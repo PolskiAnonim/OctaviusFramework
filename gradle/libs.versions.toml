@@ -4,11 +4,14 @@ compose-multiplatform = "1.7.0"
 kotlin = "2.1.0"
 kotlinx-coroutines = "1.10.1"
 postgres = "42.7.5"
+hikari = "6.2.1"
 
 [libraries]
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
+hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
 postgres = { group = "org.postgresql", name = "postgresql", version.ref = "postgres" }
 [plugins]
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }

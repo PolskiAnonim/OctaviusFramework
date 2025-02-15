@@ -26,6 +26,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.postgres)
+            implementation(libs.hikari)
+            implementation(libs.kotlin.reflect)
         }
     }
 }
