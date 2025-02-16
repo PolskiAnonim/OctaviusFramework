@@ -1,5 +1,6 @@
 package org.octavius.novels.navigator
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,11 +61,16 @@ class Navigator {
                     onClick = { this@Navigator.removeScreen() },
                     enabled = stack.size > 1,
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colors.onPrimary
-                    )
+                    AnimatedVisibility(
+                        visible = stack.size > 1
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colors.onPrimary
+                        )
+                    }
+
                 }
             }
         }

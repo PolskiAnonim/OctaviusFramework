@@ -10,4 +10,9 @@ import org.octavius.screens.MainScreen
 
 @Composable
 fun App() {
+    NovelsTheme {
+        CompositionLocalProvider(LocalState provides State) {
+            MainScreen.Content()
+        }
+    }
 }
