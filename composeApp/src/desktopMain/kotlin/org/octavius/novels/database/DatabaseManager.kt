@@ -2,7 +2,9 @@ package org.octavius.novels.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import org.octavius.novels.domain.NovelStatus
 import java.sql.Connection
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
@@ -43,6 +45,8 @@ class DatabaseManager(
                                 Long::class -> resultSet.getLong(columnName)
                                 Double::class -> resultSet.getDouble(columnName)
                                 Boolean::class -> resultSet.getBoolean(columnName)
+                                NovelStatus::class -> NovelStatus.valueOf(resultSet.getString(columnName))
+                                List::class -> listOf(resultSet.getArray(columnName).array)
                                 else -> throw IllegalArgumentException("Unsupported type: ${param.type}")
                             }
                         }
