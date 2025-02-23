@@ -11,6 +11,4 @@ class State {
     var totalPages = mutableStateOf(1L)
     val pageSize = 10
     var searchQuery = mutableStateOf("")
-    var elementList : List<Novel> = mutableListOf()
-
 }

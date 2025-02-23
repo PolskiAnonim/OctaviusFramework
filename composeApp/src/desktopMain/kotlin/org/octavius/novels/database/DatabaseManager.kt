@@ -1,16 +1,11 @@
 package org.octavius.novels.database
 
-import androidx.compose.foundation.pager.PageSize
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.octavius.novels.domain.Novel
 import org.octavius.novels.domain.NovelStatus
-import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.util.Converters.camelToSnakeCase
 import java.sql.Connection
-import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
@@ -61,7 +56,13 @@ class DatabaseManager(
                                 Double::class -> resultSet.getDouble(camelToSnakeCase(columnName))
                                 Boolean::class -> resultSet.getBoolean(camelToSnakeCase(columnName))
                                 NovelStatus::class -> NovelStatus.valueOf(resultSet.getString(camelToSnakeCase(columnName)))
-                                List::class -> listOf(resultSet.getArray(camelToSnakeCase(columnName)).array)
+                                List::class -> {
+                                    val array = resultSet.getArray(camelToSnakeCase(columnName))
+                                    when (val arrayContent = array.array) {
+                                        is Array<*> -> arrayContent.toList()
+                                        else -> throw IllegalArgumentException("Unexpected array type: ${arrayContent?.javaClass}")
+                                    }
+                                }
                                 else -> throw IllegalArgumentException("Unsupported type: ${param.type}")
                             }
                         }
