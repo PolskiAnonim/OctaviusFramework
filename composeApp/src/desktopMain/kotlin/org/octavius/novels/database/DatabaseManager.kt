@@ -30,18 +30,18 @@ class DatabaseManager(
 
     private fun getConnection(): Connection = dataSource.connection
 
-    fun <T: Any> getDataForPage(tableName: String, currentPage: Int, pageSize: Int, searchQuery: String, resultClass: KClass<T>): Pair<List<T>, Long> {
+    fun <T: Any> getDataForPage(tableName: String, currentPage: Int, pageSize: Int, whereClause: String, resultClass: KClass<T>): Pair<List<T>, Long> {
         var totalElements: Long;
         val offset = (currentPage - 1) * pageSize;
         val results = mutableListOf<T>()
 
         getConnection().use { connection ->
             connection.createStatement().use { statement ->
-                statement.executeQuery("SELECT count(*) AS total FROM $tableName").use { resultSet ->
+                statement.executeQuery("SELECT count(*) AS total FROM $tableName $whereClause").use { resultSet ->
                     resultSet.next()
                     totalElements = resultSet.getLong("total")
                 }
-                val sql = "SELECT * FROM $tableName $searchQuery LIMIT $pageSize OFFSET $offset"
+                val sql = "SELECT * FROM $tableName $whereClause LIMIT $pageSize OFFSET $offset"
                 statement.executeQuery(sql).use { resultSet ->
                     val constructor = resultClass.primaryConstructor!!
                     val parameters = constructor.parameters
