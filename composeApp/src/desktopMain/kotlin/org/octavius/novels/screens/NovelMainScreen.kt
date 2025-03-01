@@ -1,4 +1,4 @@
-package org.octavius.screens
+package org.octavius.novels.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

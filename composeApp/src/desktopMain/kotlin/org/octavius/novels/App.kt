@@ -6,7 +6,7 @@ import org.octavius.novels.database.LocalDatabase
 import org.octavius.novels.state.LocalState
 import org.octavius.novels.state.State
 import org.octavius.novels.theme.NovelsTheme
-import org.octavius.screens.MainScreen
+import org.octavius.novels.screens.MainScreen
 
 
 @Composable
