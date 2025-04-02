@@ -4,6 +4,8 @@ import androidx.compose.runtime.compositionLocalOf
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.octavius.novels.domain.NovelStatus
+import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.form.TableRelation
 import org.octavius.novels.util.Converters.camelToSnakeCase
 import java.sql.Connection
 import kotlin.reflect.KClass
@@ -74,4 +76,52 @@ class DatabaseManager(
         }
         return Pair<List<T>, Long>(results, totalElements)
     }
+
+    //----------------------------------------------formularze----------------------------------------------------------
+    // pobieranie encji
+    fun getEntityWithRelations(
+        id: Int,
+        tableRelations: List<TableRelation>
+    ): Map<ColumnInfo, Any?> {
+        if (tableRelations.isEmpty()) {
+            throw IllegalArgumentException("Lista relacji tabel nie może być pusta")
+        }
+
+        val mainTable = tableRelations.first().tableName
+        val result = mutableMapOf<ColumnInfo, Any?>()
+
+        // Budowanie zapytania SQL z wieloma JOIN-ami
+        // Tabela główna
+        val sqlBuilder = StringBuilder("SELECT * FROM $mainTable ")
+
+        // Dodawanie JOIN-ów
+        for (i in 1 until tableRelations.size) {
+            val relation = tableRelations[i]
+            sqlBuilder.append("LEFT JOIN ${relation.tableName} ON ${relation.joinCondition} ")
+        }
+
+        sqlBuilder.append("WHERE $mainTable.id = ?")
+
+        // pobranie danych
+        getConnection().use { connection ->
+            connection.prepareStatement(sqlBuilder.toString()).use { statement ->
+                statement.setInt(1, id)
+                statement.executeQuery().use { resultSet ->
+                    if (resultSet.next()) {
+                        val metaData = resultSet.metaData
+                        for (i in 1..metaData.columnCount) {
+                            val columnName = metaData.getColumnName(i)
+                            val tableName = metaData.getTableName(i)
+                            val columnValue = resultSet.getObject(i)
+                            result[ColumnInfo(tableName, columnName)] = columnValue
+                        }
+                    }
+                }
+            }
+        }
+
+        return result
+    }
+
+
 }
