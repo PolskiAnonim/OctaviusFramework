@@ -1,6 +1,7 @@
 package org.octavius.novels.form
 
 import org.octavius.novels.domain.NovelStatus
+import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.DependencyType
 import org.octavius.novels.form.control.type.*
@@ -26,9 +27,9 @@ class NovelForm : Form() {
                         label = "Informacje o nowelce"
                 ),
                 "titles" to TextListControl("titles", "novels", "Tytuły"),
-                "novelType" to EnumControl("novelType", "novels", "Typ nowelki"),
+                "novelType" to TextControl("novelType", "novels", "Typ nowelki"),
                 "originalLanguage" to TextControl("originalLanguage", "novels", "Język oryginału"),
-                "status" to EnumControl("status", "novels", "Status czytania"),
+                "status" to EnumControl("status", "novels", "Status czytania", NovelStatus::class.java),
                 // Sekcja tomów (widoczna tylko dla określonych statusów)
                 "volumesSection" to SectionControl(
                     ctrls = listOf("volumes", "translatedVolumes", "originalCompleted"),
@@ -44,11 +45,11 @@ class NovelForm : Form() {
                                     NovelStatus.completed.name,
                                     NovelStatus.planToRead.name
                                 ),
-                                dependencyType = DependencyType.OneOf
+                                dependencyType = DependencyType.Hidden,
+                                comparisonType = ComparisonType.OneOf
                             )
                         )
-                )
-                ,
+                ),
                 "volumes" to IntegerControl("volumes", "novelVolumes", "Liczba tomów"),
                 "translatedVolumes" to IntegerControl("translatedVolumes", "novelVolumes", "Przetłumaczone tomy"),
                 "originalCompleted" to BooleanControl("originalCompleted", "novelVolumes", "Oryginał ukończony")

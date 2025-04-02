@@ -37,11 +37,8 @@ abstract class Form {
 
     @Composable
     fun display() {
-        for (control in formSchema.order) {
-            formSchema.controls[control]?.display(formSchema.controls)
+        for (controlName in formSchema.order) {
+            formSchema.controls[controlName]?.render(formSchema.controls)
         }
     }
-
-
-
 }

@@ -4,9 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -40,7 +40,7 @@ class SectionControl(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colors.surface)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(8.dp)
                     .clickable(enabled = collapsible) { expanded.value = !expanded.value },
                 verticalAlignment = Alignment.CenterVertically,
@@ -48,15 +48,15 @@ class SectionControl(
             ) {
                 Text(
                     text = label ?: "",
-                    style = MaterialTheme.typography.h6,
-                    color = MaterialTheme.colors.onSurface
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 if (collapsible) {
                     Icon(
                         imageVector = if (expanded.value) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = if (expanded.value) "Zwiń" else "Rozwiń",
-                        tint = MaterialTheme.colors.onSurface
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -73,7 +73,7 @@ class SectionControl(
                             Column(modifier = Modifier.weight(1f)) {
                                 group.forEach { ctrlName ->
                                     controls[ctrlName]?.let { control ->
-                                        control.display(controls)
+                                        control.render(controls)
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
                                 }
@@ -85,7 +85,7 @@ class SectionControl(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         ctrls.forEach { ctrlName ->
                             controls[ctrlName]?.let { control ->
-                                control.display(controls)
+                                control.render(controls)
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }

@@ -1,6 +1,14 @@
 package org.octavius.novels.form.control.type
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.ControlState
@@ -12,7 +20,7 @@ class TextControl(
     hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Boolean>(
+) : Control<String>(
     ControlState(),
     label,
     fieldName,
@@ -23,7 +31,31 @@ class TextControl(
 ) {
     @Composable
     override fun display(controls: Map<String, Control<*>>) {
-        TODO("Not yet implemented")
+        state?.let { ctrlState ->
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = ctrlState.value.value ?: "",
+                    onValueChange = {
+                        ctrlState.value.value = it
+                        ctrlState.dirty.value = true
+                        ctrlState.touched.value = true
+                    },
+                    label = { Text(label ?: "") },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    isError = ctrlState.error.value != null,
+                    singleLine = true
+                )
+
+                if (ctrlState.error.value != null) {
+                    Text(
+                        text = ctrlState.error.value ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+            }
+        }
     }
 
 }

@@ -1,14 +1,23 @@
 package org.octavius.novels.form.control.type
 
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.ControlState
+import kotlin.reflect.KClass
 
-class EnumControl<T: Any>(
+class EnumControl<T: Enum<*>>(
     fieldName: String?,
     tableName: String?,
     label: String?,
+    private val enumClass: Class<T>,
+    private val displayNameFn: (T) -> String = { it.name },
     hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
@@ -23,7 +32,53 @@ class EnumControl<T: Any>(
 ) {
     @Composable
     override fun display(controls: Map<String, Control<*>>) {
-        TODO("Not yet implemented")
-    }
+        state?.let { ctrlState ->
+            var expanded by remember { mutableStateOf(false) }
+            val options = enumClass.enumConstants
 
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = label ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                )
+
+                OutlinedButton(
+                    onClick = { expanded = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = ctrlState.value.value?.let { displayNameFn(it) } ?: "Wybierz opcję"
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    options.forEach { enumOption ->
+                        DropdownMenuItem(
+                            onClick = {
+                                ctrlState.value.value = enumOption
+                                ctrlState.dirty.value = true
+                                ctrlState.touched.value = true
+                                expanded = false
+                            },
+                            text = { Text(displayNameFn(enumOption)) }
+                        )
+                    }
+                }
+
+                if (ctrlState.error.value != null) {
+                    Text(
+                        text = ctrlState.error.value ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+            }
+        }
+    }
 }
