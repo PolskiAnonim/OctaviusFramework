@@ -25,8 +25,8 @@ class SectionControl(
     val initiallyExpanded: Boolean = true,
     val columns: Int = 1,
     label: String,
-    hidden: String? = null,
-    required: String? = null,
+    hidden: Boolean? = null,
+    required: Boolean? = null,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Unit>(null,label, null, null, hidden, required, dependencies) {
 
