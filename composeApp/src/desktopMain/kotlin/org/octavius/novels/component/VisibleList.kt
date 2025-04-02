@@ -263,7 +263,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                             // Przycisk nawigacyjny
                             IconButton(onClick = onNavigate) {
                                 Icon(
-                                    imageVector = Icons.Default.ArrowForward,
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = "Przejdź dalej"
                                 )
                             }
