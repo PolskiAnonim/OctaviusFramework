@@ -22,7 +22,6 @@ class BooleanControl(
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Boolean>(
-    ControlState(),
     label,
     fieldName,
     tableName,
@@ -31,8 +30,9 @@ class BooleanControl(
     dependencies
 ) {
     @Composable
-    override fun display(controls: Map<String, Control<*>>) {
-        state?.let { ctrlState ->
+    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val state = states[controlName] as ControlState<Boolean>
+        state.let { ctrlState ->
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically

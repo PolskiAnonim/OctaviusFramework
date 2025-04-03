@@ -24,7 +24,6 @@ class TextListControl(
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<List<String>>(
-    ControlState(),
     label,
     fieldName,
     tableName,
@@ -33,8 +32,9 @@ class TextListControl(
     dependencies
 ) {
     @Composable
-    override fun display(controls: Map<String, Control<*>>) {
-        state?.let { ctrlState ->
+    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val state = states[controlName] as ControlState<List<String>>
+        state.let { ctrlState ->
             var currentList by remember { mutableStateOf(ctrlState.value.value ?: listOf("")) }
             var newItemText by remember { mutableStateOf("") }
 

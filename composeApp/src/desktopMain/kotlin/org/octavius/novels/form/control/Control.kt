@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.Composable
 
 abstract class Control<T: Any>(
-    val state: ControlState<T>?,
     val label: String?,
     val fieldName: String?,
     val tableName: String?,
@@ -13,19 +12,19 @@ abstract class Control<T: Any>(
     val dependencies: Map<String, ControlDependency<*>>?
 ) {
     @Composable
-    fun render(controls: Map<String, Control<*>>) {
-        val isVisible = shouldBeVisible(controls)
+    fun render(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val isVisible = shouldBeVisible(controls, states)
 
         AnimatedVisibility(visible = isVisible) {
-            display(controls)
+            display(controlName, controls, states)
         }
     }
 
     @Composable
-    protected abstract fun display(controls: Map<String, Control<*>>)
+    protected abstract fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>)
 
     @Composable
-    private fun shouldBeVisible(controls: Map<String, Control<*>>): Boolean {
+    private fun shouldBeVisible(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Boolean {
         // Jeśli hidden jest true, zawsze ukryj
         if (hidden == true) return false
 
@@ -35,7 +34,8 @@ abstract class Control<T: Any>(
                 val dependentControl = controls[dependency.controlName] ?: continue
                 if (dependency.dependencyType != DependencyType.Hidden) continue
 
-                val dependentValue = dependentControl.state?.value?.value
+                val dependentState = states[dependency.controlName]
+                val dependentValue = dependentState?.value?.value
 
                 when (dependency.comparisonType) {
                     ComparisonType.OneOf -> {
@@ -46,6 +46,9 @@ abstract class Control<T: Any>(
                     }
                     ComparisonType.NotEquals -> {
                         // Sprawdź czy wartość kontrolki, od której zależy, jest różna od podanej
+                        println(dependentValue)
+                        println(dependency.value)
+                        println(dependentValue == dependency.value)
                         if (dependentValue == dependency.value) return false
                     }
                     ComparisonType.Equals -> {
@@ -59,18 +62,20 @@ abstract class Control<T: Any>(
     }
 
     // Metoda do ustawiania wartości
-    open fun setInitValue(value: Any?) {
+    open fun setInitValue(value: Any?) : ControlState<T> {
+        val state = ControlState<T>()
         if (value == null) {
-            state?.value?.value = null
-            return
+            state.value.value = null
+            return state
         }
 
         try {
             @Suppress("UNCHECKED_CAST")
-            state?.value?.value = convertValue(value) as T
+            state.value.value = convertValue(value) as T
         } catch (e: ClassCastException) {
             println("Nie można skonwertować wartości $value na typ kontrolki ${this::class.simpleName}")
         }
+        return state
     }
 
     // Metoda pomocnicza do konwersji wartości - domyślna implementacja

@@ -21,7 +21,6 @@ class TextControl(
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<String>(
-    ControlState(),
     label,
     fieldName,
     tableName,
@@ -30,8 +29,9 @@ class TextControl(
     dependencies
 ) {
     @Composable
-    override fun display(controls: Map<String, Control<*>>) {
-        state?.let { ctrlState ->
+    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val state = states[controlName] as ControlState<String>
+        state.let { ctrlState ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = ctrlState.value.value ?: "",

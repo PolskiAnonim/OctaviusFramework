@@ -1,7 +1,10 @@
 package org.octavius.novels.form
 
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.*
 import org.octavius.novels.database.DatabaseManager
+import org.octavius.novels.form.control.ControlState
 import org.octavius.novels.util.Converters.camelToSnakeCase
 
 abstract class Form {
@@ -11,6 +14,7 @@ abstract class Form {
 
     protected abstract fun createSchema(): FormControls
 
+    protected val formState: MutableMap<String, ControlState<*>> = mutableMapOf()
     // Metoda do definiowania relacji tabel
     protected abstract fun defineTableRelations(): List<TableRelation>
 
@@ -22,7 +26,7 @@ abstract class Form {
         val data = DatabaseManager.getEntityWithRelations(id, tableRelations)
 
         // Mapuj dane na kontrolki
-        for ((_, control) in formSchema.controls) {
+        for ((controlName, control) in formSchema.controls) {
             if (control.fieldName != null && control.tableName != null) {
                 // Konwertuj nazwę kolumny z camelCase na snake_case jeśli potrzebne
                 val columnName = camelToSnakeCase(control.fieldName)
@@ -30,15 +34,17 @@ abstract class Form {
                 val value = data[ColumnInfo(tableName, columnName)]
 
                 // Ustaw wartość kontrolki (z odpowiednią konwersją typu)
-                control.setInitValue(value)
+                formState[controlName] = control.setInitValue(value)
             }
         }
     }
 
     @Composable
     fun display() {
-        for (controlName in formSchema.order) {
-            formSchema.controls[controlName]?.render(formSchema.controls)
+        LazyColumn {
+            items(formSchema.order) {
+                formSchema.controls[it]?.render(it, formSchema.controls, formState)
+            }
         }
     }
 }

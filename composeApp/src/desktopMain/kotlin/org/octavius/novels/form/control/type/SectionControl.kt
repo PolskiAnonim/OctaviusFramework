@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.ControlState
 
 class SectionControl(
     val ctrls: List<String>,
@@ -28,10 +29,10 @@ class SectionControl(
     hidden: Boolean? = null,
     required: Boolean? = null,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Unit>(null,label, null, null, hidden, required, dependencies) {
+) : Control<Unit>(label, null, null, hidden, required, dependencies) {
 
     @Composable
-    override fun display(controls: Map<String, Control<*>>) {
+    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         // Stan zwinięcia/rozwinięcia sekcji
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 
@@ -73,7 +74,7 @@ class SectionControl(
                             Column(modifier = Modifier.weight(1f)) {
                                 group.forEach { ctrlName ->
                                     controls[ctrlName]?.let { control ->
-                                        control.render(controls)
+                                        control.render(ctrlName,controls, states)
                                         Spacer(modifier = Modifier.height(8.dp))
                                     }
                                 }
@@ -85,7 +86,7 @@ class SectionControl(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         ctrls.forEach { ctrlName ->
                             controls[ctrlName]?.let { control ->
-                                control.render(controls)
+                                control.render(ctrlName,controls, states)
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }

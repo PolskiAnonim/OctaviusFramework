@@ -23,7 +23,6 @@ class IntegerControl(
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Int>(
-    ControlState(),
     label,
     fieldName,
     tableName,
@@ -32,8 +31,9 @@ class IntegerControl(
     dependencies
 ) {
     @Composable
-    override fun display(controls: Map<String, Control<*>>) {
-        state?.let { ctrlState ->
+    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val state = states[controlName] as ControlState<Int>
+        state.let { ctrlState ->
             val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
 
             Column(modifier = Modifier.fillMaxWidth()) {

@@ -24,10 +24,8 @@ class NovelForm(id: Int? = null) : Form() {
 
     // Metoda czyszcząca formularz
     private fun clearForm() {
-        for ((_, control) in formSchema.controls) {
-            if (control.state != null) {
-                control.state.value.value = null
-            }
+        for ((controlName, control) in formSchema.controls) {
+            formState[controlName] = control.setInitValue(null)
         }
     }
 
@@ -37,6 +35,7 @@ class NovelForm(id: Int? = null) : Form() {
             TableRelation("novel_volumes", "novels.id = novel_volumes.id") // Powiązana tabela
         )
     }
+
 
     override fun createSchema(): FormControls {
         return FormControls(
@@ -63,13 +62,9 @@ class NovelForm(id: Int? = null) : Form() {
                     dependencies = mapOf(
                         "statusDependency" to ControlDependency(
                             controlName = "status",
-                            value = listOf(
-                                NovelStatus.reading.name,
-                                NovelStatus.completed.name,
-                                NovelStatus.planToRead.name
-                            ),
+                            value = NovelStatus.notReading,
                             dependencyType = DependencyType.Hidden,
-                            comparisonType = ComparisonType.OneOf
+                            comparisonType = ComparisonType.NotEquals
                         )
                     )
                 ),

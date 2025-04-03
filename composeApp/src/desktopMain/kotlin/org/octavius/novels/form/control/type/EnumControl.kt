@@ -17,12 +17,10 @@ class EnumControl<T: Enum<*>>(
     tableName: String?,
     label: String?,
     private val enumClass: KClass<T>,
-    private val displayNameFn: (T) -> String = { it.name },
     hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<T>(
-    ControlState(),
     label,
     fieldName,
     tableName,
@@ -31,8 +29,9 @@ class EnumControl<T: Enum<*>>(
     dependencies
 ) {
     @Composable
-    override fun display(controls: Map<String, Control<*>>) {
-        state?.let { ctrlState ->
+    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val state = states[controlName] as ControlState<T>
+        state.let { ctrlState ->
             var expanded by remember { mutableStateOf(false) }
             val options = enumClass.java.enumConstants
 
@@ -50,7 +49,7 @@ class EnumControl<T: Enum<*>>(
                     Text(
                         text = ctrlState.value.value?.let { value ->
                             enumClass.members.firstOrNull { it.name == "toDisplayString" }
-                            ?.call(value) as String } ?: "Wybierz opcję"
+                                ?.call(value) as String } ?: "Wybierz opcję"
                     )
                 }
 
