@@ -7,18 +7,16 @@ import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.TableRelation
 import org.octavius.novels.util.Converters.camelToSnakeCase
+import org.octavius.novels.util.Converters.snakeToCamelCase
 import java.sql.Connection
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
-val LocalDatabase = compositionLocalOf<DatabaseManager> { error("No DatabaseManager found!") }
-
-class DatabaseManager(
-    private val jdbcUrl: String,
-    private val username: String,
-    private val password: String
-) {
+object DatabaseManager {
     private val dataSource: HikariDataSource
+    private const val jdbcUrl = "jdbc:postgresql://localhost:5430/novels_games"
+    private const val username = "postgres"
+    private const val password = "1234"
 
     init {
         val config = HikariConfig().apply {
@@ -112,7 +110,34 @@ class DatabaseManager(
                         for (i in 1..metaData.columnCount) {
                             val columnName = metaData.getColumnName(i)
                             val tableName = metaData.getTableName(i)
-                            val columnValue = resultSet.getObject(i)
+                            val columnType = metaData.getColumnTypeName(i)
+
+                            val columnValue = when (columnType) {
+                                // Obsługa tablic PostgreSQL
+                                "_varchar", "_text", "_char" -> {
+                                    val array = resultSet.getArray(i)
+                                    if (array != null) {
+                                        (array.array as Array<*>).filterNotNull().map { it.toString() }
+                                    } else null
+                                }
+                                // Obsługa typów enum
+                                "novel_status" -> {
+                                    val statusStr = resultSet.getString(i)
+                                    if (statusStr != null) {
+                                        // Konwersja z formatu PostgreSQL do Kotlin
+                                        val normalizedStatus = snakeToCamelCase(statusStr)
+                                        try {
+                                            NovelStatus.valueOf(normalizedStatus)
+                                        } catch (e: IllegalArgumentException) {
+                                            println("Nie można przekonwertować wartości enum: $statusStr")
+                                            null
+                                        }
+                                    } else null
+                                }
+                                // Standardowa obsługa pozostałych typów
+                                else -> resultSet.getObject(i)
+                            }
+
                             result[ColumnInfo(tableName, columnName)] = columnValue
                         }
                     }

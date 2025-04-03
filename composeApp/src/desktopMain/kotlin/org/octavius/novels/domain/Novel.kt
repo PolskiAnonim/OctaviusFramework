@@ -14,8 +14,8 @@ enum class NovelStatus {
     completed,
     planToRead;
 
-    fun toDisplayString(status: NovelStatus): String {
-        return when (status) {
+    fun toDisplayString(): String {
+        return when (this) {
             notReading -> "Not Reading"
             reading -> "Reading"
             completed -> "Completed"

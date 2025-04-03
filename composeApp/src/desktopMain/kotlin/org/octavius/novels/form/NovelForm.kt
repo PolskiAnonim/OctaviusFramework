@@ -6,7 +6,30 @@ import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.DependencyType
 import org.octavius.novels.form.control.type.*
 
-class NovelForm : Form() {
+class NovelForm(id: Int? = null) : Form() {
+
+    init {
+        initialize(id)
+    }
+
+    private fun initialize(novelId: Int?) {
+        if (novelId != null) {
+            // Ładowanie istniejącej nowelki
+            loadData(novelId)
+        } else {
+            // Inicjalizacja formularza dla nowej nowelki
+            clearForm()
+        }
+    }
+
+    // Metoda czyszcząca formularz
+    private fun clearForm() {
+        for ((_, control) in formSchema.controls) {
+            if (control.state != null) {
+                control.state.value.value = null
+            }
+        }
+    }
 
     override fun defineTableRelations(): List<TableRelation> {
         return listOf(
@@ -20,35 +43,35 @@ class NovelForm : Form() {
             mapOf(
                 "id" to HiddenControl<Int>("id", "novels"),
                 "novelInfo" to SectionControl(
-                        ctrls = listOf("titles", "novelType", "originalLanguage", "status"),
-                        collapsible = false,
-                        initiallyExpanded = true,
-                        columns = 1,
-                        label = "Informacje o nowelce"
+                    ctrls = listOf("titles", "novelType", "originalLanguage", "status"),
+                    collapsible = false,
+                    initiallyExpanded = true,
+                    columns = 1,
+                    label = "Informacje o nowelce"
                 ),
                 "titles" to TextListControl("titles", "novels", "Tytuły"),
                 "novelType" to TextControl("novelType", "novels", "Typ nowelki"),
                 "originalLanguage" to TextControl("originalLanguage", "novels", "Język oryginału"),
-                "status" to EnumControl("status", "novels", "Status czytania", NovelStatus::class.java),
+                "status" to EnumControl("status", "novels", "Status czytania", NovelStatus::class),
                 // Sekcja tomów (widoczna tylko dla określonych statusów)
                 "volumesSection" to SectionControl(
                     ctrls = listOf("volumes", "translatedVolumes", "originalCompleted"),
                     collapsible = true,
-                        initiallyExpanded = true,
-                        columns = 1,
-                        label = "Informacje o tomach",
-                        dependencies = mapOf(
-                            "statusDependency" to ControlDependency(
-                                controlName = "status",
-                                value = listOf(
-                                    NovelStatus.reading.name,
-                                    NovelStatus.completed.name,
-                                    NovelStatus.planToRead.name
-                                ),
-                                dependencyType = DependencyType.Hidden,
-                                comparisonType = ComparisonType.OneOf
-                            )
+                    initiallyExpanded = true,
+                    columns = 1,
+                    label = "Informacje o tomach",
+                    dependencies = mapOf(
+                        "statusDependency" to ControlDependency(
+                            controlName = "status",
+                            value = listOf(
+                                NovelStatus.reading.name,
+                                NovelStatus.completed.name,
+                                NovelStatus.planToRead.name
+                            ),
+                            dependencyType = DependencyType.Hidden,
+                            comparisonType = ComparisonType.OneOf
                         )
+                    )
                 ),
                 "volumes" to IntegerControl("volumes", "novelVolumes", "Liczba tomów"),
                 "translatedVolumes" to IntegerControl("translatedVolumes", "novelVolumes", "Przetłumaczone tomy"),

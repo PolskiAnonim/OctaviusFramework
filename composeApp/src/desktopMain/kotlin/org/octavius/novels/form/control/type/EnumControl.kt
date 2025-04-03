@@ -16,7 +16,7 @@ class EnumControl<T: Enum<*>>(
     fieldName: String?,
     tableName: String?,
     label: String?,
-    private val enumClass: Class<T>,
+    private val enumClass: KClass<T>,
     private val displayNameFn: (T) -> String = { it.name },
     hidden: Boolean? = null,
     required: Boolean? = false,
@@ -34,7 +34,7 @@ class EnumControl<T: Enum<*>>(
     override fun display(controls: Map<String, Control<*>>) {
         state?.let { ctrlState ->
             var expanded by remember { mutableStateOf(false) }
-            val options = enumClass.enumConstants
+            val options = enumClass.java.enumConstants
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -48,7 +48,9 @@ class EnumControl<T: Enum<*>>(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = ctrlState.value.value?.let { displayNameFn(it) } ?: "Wybierz opcję"
+                        text = ctrlState.value.value?.let { value ->
+                            enumClass.members.firstOrNull { it.name == "toDisplayString" }
+                            ?.call(value) as String } ?: "Wybierz opcję"
                     )
                 }
 
@@ -65,7 +67,8 @@ class EnumControl<T: Enum<*>>(
                                 ctrlState.touched.value = true
                                 expanded = false
                             },
-                            text = { Text(displayNameFn(enumOption)) }
+                            text = { Text(enumClass.members.firstOrNull { it.name == "toDisplayString" }
+                                ?.call(enumOption) as String) }
                         )
                     }
                 }

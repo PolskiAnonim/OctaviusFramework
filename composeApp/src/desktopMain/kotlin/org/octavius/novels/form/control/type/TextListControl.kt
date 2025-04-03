@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.ControlState
+import org.postgresql.jdbc.PgArray
 
 class TextListControl(
     fieldName: String?,
@@ -133,6 +134,7 @@ class TextListControl(
 
     override fun convertValue(value: Any): Any? {
         // Obsługa konwersji z tablicy SQL do listy String
+        @Suppress("UNCHECKED_CAST")
         return when (value) {
             is Array<*> -> value.mapNotNull { it?.toString() }
             is List<*> -> value.mapNotNull { it?.toString() }

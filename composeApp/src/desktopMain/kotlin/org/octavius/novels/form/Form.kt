@@ -5,7 +5,7 @@ import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.util.Converters.camelToSnakeCase
 
 abstract class Form {
-    private val formSchema: FormControls by lazy {
+    protected val formSchema: FormControls by lazy {
         createSchema()
     }
 
@@ -14,12 +14,12 @@ abstract class Form {
     // Metoda do definiowania relacji tabel
     protected abstract fun defineTableRelations(): List<TableRelation>
 
-    fun loadData(id: Int, databaseManager: DatabaseManager) {
+    fun loadData(id: Int) {
         // Pobierz definicje relacji tabel
         val tableRelations = defineTableRelations()
 
         // Pobierz dane z bazy
-        val data = databaseManager.getEntityWithRelations(id, tableRelations)
+        val data = DatabaseManager.getEntityWithRelations(id, tableRelations)
 
         // Mapuj dane na kontrolki
         for ((_, control) in formSchema.controls) {

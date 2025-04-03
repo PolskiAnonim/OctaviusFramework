@@ -98,7 +98,7 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun NovelsTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     content: @Composable() () -> Unit
 ) {
   val colorScheme = when {

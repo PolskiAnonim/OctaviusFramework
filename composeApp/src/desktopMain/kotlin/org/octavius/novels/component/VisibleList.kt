@@ -1,7 +1,6 @@
 package org.octavius.novels.component
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
@@ -25,14 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.database.DatabaseManager
-import org.octavius.novels.database.LocalDatabase
+import org.octavius.novels.navigator.LocalNavigator
+import org.octavius.novels.screens.NovelEditScreen
 import org.octavius.novels.state.LocalState
 import org.octavius.novels.state.State
 import kotlin.reflect.KClass
 
 
 class VisibleList<T : Any>(private val clazz: KClass<T>) {
-    private lateinit var databaseManager: DatabaseManager
     private lateinit var state: State
     private var elementList = mutableStateOf<List<T>>(emptyList())
     private lateinit var lazyListState: LazyListState;
@@ -42,7 +40,6 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
         columnName: String, // Nazwa kolumny do przeszukiwania
         searchType: String // Typ wyszukiwania: "array" (dla unnest) lub "text" (dla zwykłych kolumn)
     ) {
-        databaseManager = LocalDatabase.current
         state = LocalState.current
         lazyListState = rememberLazyListState()
         LaunchedEffect(state.searchQuery.value) {
@@ -71,7 +68,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                     else -> "" // Domyślnie pusty warunek
                 }
 
-                val (elements, total) = databaseManager.getDataForPage(
+                val (elements, total) = DatabaseManager.getDataForPage(
                     tableName, // Używamy przekazanej nazwy tabeli
                     state.currentPage.value,
                     state.pageSize,
@@ -89,6 +86,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
 
     @Composable
     fun List(paddingValues: PaddingValues, fieldName: String) {
+        val navigator = LocalNavigator.current
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -96,7 +94,8 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
             state = lazyListState
         ) {
             items(elementList.value) { element ->
-                ListItem(element, fieldName, { println("aaaaa") })
+                ListItem(element, fieldName, { navigator.AddScreen(
+                    NovelEditScreen(clazz.members.find { it.name == "id" }?.call(element) as Int?)) })
                 Spacer(modifier = Modifier.height(8.dp)) // opcjonalnie, dla odstępu między elementami
             }
         }
