@@ -144,6 +144,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
 
     @Composable
     fun TopBar() {
+        val navigator = LocalNavigator.current
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.primary
@@ -188,7 +189,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
 
                 // Przycisk dodawania
                 IconButton(
-                    onClick = { /* TODO: Akcja dodawania */ },
+                    onClick = { navigator.AddScreen(NovelEditScreen()) },
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Icon(
