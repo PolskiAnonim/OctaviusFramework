@@ -6,3 +6,8 @@ data class FormControls(
     val controls: Map<String, Control<*>>,
     val order: List<String>,
 )
+
+data class ControlResultData(
+    val value: Any?,
+    val dirty: Boolean
+)

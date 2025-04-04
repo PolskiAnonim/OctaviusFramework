@@ -11,12 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.novels.database.DatabaseManager
-import org.octavius.novels.form.control.ComparisonType
-import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlState
-import org.octavius.novels.form.control.DependencyType
 import org.octavius.novels.navigator.LocalNavigator
-import org.octavius.novels.util.Converters.camelToSnakeCase
 
 abstract class Form {
     // Schema and state
@@ -32,7 +28,7 @@ abstract class Form {
 
     // Loading data
 
-    private var loadedId: Int? = null
+    protected var loadedId: Int? = null
 
     fun loadData(id: Int) {
 
@@ -41,9 +37,7 @@ abstract class Form {
 
         for ((controlName, control) in formSchema.controls) {
             if (control.fieldName != null && control.tableName != null) {
-                val columnName = camelToSnakeCase(control.fieldName)
-                val tableName = camelToSnakeCase(control.tableName)
-                val value = data[ColumnInfo(tableName, columnName)]
+                val value = data[ColumnInfo(control.tableName, control.fieldName)]
                 formState[controlName] = control.setInitValue(value)
             }
         }
@@ -169,16 +163,17 @@ abstract class Form {
     // Save
 
     // Metoda zbierająca dane z formularza do zapisu
-    private fun collectFormData(): Map<String, Map<String, Any?>> {
+    private fun collectFormData(): Map<String, Map<String, ControlResultData>> {
         val result = mutableMapOf<String, MutableMap<String, Any?>>()
 
         for ((controlName, control) in formSchema.controls) {
-            var value = formState[controlName]?.value?.value ?: continue
-            value = control.getResult(value, formSchema.controls, formState) ?: continue
-
             // Pobierz tablę i pole
             val tableName = control.tableName ?: continue
             val fieldName = control.fieldName ?: continue
+
+            val state = formState[controlName] ?: continue
+            var value = formState[controlName]?.value?.value ?: continue
+            value = control.getResult(value, formSchema.controls, formState) ?: continue
 
             // Dodaj do odpowiedniej tabeli
             if (!result.containsKey(tableName)) {
@@ -186,60 +181,43 @@ abstract class Form {
             }
 
             // Dodaj wartość
-            result[tableName]!![camelToSnakeCase(fieldName)] = value
+            result[tableName]!![fieldName] = ControlResultData(value, state.dirty.value)
         }
 
-        // Dodaj ID do głównej tabeli, jeśli istnieje
-        if (loadedId != null) {
-            val mainTable = defineTableRelations().firstOrNull()?.tableName
-            if (mainTable != null && result.containsKey(mainTable)) {
-                result[mainTable]!!["id"] = loadedId
-            }
-        }
+        @Suppress("UNCHECKED_CAST")
+        return result as Map<String, Map<String, ControlResultData>>
+    }
 
-        return result
+    // Metoda do przetwarzania danych przed zapisem
+    protected abstract fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation>
+
+    private fun validateProcessFormData(databaseOperations: List<SaveOperation>): Boolean {
+        val tables = defineTableRelations().map { it.tableName }
+        val tableOperations = databaseOperations.map { it.tableName }
+        return (tables.sorted() == tableOperations.sorted())
     }
 
     // Metoda do zapisu formularza
-    fun saveForm(): Boolean {
+    private fun saveForm(): Boolean {
         // Waliduj formularz
         if (!validateForm()) {
             return false
         }
 
         // Zbierz dane
-        val formData = collectFormData()
+        val rawFormData = collectFormData()
 
-        // Przygotuj dane do zapisu
-        val tableRelations = defineTableRelations()
-        val mainTable = tableRelations.firstOrNull()?.tableName ?: return false
+        // Przetwórz dane według logiki konkretnego formularza
+        val databaseOperations = processFormData(rawFormData)
 
-        val mainData = formData[mainTable] ?: mutableMapOf()
-        val relatedData = mutableMapOf<String, Pair<String, Map<String, Any?>>>()
-
-        // Przygotuj dane dla powiązanych tabel
-        for (i in 1 until tableRelations.size) {
-            val relation = tableRelations[i]
-            val tableName = relation.tableName
-            val joinCondition = relation.joinCondition
-
-            val tableData = formData[tableName]
-            if (tableData != null) {
-                relatedData[tableName] = Pair(joinCondition, tableData)
-            }
+        if (!validateProcessFormData(databaseOperations)) {
+            return false
         }
 
         try {
             // Zapisz do bazy danych
-            val savedId = DatabaseManager.saveOrUpdateEntity(mainTable, mainData, relatedData)
-
-            if (savedId != null) {
-                // Aktualizuj ID w formularzu
-                loadedId = savedId
-                return true
-            }
-
-            return false
+            DatabaseManager.updateDatabase(databaseOperations)
+            return true
         } catch (e: Exception) {
             println("Błąd zapisu formularza: ${e.message}")
             return false

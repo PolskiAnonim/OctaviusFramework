@@ -5,9 +5,12 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
 import org.octavius.novels.util.Converters.camelToSnakeCase
 import org.octavius.novels.util.Converters.snakeToCamelCase
+import org.postgresql.jdbc.PgConnection
+import org.postgresql.jdbc.PgStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.Types
@@ -32,7 +35,13 @@ object DatabaseManager {
 
     private fun getConnection(): Connection = dataSource.connection
 
-    fun <T: Any> getDataForPage(tableName: String, currentPage: Int, pageSize: Int, whereClause: String, resultClass: KClass<T>): Pair<List<T>, Long> {
+    fun <T : Any> getDataForPage(
+        tableName: String,
+        currentPage: Int,
+        pageSize: Int,
+        whereClause: String,
+        resultClass: KClass<T>
+    ): Pair<List<T>, Long> {
         var totalElements: Long;
         val offset = (currentPage - 1) * pageSize;
         val results = mutableListOf<T>()
@@ -43,7 +52,7 @@ object DatabaseManager {
                     resultSet.next()
                     totalElements = resultSet.getLong("total")
                 }
-                val sql = "SELECT * FROM $tableName $whereClause LIMIT $pageSize OFFSET $offset"
+                val sql = "SELECT * FROM $tableName $whereClause  ORDER BY id LIMIT $pageSize OFFSET $offset"
                 statement.executeQuery(sql).use { resultSet ->
                     val constructor = resultClass.primaryConstructor!!
                     val parameters = constructor.parameters
@@ -57,7 +66,14 @@ object DatabaseManager {
                                 Long::class -> resultSet.getLong(camelToSnakeCase(columnName))
                                 Double::class -> resultSet.getDouble(camelToSnakeCase(columnName))
                                 Boolean::class -> resultSet.getBoolean(camelToSnakeCase(columnName))
-                                NovelStatus::class -> NovelStatus.valueOf(resultSet.getString(camelToSnakeCase(columnName)))
+                                NovelStatus::class -> NovelStatus.valueOf(
+                                    resultSet.getString(
+                                        camelToSnakeCase(
+                                            columnName
+                                        )
+                                    )
+                                )
+
                                 List::class -> {
                                     val array = resultSet.getArray(camelToSnakeCase(columnName))
                                     when (val arrayContent = array.array) {
@@ -65,6 +81,7 @@ object DatabaseManager {
                                         else -> throw IllegalArgumentException("Unexpected array type: ${arrayContent?.javaClass}")
                                     }
                                 }
+
                                 else -> throw IllegalArgumentException("Unsupported type: ${param.type}")
                             }
                         }
@@ -153,116 +170,32 @@ object DatabaseManager {
     //------------------------------------zapis
 
     // Główna metoda do zapisu/aktualizacji encji
-    fun saveOrUpdateEntity(
-        mainTable: String,
-        mainData: Map<String, Any?>,
-        relatedData: Map<String, Pair<String, Map<String, Any?>>>
-    ): Int? {
-        val id = mainData["id"] as? Int
-
-        return if (id != null) {
-            updateEntity(id, mainTable, mainData, relatedData)
-            id
-        } else {
-            insertEntity(mainTable, mainData, relatedData)
-        }
-    }
-
-    // Metoda do aktualizacji istniejącej encji
-    private fun updateEntity(
-        id: Int,
-        mainTable: String,
-        mainData: Map<String, Any?>,
-        relatedData: Map<String, Pair<String, Map<String, Any?>>>
-    ): Boolean {
+    fun updateDatabase(
+        databaseOperations: List<SaveOperation>
+    ) {
         getConnection().use { connection ->
             connection.autoCommit = false
 
             try {
-                // Aktualizacja głównej tabeli
-                val filteredMainData = mainData.filterKeys { it != "id" }
-                if (filteredMainData.isNotEmpty()) {
-                    val updateQuery = StringBuilder("UPDATE $mainTable SET ")
-                    val updateValues = mutableListOf<Any?>()
-
-                    filteredMainData.entries.forEachIndexed { index, (field, value) ->
-                        updateQuery.append("$field = ?")
-                        if (index < filteredMainData.size - 1) updateQuery.append(", ")
-                        updateValues.add(value)
-                    }
-
-                    updateQuery.append(" WHERE id = ?")
-                    updateValues.add(id)
-
-                    connection.prepareStatement(updateQuery.toString()).use { statement ->
-                        updateValues.forEachIndexed { index, value ->
-                            setStatementParameter(statement, index + 1, value)
+                for (operation in databaseOperations) {
+                    when (operation) {
+                        is SaveOperation.Insert -> {
+                            insertIntoTable(connection, operation)
                         }
-                        statement.executeUpdate()
+
+                        is SaveOperation.Update -> {
+                            updateTable(connection, operation)
+                        }
+
+                        is SaveOperation.Delete -> {
+                            deleteFromTable(connection, operation)
+                        }
+                        is SaveOperation.Skip -> {
+                            continue
+                        }
                     }
                 }
-
-                // Aktualizacja powiązanych tabel
-                for ((tableName, data) in relatedData) {
-                    val (joinCondition, values) = data
-                    updateRelatedTable(connection, tableName, values, id, joinCondition)
-                }
-
                 connection.commit()
-                return true
-            } catch (e: Exception) {
-                connection.rollback()
-                println("Błąd aktualizacji rekordu: ${e.message}")
-                throw e
-            }
-        }
-    }
-
-    // Metoda do wstawiania nowej encji
-    private fun insertEntity(
-        mainTable: String,
-        mainData: Map<String, Any?>,
-        relatedData: Map<String, Pair<String, Map<String, Any?>>>
-    ): Int? {
-        getConnection().use { connection ->
-            connection.autoCommit = false
-
-            try {
-                // Wstawianie do głównej tabeli
-                val filteredMainData = mainData.filterKeys { it != "id" }
-                var newId: Int? = null
-
-                if (filteredMainData.isNotEmpty()) {
-                    val columns = filteredMainData.keys.joinToString(", ")
-                    val placeholders = filteredMainData.keys.map { "?" }.joinToString(", ")
-
-                    val insertQuery = "INSERT INTO $mainTable ($columns) VALUES ($placeholders) RETURNING id"
-
-                    connection.prepareStatement(insertQuery).use { statement ->
-                        filteredMainData.values.forEachIndexed { index, value ->
-                            setStatementParameter(statement, index + 1, value)
-                        }
-
-                        statement.executeQuery().use { resultSet ->
-                            if (resultSet.next()) {
-                                newId = resultSet.getInt("id")
-                            }
-                        }
-                    }
-                }
-
-                if (newId == null) {
-                    throw Exception("Nie udało się wstawić głównego rekordu")
-                }
-
-                // Wstawianie do powiązanych tabel
-                for ((tableName, data) in relatedData) {
-                    val (joinCondition, values) = data
-                    insertRelatedTable(connection, tableName, values, newId, joinCondition)
-                }
-
-                connection.commit()
-                return newId
             } catch (e: Exception) {
                 connection.rollback()
                 println("Błąd wstawiania rekordu: ${e.message}")
@@ -271,82 +204,49 @@ object DatabaseManager {
         }
     }
 
-    // Aktualizacja powiązanej tabeli
-    private fun updateRelatedTable(
-        connection: Connection,
-        tableName: String,
-        data: Map<String, Any?>,
-        mainId: Int,
-        joinCondition: String
-    ) {
-        // Parsowanie warunku JOIN, aby wyciągnąć klucz obcy
-        val joinParts = joinCondition.split("=").map { it.trim() }
-        if (joinParts.size != 2) return
+    private fun insertIntoTable(connection: Connection, operation: SaveOperation.Insert) {
+        val columns = operation.data.keys.joinToString()
+        val placeholders = operation.data.keys.joinToString { "?" }
 
-        val foreignKeyColumn = joinParts[1].split(".").lastOrNull()?.trim() ?: return
+        val insertQuery = "INSERT INTO ${operation.tableName} ($columns) VALUES ($placeholders)"
 
-        // Sprawdź, czy rekord już istnieje
-        var exists = false
-        connection.prepareStatement("SELECT 1 FROM $tableName WHERE $foreignKeyColumn = ?").use { statement ->
-            statement.setInt(1, mainId)
-            statement.executeQuery().use { resultSet ->
-                exists = resultSet.next()
+        connection.prepareStatement(insertQuery).use { statement ->
+            operation.data.values.forEachIndexed { index, value ->
+                setStatementParameter(statement, index + 1, value.value)
             }
-        }
-
-        if (exists) {
-            // Aktualizuj istniejący rekord
-            val updateQuery = StringBuilder("UPDATE $tableName SET ")
-            val updateValues = mutableListOf<Any?>()
-
-            data.entries.forEachIndexed { index, (field, value) ->
-                updateQuery.append("$field = ?")
-                if (index < data.size - 1) updateQuery.append(", ")
-                updateValues.add(value)
-            }
-
-            updateQuery.append(" WHERE $foreignKeyColumn = ?")
-            updateValues.add(mainId)
-
-            connection.prepareStatement(updateQuery.toString()).use { statement ->
-                updateValues.forEachIndexed { index, value ->
-                    setStatementParameter(statement, index + 1, value)
-                }
-                statement.executeUpdate()
-            }
-        } else {
-            // Wstaw nowy rekord
-            insertRelatedTable(connection, tableName, data, mainId, joinCondition)
+            statement.executeQuery()
         }
     }
 
-    // Wstawianie do powiązanej tabeli
-    private fun insertRelatedTable(
-        connection: Connection,
-        tableName: String,
-        data: Map<String, Any?>,
-        mainId: Int,
-        joinCondition: String
+    // Metoda do aktualizacji istniejącej encji
+    private fun updateTable(
+        connection: Connection, operation: SaveOperation.Update
     ) {
-        // Parsowanie warunku JOIN, aby wyciągnąć klucz obcy
-        val joinParts = joinCondition.split("=").map { it.trim() }
-        if (joinParts.size != 2) return
+        val updateQuery = StringBuilder("UPDATE ${operation.tableName} SET ")
+        val updateValues = mutableListOf<Any?>()
 
-        val foreignKeyColumn = joinParts[1].split(".").lastOrNull()?.trim() ?: return
+        operation.data.entries.forEachIndexed { index, (field, value) ->
+            updateQuery.append("$field = ?")
+            if (index < operation.data.size - 1) updateQuery.append(", ")
+            updateValues.add(value.value)
+        }
 
-        // Przygotuj dane do wstawienia
-        val fieldsWithFk = data.toMutableMap()
-        fieldsWithFk[foreignKeyColumn] = mainId
+        updateQuery.append(" WHERE id = ?")
+        updateValues.add(operation.id)
 
-        val columns = fieldsWithFk.keys.joinToString(", ")
-        val placeholders = fieldsWithFk.keys.map { "?" }.joinToString(", ")
-
-        val insertQuery = "INSERT INTO $tableName ($columns) VALUES ($placeholders)"
-
-        connection.prepareStatement(insertQuery).use { statement ->
-            fieldsWithFk.values.forEachIndexed { index, value ->
+        connection.prepareStatement(updateQuery.toString()).use { statement ->
+            updateValues.forEachIndexed { index, value ->
                 setStatementParameter(statement, index + 1, value)
             }
+            statement.executeUpdate()
+        }
+    }
+
+
+    fun deleteFromTable(connection: Connection, operation: SaveOperation.Delete) {
+        val deleteQuery = "DELETE FROM ${operation.tableName} WHERE id = ?"
+        connection.prepareStatement(deleteQuery).use { statement ->
+            setStatementParameter(statement, 1, operation.id)
             statement.executeUpdate()
         }
     }
@@ -364,6 +264,13 @@ object DatabaseManager {
                 // Dla list, konwertujemy na tablicę
                 val array = statement.connection.createArrayOf("text", value.toTypedArray())
                 statement.setArray(index, array)
+            }
+            // Enums
+            is NovelStatus -> {
+                val pgObject = org.postgresql.util.PGobject()
+                pgObject.type = "novel_status"
+                pgObject.value = camelToSnakeCase(value.name).uppercase()
+                statement.setObject(index, pgObject)
             }
             else -> statement.setObject(index, value)
         }

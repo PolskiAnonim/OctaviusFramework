@@ -9,6 +9,8 @@ import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.ControlState
+import org.octavius.novels.util.Converters.camelToSnakeCase
+import java.util.*
 import kotlin.reflect.KClass
 
 class EnumControl<T: Enum<*>>(

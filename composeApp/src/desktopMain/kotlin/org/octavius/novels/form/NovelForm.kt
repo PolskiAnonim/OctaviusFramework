@@ -41,9 +41,9 @@ class NovelForm(id: Int? = null) : Form() {
                     label = "Informacje o nowelce"
                 ),
                 "titles" to TextListControl("titles", "novels", "Tytuły"),
-                "novelType" to TextControl("novelType", "novels", "Typ nowelki"),
-                "originalLanguage" to TextControl("originalLanguage", "novels", "Język oryginału"),
-                "status" to EnumControl("status", "novels", "Status czytania", NovelStatus::class),
+                "novelType" to TextControl("novel_type", "novels", "Typ nowelki"),
+                "originalLanguage" to TextControl("original_language", "novels", "Język oryginału"),
+                "status" to EnumControl("status", "novels", "Status czytania", NovelStatus::class, required = true),
                 // Sekcja tomów (widoczna tylko dla określonych statusów)
                 "volumesSection" to SectionControl(
                     ctrls = listOf("volumes", "translatedVolumes", "originalCompleted"),
@@ -60,12 +60,50 @@ class NovelForm(id: Int? = null) : Form() {
                         )
                     )
                 ),
-                "volumes" to IntegerControl("volumes", "novelVolumes", "Liczba tomów"),
-                "translatedVolumes" to IntegerControl("translatedVolumes", "novelVolumes", "Przetłumaczone tomy"),
-                "originalCompleted" to BooleanControl("originalCompleted", "novelVolumes", "Oryginał ukończony")
+                "volumes" to IntegerControl("volumes", "novel_volumes", "Liczba tomów"),
+                "translatedVolumes" to IntegerControl("translated_volumes", "novel_volumes", "Przetłumaczone tomy"),
+                "originalCompleted" to BooleanControl("original_completed", "novel_volumes", "Oryginał ukończony")
             ),
             listOf("novelInfo", "volumesSection")
         )
+    }
+
+    override fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation> {
+        val result = mutableListOf<SaveOperation>()
+
+        var novelStatus = ControlResultData(NovelStatus.notReading, false)
+        // Obsłuż tabelę główną
+        formData["novels"]?.let { data ->
+            result.add(
+                if (loadedId != null) SaveOperation.Update(
+                    "novels",
+                    data,
+                    loadedId!!
+                ) else SaveOperation.Insert("novels", data)
+            )
+            novelStatus = data["status"]!!
+        }
+
+        // Obsłuż tabelę tomów w zależności od statusu
+        formData["novel_volumes"]?.let { data ->
+            if (novelStatus.value == NovelStatus.notReading) {
+                // Zmienione na notReading
+                if (novelStatus.dirty) {
+                    result.add(SaveOperation.Delete("novel_volumes", loadedId!!))
+                } else {
+                    // Jest jak było
+                    result.add(SaveOperation.Skip("novel_volumes"))
+                }
+            } else {
+                if (novelStatus.dirty) {
+                    result.add(SaveOperation.Insert("novel_volumes", data, loadedId!!))
+                } else {
+                    result.add(SaveOperation.Update("novel_volumes", data, loadedId!!))
+                }
+            }
+        } ?: result.add(SaveOperation.Skip("novel_volumes"))
+
+        return result
     }
 
 }

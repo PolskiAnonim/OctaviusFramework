@@ -28,10 +28,10 @@ abstract class Control<T: Any>(
 
     open fun getResult(value: Any?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
         if (!isControlVisible(controls, states)) return null
-        return convertValue(value)
+        return convertToResult(value)
     }
 
-    protected open fun convertValue(value: Any?): Any? {
+    protected open fun convertToResult(value: Any?): Any? {
         return value
     }
 
