@@ -1,6 +1,5 @@
 package org.octavius.novels.component
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -8,19 +7,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.navigator.LocalNavigator
@@ -29,31 +27,29 @@ import org.octavius.novels.state.LocalState
 import org.octavius.novels.state.State
 import kotlin.reflect.KClass
 
-
 class VisibleList<T : Any>(private val clazz: KClass<T>) {
     private lateinit var state: State
     private var elementList = mutableStateOf<List<T>>(emptyList())
-    private lateinit var lazyListState: LazyListState;
+    private lateinit var lazyListState: LazyListState
+
     @Composable
     fun Service(
         tableName: String,
-        columnName: String, // Nazwa kolumny do przeszukiwania
-        searchType: String // Typ wyszukiwania: "array" (dla unnest) lub "text" (dla zwykłych kolumn)
+        columnName: String,
+        searchType: String
     ) {
         state = LocalState.current
         lazyListState = rememberLazyListState()
+
         LaunchedEffect(state.searchQuery.value) {
-            // Resetujemy stronę do 1 przy każdej zmianie wyszukiwania
             state.currentPage.value = 1
         }
 
         LaunchedEffect(state.currentPage.value, state.searchQuery.value) {
             lazyListState.scrollToItem(0,0)
             try {
-                // Bezpieczne użycie zapytania - unikamy wstrzyknięcia SQL
                 val escapedQuery = state.searchQuery.value.replace("'", "''")
 
-                // Wybór odpowiedniego typu warunku w zależności od parametrów
                 val whereClause = when (searchType) {
                     "array" -> """
                     WHERE EXISTS (
@@ -65,11 +61,11 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                     "text" -> """
                     WHERE $columnName ILIKE '%$escapedQuery%'
                 """
-                    else -> "" // Domyślnie pusty warunek
+                    else -> ""
                 }
 
                 val (elements, total) = DatabaseManager.getDataForPage(
-                    tableName, // Używamy przekazanej nazwy tabeli
+                    tableName,
                     state.currentPage.value,
                     state.pageSize,
                     whereClause,
@@ -78,7 +74,6 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                 elementList.value = elements
                 state.totalPages.value = (total + state.pageSize - 1) / state.pageSize
             } catch (e: Exception) {
-                // Obsługa błędów
                 println(e.toString())
             }
         }
@@ -96,20 +91,20 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
             items(elementList.value) { element ->
                 ListItem(element, fieldName, { navigator.AddScreen(
                     NovelEditScreen(clazz.members.find { it.name == "id" }?.call(element) as Int?)) })
-                Spacer(modifier = Modifier.height(8.dp)) // opcjonalnie, dla odstępu między elementami
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
 
     @Composable
     fun BottomBar() {
-        BottomAppBar(
-            backgroundColor = MaterialTheme.colors.primary
+        Surface(
+            color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -122,13 +117,13 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Poprzednia strona",
-                        tint = MaterialTheme.colors.onPrimary
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
 
                 Text(
                     text = "Strona ${state.currentPage.value} z ${state.totalPages.value}",
-                    color = MaterialTheme.colors.onPrimary
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
 
                 IconButton(
@@ -140,7 +135,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "Następna strona",
-                        tint = MaterialTheme.colors.onPrimary
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -149,23 +144,22 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
 
     @Composable
     fun TopBar() {
-        TopAppBar(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            backgroundColor = MaterialTheme.colors.primary
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Wyszukiwarka
-                TextField(
+                OutlinedTextField(
                     value = state.searchQuery.value,
                     onValueChange = { state.searchQuery.value = it },
-                    modifier = Modifier
-                        .weight(1f),
+                    modifier = Modifier.weight(1f),
                     placeholder = { Text("Szukaj...") },
                     leadingIcon = {
                         Icon(
@@ -186,8 +180,9 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                         }
                     },
                     singleLine = true,
-                    colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = MaterialTheme.colors.surface
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
 
@@ -199,7 +194,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Dodaj",
-                        tint = MaterialTheme.colors.onPrimary
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -208,59 +203,66 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
 
     @Composable
     fun ListItem(data: T, fieldName: String, onNavigate: () -> Unit) {
-        Column(
+        ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
-                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(8.dp)
         ) {
             val property = clazz.members.find { it.name == fieldName }
             property?.let { member ->
                 when (val value = member.call(data)) {
                     is List<*> -> {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Tytuł:",
-                                modifier = Modifier.padding(4.dp),
-                                style = MaterialTheme.typography.subtitle1
+                                style = MaterialTheme.typography.titleMedium
                             )
+
                             // Przycisk nawigacyjny
-                            IconButton(onClick = onNavigate) {
+                            FilledTonalButton(onClick = onNavigate) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = "Przejdź dalej"
                                 )
                             }
                         }
-                        value.forEach { item ->
-                            SelectionContainer {
-                                Text(
-                                    text = item.toString(),
-                                    modifier = Modifier.padding(start = 12.dp, top = 2.dp, bottom = 2.dp),
-                                    style = MaterialTheme.typography.body2
-                                )
+
+                        Column(modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)) {
+                            value.forEach { item ->
+                                SelectionContainer {
+                                    Text(
+                                        text = item.toString(),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(vertical = 2.dp)
+                                    )
+                                }
                             }
                         }
                     }
                     else -> {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             SelectionContainer {
                                 Text(
                                     text = "$fieldName: $value",
-                                    modifier = Modifier.padding(4.dp),
-                                    style = MaterialTheme.typography.body1
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
                             }
+
                             // Przycisk nawigacyjny
-                            IconButton(onClick = onNavigate) {
+                            FilledTonalButton(onClick = onNavigate) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = "Przejdź dalej"

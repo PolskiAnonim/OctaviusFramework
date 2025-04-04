@@ -33,6 +33,12 @@ class TextControl(
         val state = states[controlName] as ControlState<String>
         state.let { ctrlState ->
             Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = label ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                )
+
                 OutlinedTextField(
                     value = ctrlState.value.value ?: "",
                     onValueChange = {
@@ -40,9 +46,7 @@ class TextControl(
                         ctrlState.dirty.value = true
                         ctrlState.touched.value = true
                     },
-                    label = { Text(label ?: "") },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    isError = ctrlState.error.value != null,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp),
                     singleLine = true
                 )
 
@@ -50,12 +54,11 @@ class TextControl(
                     Text(
                         text = ctrlState.error.value ?: "",
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 16.dp)
                     )
                 }
             }
         }
     }
-
 }

@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.ControlState
-import org.postgresql.jdbc.PgArray
 
 class TextListControl(
     fieldName: String?,
@@ -38,11 +37,11 @@ class TextListControl(
             var currentList by remember { mutableStateOf(ctrlState.value.value ?: listOf("")) }
             var newItemText by remember { mutableStateOf("") }
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 Text(
                     text = label ?: "",
-                    style = MaterialTheme.typography.displayMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
                 )
 
                 LazyColumn(
@@ -63,7 +62,7 @@ class TextListControl(
                                     ctrlState.dirty.value = true
                                     ctrlState.touched.value = true
                                 },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).padding(end = 8.dp),
                                 singleLine = true
                             )
 
@@ -80,7 +79,8 @@ class TextListControl(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Usuń"
+                                        contentDescription = "Usuń",
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }
@@ -88,19 +88,20 @@ class TextListControl(
                     }
                 }
 
+                // Pole do dodawania nowego tytułu
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
                         value = newItemText,
                         onValueChange = { newItemText = it },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).padding(end = 8.dp),
                         placeholder = { Text("Dodaj nowy element") },
                         singleLine = true
                     )
 
-                    IconButton(
+                    FilledTonalButton(
                         onClick = {
                             if (newItemText.isNotBlank()) {
                                 val updatedList = currentList.toMutableList()
@@ -119,26 +120,7 @@ class TextListControl(
                         )
                     }
                 }
-
-                if (ctrlState.error.value != null) {
-                    Text(
-                        text = ctrlState.error.value ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
-                }
             }
-        }
-    }
-
-    override fun convertValue(value: Any): Any? {
-        // Obsługa konwersji z tablicy SQL do listy String
-        @Suppress("UNCHECKED_CAST")
-        return when (value) {
-            is Array<*> -> value.mapNotNull { it?.toString() }
-            is List<*> -> value.mapNotNull { it?.toString() }
-            else -> super.convertValue(value)
         }
     }
 }

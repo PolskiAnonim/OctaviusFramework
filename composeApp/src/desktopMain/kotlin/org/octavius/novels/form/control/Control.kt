@@ -46,9 +46,6 @@ abstract class Control<T: Any>(
                     }
                     ComparisonType.NotEquals -> {
                         // Sprawdź czy wartość kontrolki, od której zależy, jest różna od podanej
-                        println(dependentValue)
-                        println(dependency.value)
-                        println(dependentValue == dependency.value)
                         if (dependentValue == dependency.value) return false
                     }
                     ComparisonType.Equals -> {

@@ -1,10 +1,9 @@
 package org.octavius.novels.form.control.type
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
@@ -35,50 +34,62 @@ class EnumControl<T: Enum<*>>(
             var expanded by remember { mutableStateOf(false) }
             val options = enumClass.java.enumConstants
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 Text(
                     text = label ?: "",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                 )
 
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth()
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        text = ctrlState.value.value?.let { value ->
-                            enumClass.members.firstOrNull { it.name == "toDisplayString" }
-                                ?.call(value) as String } ?: "Wybierz opcję"
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    options.forEach { enumOption ->
-                        DropdownMenuItem(
-                            onClick = {
-                                ctrlState.value.value = enumOption
-                                ctrlState.dirty.value = true
-                                ctrlState.touched.value = true
-                                expanded = false
-                            },
-                            text = { Text(enumClass.members.firstOrNull { it.name == "toDisplayString" }
-                                ?.call(enumOption) as String) }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        // Tekst wartości
+                        Text(
+                            text = ctrlState.value.value?.let { value ->
+                                enumClass.members.firstOrNull { it.name == "toDisplayString" }
+                                    ?.call(value) as String
+                            } ?: "Wybierz opcję",
+                            style = MaterialTheme.typography.bodyLarge
                         )
+
+                        // Menedżer wyskakującego menu
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            options.forEach { enumOption ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(enumClass.members.firstOrNull { it.name == "toDisplayString" }
+                                            ?.call(enumOption) as String)
+                                    },
+                                    onClick = {
+                                        ctrlState.value.value = enumOption
+                                        ctrlState.dirty.value = true
+                                        ctrlState.touched.value = true
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
 
-                if (ctrlState.error.value != null) {
-                    Text(
-                        text = ctrlState.error.value ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
+                // Przycisk rozwijania menu
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Text("Wybierz status")
                 }
             }
         }

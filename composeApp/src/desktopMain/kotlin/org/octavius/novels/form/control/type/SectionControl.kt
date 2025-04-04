@@ -4,12 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,61 +31,81 @@ class SectionControl(
 
     @Composable
     override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
-        // Stan zwinięcia/rozwinięcia sekcji
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Nagłówek sekcji z możliwością zwijania
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(8.dp)
-                    .clickable(enabled = collapsible) { expanded.value = !expanded.value },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = label ?: "",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+        ElevatedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Nagłówek sekcji
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = collapsible) { expanded.value = !expanded.value },
+                    color = MaterialTheme.colorScheme.primary
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = label ?: "",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
 
-                if (collapsible) {
-                    Icon(
-                        imageVector = if (expanded.value) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (expanded.value) "Zwiń" else "Rozwiń",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            // Zawartość sekcji (jeśli rozwinięta)
-            AnimatedVisibility(visible = expanded.value) {
-                // Logika układu w kolumnach
-                if (columns > 1) {
-                    // Podziel kontrolki na grupy według liczby kolumn
-                    val controlGroups = ctrls.chunked(ctrls.size / columns + if (ctrls.size % columns > 0) 1 else 0)
-
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        controlGroups.forEach { group ->
-                            Column(modifier = Modifier.weight(1f)) {
-                                group.forEach { ctrlName ->
-                                    controls[ctrlName]?.let { control ->
-                                        control.render(ctrlName,controls, states)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                    }
-                                }
-                            }
+                        if (collapsible) {
+                            Icon(
+                                imageVector = if (expanded.value) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (expanded.value) "Zwiń" else "Rozwiń",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                     }
-                } else {
-                    // Standardowy układ jednokolumnowy
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        ctrls.forEach { ctrlName ->
-                            controls[ctrlName]?.let { control ->
-                                control.render(ctrlName,controls, states)
-                                Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Zawartość sekcji
+                AnimatedVisibility(visible = expanded.value) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            if (columns > 1) {
+                                val controlGroups = ctrls.chunked(ctrls.size / columns + if (ctrls.size % columns > 0) 1 else 0)
+
+                                Row(modifier = Modifier.fillMaxWidth()) {
+                                    controlGroups.forEach { group ->
+                                        Column(modifier = Modifier
+                                            .weight(1f)
+                                            .padding(horizontal = 4.dp)) {
+                                            group.forEach { ctrlName ->
+                                                controls[ctrlName]?.let { control ->
+                                                    control.render(ctrlName, controls, states)
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    ctrls.forEach { ctrlName ->
+                                        controls[ctrlName]?.let { control ->
+                                            control.render(ctrlName, controls, states)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

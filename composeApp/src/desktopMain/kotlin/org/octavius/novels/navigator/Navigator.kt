@@ -5,23 +5,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 class Navigator {
-    private val stack= mutableStateListOf<Screen>()
+    private val stack = mutableStateListOf<Screen>()
 
     @Composable
     fun DisplayLast() {
@@ -49,9 +44,9 @@ class Navigator {
 
     @Composable
     fun NavigationBar() {
-        TopAppBar(
+        Surface(
             modifier = Modifier.height(56.dp),
-            backgroundColor = MaterialTheme.colors.primary
+            color = MaterialTheme.colorScheme.primary
         ) {
             Row(
                 modifier = Modifier.fillMaxSize(),
@@ -66,16 +61,12 @@ class Navigator {
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colors.onPrimary
+                            contentDescription = "Wstecz",
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-
                 }
             }
         }
     }
 }
-
-
-

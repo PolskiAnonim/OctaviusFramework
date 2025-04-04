@@ -1,11 +1,7 @@
 package org.octavius.novels.form.control.type
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,23 +29,32 @@ class BooleanControl(
     override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         val state = states[controlName] as ControlState<Boolean>
         state.let { ctrlState ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
             ) {
-                Checkbox(
-                    checked = ctrlState.value.value ?: false,
-                    onCheckedChange = {
-                        ctrlState.value.value = it
-                        ctrlState.dirty.value = true
-                        ctrlState.touched.value = true
-                    }
-                )
-                Text(
-                    text = label ?: "",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp, horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = ctrlState.value.value ?: false,
+                        onCheckedChange = {
+                            ctrlState.value.value = it
+                            ctrlState.dirty.value = true
+                            ctrlState.touched.value = true
+                        }
+                    )
+
+                    Text(
+                        text = label ?: "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
         }
     }

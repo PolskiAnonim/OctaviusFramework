@@ -1,12 +1,8 @@
 package org.octavius.novels.form.control.type
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,7 +32,13 @@ class IntegerControl(
         state.let { ctrlState ->
             val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Text(
+                    text = label ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                )
+
                 OutlinedTextField(
                     value = textValue,
                     onValueChange = { newValue ->
@@ -53,8 +55,7 @@ class IntegerControl(
                         ctrlState.dirty.value = true
                         ctrlState.touched.value = true
                     },
-                    label = { Text(label ?: "") },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = ctrlState.error.value != null,
                     singleLine = true
@@ -64,8 +65,8 @@ class IntegerControl(
                     Text(
                         text = ctrlState.error.value ?: "",
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.displayMedium,
-                        modifier = Modifier.padding(start = 16.dp)
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
                     )
                 }
             }

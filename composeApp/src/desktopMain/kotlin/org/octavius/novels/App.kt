@@ -9,7 +9,7 @@ import org.octavius.novels.screens.MainScreen
 
 @Composable
 fun App() {
-    NovelsTheme {
+    NovelsTheme(darkTheme = false) { // Ustaw false dla jasnego motywu
         CompositionLocalProvider(LocalState provides State()) {
             MainScreen.Content()
         }
