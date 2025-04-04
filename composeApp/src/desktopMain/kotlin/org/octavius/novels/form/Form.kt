@@ -32,7 +32,7 @@ abstract class Form {
         for ((controlName, control) in formSchema.controls) {
             if (control.fieldName != null && control.tableName != null) {
                 val columnName = camelToSnakeCase(control.fieldName)
-                val tableName = control.tableName
+                val tableName = camelToSnakeCase(control.tableName)
                 val value = data[ColumnInfo(tableName, columnName)]
                 formState[controlName] = control.setInitValue(value)
             }
