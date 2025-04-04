@@ -53,7 +53,6 @@ class IntegerControl(
                             ctrlState.error.value = "Wartość musi być liczbą całkowitą"
                         }
                         ctrlState.dirty.value = true
-                        ctrlState.touched.value = true
                     },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

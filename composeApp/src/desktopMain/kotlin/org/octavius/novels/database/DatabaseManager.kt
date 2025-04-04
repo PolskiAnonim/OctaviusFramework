@@ -180,7 +180,10 @@ object DatabaseManager {
                 for (operation in databaseOperations) {
                     when (operation) {
                         is SaveOperation.Insert -> {
-                            insertIntoTable(connection, operation)
+                            val id = insertIntoTable(connection, operation)
+                            databaseOperations.filterIsInstance<SaveOperation.Insert>().forEach { op ->
+                                op.foreignKeys.filter { it.referencedTable == operation.tableName }.forEach { it.value = id }
+                            }
                         }
 
                         is SaveOperation.Update -> {
@@ -189,9 +192,6 @@ object DatabaseManager {
 
                         is SaveOperation.Delete -> {
                             deleteFromTable(connection, operation)
-                        }
-                        is SaveOperation.Skip -> {
-                            continue
                         }
                     }
                 }
@@ -204,18 +204,43 @@ object DatabaseManager {
         }
     }
 
-    private fun insertIntoTable(connection: Connection, operation: SaveOperation.Insert) {
-        val columns = operation.data.keys.joinToString()
-        val placeholders = operation.data.keys.joinToString { "?" }
+    private fun insertIntoTable(connection: Connection, operation: SaveOperation.Insert): Int? {
+        val dataColumns = operation.data.keys.toList()
 
-        val insertQuery = "INSERT INTO ${operation.tableName} ($columns) VALUES ($placeholders)"
+        // Dodaj kolumny kluczy obcych
+        val foreignKeyColumns = operation.foreignKeys
+            .filter { it.value != null }
+            .map { it.columnName }
+
+        val allColumns = dataColumns + foreignKeyColumns
+        val columnsString = allColumns.joinToString()
+        val placeholders = allColumns.joinToString { "?" }
+
+        val insertQuery = "INSERT INTO ${operation.tableName} ($columnsString) VALUES ($placeholders) RETURNING id"
 
         connection.prepareStatement(insertQuery).use { statement ->
+            // Ustaw parametry dla zwykłych danych
             operation.data.values.forEachIndexed { index, value ->
                 setStatementParameter(statement, index + 1, value.value)
             }
-            statement.executeQuery()
+
+            // Ustaw parametry dla kluczy obcych
+            val fkValues = operation.foreignKeys
+                .filter { it.value != null }
+                .map { it.value }
+
+            fkValues.forEachIndexed { index, value ->
+                setStatementParameter(statement, operation.data.size + index + 1, value)
+            }
+
+            statement.executeQuery().use { rs ->
+                if (rs.next()) {
+                    return rs.getInt(1)
+                }
+            }
         }
+
+        return null
     }
 
     // Metoda do aktualizacji istniejącej encji

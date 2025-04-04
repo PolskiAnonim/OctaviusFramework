@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
@@ -40,12 +41,12 @@ class BooleanControl(
                         .padding(vertical = 8.dp, horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(
-                        checked = ctrlState.value.value ?: false,
-                        onCheckedChange = {
-                            ctrlState.value.value = it
-                            ctrlState.dirty.value = true
-                            ctrlState.touched.value = true
+                    TriStateCheckbox(
+                        state = if (ctrlState.value.value != null) ToggleableState(ctrlState.value.value!!) else ToggleableState.Indeterminate,
+                        onClick = {
+                            val mapping = mapOf(null to false,false to true,true to null)
+                            ctrlState.value.value = mapping[ctrlState.value.value]
+                            updateState(ctrlState)
                         }
                     )
 

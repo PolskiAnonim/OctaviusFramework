@@ -172,8 +172,8 @@ abstract class Form {
             val fieldName = control.fieldName ?: continue
 
             val state = formState[controlName] ?: continue
-            var value = formState[controlName]?.value?.value ?: continue
-            value = control.getResult(value, formSchema.controls, formState) ?: continue
+            var value = state.value.value
+            value = control.getResult(value, formSchema.controls, formState)
 
             // Dodaj do odpowiedniej tabeli
             if (!result.containsKey(tableName)) {
@@ -191,12 +191,6 @@ abstract class Form {
     // Metoda do przetwarzania danych przed zapisem
     protected abstract fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation>
 
-    private fun validateProcessFormData(databaseOperations: List<SaveOperation>): Boolean {
-        val tables = defineTableRelations().map { it.tableName }
-        val tableOperations = databaseOperations.map { it.tableName }
-        return (tables.sorted() == tableOperations.sorted())
-    }
-
     // Metoda do zapisu formularza
     private fun saveForm(): Boolean {
         // Waliduj formularz
@@ -209,10 +203,6 @@ abstract class Form {
 
         // Przetwórz dane według logiki konkretnego formularza
         val databaseOperations = processFormData(rawFormData)
-
-        if (!validateProcessFormData(databaseOperations)) {
-            return false
-        }
 
         try {
             // Zapisz do bazy danych

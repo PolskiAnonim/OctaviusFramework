@@ -60,9 +60,9 @@ class NovelForm(id: Int? = null) : Form() {
                         )
                     )
                 ),
-                "volumes" to IntegerControl("volumes", "novel_volumes", "Liczba tomów"),
-                "translatedVolumes" to IntegerControl("translated_volumes", "novel_volumes", "Przetłumaczone tomy"),
-                "originalCompleted" to BooleanControl("original_completed", "novel_volumes", "Oryginał ukończony")
+                "volumes" to IntegerControl("volumes", "novel_volumes", "Liczba tomów", required = true),
+                "translatedVolumes" to IntegerControl("translated_volumes", "novel_volumes", "Przetłumaczone tomy", required = true),
+                "originalCompleted" to BooleanControl("original_completed", "novel_volumes", "Oryginał ukończony", required = true)
             ),
             listOf("novelInfo", "volumesSection")
         )
@@ -71,7 +71,7 @@ class NovelForm(id: Int? = null) : Form() {
     override fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation> {
         val result = mutableListOf<SaveOperation>()
 
-        var novelStatus = ControlResultData(NovelStatus.notReading, false)
+        var novelStatus = ControlResultData(NovelStatus.notReading, true)
         // Obsłuż tabelę główną
         formData["novels"]?.let { data ->
             result.add(
@@ -84,24 +84,19 @@ class NovelForm(id: Int? = null) : Form() {
             novelStatus = data["status"]!!
         }
 
-        // Obsłuż tabelę tomów w zależności od statusu
-        formData["novel_volumes"]?.let { data ->
-            if (novelStatus.value == NovelStatus.notReading) {
-                // Zmienione na notReading
-                if (novelStatus.dirty) {
-                    result.add(SaveOperation.Delete("novel_volumes", loadedId!!))
-                } else {
-                    // Jest jak było
-                    result.add(SaveOperation.Skip("novel_volumes"))
-                }
-            } else {
-                if (novelStatus.dirty) {
-                    result.add(SaveOperation.Insert("novel_volumes", data, loadedId!!))
-                } else {
-                    result.add(SaveOperation.Update("novel_volumes", data, loadedId!!))
-                }
+        if (novelStatus.value == NovelStatus.notReading) {
+            if (novelStatus.dirty && loadedId != null) {
+                result.add(SaveOperation.Delete("novel_volumes", loadedId!!))
             }
-        } ?: result.add(SaveOperation.Skip("novel_volumes"))
+        } else {
+            // Czytam
+            if (novelStatus.dirty) {
+                result.add(SaveOperation.Insert("novel_volumes", formData["novel_volumes"]!!,
+                    listOf(ForeignKey("id","novels.id", loadedId))))
+            } else {
+                result.add(SaveOperation.Update("novel_volumes", formData["novel_volumes"]!!, loadedId!!))
+            }
+        }
 
         return result
     }

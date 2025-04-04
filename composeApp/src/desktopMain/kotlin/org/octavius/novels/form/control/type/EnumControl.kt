@@ -77,7 +77,6 @@ class EnumControl<T: Enum<*>>(
                                     onClick = {
                                         ctrlState.value.value = enumOption
                                         ctrlState.dirty.value = true
-                                        ctrlState.touched.value = true
                                         expanded = false
                                     }
                                 )

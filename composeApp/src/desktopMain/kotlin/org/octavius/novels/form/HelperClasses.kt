@@ -15,7 +15,7 @@ sealed class SaveOperation {
     data class Insert(
         override val tableName: String,
         val data: Map<String, ControlResultData>,
-        val id: Int? = null
+        val foreignKeys: List<ForeignKey> = emptyList()
     ) : SaveOperation()
 
     data class Update(
@@ -28,8 +28,10 @@ sealed class SaveOperation {
         override val tableName: String,
         val id: Int
     ) : SaveOperation()
-
-    data class Skip(
-        override val tableName: String
-    ) : SaveOperation()
 }
+
+data class ForeignKey(
+    val columnName: String,
+    val referencedTable: String,  // format "tabela.kolumna"
+    var value: Int? = null
+)

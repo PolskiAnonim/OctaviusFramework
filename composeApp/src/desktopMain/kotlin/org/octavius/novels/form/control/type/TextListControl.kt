@@ -60,7 +60,6 @@ class TextListControl(
                                     currentList = updatedList
                                     ctrlState.value.value = updatedList
                                     ctrlState.dirty.value = true
-                                    ctrlState.touched.value = true
                                 },
                                 modifier = Modifier.weight(1f).padding(end = 8.dp),
                                 singleLine = true
@@ -74,7 +73,6 @@ class TextListControl(
                                         currentList = updatedList
                                         ctrlState.value.value = updatedList
                                         ctrlState.dirty.value = true
-                                        ctrlState.touched.value = true
                                     }
                                 ) {
                                     Icon(
@@ -110,7 +108,6 @@ class TextListControl(
                                 ctrlState.value.value = updatedList
                                 newItemText = ""
                                 ctrlState.dirty.value = true
-                                ctrlState.touched.value = true
                             }
                         }
                     ) {

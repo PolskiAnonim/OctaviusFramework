@@ -44,7 +44,6 @@ class TextControl(
                     onValueChange = {
                         ctrlState.value.value = it
                         ctrlState.dirty.value = true
-                        ctrlState.touched.value = true
                     },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp),
                     singleLine = true

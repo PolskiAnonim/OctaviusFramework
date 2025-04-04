@@ -12,6 +12,12 @@ abstract class Control<T: Any>(
     val dependencies: Map<String, ControlDependency<*>>?
 ) {
 
+    open fun updateState(state: ControlState<T>) {
+        if (state.value.value != state.initValue.value) {
+            state.dirty.value = true
+        }
+    }
+
     // Walidacja
     open fun validateControl(state: ControlState<*>? ,controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         if (state == null) return
