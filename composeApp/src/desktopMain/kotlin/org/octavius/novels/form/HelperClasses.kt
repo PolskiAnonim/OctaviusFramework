@@ -8,3 +8,11 @@ data class TableRelation(
 )
 
 data class ColumnInfo(val tableName: String, val fieldName: String)
+
+// SaveOperation.kt
+sealed class SaveOperation {
+    data class Insert(val data: Map<String, Any?>) : SaveOperation()
+    data class Update(val data: Map<String, Any?>) : SaveOperation()
+    data class Delete(val data: Any? = null) : SaveOperation()
+    data class Skip(val data: Any? = null) : SaveOperation()
+}

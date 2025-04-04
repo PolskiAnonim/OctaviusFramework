@@ -11,6 +11,61 @@ abstract class Control<T: Any>(
     val required: Boolean?,
     val dependencies: Map<String, ControlDependency<*>>?
 ) {
+
+    // Walidacja
+    open fun validateControl(state: ControlState<*>? ,controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        if (state == null) return
+        if (!isControlVisible(controls, states)) return
+        validate(state)
+    }
+
+    // Funkcja dla walidacji określonych kontrolek
+    protected open fun validate(state: ControlState<*>) {
+        return
+    }
+
+    // Konwersja wyniku
+
+    open fun getResult(value: Any?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
+        if (!isControlVisible(controls, states)) return null
+        return convertValue(value)
+    }
+
+    protected open fun convertValue(value: Any?): Any? {
+        return value
+    }
+
+    // Sprawdzenie czy kontrolka jest widoczna
+    private fun isControlVisible(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Boolean {
+        // Jeśli hidden jest true, zawsze ukryj
+        if (hidden == true) return false
+
+        // Sprawdź zależności
+        dependencies?.forEach { (_, dependency) ->
+            if (dependency.dependencyType != DependencyType.Visible) return@forEach
+
+            val dependentControl = controls[dependency.controlName] ?: return@forEach
+            val dependentState = states[dependency.controlName] ?: return@forEach
+            val dependentValue = dependentState.value.value
+
+            when (dependency.comparisonType) {
+                ComparisonType.OneOf -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
+                    if (dependentValue !in acceptedValues) return false
+                }
+                ComparisonType.NotEquals -> {
+                    if (dependentValue == dependency.value) return false
+                }
+                ComparisonType.Equals -> {
+                    if (dependentValue != dependency.value) return false
+                }
+            }
+        }
+
+        return true
+    }
+
     @Composable
     fun render(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         val isVisible = shouldBeVisible(controls, states)
@@ -32,7 +87,7 @@ abstract class Control<T: Any>(
         if (dependencies != null) {
             for ((_, dependency) in dependencies) {
                 val dependentControl = controls[dependency.controlName] ?: continue
-                if (dependency.dependencyType != DependencyType.Hidden) continue
+                if (dependency.dependencyType != DependencyType.Visible) continue
 
                 val dependentState = states[dependency.controlName]
                 val dependentValue = dependentState?.value?.value
@@ -89,7 +144,7 @@ data class ControlDependency<T>(
     )
 
 enum class DependencyType {
-    Hidden,
+    Visible,
     Required,
 }
 
