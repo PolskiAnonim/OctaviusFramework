@@ -2,6 +2,7 @@ package org.octavius.novels.form.control
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.Composable
+import org.octavius.novels.form.ControlState
 
 abstract class Control<T: Any>(
     val label: String?,

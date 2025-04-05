@@ -1,8 +1,8 @@
 package org.octavius.novels.form.control.type
 
 import androidx.compose.runtime.Composable
+import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlState
 
 class HiddenControl<T : Any>(fieldName: String?, tableName: String?) : Control<T>(
     label = null,

@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.database.DatabaseManager
-import org.octavius.novels.form.control.ControlState
 import org.octavius.novels.navigator.LocalNavigator
 import org.octavius.novels.navigator.Screen
 
