@@ -1,7 +1,6 @@
 package org.octavius.novels.form.control.type
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -30,7 +29,11 @@ class SectionControl(
 ) : Control<Unit>(label, null, null, hidden, required, dependencies) {
 
     @Composable
-    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    override fun display(
+        controlState: ControlState<Unit>?,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(
@@ -90,7 +93,7 @@ class SectionControl(
                                             .padding(horizontal = 4.dp)) {
                                             group.forEach { ctrlName ->
                                                 controls[ctrlName]?.let { control ->
-                                                    control.render(ctrlName, controls, states)
+                                                    control.render(states[ctrlName], controls, states)
                                                     Spacer(modifier = Modifier.height(8.dp))
                                                 }
                                             }
@@ -101,7 +104,7 @@ class SectionControl(
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     ctrls.forEach { ctrlName ->
                                         controls[ctrlName]?.let { control ->
-                                            control.render(ctrlName, controls, states)
+                                            control.render(states[ctrlName], controls, states)
                                             Spacer(modifier = Modifier.height(12.dp))
                                         }
                                     }

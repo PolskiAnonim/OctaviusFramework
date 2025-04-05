@@ -29,9 +29,12 @@ class TextControl(
     dependencies
 ) {
     @Composable
-    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
-        val state = states[controlName] as ControlState<String>
-        state.let { ctrlState ->
+    override fun display(
+        controlState: ControlState<String>?,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
+        controlState!!.let { ctrlState ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = label ?: "",

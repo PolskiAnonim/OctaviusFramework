@@ -4,10 +4,10 @@ import java.util.*
 
 
 object Converters {
-    fun snakeToCamelCase(snakeStr: String): String {
+    fun snakeToCamelCase(snakeStr: String, firstLarge: Boolean = false): String {
         return snakeStr.split('_')
             .mapIndexed { index, word ->
-                if (index == 0) {
+                if (index == 0 && !firstLarge) {
                     word.lowercase()
                 } else {
                     word.lowercase()

@@ -5,8 +5,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.database.DatabaseManager
@@ -66,7 +69,7 @@ abstract class Form : Screen {
                 .verticalScroll(scrollState) // Dodajemy przewijanie pionowe
         ) {
             formSchema.order.forEach {
-                formSchema.controls[it]?.render(it, formSchema.controls, formState)
+                formSchema.controls[it]?.render(formState[it], formSchema.controls, formState)
             }
 
             // Przyciski akcji na dole formularza

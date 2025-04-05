@@ -1,7 +1,7 @@
 package org.octavius.novels.state
 
-import androidx.compose.runtime.*
-import org.octavius.novels.domain.Novel
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableStateOf
 
 val LocalState = compositionLocalOf<State> { error("No State found!") }
 

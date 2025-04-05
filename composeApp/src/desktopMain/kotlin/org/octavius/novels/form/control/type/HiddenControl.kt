@@ -13,7 +13,11 @@ class HiddenControl<T : Any>(fieldName: String?, tableName: String?) : Control<T
     dependencies = null
 ) {
     @Composable
-    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    override fun display(
+        controlState: ControlState<T>?,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
         //Brak widocznej zawartości
     }
 }

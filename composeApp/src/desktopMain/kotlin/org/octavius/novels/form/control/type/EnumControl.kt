@@ -28,9 +28,12 @@ class EnumControl<T: Enum<*>>(
     dependencies
 ) {
     @Composable
-    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
-        val state = states[controlName] as ControlState<T>
-        state.let { ctrlState ->
+    override fun display(
+        controlState: ControlState<T>?,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
+        controlState!!.let { ctrlState ->
             var expanded by remember { mutableStateOf(false) }
             val options = enumClass.java.enumConstants
 
@@ -88,7 +91,7 @@ class EnumControl<T: Enum<*>>(
                     onClick = { expanded = true },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
-                    Text("Wybierz status")
+                    Text("Wybierz opcję")
                 }
             }
         }

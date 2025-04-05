@@ -1,5 +1,6 @@
 package org.octavius.novels.form
 
+import org.octavius.novels.domain.NovelLanguage
 import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.ControlDependency
@@ -32,24 +33,24 @@ class NovelForm(id: Int? = null) : Form() {
                     ctrls = listOf("titles", "novelType", "originalLanguage", "status"),
                     collapsible = false,
                     initiallyExpanded = true,
-                    columns = 1,
+                    columns = 2,
                     label = "Informacje o nowelce"
                 ),
                 "titles" to TextListControl("titles", "novels", "Tytuły"),
                 "novelType" to TextControl("novel_type", "novels", "Typ nowelki"),
-                "originalLanguage" to TextControl("original_language", "novels", "Język oryginału"),
+                "originalLanguage" to EnumControl("original_language", "novels", "Język oryginału", NovelLanguage::class, required = true),
                 "status" to EnumControl("status", "novels", "Status czytania", NovelStatus::class, required = true),
                 // Sekcja tomów (widoczna tylko dla określonych statusów)
                 "volumesSection" to SectionControl(
                     ctrls = listOf("volumes", "translatedVolumes", "originalCompleted"),
                     collapsible = true,
                     initiallyExpanded = true,
-                    columns = 1,
+                    columns = 2,
                     label = "Informacje o tomach",
                     dependencies = mapOf(
                         "statusDependency" to ControlDependency(
                             controlName = "status",
-                            value = NovelStatus.notReading,
+                            value = NovelStatus.NotReading,
                             dependencyType = DependencyType.Visible,
                             comparisonType = ComparisonType.NotEquals
                         )
@@ -66,7 +67,7 @@ class NovelForm(id: Int? = null) : Form() {
     override fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation> {
         val result = mutableListOf<SaveOperation>()
 
-        var novelStatus = ControlResultData(NovelStatus.notReading, true)
+        var novelStatus = ControlResultData(NovelStatus.NotReading, true)
         // Obsłuż tabelę główną
         formData["novels"]?.let { data ->
             result.add(
@@ -79,7 +80,7 @@ class NovelForm(id: Int? = null) : Form() {
             novelStatus = data["status"]!!
         }
 
-        if (novelStatus.value == NovelStatus.notReading) {
+        if (novelStatus.value == NovelStatus.NotReading) {
             if (novelStatus.dirty && loadedId != null) {
                 result.add(SaveOperation.Delete("novel_volumes", loadedId!!))
             }

@@ -1,6 +1,5 @@
 package org.octavius.novels.database
 
-import androidx.compose.runtime.compositionLocalOf
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.octavius.novels.domain.NovelStatus
@@ -9,8 +8,6 @@ import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
 import org.octavius.novels.util.Converters.camelToSnakeCase
 import org.octavius.novels.util.Converters.snakeToCamelCase
-import org.postgresql.jdbc.PgConnection
-import org.postgresql.jdbc.PgStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.Types
@@ -131,24 +128,30 @@ object DatabaseManager {
                             val tableName = metaData.getTableName(i)
                             val columnType = metaData.getColumnTypeName(i)
 
-                            val columnValue = when (columnType) {
+                            val columnValue = when {
                                 // Obsługa tablic PostgreSQL
-                                "_varchar", "_text", "_char" -> {
+                                columnType.startsWith("_") && listOf("_varchar", "_text", "_char").contains(columnType) -> {
                                     val array = resultSet.getArray(i)
                                     if (array != null) {
                                         (array.array as Array<*>).filterNotNull().map { it.toString() }
                                     } else null
                                 }
-                                // Obsługa typów enum
-                                "novel_status" -> {
-                                    val statusStr = resultSet.getString(i)
-                                    if (statusStr != null) {
+                                // Obsługa typów enum zaczynających się od "novel_"
+                                columnType.startsWith("novel_") -> {
+                                    val resStr = resultSet.getString(i)
+                                    if (resStr != null) {
                                         // Konwersja z formatu PostgreSQL do Kotlin
-                                        val normalizedStatus = snakeToCamelCase(statusStr)
+                                        val enumClassName = snakeToCamelCase(columnType, true)
+
                                         try {
-                                            NovelStatus.valueOf(normalizedStatus)
-                                        } catch (e: IllegalArgumentException) {
-                                            println("Nie można przekonwertować wartości enum: $statusStr")
+                                            // Dynamiczne pobranie klasy enuma i wywołanie valueOf
+                                            val enumClass = Class.forName("org.octavius.novels.domain.$enumClassName")
+                                            val valueOfMethod = enumClass.getMethod("valueOf", String::class.java)
+                                            val normalizedValue = snakeToCamelCase(resStr, true)
+                                            valueOfMethod.invoke(null, normalizedValue)
+                                        } catch (e: Exception) {
+                                            println("Nie można przekonwertować wartości enum: $resStr dla typu $columnType")
+                                            e.printStackTrace()
                                             null
                                         }
                                     } else null
@@ -291,9 +294,9 @@ object DatabaseManager {
                 statement.setArray(index, array)
             }
             // Enums
-            is NovelStatus -> {
+            is Enum<*> -> {
                 val pgObject = org.postgresql.util.PGobject()
-                pgObject.type = "novel_status"
+                pgObject.type = camelToSnakeCase(value.javaClass.simpleName)
                 pgObject.value = camelToSnakeCase(value.name).uppercase()
                 statement.setObject(index, pgObject)
             }

@@ -1,8 +1,12 @@
 package org.octavius.novels.form.control.type
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,9 +31,12 @@ class IntegerControl(
     dependencies
 ) {
     @Composable
-    override fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
-        val state = states[controlName] as ControlState<Int>
-        state.let { ctrlState ->
+    override fun display(
+        controlState: ControlState<Int>?,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
+        controlState!!.let { ctrlState ->
             val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {

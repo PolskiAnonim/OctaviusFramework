@@ -73,16 +73,17 @@ abstract class Control<T: Any>(
     }
 
     @Composable
-    fun render(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    fun render(controlState: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         val isVisible = shouldBeVisible(controls, states)
 
         AnimatedVisibility(visible = isVisible) {
-            display(controlName, controls, states)
+            @Suppress("UNCHECKED_CAST")
+            display(controlState as ControlState<T>?, controls, states)
         }
     }
 
     @Composable
-    protected abstract fun display(controlName: String, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>)
+    protected abstract fun display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>)
 
     @Composable
     private fun shouldBeVisible(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Boolean {
