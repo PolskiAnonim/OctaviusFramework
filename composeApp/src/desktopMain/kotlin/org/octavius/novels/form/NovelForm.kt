@@ -9,13 +9,9 @@ import org.octavius.novels.form.control.type.*
 class NovelForm(id: Int? = null) : Form() {
 
     init {
-        initialize(id)
-    }
-
-    private fun initialize(novelId: Int?) {
-        if (novelId != null) {
+        if (id != null) {
             // Ładowanie istniejącej nowelki
-            loadData(novelId)
+            loadData(id)
         } else {
             // Inicjalizacja formularza dla nowej nowelki
             clearForm()
@@ -28,7 +24,6 @@ class NovelForm(id: Int? = null) : Form() {
             TableRelation("novel_volumes", "novels.id = novel_volumes.id") // Powiązana tabela
         )
     }
-
 
     override fun createSchema(): FormControls {
         return FormControls(
@@ -100,5 +95,4 @@ class NovelForm(id: Int? = null) : Form() {
 
         return result
     }
-
 }

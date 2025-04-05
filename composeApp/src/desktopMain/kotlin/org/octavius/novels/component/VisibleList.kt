@@ -21,8 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.database.DatabaseManager
+import org.octavius.novels.form.NovelForm
 import org.octavius.novels.navigator.LocalNavigator
-import org.octavius.novels.screens.NovelEditScreen
 import org.octavius.novels.state.LocalState
 import org.octavius.novels.state.State
 import kotlin.reflect.KClass
@@ -89,8 +89,11 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
             state = lazyListState
         ) {
             items(elementList.value) { element ->
-                ListItem(element, fieldName, { navigator.AddScreen(
-                    NovelEditScreen(clazz.members.find { it.name == "id" }?.call(element) as Int?)) })
+                ListItem(element, fieldName) {
+                    navigator.AddScreen(
+                        NovelForm(clazz.members.find { it.name == "id" }?.call(element) as Int?)
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -189,7 +192,7 @@ class VisibleList<T : Any>(private val clazz: KClass<T>) {
 
                 // Przycisk dodawania
                 IconButton(
-                    onClick = { navigator.AddScreen(NovelEditScreen()) },
+                    onClick = { navigator.AddScreen(NovelForm()) },
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Icon(

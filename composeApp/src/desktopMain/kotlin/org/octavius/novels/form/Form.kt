@@ -9,12 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.form.control.ControlState
 import org.octavius.novels.navigator.LocalNavigator
+import org.octavius.novels.navigator.Screen
 
-abstract class Form {
+abstract class Form : Screen {
     // Schema and state
     private val formSchema: FormControls by lazy {
         createSchema()
@@ -31,7 +31,6 @@ abstract class Form {
     protected var loadedId: Int? = null
 
     fun loadData(id: Int) {
-
         val tableRelations = defineTableRelations()
         val data = DatabaseManager.getEntityWithRelations(id, tableRelations)
 
@@ -53,97 +52,64 @@ abstract class Form {
         }
     }
 
-    // Snackbar
-
-    private val snackbarHostState = SnackbarHostState()
-    private val showSnackbar = mutableStateOf(false)
-    private val snackbarMessage = mutableStateOf("")
-
     // Display
-
     @Composable
-    fun display() {
+    override fun Content(paddingValues: PaddingValues) {
         val navigator = LocalNavigator.current
         val scrollState = rememberScrollState()
 
-        val scope = rememberCoroutineScope()
-
-        LaunchedEffect(showSnackbar.value) {
-            if (showSnackbar.value) {
-                scope.launch {
-                    snackbarHostState.showSnackbar(message = snackbarMessage.value)
-                    showSnackbar.value = false
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .verticalScroll(scrollState) // Dodajemy przewijanie pionowe
+        ) {
+            formSchema.order.forEach {
+                formSchema.controls[it]?.render(it, formSchema.controls, formState)
             }
-        }
 
-        Scaffold(
-            bottomBar = {
-                BottomAppBar {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        OutlinedButton(
-                            onClick = { navigator.removeScreen() }
-                        ) {
-                            Text("Anuluj")
-                        }
+            // Przyciski akcji na dole formularza
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                OutlinedButton(
+                    onClick = { navigator.removeScreen() }
+                ) {
+                    Text("Anuluj")
+                }
 
-                        Button(
-                            onClick = {
-                                try {
-                                    val success = saveForm()
-                                    if (success) {
-                                        snackbarMessage.value = "Formularz został zapisany pomyślnie"
-                                        showSnackbar.value = true
-                                        // Wróć do poprzedniego ekranu po zapisie
-                                        navigator.removeScreen()
-                                    } else {
-                                        snackbarMessage.value  = "Formularz zawiera błędy"
-                                        showSnackbar.value = true
-                                    }
-                                } catch (e: Exception) {
-                                    snackbarMessage.value = "Wystąpił błąd: ${e.message}"
-                                    showSnackbar.value = true
-                                }
+                Button(
+                    onClick = {
+                        try {
+                            val success = saveForm()
+                            if (success) {
+                                navigator.showSnackbar("Formularz został zapisany pomyślnie")
+                                // Wróć do poprzedniego ekranu po zapisie
+                                navigator.removeScreen()
+                            } else {
+                                navigator.showSnackbar("Formularz zawiera błędy")
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Save,
-                                contentDescription = "Zapisz",
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text("Zapisz")
+                        } catch (e: Exception) {
+                            navigator.showSnackbar("Wystąpił błąd: ${e.message}")
                         }
                     }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Save,
+                        contentDescription = "Zapisz",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Zapisz")
                 }
-            },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .verticalScroll(scrollState) // Dodajemy przewijanie pionowe
-            ) {
-                formSchema.order.forEach {
-                    formSchema.controls[it]?.render(it, formSchema.controls, formState)
-                }
-
-                // Dodajemy dodatkowy odstęp na dole, aby zapewnić, że dolne elementy
-                // nie będą zasłonięte przez dolny pasek
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 
     // Validate
-
-    // Walidacja formularza
     private fun validateForm(): Boolean {
         var isValid = true
 
@@ -161,8 +127,6 @@ abstract class Form {
     }
 
     // Save
-
-    // Metoda zbierająca dane z formularza do zapisu
     private fun collectFormData(): Map<String, Map<String, ControlResultData>> {
         val result = mutableMapOf<String, MutableMap<String, Any?>>()
 
@@ -213,5 +177,4 @@ abstract class Form {
             return false
         }
     }
-
 }

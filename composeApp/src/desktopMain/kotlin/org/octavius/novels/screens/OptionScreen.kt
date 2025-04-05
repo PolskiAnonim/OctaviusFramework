@@ -1,8 +1,11 @@
+// NovelMainScreen.kt
 package org.octavius.novels.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -12,11 +15,17 @@ import androidx.compose.ui.Modifier
 import org.octavius.novels.navigator.LocalNavigator
 import org.octavius.novels.navigator.Screen
 
-class NovelMainScreen: Screen {
+class OptionScreen: Screen {
     @Composable
-    override fun Content() {
+    override fun Content(paddingValues: PaddingValues) {
         val navigator = LocalNavigator.current
-        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background),contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(MaterialTheme.colors.background),
+            contentAlignment = Alignment.Center
+        ) {
             Button(onClick = { navigator.AddScreen(NovelListScreen) }) {
                 Text("Novels")
             }

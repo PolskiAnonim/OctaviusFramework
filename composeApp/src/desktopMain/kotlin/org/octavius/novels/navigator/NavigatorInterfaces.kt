@@ -1,5 +1,6 @@
 package org.octavius.novels.navigator
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.painter.Painter
@@ -9,7 +10,7 @@ val LocalNavigator = compositionLocalOf<Navigator> { error("No Navigator found!"
 //Screen for Navigator
 interface Screen {
     @Composable
-    fun Content()
+    fun Content(paddingValues: PaddingValues)
 }
 
 //Tabs for TabNavigator

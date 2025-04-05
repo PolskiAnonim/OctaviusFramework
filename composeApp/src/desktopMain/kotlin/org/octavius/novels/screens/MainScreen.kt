@@ -11,7 +11,7 @@ object MainScreen {
     var navigator: Navigator = Navigator()
 
     init {
-        navigator.AddScreen(NovelMainScreen())
+        navigator.AddScreen(OptionScreen())
     }
 
     @Composable

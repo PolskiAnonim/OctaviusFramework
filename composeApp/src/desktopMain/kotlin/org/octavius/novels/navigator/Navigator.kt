@@ -1,7 +1,6 @@
 package org.octavius.novels.navigator
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -11,20 +10,48 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 class Navigator {
     private val stack = mutableStateListOf<Screen>()
 
+    // Obsługa Snackbara
+    private val _snackbarMessage = mutableStateOf("")
+    private val _showSnackbar = mutableStateOf(false)
+
+    fun showSnackbar(message: String) {
+        _snackbarMessage.value = message
+        _showSnackbar.value = true
+    }
+
     @Composable
     fun DisplayLast() {
+        val snackbarHostState = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
+
+        // Pokaż snackbar, jeśli _showSnackbar jest true
+        if (_showSnackbar.value) {
+            scope.launch {
+                snackbarHostState.showSnackbar(message = _snackbarMessage.value)
+                _showSnackbar.value = false
+            }
+        }
+
         // Provide the current navigator instance if needed
         CompositionLocalProvider(LocalNavigator provides this) {
-            Column {
-                Row { NavigationBar() }
-                Row { stack.last().Content() }
+            Scaffold(
+                topBar = { NavigationBar() },
+                snackbarHost = { SnackbarHost(snackbarHostState) }
+            ) { paddingValues ->
+                if (stack.isNotEmpty()) {
+                    stack.last().Content(paddingValues)
+                }
             }
         }
     }
