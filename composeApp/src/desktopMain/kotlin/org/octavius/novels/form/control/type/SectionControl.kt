@@ -31,6 +31,11 @@ class SectionControl(
 ) : Control<Unit>(label, null, null, hidden, required, dependencies) {
     override val validator: ControlValidator<Unit> = DefaultValidator()
 
+    override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
+        ctrls.forEach { childControlName ->
+            controls[childControlName]?.parentControl = parentControlName
+        }
+    }
 
     @Composable
     override fun display(

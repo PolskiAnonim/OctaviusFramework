@@ -11,10 +11,17 @@ abstract class Control<T: Any>(
     val tableName: String?,
     val hidden: Boolean?,
     val required: Boolean?,
-    val dependencies: Map<String, ControlDependency<*>>?
+    val dependencies: Map<String, ControlDependency<*>>?,
+    var parentControl: String? = null // Kontrolka nadrzędna
 ) {
     // Tworzymy validator jako lazy property
     protected abstract val validator: ControlValidator<T>
+
+    // Funkcja do ustawienia zależności parentCtrl - wykorzystywana gdy kontrolka powinna zależeć od widoczności
+    // kontrolki nadrzędnej
+    open fun setupParentRelationships(parentControlName: String ,controls: Map<String, Control<*>>) {
+        return // Domyślnie brak działania
+    }
 
     open fun updateState(state: ControlState<T>) {
         if (state.value.value != state.initValue.value) {
@@ -24,9 +31,9 @@ abstract class Control<T: Any>(
 
     // Walidacja
     // Uproszczona metoda walidacji
-    open fun validateControl(state: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    open fun validateControl(controlName: String, state: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         if (state == null) return
-        validator.validate(state, this, controls, states)
+        validator.validate(controlName, state, this, controls, states)
     }
 
 

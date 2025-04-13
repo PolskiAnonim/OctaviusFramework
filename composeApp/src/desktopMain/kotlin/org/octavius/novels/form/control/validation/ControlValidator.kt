@@ -4,6 +4,7 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.DependencyType
+import org.octavius.novels.form.control.type.SectionControl
 
 abstract class ControlValidator<T: Any> {
     // Sprawdzenie czy kontrolka jest widoczna
@@ -12,6 +13,11 @@ abstract class ControlValidator<T: Any> {
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
     ): Boolean {
+        // Jeśli kontrolka ma rodzica, najpierw sprawdź czy rodzic jest widoczny
+        control.parentControl?.let { parentName ->
+            val parentControl = controls[parentName] ?: return false
+            if (!isControlVisible(parentControl, controls, states)) return false
+        }
         // Jeśli hidden jest true, zawsze ukryj
         if (control.hidden == true) return false
 
@@ -93,13 +99,16 @@ abstract class ControlValidator<T: Any> {
 
     // Główna metoda walidacji
     fun validate(
+        controlName: String,
         state: ControlState<*>,
         control: Control<*>,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
     ) {
         // Jeśli kontrolka nie jest widoczna, pomijamy walidację
-        if (!isControlVisible(control, controls, states)) return
+        if (!isControlVisible(control, controls, states)) {
+            return
+        }
 
         // Sprawdzamy czy pole jest wymagane
         val isRequired = isControlRequired(control, controls, states)

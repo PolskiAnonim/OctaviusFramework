@@ -13,14 +13,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.database.DatabaseManager
+import org.octavius.novels.form.control.Control
 import org.octavius.novels.navigator.LocalNavigator
 import org.octavius.novels.navigator.Screen
 
 abstract class Form : Screen {
     // Schema and state
     private val formSchema: FormControls by lazy {
-        createSchema()
+        val schema = createSchema()
+        setupParentChildRelationships(schema.controls)
+        schema
     }
+
+    private fun setupParentChildRelationships(controls: Map<String, Control<*>>) {
+        controls.forEach { control ->
+            control.value.setupParentRelationships(control.key, controls)
+        }
+    }
+
 
     protected abstract fun createSchema(): FormControls
 
@@ -118,7 +128,7 @@ abstract class Form : Screen {
         for ((controlName, control) in formSchema.controls) {
             // Pobierz stan kontrolki
             val state = formState[controlName] ?: continue
-            control.validateControl(state, formSchema.controls, formState)
+            control.validateControl(controlName, state, formSchema.controls, formState)
 
             if (state.error.value != null) {
                 isValid = false
