@@ -27,6 +27,8 @@ class EnumControl<T: Enum<*>>(
     required,
     dependencies
 ) {
+    override val validator: ControlValidator<T> = DefaultValidator()
+
     @Composable
     override fun display(
         controlState: ControlState<T>?,

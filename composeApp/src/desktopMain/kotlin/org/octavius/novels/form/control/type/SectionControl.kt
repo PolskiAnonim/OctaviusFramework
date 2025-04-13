@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.validation.ControlValidator
+import org.octavius.novels.form.control.validation.DefaultValidator
 
 class SectionControl(
     val ctrls: List<String>,
@@ -27,6 +29,8 @@ class SectionControl(
     required: Boolean? = null,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Unit>(label, null, null, hidden, required, dependencies) {
+    override val validator: ControlValidator<Unit> = DefaultValidator()
+
 
     @Composable
     override fun display(

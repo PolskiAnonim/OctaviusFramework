@@ -3,6 +3,7 @@ package org.octavius.novels.form.control
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.Composable
 import org.octavius.novels.form.ControlState
+import org.octavius.novels.form.control.validation.ControlValidator
 
 abstract class Control<T: Any>(
     val label: String?,
@@ -12,6 +13,8 @@ abstract class Control<T: Any>(
     val required: Boolean?,
     val dependencies: Map<String, ControlDependency<*>>?
 ) {
+    // Tworzymy validator jako lazy property
+    protected abstract val validator: ControlValidator<T>
 
     open fun updateState(state: ControlState<T>) {
         if (state.value.value != state.initValue.value) {
@@ -20,21 +23,16 @@ abstract class Control<T: Any>(
     }
 
     // Walidacja
-    open fun validateControl(state: ControlState<*>? ,controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    // Uproszczona metoda walidacji
+    open fun validateControl(state: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         if (state == null) return
-        if (!isControlVisible(controls, states)) return
-        validate(state)
+        validator.validate(state, this, controls, states)
     }
 
-    // Funkcja dla walidacji określonych kontrolek
-    protected open fun validate(state: ControlState<*>) {
-        return
-    }
 
     // Konwersja wyniku
-
     open fun getResult(value: Any?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
-        if (!isControlVisible(controls, states)) return null
+        if (!validator.isControlVisible(this, controls, states)) return null
         return convertToResult(value)
     }
 
@@ -42,40 +40,9 @@ abstract class Control<T: Any>(
         return value
     }
 
-    // Sprawdzenie czy kontrolka jest widoczna
-    private fun isControlVisible(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Boolean {
-        // Jeśli hidden jest true, zawsze ukryj
-        if (hidden == true) return false
-
-        // Sprawdź zależności
-        dependencies?.forEach { (_, dependency) ->
-            if (dependency.dependencyType != DependencyType.Visible) return@forEach
-
-            val dependentControl = controls[dependency.controlName] ?: return@forEach
-            val dependentState = states[dependency.controlName] ?: return@forEach
-            val dependentValue = dependentState.value.value
-
-            when (dependency.comparisonType) {
-                ComparisonType.OneOf -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
-                    if (dependentValue !in acceptedValues) return false
-                }
-                ComparisonType.NotEquals -> {
-                    if (dependentValue == dependency.value) return false
-                }
-                ComparisonType.Equals -> {
-                    if (dependentValue != dependency.value) return false
-                }
-            }
-        }
-
-        return true
-    }
-
     @Composable
     fun render(controlState: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
-        val isVisible = shouldBeVisible(controls, states)
+        val isVisible = validator.isControlVisible(this, controls, states)
 
         AnimatedVisibility(visible = isVisible) {
             @Suppress("UNCHECKED_CAST")
@@ -85,41 +52,6 @@ abstract class Control<T: Any>(
 
     @Composable
     protected abstract fun display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>)
-
-    @Composable
-    private fun shouldBeVisible(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Boolean {
-        // Jeśli hidden jest true, zawsze ukryj
-        if (hidden == true) return false
-
-        // Sprawdź zależności
-        if (dependencies != null) {
-            for ((_, dependency) in dependencies) {
-                val dependentControl = controls[dependency.controlName] ?: continue
-                if (dependency.dependencyType != DependencyType.Visible) continue
-
-                val dependentState = states[dependency.controlName]
-                val dependentValue = dependentState?.value?.value
-
-                when (dependency.comparisonType) {
-                    ComparisonType.OneOf -> {
-                        // Sprawdź czy wartość kontrolki, od której zależy, jest na liście wartości
-                        @Suppress("UNCHECKED_CAST")
-                        val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
-                        if (dependentValue !in acceptedValues) return false
-                    }
-                    ComparisonType.NotEquals -> {
-                        // Sprawdź czy wartość kontrolki, od której zależy, jest różna od podanej
-                        if (dependentValue == dependency.value) return false
-                    }
-                    ComparisonType.Equals -> {
-                        if (dependentValue != dependency.value) return false
-                    }
-                }
-            }
-        }
-
-        return true
-    }
 
     // Metoda do ustawiania wartości
     open fun setInitValue(value: Any?) : ControlState<T> {
