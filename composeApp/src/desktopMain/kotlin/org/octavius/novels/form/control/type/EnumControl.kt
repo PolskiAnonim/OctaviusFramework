@@ -1,14 +1,23 @@
 package org.octavius.novels.form.control.type
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.validation.ControlValidator
+import org.octavius.novels.form.control.validation.DefaultValidator
 import kotlin.reflect.KClass
 
 class EnumControl<T: Enum<*>>(
@@ -29,6 +38,7 @@ class EnumControl<T: Enum<*>>(
 ) {
     override val validator: ControlValidator<T> = DefaultValidator()
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun display(
         controlState: ControlState<T>?,
@@ -39,61 +49,92 @@ class EnumControl<T: Enum<*>>(
             var expanded by remember { mutableStateOf(false) }
             val options = enumClass.java.enumConstants
 
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                Text(
-                    text = label ?: "",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                )
+            // Sprawdzamy, czy kontrolka jest wymagana
+            val isRequired = validator.isControlRequired(this, controls, states)
 
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                // Label z gwiazdką jeśli pole jest wymagane
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 ) {
-                    Box(
+                    Text(
+                        text = label ?: "",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    if (isRequired) {
+                        Text(
+                            text = " *",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Pole z wybraną wartością
+                    OutlinedTextField(
+                        value = ctrlState.value.value?.let { value ->
+                            enumClass.members.firstOrNull { it.name == "toDisplayString" }
+                                ?.call(value) as String
+                        } ?: (if (!isRequired) "Brak wyboru" else "Wybierz opcję"),
+                        onValueChange = { },  // Nie pozwalamy na edycję ręczną
+                        readOnly = true,      // Pole tylko do odczytu
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        // Tekst wartości
-                        Text(
-                            text = ctrlState.value.value?.let { value ->
-                                enumClass.members.firstOrNull { it.name == "toDisplayString" }
-                                    ?.call(value) as String
-                            } ?: "Wybierz opcję",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)     // Oznacza ten element jako kotwicę dla menu
+                    )
 
-                        // Menedżer wyskakującego menu
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
-                        ) {
-                            options.forEach { enumOption ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(enumClass.members.firstOrNull { it.name == "toDisplayString" }
-                                            ?.call(enumOption) as String)
-                                    },
-                                    onClick = {
-                                        ctrlState.value.value = enumOption
-                                        updateState(ctrlState)
-                                        expanded = false
-                                    }
-                                )
-                            }
+                    // Menu z opcjami
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        // Opcja null tylko jeśli kontrolka nie jest wymagana
+                        if (!isRequired) {
+                            DropdownMenuItem(
+                                text = { Text("Brak wyboru") },
+                                onClick = {
+                                    ctrlState.value.value = null
+                                    updateState(ctrlState)
+                                    expanded = false
+                                }
+                            )
+
+                            HorizontalDivider()
+                        }
+
+                        // Standardowe opcje enum
+                        options.forEach { enumOption ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(enumClass.members.firstOrNull { it.name == "toDisplayString" }
+                                        ?.call(enumOption) as String)
+                                },
+                                onClick = {
+                                    ctrlState.value.value = enumOption
+                                    updateState(ctrlState)
+                                    expanded = false
+                                }
+                            )
                         }
                     }
                 }
 
-                // Przycisk rozwijania menu
-                Button(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                ) {
-                    Text("Wybierz opcję")
+                // Komunikat o błędzie
+                if (ctrlState.error.value != null) {
+                    Text(
+                        text = ctrlState.error.value ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
                 }
             }
         }
