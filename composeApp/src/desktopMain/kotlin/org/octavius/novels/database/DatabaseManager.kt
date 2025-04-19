@@ -271,7 +271,7 @@ object DatabaseManager {
     }
 
 
-    fun deleteFromTable(connection: Connection, operation: SaveOperation.Delete) {
+    private fun deleteFromTable(connection: Connection, operation: SaveOperation.Delete) {
         val deleteQuery = "DELETE FROM ${operation.tableName} WHERE id = ?"
         connection.prepareStatement(deleteQuery).use { statement ->
             setStatementParameter(statement, 1, operation.id)
