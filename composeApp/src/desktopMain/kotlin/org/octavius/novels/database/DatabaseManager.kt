@@ -8,8 +8,15 @@ import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
 import org.octavius.novels.util.Converters.camelToSnakeCase
 import org.octavius.novels.util.Converters.snakeToCamelCase
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.RowMapper
+import org.springframework.jdbc.core.queryForObject
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.transaction.TransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import java.sql.Connection
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.sql.Types
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
@@ -19,6 +26,8 @@ object DatabaseManager {
     private const val jdbcUrl = "jdbc:postgresql://localhost:5430/novels_games"
     private const val username = "postgres"
     private const val password = "1234"
+    private val transactionManager: DataSourceTransactionManager
+    private val jdbcTemplate: JdbcTemplate
 
     init {
         val config = HikariConfig().apply {
@@ -28,6 +37,8 @@ object DatabaseManager {
             maximumPoolSize = 10
         }
         dataSource = HikariDataSource(config)
+        jdbcTemplate = JdbcTemplate(dataSource)
+        transactionManager = DataSourceTransactionManager(dataSource)
     }
 
     private fun getConnection(): Connection = dataSource.connection
@@ -105,7 +116,6 @@ object DatabaseManager {
         val result = mutableMapOf<ColumnInfo, Any?>()
 
         // Budowanie zapytania SQL z wieloma JOIN-ami
-        // Tabela główna
         val sqlBuilder = StringBuilder("SELECT * FROM $mainTable ")
 
         // Dodawanie JOIN-ów
@@ -116,98 +126,99 @@ object DatabaseManager {
 
         sqlBuilder.append("WHERE $mainTable.id = ?")
 
-        // pobranie danych
-        getConnection().use { connection ->
-            connection.prepareStatement(sqlBuilder.toString()).use { statement ->
-                statement.setInt(1, id)
-                statement.executeQuery().use { resultSet ->
-                    if (resultSet.next()) {
-                        val metaData = resultSet.metaData
-                        for (i in 1..metaData.columnCount) {
-                            val columnName = metaData.getColumnName(i)
-                            val tableName = metaData.getTableName(i)
-                            val columnType = metaData.getColumnTypeName(i)
+        // Definiujemy mapper jako klasę wewnętrzną
+        class EntityRowMapper : RowMapper<Map<ColumnInfo, Any?>> {
+            override fun mapRow(rs: ResultSet, rowNum: Int): Map<ColumnInfo, Any?> {
+                val rowResult = mutableMapOf<ColumnInfo, Any?>()
+                val metaData = rs.metaData
 
-                            val columnValue = when {
-                                // Obsługa tablic PostgreSQL
-                                columnType.startsWith("_") && listOf("_varchar", "_text", "_char").contains(columnType) -> {
-                                    val array = resultSet.getArray(i)
-                                    if (array != null) {
-                                        (array.array as Array<*>).filterNotNull().map { it.toString() }
-                                    } else null
-                                }
-                                // Obsługa typów enum zaczynających się od "novel_"
-                                columnType.startsWith("novel_") -> {
-                                    val resStr = resultSet.getString(i)
-                                    if (resStr != null) {
-                                        // Konwersja z formatu PostgreSQL do Kotlin
-                                        val enumClassName = snakeToCamelCase(columnType, true)
+                for (i in 1..metaData.columnCount) {
+                    val columnName = metaData.getColumnName(i)
+                    val tableName = metaData.getTableName(i)
+                    val columnType = metaData.getColumnTypeName(i)
 
-                                        try {
-                                            // Dynamiczne pobranie klasy enuma i wywołanie valueOf
-                                            val enumClass = Class.forName("org.octavius.novels.domain.$enumClassName")
-                                            val valueOfMethod = enumClass.getMethod("valueOf", String::class.java)
-                                            val normalizedValue = snakeToCamelCase(resStr, true)
-                                            valueOfMethod.invoke(null, normalizedValue)
-                                        } catch (e: Exception) {
-                                            println("Nie można przekonwertować wartości enum: $resStr dla typu $columnType")
-                                            e.printStackTrace()
-                                            null
-                                        }
-                                    } else null
-                                }
-                                // Standardowa obsługa pozostałych typów
-                                else -> resultSet.getObject(i)
-                            }
-
-                            result[ColumnInfo(tableName, columnName)] = columnValue
+                    val columnValue = when {
+                        // Obsługa tablic PostgreSQL
+                        columnType.startsWith("_") && listOf("_varchar", "_text", "_char").contains(columnType) -> {
+                            val array = rs.getArray(i)
+                            if (array != null) {
+                                (array.array as Array<*>).filterNotNull().map { it.toString() }
+                            } else null
                         }
+                        // Obsługa typów enum zaczynających się od "novel_"
+                        columnType.startsWith("novel_") -> {
+                            val resStr = rs.getString(i)
+                            if (resStr != null) {
+                                // Konwersja z formatu PostgreSQL do Kotlin
+                                val enumClassName = snakeToCamelCase(columnType, true)
+
+                                try {
+                                    // Dynamiczne pobranie klasy enuma i wywołanie valueOf
+                                    val enumClass = Class.forName("org.octavius.novels.domain.$enumClassName")
+                                    val valueOfMethod = enumClass.getMethod("valueOf", String::class.java)
+                                    val normalizedValue = snakeToCamelCase(resStr, true)
+                                    valueOfMethod.invoke(null, normalizedValue)
+                                } catch (e: Exception) {
+                                    println("Nie można przekonwertować wartości enum: $resStr dla typu $columnType")
+                                    e.printStackTrace()
+                                    null
+                                }
+                            } else null
+                        }
+                        // Standardowa obsługa pozostałych typów
+                        else -> rs.getObject(i)
                     }
+
+                    rowResult[ColumnInfo(tableName, columnName)] = columnValue
                 }
+
+                return rowResult
             }
         }
 
-        return result
+        // Wykonanie zapytania z mapperem
+        return jdbcTemplate.queryForObject(
+            sqlBuilder.toString(),
+            EntityRowMapper(),
+            id
+        )!!
     }
 
     //------------------------------------zapis
 
     // Główna metoda do zapisu/aktualizacji encji
-    fun updateDatabase(
-        databaseOperations: List<SaveOperation>
-    ) {
-        getConnection().use { connection ->
-            connection.autoCommit = false
+    fun updateDatabase(databaseOperations: List<SaveOperation>) {
+        // Używamy TransactionTemplate zamiast ręcznego zarządzania transakcjami
+        val transactionTemplate = TransactionTemplate(transactionManager)
 
+        transactionTemplate.execute { status ->
             try {
                 for (operation in databaseOperations) {
                     when (operation) {
                         is SaveOperation.Insert -> {
-                            val id = insertIntoTable(connection, operation)
+                            val id = insertIntoTable(operation)
                             databaseOperations.filterIsInstance<SaveOperation.Insert>().forEach { op ->
-                                op.foreignKeys.filter { it.referencedTable == operation.tableName }.forEach { it.value = id }
+                                op.foreignKeys.filter { it.referencedTable == operation.tableName }
+                                    .forEach { it.value = id }
                             }
                         }
-
                         is SaveOperation.Update -> {
-                            updateTable(connection, operation)
+                            updateTable(operation)
                         }
-
                         is SaveOperation.Delete -> {
-                            deleteFromTable(connection, operation)
+                            deleteFromTable(operation)
                         }
                     }
                 }
-                connection.commit()
             } catch (e: Exception) {
-                connection.rollback()
+                status.setRollbackOnly()
                 println("Błąd wstawiania rekordu: ${e.message}")
                 throw e
             }
         }
     }
 
-    private fun insertIntoTable(connection: Connection, operation: SaveOperation.Insert): Int? {
+    private fun insertIntoTable(operation: SaveOperation.Insert): Int? {
         val dataColumns = operation.data.keys.toList()
 
         // Dodaj kolumny kluczy obcych
@@ -221,86 +232,62 @@ object DatabaseManager {
 
         val insertQuery = "INSERT INTO ${operation.tableName} ($columnsString) VALUES ($placeholders) RETURNING id"
 
-        connection.prepareStatement(insertQuery).use { statement ->
-            // Ustaw parametry dla zwykłych danych
-            operation.data.values.forEachIndexed { index, value ->
-                setStatementParameter(statement, index + 1, value.value)
-            }
+        // Przygotowanie parametrów
+        val params = mutableListOf<Any?>()
 
-            // Ustaw parametry dla kluczy obcych
-            val fkValues = operation.foreignKeys
-                .filter { it.value != null }
-                .map { it.value }
-
-            fkValues.forEachIndexed { index, value ->
-                setStatementParameter(statement, operation.data.size + index + 1, value)
-            }
-
-            statement.executeQuery().use { rs ->
-                if (rs.next()) {
-                    return rs.getInt(1)
-                }
-            }
+        // Wartości dla zwykłych danych
+        operation.data.values.forEach { value ->
+            params.add(convertValueForJdbc(value.value))
         }
 
-        return null
+        // Wartości dla kluczy obcych
+        operation.foreignKeys
+            .filter { it.value != null }
+            .forEach { params.add(it.value) }
+
+        // Wykonanie zapytania i pobranie wygenerowanego ID
+        return jdbcTemplate.queryForObject(insertQuery, Int::class.java, *params.toTypedArray())
     }
 
-    // Metoda do aktualizacji istniejącej encji
-    private fun updateTable(
-        connection: Connection, operation: SaveOperation.Update
-    ) {
+    private fun updateTable(operation: SaveOperation.Update) {
         val updateQuery = StringBuilder("UPDATE ${operation.tableName} SET ")
-        val updateValues = mutableListOf<Any?>()
+        val params = mutableListOf<Any?>()
 
         operation.data.entries.forEachIndexed { index, (field, value) ->
             updateQuery.append("$field = ?")
             if (index < operation.data.size - 1) updateQuery.append(", ")
-            updateValues.add(value.value)
+            params.add(convertValueForJdbc(value.value))
         }
 
         updateQuery.append(" WHERE id = ?")
-        updateValues.add(operation.id)
+        params.add(operation.id)
 
-        connection.prepareStatement(updateQuery.toString()).use { statement ->
-            updateValues.forEachIndexed { index, value ->
-                setStatementParameter(statement, index + 1, value)
-            }
-            statement.executeUpdate()
-        }
+        jdbcTemplate.update(updateQuery.toString(), *params.toTypedArray())
     }
 
-
-    private fun deleteFromTable(connection: Connection, operation: SaveOperation.Delete) {
-        val deleteQuery = "DELETE FROM ${operation.tableName} WHERE id = ?"
-        connection.prepareStatement(deleteQuery).use { statement ->
-            setStatementParameter(statement, 1, operation.id)
-            statement.executeUpdate()
-        }
+    private fun deleteFromTable(operation: SaveOperation.Delete) {
+        jdbcTemplate.update("DELETE FROM ${operation.tableName} WHERE id = ?", operation.id)
     }
 
-    // Ustawianie parametrów w zapytaniu SQL
-    private fun setStatementParameter(statement: PreparedStatement, index: Int, value: Any?) {
-        when (value) {
-            null -> statement.setNull(index, Types.NULL)
-            is Int -> statement.setInt(index, value)
-            is Long -> statement.setLong(index, value)
-            is String -> statement.setString(index, value)
-            is Boolean -> statement.setBoolean(index, value)
-            is Double -> statement.setDouble(index, value)
+    // Pomocnicza metoda do konwersji wartości dla JDBC
+    private fun convertValueForJdbc(value: Any?): Any? {
+        return when (value) {
+            null -> null
             is List<*> -> {
-                // Dla list, konwertujemy na tablicę
-                val array = statement.connection.createArrayOf("text", value.toTypedArray())
-                statement.setArray(index, array)
+                // Dla PostgreSQL, konwertujemy listy na tablice
+                val array = jdbcTemplate.dataSource!!.connection.use { conn ->
+                    conn.createArrayOf("text", value.toTypedArray())
+                }
+                array
             }
-            // Enums
             is Enum<*> -> {
+                // Dla enum tworzymy PGobject
                 val pgObject = org.postgresql.util.PGobject()
                 pgObject.type = camelToSnakeCase(value.javaClass.simpleName)
                 pgObject.value = camelToSnakeCase(value.name).uppercase()
-                statement.setObject(index, pgObject)
+                pgObject
             }
-            else -> statement.setObject(index, value)
+            else -> value
         }
     }
 }

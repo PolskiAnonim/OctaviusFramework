@@ -29,6 +29,7 @@ kotlin {
             implementation(libs.postgres)
             implementation(libs.hikari)
             implementation(libs.kotlin.reflect)
+            implementation(libs.spring.jdbc)
         }
     }
 }
