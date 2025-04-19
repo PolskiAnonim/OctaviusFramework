@@ -1,5 +1,6 @@
 package org.octavius.novels.form.control.type
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,26 +44,38 @@ class BooleanControl(
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TriStateCheckbox(
-                        state = if (ctrlState.value.value != null) ToggleableState(ctrlState.value.value!!) else ToggleableState.Indeterminate,
-                        onClick = {
-                            val mapping = mapOf(null to false,false to true,true to null)
-                            ctrlState.value.value = mapping[ctrlState.value.value]
-                            updateState(ctrlState)
-                        }
-                    )
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TriStateCheckbox(
+                            state = if (ctrlState.value.value != null) ToggleableState(ctrlState.value.value!!) else ToggleableState.Indeterminate,
+                            onClick = {
+                                val mapping = mapOf(null to false, false to true, true to null)
+                                ctrlState.value.value = mapping[ctrlState.value.value]
+                                updateState(ctrlState)
+                            }
+                        )
 
-                    Text(
-                        text = label ?: "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
+                        Text(
+                            text = label ?: "",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+
+                    // Wyświetlanie komunikatu błędu
+                    if (ctrlState.error.value != null) {
+                        Text(
+                            text = ctrlState.error.value ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 24.dp, bottom = 8.dp) // Wyrównane z tekstem etykiety
+                        )
+                    }
                 }
             }
         }

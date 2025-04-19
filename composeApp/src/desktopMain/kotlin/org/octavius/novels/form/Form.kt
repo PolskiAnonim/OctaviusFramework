@@ -128,6 +128,7 @@ abstract class Form : Screen {
         for ((controlName, control) in formSchema.controls) {
             // Pobierz stan kontrolki
             val state = formState[controlName] ?: continue
+            state.error.value = null
             control.validateControl(controlName, state, formSchema.controls, formState)
 
             if (state.error.value != null) {
