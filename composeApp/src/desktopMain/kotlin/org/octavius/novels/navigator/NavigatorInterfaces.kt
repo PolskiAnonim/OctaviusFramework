@@ -19,8 +19,11 @@ data class TabOptions(
     val icon: Painter? = null
 )
 
-interface Tab : Screen {
-    val options: TabOptions     //Title and icon
+interface Tab {
+    val options: TabOptions
         @Composable get
-    val index:UShort    //Index for changing tab
+    val index: UShort
+
+    @Composable
+    fun Content()
 }

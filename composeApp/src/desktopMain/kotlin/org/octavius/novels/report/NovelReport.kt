@@ -63,7 +63,7 @@ class NovelReport(navigator: Navigator) : Report() {
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
         val id = rowData["id"] as? Int
         if (id != null) {
-            navigator.AddScreen(NovelForm(id))
+            navigator.addScreen(NovelForm(id))
         }
     }
 }

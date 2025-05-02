@@ -26,7 +26,7 @@ class Navigator {
     }
 
     @Composable
-    fun DisplayLast() {
+    fun Display() {
         val snackbarHostState = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
 
@@ -51,7 +51,7 @@ class Navigator {
         }
     }
 
-    fun AddScreen(screen: Screen) {
+    fun addScreen(screen: Screen) {
         if (stack.size>1 && screen::class == stack.last()::class) {
             stack.removeLast()
             stack.add(screen)
