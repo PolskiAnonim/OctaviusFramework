@@ -1,13 +1,5 @@
 package org.octavius.novels.domain
 
-data class Novel(
-    val id: Int,
-    val titles: List<String>,
-    val novelType: String,
-    val originalLanguage: NovelLanguage,
-    val status: NovelStatus
-)
-
 enum class NovelStatus {
     NotReading,
     Reading,

@@ -2,7 +2,6 @@ package org.octavius.novels.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.octavius.novels.database.UserTypesConverter
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
@@ -10,7 +9,6 @@ import org.octavius.novels.util.Converters.camelToSnakeCase
 import org.octavius.novels.util.Converters.snakeToCamelCase
 import org.postgresql.util.PGobject
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.PreparedStatementSetter
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -32,6 +30,7 @@ object DatabaseManager {
 
     // Instancja TransactionManager
     private val transactionManager: DataSourceTransactionManager
+
     // Instancja konwertera typów użytkownika
     private var typesConverter: UserTypesConverter
 
@@ -81,45 +80,20 @@ object DatabaseManager {
         pageSize: Int = 10
     ): Pair<List<Map<String, Any?>>, Long> {
         // Pobranie całkowitej liczby wyników
-        val countQuery = "SELECT COUNT(*) FROM ($sql) AS counted_query"
+        val countQuery = "SELECT COUNT(*) AS counted_query FROM ($sql)"
         val totalCount = jdbcTemplate.queryForObject(
             countQuery,
             Long::class.java,
-            params.toTypedArray()
+            *params.toTypedArray()
         ) ?: 0L
 
         // Pobranie wyników dla bieżącej strony
         val offset = (page - 1) * pageSize
         val pagedQuery = "$sql LIMIT $pageSize OFFSET $offset"
 
-        val results = jdbcTemplate.query(pagedQuery, mapRowMapper,params.toTypedArray())
+        val results = jdbcTemplate.query(pagedQuery, mapRowMapper, *params.toTypedArray())
 
-        return Pair(results, totalCount)
-    }
-
-    // Metoda do pobierania danych dla określonej klasy z paginacją
-    fun <T : Any> getDataForPage(
-        tableName: String,
-        currentPage: Int,
-        pageSize: Int,
-        whereClause: String,
-        resultClass: KClass<T>
-    ): Pair<List<T>, Long> {
-        val offset = (currentPage - 1) * pageSize
-
-        // Budowanie zapytania SQL
-        val countQuery = "SELECT COUNT(*) FROM $tableName $whereClause"
-        val dataQuery = "SELECT * FROM $tableName $whereClause ORDER BY id LIMIT $pageSize OFFSET $offset"
-
-        // Pobranie liczby wyników
-        val totalCount = jdbcTemplate.queryForObject(countQuery, Long::class.java) ?: 0L
-
-        // Pobranie danych
-        val results = jdbcTemplate.query(dataQuery) { rs, _ ->
-            mapResultSetToClass(rs, resultClass)
-        }
-
-        return Pair(results, totalCount)
+        return Pair(results, totalCount / pageSize + 1)
     }
 
     // Mapowanie ResultSet na klasę
@@ -168,7 +142,7 @@ object DatabaseManager {
         sqlBuilder.append("WHERE $mainTable.id = ?")
 
         // Wykonanie zapytania i pobranie wyników
-        return jdbcTemplate.query(sqlBuilder.toString(), arrayOf(id), ResultSetExtractor { rs ->
+        return jdbcTemplate.query(sqlBuilder.toString(), ResultSetExtractor { rs ->
             val result = mutableMapOf<ColumnInfo, Any?>()
 
             if (rs.next()) {
@@ -189,7 +163,7 @@ object DatabaseManager {
             }
 
             result
-        }) ?: emptyMap()
+        }, arrayOf(id)) ?: emptyMap()
     }
 
     // Metody do operacji DML (Insert, Update, Delete)
@@ -210,9 +184,11 @@ object DatabaseManager {
                                     .forEach { it.value = id }
                             }
                         }
+
                         is SaveOperation.Update -> {
                             updateTable(operation)
                         }
+
                         is SaveOperation.Delete -> {
                             deleteFromTable(operation)
                         }
@@ -306,17 +282,9 @@ object DatabaseManager {
                 pgObject.value = camelToSnakeCase(value.name).uppercase()
                 ps.setObject(index, pgObject)
             }
+
             else -> ps.setObject(index, value)
         }
     }
 
-    // Daje dostęp do konwertera typów
-    fun getTypesConverter(): UserTypesConverter {
-        return typesConverter
-    }
-
-    // Daje dostęp do JdbcTemplate
-    fun getJdbcTemplate(): JdbcTemplate {
-        return jdbcTemplate
-    }
 }

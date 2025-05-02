@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.octavius.novels.navigator.LocalNavigator
 import org.octavius.novels.navigator.Screen
+import org.octavius.novels.report.NovelReport
 
 class OptionScreen: Screen {
     @Composable
@@ -26,7 +27,7 @@ class OptionScreen: Screen {
                 .background(MaterialTheme.colors.background),
             contentAlignment = Alignment.Center
         ) {
-            Button(onClick = { navigator.AddScreen(NovelListScreen) }) {
+            Button(onClick = { navigator.AddScreen(NovelReport(navigator)) }) {
                 Text("Novels")
             }
         }

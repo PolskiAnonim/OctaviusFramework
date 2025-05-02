@@ -25,3 +25,8 @@ enum class SortDirection {
         ASC, // Rosnąca
         DESC // Malejąca
 }
+
+data class Query(
+        val sql: String ,
+        val params: Array<Any?>  = emptyArray()
+)

@@ -9,41 +9,121 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.novels.database.DatabaseManager
+import org.octavius.novels.navigator.Screen
 import org.octavius.novels.report.column.ReportColumn
 
-class Report(
-    private val sql: String,
-    private val columns: List<ReportColumn>,
-    private val params: Array<Any?> = emptyArray(),
-    private val pageSize: Int = 10,
-    private val onRowClick: ((Map<String, Any?>) -> Unit)? = null
-) {
-    private val currentPage = mutableStateOf(1)
-    private val totalPages = mutableStateOf(1L)
-    private val dataList = mutableStateOf<List<Map<String, Any?>>>(emptyList())
-    private val searchQuery = mutableStateOf("")
+abstract class Report: Screen {
 
-    @Composable
-    fun Display(modifier: Modifier = Modifier) {
-        val lazyListState = rememberLazyListState()
-        val coroutineScope = rememberCoroutineScope()
+    private val reportState: ReportState = ReportState()
 
-        LaunchedEffect(currentPage.value, searchQuery.value) {
-            fetchData()
+    private val query: Query by lazy {
+        createQuery()
+    }
+
+    private val columns: List<ReportColumn> by lazy {
+        createColumns()
+    }
+
+    open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
+
+    abstract fun createQuery(): Query
+
+    abstract fun createColumns(): List<ReportColumn>
+
+
+
+    private fun fetchData(
+        page: Int,
+        searchQuery: String,
+        filters: SnapshotStateMap<String, FilterValue<*>>,
+        onResult: (List<Map<String, Any?>>, Long) -> Unit
+    ) {
+        // Budowanie klauzuli WHERE dla wyszukiwania
+        val whereClauseBuilder = StringBuilder()
+
+        if (searchQuery.isNotEmpty()) {
+            // Dodaj warunek wyszukiwania
+            val escapedQuery = searchQuery.replace("'", "''")
+            whereClauseBuilder.append("(CAST(id AS TEXT) ILIKE '%$escapedQuery%')")
         }
 
-        Column(modifier = modifier) {
-            // Pasek wyszukiwania
+        // Dodaj warunki filtrowania
+        if (filters.isNotEmpty()) {
+            val filterClause = FilterQueryBuilder.buildWhereClause(filters)
+            if (filterClause.isNotEmpty()) {
+                if (whereClauseBuilder.isNotEmpty()) {
+                    whereClauseBuilder.append(" AND ")
+                }
+                whereClauseBuilder.append(filterClause.removePrefix("WHERE "))
+            }
+        }
+
+        // Dodaj klauzulę WHERE do zapytania SQL
+        val finalSql = if (whereClauseBuilder.isNotEmpty()) {
+            if (query.sql.lowercase().contains("where")) {
+                "${query.sql} AND $whereClauseBuilder"
+            } else {
+                "${query.sql} WHERE $whereClauseBuilder"
+            }
+        } else {
+            query.sql
+        }
+
+        try {
+            val (results, totalCount) = DatabaseManager.executeQuery(
+                sql = finalSql,
+                params = query.params.toList(),
+                page = page,
+                pageSize = reportState.pageSize.value
+            )
+
+            onResult(results, totalCount)
+        } catch (e: Exception) {
+            println("Błąd podczas pobierania danych: ${e.message}")
+            e.printStackTrace()
+            onResult(emptyList(), 0)
+        }
+    }
+
+
+    @Composable
+    override fun Content(paddingValues: PaddingValues) {
+        val lazyListState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
+        var showFilters by remember { mutableStateOf(false) }
+        var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
+        var totalPages by remember { mutableStateOf(1L) }
+
+        // Efekt pobierający dane po zmianie strony, zapytania wyszukiwania lub filtrów
+        LaunchedEffect(
+            reportState.currentPage.value,
+            reportState.searchQuery.value,
+            reportState.filtering
+        ) {
+            fetchData(
+                reportState.currentPage.value,
+                reportState.searchQuery.value,
+                reportState.filtering
+            ) { result, pages ->
+                dataList = result
+                totalPages = pages
+                reportState.totalPages.value = pages.toInt()
+            }
+        }
+
+        Column(modifier = Modifier.padding(paddingValues)) {
+            // Pasek wyszukiwania i filtrowania
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -51,10 +131,10 @@ class Report(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
-                    value = searchQuery.value,
+                    value = reportState.searchQuery.value,
                     onValueChange = {
-                        searchQuery.value = it
-                        currentPage.value = 1
+                        reportState.searchQuery.value = it
+                        reportState.currentPage.value = 1
                     },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Szukaj...") },
@@ -65,11 +145,11 @@ class Report(
                         )
                     },
                     trailingIcon = {
-                        if (searchQuery.value.isNotEmpty()) {
+                        if (reportState.searchQuery.value.isNotEmpty()) {
                             IconButton(
                                 onClick = {
-                                    searchQuery.value = ""
-                                    currentPage.value = 1
+                                    reportState.searchQuery.value = ""
+                                    reportState.currentPage.value = 1
                                 }
                             ) {
                                 Icon(
@@ -80,6 +160,37 @@ class Report(
                         }
                     },
                     singleLine = true
+                )
+
+                // Przycisk filtrów
+                IconButton(
+                    onClick = { showFilters = !showFilters },
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    if (reportState.filtering.isEmpty()) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filtry"
+                        )
+                    } else {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterListOff,
+                                contentDescription = "Filtry aktywne",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Panel filtrów
+            if (showFilters) {
+                FilterPanel(
+                    columns = columns.filter { it.filtrable },
+                    reportState = reportState
                 )
             }
 
@@ -97,11 +208,72 @@ class Report(
                             .padding(horizontal = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = column.header,
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = column.header,
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center
+                            )
+
+                            // Ikona sortowania, jeśli kolumna obsługuje sortowanie
+                            if (column.sortable) {
+                                val sortValue = reportState.sorting[column.name]
+
+                                IconButton(
+                                    onClick = {
+                                        when (sortValue?.direction?.value) {
+                                            null -> {
+                                                reportState.sorting[column.name] = SortValue(
+                                                    mutableStateOf(column.name),
+                                                    mutableStateOf(SortDirection.ASC)
+                                                )
+                                            }
+                                            SortDirection.ASC -> {
+                                                reportState.sorting[column.name] = SortValue(
+                                                    mutableStateOf(column.name),
+                                                    mutableStateOf(SortDirection.DESC)
+                                                )
+                                            }
+                                            SortDirection.DESC -> {
+                                                reportState.sorting.remove(column.name)
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    when (sortValue?.direction?.value) {
+                                        null -> Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Sort,
+                                            contentDescription = "Sortuj",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+                                        )
+                                        SortDirection.ASC -> Icon(
+                                            imageVector = Icons.Default.ArrowUpward,
+                                            contentDescription = "Sortuj rosnąco",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        SortDirection.DESC -> Icon(
+                                            imageVector = Icons.Default.ArrowDownward,
+                                            contentDescription = "Sortuj malejąco",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Wskaźnik filtra
+                            if (column.filtrable && reportState.filtering.containsKey(column.name)) {
+                                Icon(
+                                    imageVector = Icons.Default.FilterAlt,
+                                    contentDescription = "Filtr aktywny",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -111,14 +283,14 @@ class Report(
                 state = lazyListState,
                 modifier = Modifier.weight(1f)
             ) {
-                items(dataList.value) { rowData ->
+                items(dataList) { rowData ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .run {
                                 if (onRowClick != null) {
-                                    this.clickable { onRowClick.invoke(rowData) }
+                                    this.clickable { onRowClick!!.invoke(rowData) }
                                 } else {
                                     this
                                 }
@@ -158,14 +330,14 @@ class Report(
                 ) {
                     IconButton(
                         onClick = {
-                            if (currentPage.value > 1) {
-                                currentPage.value--
+                            if (reportState.currentPage.value > 1) {
+                                reportState.currentPage.value--
                                 coroutineScope.launch {
                                     lazyListState.scrollToItem(0)
                                 }
                             }
                         },
-                        enabled = currentPage.value > 1
+                        enabled = reportState.currentPage.value > 1
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -175,20 +347,20 @@ class Report(
                     }
 
                     Text(
-                        text = "Strona ${currentPage.value} z ${totalPages.value}",
+                        text = "Strona ${reportState.currentPage.value} z ${reportState.totalPages.value}",
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
 
                     IconButton(
                         onClick = {
-                            if (currentPage.value < totalPages.value) {
-                                currentPage.value++
+                            if (reportState.currentPage.value < reportState.totalPages.value) {
+                                reportState.currentPage.value++
                                 coroutineScope.launch {
                                     lazyListState.scrollToItem(0)
                                 }
                             }
                         },
-                        enabled = currentPage.value < totalPages.value
+                        enabled = reportState.currentPage.value < reportState.totalPages.value
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -198,36 +370,6 @@ class Report(
                     }
                 }
             }
-        }
-    }
-
-    private fun fetchData() {
-        val finalSql = if (searchQuery.value.isNotEmpty()) {
-            // Dodaj warunek wyszukiwania - to jest uproszczone i może wymagać dostosowania
-            val escapedQuery = searchQuery.value.replace("'", "''")
-
-            if (sql.lowercase().contains("where")) {
-                "$sql AND (CAST(id AS TEXT) ILIKE '%$escapedQuery%')"
-            } else {
-                "$sql WHERE (CAST(id AS TEXT) ILIKE '%$escapedQuery%')"
-            }
-        } else {
-            sql
-        }
-
-        try {
-            val (results, totalCount) = DatabaseManager.executeQuery(
-                sql = finalSql,
-                params = params.toList(),
-                page = currentPage.value,
-                pageSize = pageSize
-            )
-
-            dataList.value = results
-            totalPages.value = (totalCount + pageSize - 1) / pageSize
-        } catch (e: Exception) {
-            println("Błąd podczas pobierania danych: ${e.message}")
-            e.printStackTrace()
         }
     }
 }

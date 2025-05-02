@@ -23,7 +23,7 @@ sealed class FilterValue<T> {
     ) : FilterValue<String>()
 
     // Filtr dla wartości enumów
-    data class EnumFilter<E : Enum<E>>(
+    data class EnumFilter<E : Enum<*>>(
         val values: List<E>,
         val include: Boolean = true, // true = include these values, false = exclude
         override val nullHandling: NullHandling = NullHandling.Ignore
