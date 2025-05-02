@@ -161,9 +161,8 @@ object DatabaseManager {
                     }
                 }
             }
-
             result
-        }, arrayOf(id)) ?: emptyMap()
+        }, id) ?: emptyMap()
     }
 
     // Metody do operacji DML (Insert, Update, Delete)
