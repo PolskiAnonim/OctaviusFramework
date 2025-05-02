@@ -87,7 +87,7 @@ abstract class ControlValidator<T: Any> {
         return isRequired
     }
 
-    // Sprawdzenie czy wartość jest pusta
+    // Sprawdzenie, czy wartość jest pusta
     fun isValueEmpty(value: Any?): Boolean {
         return when (value) {
             null -> true
@@ -110,7 +110,7 @@ abstract class ControlValidator<T: Any> {
             return
         }
 
-        // Sprawdzamy czy pole jest wymagane
+        // Sprawdzamy, czy pole jest wymagane
         val isRequired = isControlRequired(control, controls, states)
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd

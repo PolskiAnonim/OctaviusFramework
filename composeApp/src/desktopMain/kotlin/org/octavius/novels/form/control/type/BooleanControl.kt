@@ -67,7 +67,7 @@ class BooleanControl(
                         )
                     }
 
-                    // Wyświetlanie komunikatu błędu
+                    // Wyświetlanie komunikatu o błędzie
                     if (ctrlState.error.value != null) {
                         Text(
                             text = ctrlState.error.value ?: "",

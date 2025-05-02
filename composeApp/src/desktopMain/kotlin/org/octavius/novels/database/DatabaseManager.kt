@@ -2,20 +2,20 @@ package org.octavius.novels.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.octavius.novels.domain.NovelStatus
+import org.octavius.novels.database.UserTypesConverter
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
 import org.octavius.novels.util.Converters.camelToSnakeCase
 import org.octavius.novels.util.Converters.snakeToCamelCase
+import org.postgresql.util.PGobject
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.PreparedStatementSetter
+import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.RowMapper
-import org.springframework.jdbc.core.queryForObject
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
-import org.springframework.transaction.TransactionManager
+import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.transaction.support.TransactionTemplate
-import java.sql.Connection
-import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
 import kotlin.reflect.KClass
@@ -26,8 +26,14 @@ object DatabaseManager {
     private const val jdbcUrl = "jdbc:postgresql://localhost:5430/novels_games"
     private const val username = "postgres"
     private const val password = "1234"
+
+    // Instancja JdbcTemplate
+    private var jdbcTemplate: JdbcTemplate
+
+    // Instancja TransactionManager
     private val transactionManager: DataSourceTransactionManager
-    private val jdbcTemplate: JdbcTemplate
+    // Instancja konwertera typów użytkownika
+    private var typesConverter: UserTypesConverter
 
     init {
         val config = HikariConfig().apply {
@@ -37,12 +43,61 @@ object DatabaseManager {
             maximumPoolSize = 10
         }
         dataSource = HikariDataSource(config)
+
+        // Inicjalizacja JdbcTemplate
         jdbcTemplate = JdbcTemplate(dataSource)
         transactionManager = DataSourceTransactionManager(dataSource)
+        // Inicjalizacja konwertera typów
+        typesConverter = UserTypesConverter(jdbcTemplate)
+        typesConverter.initialize()
     }
 
-    private fun getConnection(): Connection = dataSource.connection
+    // RowMapper dla mapowania wyników na mapy
+    private val mapRowMapper = RowMapper<Map<String, Any?>> { rs, _ ->
+        val data = mutableMapOf<String, Any?>()
+        val metaData = rs.metaData
 
+        for (i in 1..metaData.columnCount) {
+            val columnName = metaData.getColumnName(i)
+            val columnType = metaData.getColumnTypeName(i)
+
+            val rawValue = rs.getObject(i)
+            if (rs.wasNull()) {
+                data[snakeToCamelCase(columnName)] = null
+            } else {
+                val convertedValue = typesConverter.convertToDomainType(rawValue, columnType)
+                data[snakeToCamelCase(columnName)] = convertedValue
+            }
+        }
+
+        data
+    }
+
+    // Wykonanie zapytania z paginacją
+    fun executeQuery(
+        sql: String,
+        params: List<Any?> = emptyList(),
+        page: Int = 1,
+        pageSize: Int = 10
+    ): Pair<List<Map<String, Any?>>, Long> {
+        // Pobranie całkowitej liczby wyników
+        val countQuery = "SELECT COUNT(*) FROM ($sql) AS counted_query"
+        val totalCount = jdbcTemplate.queryForObject(
+            countQuery,
+            Long::class.java,
+            params.toTypedArray()
+        ) ?: 0L
+
+        // Pobranie wyników dla bieżącej strony
+        val offset = (page - 1) * pageSize
+        val pagedQuery = "$sql LIMIT $pageSize OFFSET $offset"
+
+        val results = jdbcTemplate.query(pagedQuery, mapRowMapper,params.toTypedArray())
+
+        return Pair(results, totalCount)
+    }
+
+    // Metoda do pobierania danych dla określonej klasy z paginacją
     fun <T : Any> getDataForPage(
         tableName: String,
         currentPage: Int,
@@ -50,60 +105,50 @@ object DatabaseManager {
         whereClause: String,
         resultClass: KClass<T>
     ): Pair<List<T>, Long> {
-        var totalElements: Long;
-        val offset = (currentPage - 1) * pageSize;
-        val results = mutableListOf<T>()
+        val offset = (currentPage - 1) * pageSize
 
-        getConnection().use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery("SELECT count(*) AS total FROM $tableName $whereClause").use { resultSet ->
-                    resultSet.next()
-                    totalElements = resultSet.getLong("total")
-                }
-                val sql = "SELECT * FROM $tableName $whereClause  ORDER BY id LIMIT $pageSize OFFSET $offset"
-                statement.executeQuery(sql).use { resultSet ->
-                    val constructor = resultClass.primaryConstructor!!
-                    val parameters = constructor.parameters
+        // Budowanie zapytania SQL
+        val countQuery = "SELECT COUNT(*) FROM $tableName $whereClause"
+        val dataQuery = "SELECT * FROM $tableName $whereClause ORDER BY id LIMIT $pageSize OFFSET $offset"
 
-                    while (resultSet.next()) {
-                        val args = parameters.associateWith { param ->
-                            val columnName = param.name!!
-                            when (param.type.classifier) {
-                                String::class -> resultSet.getString(camelToSnakeCase(columnName))
-                                Int::class -> resultSet.getInt(camelToSnakeCase(columnName))
-                                Long::class -> resultSet.getLong(camelToSnakeCase(columnName))
-                                Double::class -> resultSet.getDouble(camelToSnakeCase(columnName))
-                                Boolean::class -> resultSet.getBoolean(camelToSnakeCase(columnName))
-                                NovelStatus::class -> NovelStatus.valueOf(
-                                    resultSet.getString(
-                                        camelToSnakeCase(
-                                            columnName
-                                        )
-                                    )
-                                )
+        // Pobranie liczby wyników
+        val totalCount = jdbcTemplate.queryForObject(countQuery, Long::class.java) ?: 0L
 
-                                List::class -> {
-                                    val array = resultSet.getArray(camelToSnakeCase(columnName))
-                                    when (val arrayContent = array.array) {
-                                        is Array<*> -> arrayContent.toList()
-                                        else -> throw IllegalArgumentException("Unexpected array type: ${arrayContent?.javaClass}")
-                                    }
-                                }
-
-                                else -> throw IllegalArgumentException("Unsupported type: ${param.type}")
-                            }
-                        }
-
-                        results.add(constructor.callBy(args))
-                    }
-                }
-            }
+        // Pobranie danych
+        val results = jdbcTemplate.query(dataQuery) { rs, _ ->
+            mapResultSetToClass(rs, resultClass)
         }
-        return Pair<List<T>, Long>(results, totalElements)
+
+        return Pair(results, totalCount)
     }
 
-    //----------------------------------------------formularze----------------------------------------------------------
-    // pobieranie encji
+    // Mapowanie ResultSet na klasę
+    private fun <T : Any> mapResultSetToClass(rs: ResultSet, resultClass: KClass<T>): T {
+        val constructor = resultClass.primaryConstructor!!
+        val parameters = constructor.parameters
+
+        val args = parameters.associateWith { param ->
+            val columnName = param.name!!
+            val columnNameSnakeCase = camelToSnakeCase(columnName)
+
+            val metaData = rs.metaData
+            val columnType = (1..metaData.columnCount)
+                .firstOrNull { metaData.getColumnName(it).equals(columnNameSnakeCase, ignoreCase = true) }
+                ?.let { metaData.getColumnTypeName(it) }
+                ?: "unknown"
+
+            val rawValue = rs.getObject(columnNameSnakeCase)
+            if (rs.wasNull()) {
+                null
+            } else {
+                typesConverter.convertToDomainType(rawValue, columnType)
+            }
+        }
+
+        return constructor.callBy(args)
+    }
+
+    // Pobranie encji z relacjami
     fun getEntityWithRelations(
         id: Int,
         tableRelations: List<TableRelation>
@@ -113,80 +158,43 @@ object DatabaseManager {
         }
 
         val mainTable = tableRelations.first().tableName
-        val result = mutableMapOf<ColumnInfo, Any?>()
 
-        // Budowanie zapytania SQL z wieloma JOIN-ami
+        // Budowanie zapytania SQL z JOIN-ami
         val sqlBuilder = StringBuilder("SELECT * FROM $mainTable ")
-
-        // Dodawanie JOIN-ów
         for (i in 1 until tableRelations.size) {
             val relation = tableRelations[i]
             sqlBuilder.append("LEFT JOIN ${relation.tableName} ON ${relation.joinCondition} ")
         }
-
         sqlBuilder.append("WHERE $mainTable.id = ?")
 
-        // Definiujemy mapper jako klasę wewnętrzną
-        class EntityRowMapper : RowMapper<Map<ColumnInfo, Any?>> {
-            override fun mapRow(rs: ResultSet, rowNum: Int): Map<ColumnInfo, Any?> {
-                val rowResult = mutableMapOf<ColumnInfo, Any?>()
-                val metaData = rs.metaData
+        // Wykonanie zapytania i pobranie wyników
+        return jdbcTemplate.query(sqlBuilder.toString(), arrayOf(id), ResultSetExtractor { rs ->
+            val result = mutableMapOf<ColumnInfo, Any?>()
 
+            if (rs.next()) {
+                val metaData = rs.metaData
                 for (i in 1..metaData.columnCount) {
                     val columnName = metaData.getColumnName(i)
                     val tableName = metaData.getTableName(i)
                     val columnType = metaData.getColumnTypeName(i)
 
-                    val columnValue = when {
-                        // Obsługa tablic PostgreSQL
-                        columnType.startsWith("_") && listOf("_varchar", "_text", "_char").contains(columnType) -> {
-                            val array = rs.getArray(i)
-                            if (array != null) {
-                                (array.array as Array<*>).filterNotNull().map { it.toString() }
-                            } else null
-                        }
-                        // Obsługa typów enum zaczynających się od "novel_"
-                        columnType.startsWith("novel_") -> {
-                            val resStr = rs.getString(i)
-                            if (resStr != null) {
-                                // Konwersja z formatu PostgreSQL do Kotlin
-                                val enumClassName = snakeToCamelCase(columnType, true)
-
-                                try {
-                                    // Dynamiczne pobranie klasy enuma i wywołanie valueOf
-                                    val enumClass = Class.forName("org.octavius.novels.domain.$enumClassName")
-                                    val valueOfMethod = enumClass.getMethod("valueOf", String::class.java)
-                                    val normalizedValue = snakeToCamelCase(resStr, true)
-                                    valueOfMethod.invoke(null, normalizedValue)
-                                } catch (e: Exception) {
-                                    println("Nie można przekonwertować wartości enum: $resStr dla typu $columnType")
-                                    e.printStackTrace()
-                                    null
-                                }
-                            } else null
-                        }
-                        // Standardowa obsługa pozostałych typów
-                        else -> rs.getObject(i)
+                    val rawValue = rs.getObject(i)
+                    if (rs.wasNull()) {
+                        result[ColumnInfo(tableName, columnName)] = null
+                    } else {
+                        val convertedValue = typesConverter.convertToDomainType(rawValue, columnType)
+                        result[ColumnInfo(tableName, columnName)] = convertedValue
                     }
-
-                    rowResult[ColumnInfo(tableName, columnName)] = columnValue
                 }
-
-                return rowResult
             }
-        }
 
-        // Wykonanie zapytania z mapperem
-        return jdbcTemplate.queryForObject(
-            sqlBuilder.toString(),
-            EntityRowMapper(),
-            id
-        )!!
+            result
+        }) ?: emptyMap()
     }
 
-    //------------------------------------zapis
+    // Metody do operacji DML (Insert, Update, Delete)
 
-    // Główna metoda do zapisu/aktualizacji encji
+    // Główna metoda do zapisywania encji
     fun updateDatabase(databaseOperations: List<SaveOperation>) {
         // Używamy TransactionTemplate zamiast ręcznego zarządzania transakcjami
         val transactionTemplate = TransactionTemplate(transactionManager)
@@ -232,62 +240,83 @@ object DatabaseManager {
 
         val insertQuery = "INSERT INTO ${operation.tableName} ($columnsString) VALUES ($placeholders) RETURNING id"
 
-        // Przygotowanie parametrów
-        val params = mutableListOf<Any?>()
+        val keyHolder = GeneratedKeyHolder()
 
-        // Wartości dla zwykłych danych
-        operation.data.values.forEach { value ->
-            params.add(convertValueForJdbc(value.value))
-        }
+        jdbcTemplate.update({ connection ->
+            val ps = connection.prepareStatement(insertQuery, arrayOf("id"))
 
-        // Wartości dla kluczy obcych
-        operation.foreignKeys
-            .filter { it.value != null }
-            .forEach { params.add(it.value) }
+            // Ustaw parametry dla zwykłych danych
+            operation.data.values.forEachIndexed { index, value ->
+                setStatementParameter(ps, index + 1, value.value)
+            }
 
-        // Wykonanie zapytania i pobranie wygenerowanego ID
-        return jdbcTemplate.queryForObject(insertQuery, Int::class.java, *params.toTypedArray())
+            // Ustaw parametry dla kluczy obcych
+            val fkValues = operation.foreignKeys
+                .filter { it.value != null }
+                .map { it.value }
+
+            fkValues.forEachIndexed { index, value ->
+                setStatementParameter(ps, operation.data.size + index + 1, value)
+            }
+
+            ps
+        }, keyHolder)
+
+        return keyHolder.keys?.get("id") as? Int
     }
 
     private fun updateTable(operation: SaveOperation.Update) {
-        val updateQuery = StringBuilder("UPDATE ${operation.tableName} SET ")
-        val params = mutableListOf<Any?>()
+        val updatePairs = operation.data.entries.joinToString { "${it.key} = ?" }
+        val updateQuery = "UPDATE ${operation.tableName} SET $updatePairs WHERE id = ?"
 
-        operation.data.entries.forEachIndexed { index, (field, value) ->
-            updateQuery.append("$field = ?")
-            if (index < operation.data.size - 1) updateQuery.append(", ")
-            params.add(convertValueForJdbc(value.value))
+        jdbcTemplate.update(updateQuery) { ps ->
+            // Ustaw parametry dla danych
+            operation.data.values.forEachIndexed { index, value ->
+                setStatementParameter(ps, index + 1, value.value)
+            }
+
+            // Ustaw parametr dla id
+            ps.setInt(operation.data.size + 1, operation.id)
         }
-
-        updateQuery.append(" WHERE id = ?")
-        params.add(operation.id)
-
-        jdbcTemplate.update(updateQuery.toString(), *params.toTypedArray())
     }
 
     private fun deleteFromTable(operation: SaveOperation.Delete) {
-        jdbcTemplate.update("DELETE FROM ${operation.tableName} WHERE id = ?", operation.id)
+        val deleteQuery = "DELETE FROM ${operation.tableName} WHERE id = ?"
+        jdbcTemplate.update(deleteQuery, operation.id)
     }
 
-    // Pomocnicza metoda do konwersji wartości dla JDBC
-    private fun convertValueForJdbc(value: Any?): Any? {
-        return when (value) {
-            null -> null
+    // Pomocnicza metoda do ustawiania parametrów w PreparedStatement
+    private fun setStatementParameter(ps: java.sql.PreparedStatement, index: Int, value: Any?) {
+        when (value) {
+            null -> ps.setNull(index, Types.NULL)
+            is Int -> ps.setInt(index, value)
+            is Long -> ps.setLong(index, value)
+            is String -> ps.setString(index, value)
+            is Boolean -> ps.setBoolean(index, value)
+            is Double -> ps.setDouble(index, value)
             is List<*> -> {
-                // Dla PostgreSQL, konwertujemy listy na tablice
-                val array = jdbcTemplate.dataSource!!.connection.use { conn ->
-                    conn.createArrayOf("text", value.toTypedArray())
-                }
-                array
+                // Dla list, konwertujemy na tablicę
+                val array = ps.connection.createArrayOf("text", value.toTypedArray())
+                ps.setArray(index, array)
             }
+            // Enums
             is Enum<*> -> {
-                // Dla enum tworzymy PGobject
-                val pgObject = org.postgresql.util.PGobject()
+                val pgObject = PGobject()
                 pgObject.type = camelToSnakeCase(value.javaClass.simpleName)
                 pgObject.value = camelToSnakeCase(value.name).uppercase()
-                pgObject
+                ps.setObject(index, pgObject)
             }
-            else -> value
+            else -> ps.setObject(index, value)
         }
+    }
+
+    // Daje dostęp do konwertera typów
+    fun getTypesConverter(): UserTypesConverter {
+        return typesConverter
+    }
+
+    // Daje dostęp do JdbcTemplate
+    fun getJdbcTemplate(): JdbcTemplate {
+        return jdbcTemplate
     }
 }
