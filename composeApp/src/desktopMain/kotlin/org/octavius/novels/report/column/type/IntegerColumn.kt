@@ -111,13 +111,12 @@ class IntegerColumn(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>,
-        onFilterChanged: (FilterValue<*>?) -> Unit
+        currentFilter: FilterValue<*>
     ) {
         if (!filterable) return
 
         @Suppress("UNCHECKED_CAST")
-        val numberFilter = currentFilter as? FilterValue.NumberFilter<Int> ?: return
+        val numberFilter = currentFilter as FilterValue.NumberFilter<Int>
         val minValue = numberFilter.minValue
         val maxValue = numberFilter.maxValue
         val filterType = numberFilter.filterType

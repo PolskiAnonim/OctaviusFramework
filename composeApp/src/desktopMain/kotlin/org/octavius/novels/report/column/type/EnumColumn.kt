@@ -105,8 +105,7 @@ class EnumColumn<E : Enum<*>>(
 
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>,
-        onFilterChanged: (FilterValue<*>?) -> Unit
+        currentFilter: FilterValue<*>
     ) {
         if (!filterable) return
 

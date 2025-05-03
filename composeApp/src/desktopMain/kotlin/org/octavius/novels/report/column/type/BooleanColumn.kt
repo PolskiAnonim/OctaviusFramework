@@ -89,8 +89,7 @@ class BooleanColumn(
 
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>,
-        onFilterChanged: (FilterValue<*>?) -> Unit
+        currentFilter: FilterValue<*>
     ) {
         if (!filterable) return
 

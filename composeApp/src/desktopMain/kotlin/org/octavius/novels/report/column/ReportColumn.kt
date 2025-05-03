@@ -17,12 +17,9 @@ abstract class ReportColumn(
     abstract fun RenderCell(item: Map<String, Any?>, modifier: Modifier)
 
     @Composable
-    open fun RenderFilter(
-        currentFilter: FilterValue<*>,
-        onFilterChanged: (FilterValue<*>?) -> Unit
-    ) {
-
-    }
+    abstract fun RenderFilter(
+        currentFilter: FilterValue<*>
+    )
 
     abstract fun initializeState(): ColumnState
 

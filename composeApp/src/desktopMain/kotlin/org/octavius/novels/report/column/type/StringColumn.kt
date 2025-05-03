@@ -91,8 +91,7 @@ class StringColumn(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>,
-        onFilterChanged: (FilterValue<*>?) -> Unit
+        currentFilter: FilterValue<*>
     ) {
         if (!filterable) return
 
