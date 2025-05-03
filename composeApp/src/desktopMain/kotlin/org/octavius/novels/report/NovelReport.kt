@@ -1,11 +1,10 @@
 package org.octavius.novels.report
 
+import org.octavius.novels.domain.NovelLanguage
+import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.NovelForm
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.column.ReportColumn
-
-import org.octavius.novels.domain.NovelLanguage
-import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.report.column.type.BooleanColumn
 import org.octavius.novels.report.column.type.EnumColumn
 import org.octavius.novels.report.column.type.IntegerColumn
@@ -23,39 +22,41 @@ class NovelReport(navigator: Navigator) : Report() {
         return Query(sql)
     }
 
-    override fun createColumns(): List<ReportColumn> {
-        return listOf(StringListColumn(
-            name = "titles",
-            header = "Tytuły",
-            width = 3f
-        ),
-            EnumColumn(
+    override fun createColumns(): Map<String, ReportColumn> {
+        return mapOf(
+            "titles" to StringListColumn(
+                name = "titles",
+                header = "Tytuły",
+                width = 3f
+            ),
+            "status" to EnumColumn(
                 name = "status",
                 header = "Status",
                 enumClass = NovelStatus::class,
                 width = 1f
             ),
-            EnumColumn(
-                name = "originalLanguage",
+            "originalLanguage" to EnumColumn(
+                name = "original_language",
                 header = "Język oryginału",
                 enumClass = NovelLanguage::class,
                 width = 1f
             ),
-            IntegerColumn(
+            "volumes" to IntegerColumn(
                 name = "volumes",
                 header = "Tomy",
                 width = 0.7f
             ),
-            IntegerColumn(
-                name = "translatedVolumes",
+            "translatedVolumes" to IntegerColumn(
+                name = "translated_volumes",
                 header = "Przetłumaczone",
                 width = 0.7f
             ),
-            BooleanColumn(
-                name = "originalCompleted",
+            "originalCompleted" to BooleanColumn(
+                name = "original_completed",
                 header = "Ukończone",
                 width = 0.6f
-            ))
+            )
+        )
     }
 
 

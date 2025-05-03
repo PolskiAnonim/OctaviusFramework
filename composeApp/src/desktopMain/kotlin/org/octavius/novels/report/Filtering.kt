@@ -1,39 +1,106 @@
 package org.octavius.novels.report
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import org.octavius.novels.util.Converters.camelToSnakeCase
+import kotlin.reflect.KClass
 
-sealed class FilterValue<T> {
-    abstract val nullHandling: NullHandling
+// 1. Najpierw dodajmy interfejs dla filtrów, który zapewni funkcje reset i isActive
+interface FilterInterface<T> {
+    fun reset()
+    fun isActive(): Boolean
+}
 
-    // Filtr dla wartości liczbowych (Int, Double itp.)
-    data class NumberFilter<T : Comparable<T>>(
-        val filterType: NumberFilterType,
-        val minValue: T? = null,
-        val maxValue: T? = null,
-        override val nullHandling: NullHandling = NullHandling.Ignore
-    ) : FilterValue<T>()
+sealed class FilterValue<T> : FilterInterface<T> {
+    abstract val nullHandling: MutableState<NullHandling>
 
-    // Filtr dla wartości tekstowych
-    data class TextFilter(
-        val filterType: TextFilterType,
-        val value: String,
-        val caseSensitive: Boolean = false,
-        override val nullHandling: NullHandling = NullHandling.Ignore
-    ) : FilterValue<String>()
-
-    // Filtr dla wartości enumów
-    data class EnumFilter<E : Enum<*>>(
-        val values: List<E>,
-        val include: Boolean = true, // true = include these values, false = exclude
-        override val nullHandling: NullHandling = NullHandling.Ignore
-    ) : FilterValue<E>()
-
-    // Filtr dla wartości boolean
     data class BooleanFilter(
-        val value: Boolean?,
-        override val nullHandling: NullHandling = NullHandling.Ignore
-    ) : FilterValue<Boolean>()
+        val value: MutableState<Boolean?> = mutableStateOf(null),
+        override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
+    ) : FilterValue<Boolean>() {
+        override fun reset() {
+            value.value = null
+            nullHandling.value = NullHandling.Ignore
+        }
+
+        override fun isActive(): Boolean {
+            return value.value != null || nullHandling.value != NullHandling.Ignore
+        }
+    }
+
+    data class NumberFilter<T : Comparable<T>>(
+        val filterType: MutableState<NumberFilterType> = mutableStateOf(NumberFilterType.Equals),
+        val minValue: MutableState<T?> = mutableStateOf(null),
+        val maxValue: MutableState<T?> = mutableStateOf(null),
+        override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
+    ) : FilterValue<T>() {
+        override fun reset() {
+            minValue.value = null
+            maxValue.value = null
+            filterType.value = NumberFilterType.Equals
+            nullHandling.value = NullHandling.Ignore
+        }
+
+        override fun isActive(): Boolean {
+            return minValue.value != null || maxValue.value != null || nullHandling.value != NullHandling.Ignore
+        }
+    }
+
+    data class TextFilter(
+        val filterType: MutableState<TextFilterType> = mutableStateOf(TextFilterType.Contains),
+        val value: MutableState<String> = mutableStateOf(""),
+        val caseSensitive: MutableState<Boolean> = mutableStateOf(false),
+        override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
+    ) : FilterValue<String>() {
+        override fun reset() {
+            value.value = ""
+            filterType.value = TextFilterType.Contains
+            caseSensitive.value = false
+            nullHandling.value = NullHandling.Ignore
+        }
+
+        override fun isActive(): Boolean {
+            return value.value.isNotEmpty() || nullHandling.value != NullHandling.Ignore
+        }
+    }
+
+    data class EnumFilter<E : Enum<*>>(
+        private val _values: MutableState<MutableList<E>> = mutableStateOf(mutableListOf()),
+        val include: MutableState<Boolean> = mutableStateOf(true),
+        override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
+    ) : FilterValue<E>() {
+        // Właściwość tylko do odczytu dla widoku
+        val values: State<List<E>> get() = _values
+
+        // Metody do modyfikacji listy
+        fun addValue(value: Any) {
+            @Suppress("UNCHECKED_CAST")
+            _values.value.add(value as E)
+        }
+
+        fun removeValue(value: Any) {
+            @Suppress("UNCHECKED_CAST")
+            _values.value.removeIf { it == value as E }
+        }
+
+        fun containsValue(value: Any): Boolean {
+            @Suppress("UNCHECKED_CAST")
+            return _values.value.contains(value as E)
+        }
+
+        override fun reset() {
+            _values.value = mutableListOf()
+            include.value = true
+            nullHandling.value = NullHandling.Ignore
+        }
+
+        override fun isActive(): Boolean {
+            return _values.value.isNotEmpty() || nullHandling.value != NullHandling.Ignore
+        }
+    }
 }
 
 enum class NumberFilterType {
@@ -56,111 +123,6 @@ enum class TextFilterType {
 
 enum class NullHandling {
     Ignore,      // Ignoruj wartości null
-    Include,     // Dołącz wartości null
-    Exclude      // Wyklucz wartości null
-}
-
-object FilterQueryBuilder {
-    fun buildWhereClause(filters: SnapshotStateMap<String, FilterValue<*>>): String {
-        if (filters.isEmpty()) return ""
-
-        val conditions = filters.mapNotNull { buildCondition(it.key, it.value) }
-        if (conditions.isEmpty()) return ""
-
-        return "WHERE " + conditions.joinToString(" AND ")
-    }
-
-    private fun buildCondition(columnName: String, filter: FilterValue<*>): String? {
-        return when (filter) {
-            is FilterValue.NumberFilter<*> -> buildNumberCondition(columnName, filter)
-            is FilterValue.TextFilter -> buildTextCondition(columnName, filter)
-            is FilterValue.EnumFilter<*> -> buildEnumCondition(columnName, filter)
-            is FilterValue.BooleanFilter -> buildBooleanCondition(columnName, filter)
-        }
-    }
-
-    private fun buildNumberCondition(column: String, filter: FilterValue.NumberFilter<*>): String? {
-        val nullCheck = getNullCheck(column, filter.nullHandling)
-
-        val condition = when (filter.filterType) {
-            NumberFilterType.Equals ->
-                filter.minValue?.let { "$column = $it" }
-            NumberFilterType.NotEquals ->
-                filter.minValue?.let { "$column <> $it" }
-            NumberFilterType.LessThan ->
-                filter.minValue?.let { "$column < $it" }
-            NumberFilterType.LessEquals ->
-                filter.minValue?.let { "$column <= $it" }
-            NumberFilterType.GreaterThan ->
-                filter.minValue?.let { "$column > $it" }
-            NumberFilterType.GreaterEquals ->
-                filter.minValue?.let { "$column >= $it" }
-            NumberFilterType.Range -> {
-                val minCond = filter.minValue?.let { "$column >= $it" }
-                val maxCond = filter.maxValue?.let { "$column <= $it" }
-                when {
-                    minCond != null && maxCond != null -> "($minCond AND $maxCond)"
-                    minCond != null -> minCond
-                    maxCond != null -> maxCond
-                    else -> null
-                }
-            }
-        }
-
-        return condition?.let { combineWithNullCheck(it, nullCheck) }
-    }
-
-    private fun buildTextCondition(column: String, filter: FilterValue.TextFilter): String {
-        val value = filter.value.replace("'", "''") // Escape apostrophes
-        val nullCheck = getNullCheck(column, filter.nullHandling)
-
-        val valueExpr = if (filter.caseSensitive) "'$value'" else "LOWER('$value')"
-        val columnExpr = if (filter.caseSensitive) column else "LOWER($column)"
-
-        val condition = when (filter.filterType) {
-            TextFilterType.Exact ->
-                "$columnExpr = $valueExpr"
-            TextFilterType.StartsWith ->
-                "$columnExpr LIKE '$value%'"
-            TextFilterType.EndsWith ->
-                "$columnExpr LIKE '%$value'"
-            TextFilterType.Contains ->
-                "$columnExpr LIKE '%$value%'"
-            TextFilterType.NotContains ->
-                "$columnExpr NOT LIKE '%$value%'"
-        }
-
-        return combineWithNullCheck(condition, nullCheck)
-    }
-
-    private fun buildEnumCondition(column: String, filter: FilterValue.EnumFilter<*>): String? {
-        if (filter.values.isEmpty()) return null
-
-        val nullCheck = getNullCheck(column, filter.nullHandling)
-
-        val values = filter.values.joinToString(", ") { "'${camelToSnakeCase(it.name).uppercase()}'" }
-        val operator = if (filter.include) "=" else "<>"
-
-        val condition = "$column $operator ANY(ARRAY[$values])"
-        return combineWithNullCheck(condition, nullCheck)
-    }
-
-    private fun buildBooleanCondition(column: String, filter: FilterValue.BooleanFilter): String? {
-        val nullCheck = getNullCheck(column, filter.nullHandling)
-
-        val condition = filter.value?.let { "$column = ${if (it) "TRUE" else "FALSE"}" }
-        return condition?.let { combineWithNullCheck(it, nullCheck) }
-    }
-
-    private fun getNullCheck(column: String, nullHandling: NullHandling): String? {
-        return when (nullHandling) {
-            NullHandling.Include -> "OR $column IS NULL"
-            NullHandling.Exclude -> "AND $column IS NOT NULL"
-            NullHandling.Ignore -> null
-        }
-    }
-
-    private fun combineWithNullCheck(condition: String, nullCheck: String?): String {
-        return nullCheck?.let { "($condition $it)" } ?: condition
-    }
+    Include,     // Dołącz wartości null - dla pustej wartości - tylko nulle
+    Exclude,     // Wyklucz wartości null
 }

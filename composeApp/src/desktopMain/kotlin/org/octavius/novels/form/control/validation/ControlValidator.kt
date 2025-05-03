@@ -4,7 +4,6 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.DependencyType
-import org.octavius.novels.form.control.type.SectionControl
 
 abstract class ControlValidator<T: Any> {
     // Sprawdzenie czy kontrolka jest widoczna

@@ -9,9 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.report.FilterValue
-import org.octavius.novels.report.NullHandling
-import org.octavius.novels.report.TextFilterType
+import org.octavius.novels.report.*
 import org.octavius.novels.report.column.ReportColumn
 
 class StringListColumn(
@@ -22,7 +20,65 @@ class StringListColumn(
     filterable: Boolean = true,
     private val maxVisibleItems: Int = 3,
     private val separator: String? = null
-) : ReportColumn(name, header, width, sortable, filterable) {
+) : ReportColumn(name, header, width, filterable, sortable) {
+
+    override fun initializeState(): ColumnState {
+        return ColumnState(
+            mutableStateOf(SortDirection.UNSPECIFIED),
+            filtering = if (filterable) mutableStateOf(FilterValue.TextFilter()) else mutableStateOf(
+                null
+            )
+        )
+    }
+
+    override fun constructWhereClause(filter: FilterValue<*>): String {
+        val textFilter = filter as FilterValue.TextFilter
+
+        // Gdy nie mamy wartości do filtrowania
+        if (textFilter.value.value.isEmpty() && textFilter.nullHandling.value == NullHandling.Ignore) {
+            return ""
+        }
+
+        // Escape wartości tekstu dla SQL
+        val escapedValue = textFilter.value.value.replace("'", "''")
+
+        // Określenie czy wyszukiwanie powinno być case-sensitive
+        val valueExpr = if (textFilter.caseSensitive.value) "'$escapedValue'" else "LOWER('$escapedValue')"
+
+        // Budowanie klauzuli dla listy tekstów
+        // W przypadku listy musimy sprawdzić, czy jakikolwiek element spełnia warunek
+        val baseClause = when (textFilter.filterType.value) {
+            TextFilterType.Exact ->
+                "$name @> ARRAY[$valueExpr]"  // Sprawdza czy lista zawiera dokładnie tę wartość
+
+            TextFilterType.StartsWith ->
+                "EXISTS (SELECT 1 FROM unnest($name) AS elem WHERE " +
+                        (if (textFilter.caseSensitive.value) "elem" else "LOWER(elem)") +
+                        " LIKE '${escapedValue}%')"
+
+            TextFilterType.EndsWith ->
+                "EXISTS (SELECT 1 FROM unnest($name) AS elem WHERE " +
+                        (if (textFilter.caseSensitive.value) "elem" else "LOWER(elem)") +
+                        " LIKE '%${escapedValue}')"
+
+            TextFilterType.Contains ->
+                "EXISTS (SELECT FROM unnest($name) AS elem WHERE " +
+                        (if (textFilter.caseSensitive.value) "elem" else "LOWER(elem)") +
+                        " LIKE '%${escapedValue}%')"
+
+            TextFilterType.NotContains ->
+                "NOT EXISTS (SELECT FROM unnest($name) AS elem WHERE " +
+                        (if (textFilter.caseSensitive.value) "elem" else "LOWER(elem)") +
+                        " LIKE '%${escapedValue}%')"
+        }
+
+        // Łączenie podstawowej klauzuli z obsługą nulli
+        return when (textFilter.nullHandling.value) {
+            NullHandling.Ignore -> baseClause
+            NullHandling.Include -> "($baseClause OR $name IS NULL)"
+            NullHandling.Exclude -> "($baseClause AND $name IS NOT NULL)"
+        }
+    }
 
     @Composable
     override fun RenderCell(item: Map<String, Any?>, modifier: Modifier) {
@@ -56,7 +112,7 @@ class StringListColumn(
             }
         } else {
             // Wyświetl jako listę elementów
-            androidx.compose.foundation.layout.Column(
+            Column(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp, horizontal = 8.dp)
@@ -84,25 +140,15 @@ class StringListColumn(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>?,
+        currentFilter: FilterValue<*>,
         onFilterChanged: (FilterValue<*>?) -> Unit
     ) {
-        if (!filtrable) return
+        if (!filterable) return
 
-        var expanded by remember { mutableStateOf(false) }
-        var filterText by remember { mutableStateOf("") }
-        var filterType by remember { mutableStateOf(TextFilterType.Contains) }
-
-        @Suppress("UNCHECKED_CAST")
-        val textFilter = currentFilter as? FilterValue.TextFilter
-
-        // Inicjalizacja wartości z aktualnego filtra
-        LaunchedEffect(currentFilter) {
-            textFilter?.let {
-                filterText = it.value
-                filterType = it.filterType
-            }
-        }
+        val textFilter = currentFilter as? FilterValue.TextFilter ?: return
+        val filterText = textFilter.value
+        val filterType = textFilter.filterType
+        val nullHandling = textFilter.nullHandling
 
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
@@ -112,29 +158,17 @@ class StringListColumn(
             )
 
             OutlinedTextField(
-                value = filterText,
+                value = filterText.value,
                 onValueChange = {
-                    filterText = it
-                    if (it.isNotEmpty()) {
-                        onFilterChanged(
-                            FilterValue.TextFilter(
-                                filterType = filterType,
-                                value = it,
-                                nullHandling = NullHandling.Exclude
-                            )
-                        )
-                    } else {
-                        onFilterChanged(null)
-                    }
+                    filterText.value = it
                 },
                 label = { Text("Szukaj w liście") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    if (filterText.isNotEmpty()) {
+                    if (filterText.value.isNotEmpty()) {
                         IconButton(onClick = {
-                            filterText = ""
-                            onFilterChanged(null)
+                            filterText.value = ""
                         }) {
                             Icon(Icons.Default.Clear, "Wyczyść filtr")
                         }
@@ -144,12 +178,14 @@ class StringListColumn(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            var expanded by remember { mutableStateOf(false) }
+
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = it }
             ) {
                 OutlinedTextField(
-                    value = when(filterType) {
+                    value = when(filterType.value) {
                         TextFilterType.Exact -> "Element dokładnie równy"
                         TextFilterType.StartsWith -> "Element zaczyna się od"
                         TextFilterType.EndsWith -> "Element kończy się na"
@@ -178,21 +214,44 @@ class StringListColumn(
                         DropdownMenuItem(
                             text = { Text(label) },
                             onClick = {
-                                filterType = type
+                                filterType.value = type
                                 expanded = false
-                                if (filterText.isNotEmpty()) {
-                                    onFilterChanged(
-                                        FilterValue.TextFilter(
-                                            filterType = type,
-                                            value = filterText,
-                                            nullHandling = NullHandling.Exclude
-                                        )
-                                    )
-                                }
                             }
                         )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Opcje dla obsługi null
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Wartości puste:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+
+                RadioButton(
+                    selected = nullHandling.value == NullHandling.Ignore,
+                    onClick = { nullHandling.value = NullHandling.Ignore }
+                )
+                Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
+
+                RadioButton(
+                    selected = nullHandling.value == NullHandling.Include,
+                    onClick = { nullHandling.value = NullHandling.Include }
+                )
+                Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
+
+                RadioButton(
+                    selected = nullHandling.value == NullHandling.Exclude,
+                    onClick = { nullHandling.value = NullHandling.Exclude }
+                )
+                Text("Wyklucz")
             }
 
             Text(

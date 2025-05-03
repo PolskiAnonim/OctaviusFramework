@@ -14,11 +14,13 @@ import org.octavius.novels.report.column.ReportColumn
 
 @Composable
 fun FilterPanel(
-    columns: List<ReportColumn>,
-    reportState: ReportState
+    columns: Map<String, ReportColumn>,
+    columnStates: Map<String, ColumnState>,
+    onPageReset: () -> Unit
 ) {
     if (columns.isEmpty()) return
 
+    val columnsList = columns.entries.toList()
     var selectedColumnIndex by remember { mutableStateOf(0) }
     val scrollState = rememberScrollState()
 
@@ -45,11 +47,18 @@ fun FilterPanel(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                if (reportState.filtering.isNotEmpty()) {
+                // Przycisk resetowania wszystkich filtrów
+                val anyFilterActive = columnStates.values.any {
+                    it.filtering.value?.isActive() == true
+                }
+
+                if (anyFilterActive) {
                     Button(
                         onClick = {
-                            reportState.filtering.clear()
-                            reportState.currentPage.value = 1
+                            columnStates.values.forEach { state ->
+                                state.filtering.value?.reset()
+                            }
+                            onPageReset()
                         }
                     ) {
                         Icon(
@@ -80,7 +89,10 @@ fun FilterPanel(
                     selectedTabIndex = selectedColumnIndex,
                     modifier = Modifier.weight(1f)
                 ) {
-                    columns.forEachIndexed { index, column ->
+                    columnsList.forEachIndexed { index, (key, column) ->
+                        val state = columnStates[key]
+                        val isFilterActive = state?.filtering?.value?.isActive() == true
+
                         Tab(
                             selected = selectedColumnIndex == index,
                             onClick = { selectedColumnIndex = index },
@@ -88,8 +100,8 @@ fun FilterPanel(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(column.header)
 
-                                    // Dodaj wskaźnik aktywnego filtra
-                                    if (reportState.filtering.containsKey(column.name)) {
+                                    // Wskaźnik aktywnego filtra
+                                    if (isFilterActive) {
                                         Badge(
                                             modifier = Modifier.padding(start = 4.dp),
                                             containerColor = MaterialTheme.colorScheme.primary
@@ -106,29 +118,32 @@ fun FilterPanel(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Wyświetlanie interfejsu filtrowania dla wybranej kolumny
-            val selectedColumn = columns.getOrNull(selectedColumnIndex)
-            selectedColumn?.let { column ->
+            // Interfejs filtrowania dla wybranej kolumny
+            if (selectedColumnIndex < columnsList.size) {
+                val (columnKey, selectedColumn) = columnsList[selectedColumnIndex]
+                val state = columnStates[columnKey]
+                val filter = state?.filtering?.value
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp)
                         .verticalScroll(scrollState)
                 ) {
-                    column.RenderFilter(
-                        currentFilter = reportState.filtering[column.name],
-                        onFilterChanged = { filterValue ->
-                            if (filterValue != null) {
-                                reportState.filtering[column.name] = filterValue
-                            } else {
-                                reportState.filtering.remove(column.name)
+                    if (filter != null) {
+                        selectedColumn.RenderFilter(
+                            currentFilter = filter,
+                            onFilterChanged = { newFilter ->
+                                // Tutaj nic nie robimy - filtr jest już MutableState
+                                // i modyfikacja jest obsługiwana wewnątrz RenderFilter
+                                onPageReset()
                             }
-                            reportState.currentPage.value = 1
-                        }
-                    )
+                        )
+                    }
                 }
 
-                if (reportState.filtering.containsKey(column.name)) {
+                // Przycisk czyszczenia aktywnego filtra
+                if (filter?.isActive() == true) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -137,8 +152,8 @@ fun FilterPanel(
                     ) {
                         OutlinedButton(
                             onClick = {
-                                reportState.filtering.remove(column.name)
-                                reportState.currentPage.value = 1
+                                filter.reset()
+                                onPageReset()
                             }
                         ) {
                             Icon(
@@ -146,7 +161,7 @@ fun FilterPanel(
                                 contentDescription = "Wyczyść filtr"
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Wyczyść filtr dla ${column.header}")
+                            Text("Wyczyść filtr dla ${selectedColumn.header}")
                         }
                     }
                 }
