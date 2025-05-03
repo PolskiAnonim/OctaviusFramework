@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -130,29 +131,33 @@ abstract class Report : Screen {
         var showFilters by remember { mutableStateOf(false) }
         var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
         var totalPages by remember { mutableStateOf(1L) }
-        var changedFilters by remember { mutableStateOf(1L) }
+
+        // Dla śledzenia zmian filtrów
+        val filteringState = derivedStateOf {
+            columnStates.map { (key, state) ->
+                key to (state.filtering.value?.isActive() == true)
+            }.toMap()
+        }
+
+        // Efekt pobierający dane po zmianie parametrów
+        LaunchedEffect(
+            reportState.currentPage.value,
+            reportState.searchQuery.value,
+            filteringState.value  // Śledzenie zmian w filtrach
+        ) {
+            fetchData(reportState.currentPage.value) { result, pages ->
+                dataList = result
+                totalPages = pages
+                reportState.totalPages.value = pages.toInt()
+            }
+        }
 
         Column(modifier = Modifier.padding(paddingValues)) {
-            // Efekt pobierający dane po zmianie parametrów
-            LaunchedEffect(
-                reportState.currentPage.value,
-                reportState.searchQuery.value,
-                changedFilters  // Śledzenie zmian w filtrach
-            ) {
-                fetchData(reportState.currentPage.value) { result, pages ->
-                    dataList = result
-                    totalPages = pages
-                    reportState.totalPages.value = pages.toInt()
-                }
-            }
-
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.weight(1f)
             ) {
-
                 item {
-
                     // Pasek wyszukiwania i filtrowania
                     Row(
                         modifier = Modifier
@@ -221,9 +226,8 @@ abstract class Report : Screen {
                         FilterPanel(
                             columns = columns.filter { it.value.filterable },
                             columnStates = columnStates.filter { it.value.filtering.value != null },
-                            onFiltersChanged = {
+                            onPageReset = {
                                 reportState.currentPage.value = 1
-                                changedFilters++
                             }
                         )
                     }

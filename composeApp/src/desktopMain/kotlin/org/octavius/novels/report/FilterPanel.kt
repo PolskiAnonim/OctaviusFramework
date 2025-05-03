@@ -16,7 +16,7 @@ import org.octavius.novels.report.column.ReportColumn
 fun FilterPanel(
     columns: Map<String, ReportColumn>,
     columnStates: Map<String, ColumnState>,
-    onFiltersChanged: () -> Unit
+    onPageReset: () -> Unit
 ) {
     if (columns.isEmpty()) return
 
@@ -58,7 +58,7 @@ fun FilterPanel(
                             columnStates.values.forEach { state ->
                                 state.filtering.value!!.reset()
                             }
-                            onFiltersChanged()
+                            onPageReset()
                         }
                     ) {
                         Icon(
@@ -132,8 +132,7 @@ fun FilterPanel(
                 ) {
                     key(selectedColumnIndex) {
                         selectedColumn.RenderFilter(
-                            currentFilter = filter,
-                            onFilterChanged = { onFiltersChanged() }
+                            currentFilter = filter
                         )
                     }
                 }
@@ -149,7 +148,7 @@ fun FilterPanel(
                         OutlinedButton(
                             onClick = {
                                 filter.reset()
-                                onFiltersChanged()
+                                onPageReset()
                             }
                         ) {
                             Icon(
