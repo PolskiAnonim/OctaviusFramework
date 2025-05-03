@@ -49,14 +49,14 @@ fun FilterPanel(
 
                 // Przycisk resetowania wszystkich filtrów
                 val anyFilterActive = columnStates.values.any {
-                    it.filtering.value?.isActive() == true
+                    it.filtering.value!!.isActive()
                 }
 
                 if (anyFilterActive) {
                     Button(
                         onClick = {
                             columnStates.values.forEach { state ->
-                                state.filtering.value?.reset()
+                                state.filtering.value!!.reset()
                             }
                             onPageReset()
                         }
@@ -90,8 +90,8 @@ fun FilterPanel(
                     modifier = Modifier.weight(1f)
                 ) {
                     columnsList.forEachIndexed { index, (key, column) ->
-                        val state = columnStates[key]
-                        val isFilterActive = state?.filtering?.value?.isActive() == true
+                        val state = columnStates[key]!!
+                        val isFilterActive = state.filtering.value!!.isActive()
 
                         Tab(
                             selected = selectedColumnIndex == index,
@@ -121,8 +121,8 @@ fun FilterPanel(
             // Interfejs filtrowania dla wybranej kolumny
             if (selectedColumnIndex < columnsList.size) {
                 val (columnKey, selectedColumn) = columnsList[selectedColumnIndex]
-                val state = columnStates[columnKey]
-                val filter = state?.filtering?.value
+                val state = columnStates[columnKey]!!
+                val filter = state.filtering.value!!
 
                 Box(
                     modifier = Modifier
@@ -130,20 +130,16 @@ fun FilterPanel(
                         .height(300.dp)
                         .verticalScroll(scrollState)
                 ) {
-                    if (filter != null) {
+                    key(selectedColumnIndex) {
                         selectedColumn.RenderFilter(
                             currentFilter = filter,
-                            onFilterChanged = { newFilter ->
-                                // Tutaj nic nie robimy - filtr jest już MutableState
-                                // i modyfikacja jest obsługiwana wewnątrz RenderFilter
-                                onPageReset()
-                            }
+                            onFilterChanged = { onPageReset() }
                         )
                     }
                 }
 
                 // Przycisk czyszczenia aktywnego filtra
-                if (filter?.isActive() == true) {
+                if (filter.isActive()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

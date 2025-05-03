@@ -1,14 +1,9 @@
 package org.octavius.novels.report
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshots.SnapshotStateMap
-import org.octavius.novels.util.Converters.camelToSnakeCase
-import kotlin.reflect.KClass
 
-// 1. Najpierw dodajmy interfejs dla filtrów, który zapewni funkcje reset i isActive
 interface FilterInterface<T> {
     fun reset()
     fun isActive(): Boolean
@@ -68,7 +63,7 @@ sealed class FilterValue<T> : FilterInterface<T> {
     }
 
     data class EnumFilter<E : Enum<*>>(
-        private val _values: MutableState<MutableList<E>> = mutableStateOf(mutableListOf()),
+        private val _values: MutableState<List<E>> = mutableStateOf(emptyList()),
         val include: MutableState<Boolean> = mutableStateOf(true),
         override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
     ) : FilterValue<E>() {
@@ -78,12 +73,12 @@ sealed class FilterValue<T> : FilterInterface<T> {
         // Metody do modyfikacji listy
         fun addValue(value: Any) {
             @Suppress("UNCHECKED_CAST")
-            _values.value.add(value as E)
+            _values.value += value as E
         }
 
         fun removeValue(value: Any) {
             @Suppress("UNCHECKED_CAST")
-            _values.value.removeIf { it == value as E }
+            _values.value = _values.value.filter { it != value as E }
         }
 
         fun containsValue(value: Any): Boolean {
@@ -92,7 +87,7 @@ sealed class FilterValue<T> : FilterInterface<T> {
         }
 
         override fun reset() {
-            _values.value = mutableListOf()
+            _values.value = emptyList()
             include.value = true
             nullHandling.value = NullHandling.Ignore
         }

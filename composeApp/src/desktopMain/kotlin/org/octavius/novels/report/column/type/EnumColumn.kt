@@ -24,7 +24,7 @@ class EnumColumn<E : Enum<*>>(
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
-    private val enumClass: KClass<E>,
+    private val enumClass: KClass<out E>,
     private val formatter: (Enum<*>?) -> String = {
         it?.let {
             try {
