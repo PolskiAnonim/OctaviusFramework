@@ -135,7 +135,7 @@ abstract class Report : Screen {
         // Dla śledzenia zmian filtrów
         val filteringState = derivedStateOf {
             columnStates.map { (key, state) ->
-                key to (state.filtering.value?.isActive() == true)
+                key to (state.filtering.value?.dirtyState?.value)
             }.toMap()
         }
 

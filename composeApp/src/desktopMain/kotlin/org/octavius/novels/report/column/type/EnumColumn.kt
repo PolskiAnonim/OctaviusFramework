@@ -136,19 +136,28 @@ class EnumColumn<E : Enum<*>>(
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Ignore,
-                    onClick = { nullHandling.value = NullHandling.Ignore }
+                    onClick = {
+                        nullHandling.value = NullHandling.Ignore
+                        enumFilter.markDirty()
+                    }
                 )
                 Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Include,
-                    onClick = { nullHandling.value = NullHandling.Include }
+                    onClick = {
+                        nullHandling.value = NullHandling.Include
+                        enumFilter.markDirty()
+                    }
                 )
                 Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Exclude,
-                    onClick = { nullHandling.value = NullHandling.Exclude }
+                    onClick = {
+                        nullHandling.value = NullHandling.Exclude
+                        enumFilter.markDirty()
+                    }
                 )
                 Text("Wyklucz")
             }
@@ -163,13 +172,19 @@ class EnumColumn<E : Enum<*>>(
                 Text("Tryb wyboru:")
                 RadioButton(
                     selected = include.value,
-                    onClick = { include.value = true }
+                    onClick = {
+                        include.value = true
+                        enumFilter.markDirty()
+                    }
                 )
                 Text("Uwzględnij zaznaczone", modifier = Modifier.padding(end = 8.dp))
 
                 RadioButton(
                     selected = !include.value,
-                    onClick = { include.value = false }
+                    onClick = {
+                        include.value = false
+                        enumFilter.markDirty()
+                    }
                 )
                 Text("Wyklucz zaznaczone")
             }

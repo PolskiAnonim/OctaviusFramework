@@ -112,14 +112,17 @@ class BooleanColumn(
                     selected = filterValue.value == true,
                     onClick = {
                         filterValue.value = if (filterValue.value == true) null else true
+                        booleanFilter.markDirty()
                     },
                     label = { Text(trueText) },
                     leadingIcon = if (filterValue.value == true) {
-                        { Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        ) }
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
                     } else null
                 )
 
@@ -127,14 +130,17 @@ class BooleanColumn(
                     selected = filterValue.value == false,
                     onClick = {
                         filterValue.value = if (filterValue.value == false) null else false
+                        booleanFilter.markDirty()
                     },
                     label = { Text(falseText) },
                     leadingIcon = if (filterValue.value == false) {
-                        { Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        ) }
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
                     } else null
                 )
             }
@@ -154,19 +160,28 @@ class BooleanColumn(
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Ignore,
-                    onClick = { nullHandling.value = NullHandling.Ignore }
+                    onClick = {
+                        nullHandling.value = NullHandling.Ignore
+                        booleanFilter.markDirty()
+                    }
                 )
                 Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Include,
-                    onClick = { nullHandling.value = NullHandling.Include }
+                    onClick = {
+                        nullHandling.value = NullHandling.Include
+                        booleanFilter.markDirty()
+                    }
                 )
                 Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Exclude,
-                    onClick = { nullHandling.value = NullHandling.Exclude }
+                    onClick = {
+                        nullHandling.value = NullHandling.Exclude
+                        booleanFilter.markDirty()
+                    }
                 )
                 Text("Wyklucz")
             }

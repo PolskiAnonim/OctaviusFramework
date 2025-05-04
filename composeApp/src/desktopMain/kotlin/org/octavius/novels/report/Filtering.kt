@@ -12,6 +12,13 @@ interface FilterInterface<T> {
 sealed class FilterValue<T> : FilterInterface<T> {
     abstract val nullHandling: MutableState<NullHandling>
 
+    val dirtyState: MutableState<Boolean> = mutableStateOf(false)
+
+    // Funkcja pomocnicza do oznaczenia filtru jako zmieniony
+    fun markDirty() {
+        dirtyState.value = !dirtyState.value
+    }
+
     data class BooleanFilter(
         val value: MutableState<Boolean?> = mutableStateOf(null),
         override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
@@ -37,6 +44,7 @@ sealed class FilterValue<T> : FilterInterface<T> {
             maxValue.value = null
             filterType.value = NumberFilterType.Equals
             nullHandling.value = NullHandling.Ignore
+            markDirty()
         }
 
         override fun isActive(): Boolean {
@@ -55,6 +63,7 @@ sealed class FilterValue<T> : FilterInterface<T> {
             filterType.value = TextFilterType.Contains
             caseSensitive.value = false
             nullHandling.value = NullHandling.Ignore
+            markDirty()
         }
 
         override fun isActive(): Boolean {
@@ -74,11 +83,13 @@ sealed class FilterValue<T> : FilterInterface<T> {
         fun addValue(value: Any) {
             @Suppress("UNCHECKED_CAST")
             _values.value += value as E
+            markDirty()
         }
 
         fun removeValue(value: Any) {
             @Suppress("UNCHECKED_CAST")
             _values.value = _values.value.filter { it != value as E }
+            markDirty()
         }
 
         fun containsValue(value: Any): Boolean {
@@ -90,6 +101,7 @@ sealed class FilterValue<T> : FilterInterface<T> {
             _values.value = emptyList()
             include.value = true
             nullHandling.value = NullHandling.Ignore
+            markDirty()
         }
 
         override fun isActive(): Boolean {

@@ -106,7 +106,7 @@ class StringColumn(
                 value = filterText.value,
                 onValueChange = {
                     filterText.value = it
-                    // Filtr jest już aktualizowany poprzez MutableState
+                    textFilter.markDirty()
                 },
                 label = { Text("Filtruj") },
                 singleLine = true,
@@ -115,6 +115,7 @@ class StringColumn(
                     if (filterText.value.isNotEmpty()) {
                         IconButton(onClick = {
                             filterText.value = ""
+                            textFilter.markDirty()
                         }) {
                             Icon(Icons.Default.Clear, "Wyczyść filtr")
                         }
@@ -131,7 +132,7 @@ class StringColumn(
                 onExpandedChange = { expanded = it }
             ) {
                 OutlinedTextField(
-                    value = when(filterType.value) {
+                    value = when (filterType.value) {
                         TextFilterType.Exact -> "Dokładnie"
                         TextFilterType.StartsWith -> "Zaczyna się od"
                         TextFilterType.EndsWith -> "Kończy się na"
@@ -160,8 +161,9 @@ class StringColumn(
                         DropdownMenuItem(
                             text = { Text(label) },
                             onClick = {
-                                filterType.value = type
                                 expanded = false
+                                filterType.value = type
+                                textFilter.markDirty()
                             },
                             trailingIcon = if (filterType.value == type) {
                                 { Icon(Icons.Default.Check, null) }
@@ -186,19 +188,28 @@ class StringColumn(
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Ignore,
-                    onClick = { nullHandling.value = NullHandling.Ignore }
+                    onClick = {
+                        nullHandling.value = NullHandling.Ignore
+                        textFilter.markDirty()
+                    }
                 )
                 Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Include,
-                    onClick = { nullHandling.value = NullHandling.Include }
+                    onClick = {
+                        nullHandling.value = NullHandling.Include
+                        textFilter.markDirty()
+                    }
                 )
                 Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Exclude,
-                    onClick = { nullHandling.value = NullHandling.Exclude }
+                    onClick = {
+                        nullHandling.value = NullHandling.Exclude
+                        textFilter.markDirty()
+                    }
                 )
                 Text("Wyklucz")
             }
@@ -212,7 +223,10 @@ class StringColumn(
             ) {
                 Checkbox(
                     checked = caseSensitive.value,
-                    onCheckedChange = { caseSensitive.value = it }
+                    onCheckedChange = {
+                        caseSensitive.value = it
+                        textFilter.markDirty()
+                    }
                 )
                 Text(
                     text = "Uwzględnij wielkość liter",

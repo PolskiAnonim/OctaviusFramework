@@ -37,7 +37,8 @@ class IntegerColumn(
 
         // Jeśli nie mamy wartości do filtrowania i ignorujemy nulle, zwróć pusty string
         if ((intFilter.minValue.value == null && intFilter.maxValue.value == null) &&
-            intFilter.nullHandling.value == NullHandling.Ignore) {
+            intFilter.nullHandling.value == NullHandling.Ignore
+        ) {
             return ""
         }
 
@@ -108,6 +109,7 @@ class IntegerColumn(
             )
         }
     }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(
@@ -130,7 +132,7 @@ class IntegerColumn(
                 onExpandedChange = { expanded = it }
             ) {
                 OutlinedTextField(
-                    value = when(filterType.value) {
+                    value = when (filterType.value) {
                         NumberFilterType.Equals -> "Równe"
                         NumberFilterType.NotEquals -> "Różne od"
                         NumberFilterType.LessThan -> "Mniejsze niż"
@@ -160,14 +162,15 @@ class IntegerColumn(
                         NumberFilterType.GreaterEquals to "Większe lub równe",
                         NumberFilterType.Range to "Zakres"
                     ).forEach { (type, label) ->
-                    DropdownMenuItem(
-                        text = { Text(label) },
-                        onClick = {
-                            filterType.value = type
-                            expanded = false
-                        }
-                    )
-                }
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                expanded = false
+                                filterType.value = type
+                                numberFilter.markDirty()
+                            }
+                        )
+                    }
                 }
             }
 
@@ -183,6 +186,7 @@ class IntegerColumn(
                         onValueChange = {
                             try {
                                 minValue.value = if (it.isEmpty()) null else it.toInt()
+                                numberFilter.markDirty()
                             } catch (e: NumberFormatException) {
                                 // Ignoruj niepoprawne wartości
                             }
@@ -198,6 +202,7 @@ class IntegerColumn(
                         onValueChange = {
                             try {
                                 maxValue.value = if (it.isEmpty()) null else it.toInt()
+                                numberFilter.markDirty()
                             } catch (e: NumberFormatException) {
                                 // Ignoruj niepoprawne wartości
                             }
@@ -214,6 +219,7 @@ class IntegerColumn(
                     onValueChange = {
                         try {
                             minValue.value = if (it.isEmpty()) null else it.toInt()
+                            numberFilter.markDirty()
                         } catch (e: NumberFormatException) {
                             // Ignoruj niepoprawne wartości
                         }
@@ -226,6 +232,7 @@ class IntegerColumn(
                         if (minValue.value.toString().isNotEmpty()) {
                             IconButton(onClick = {
                                 minValue.value = null
+                                numberFilter.markDirty()
                             }) {
                                 Icon(Icons.Default.Clear, "Wyczyść filtr")
                             }
@@ -249,19 +256,28 @@ class IntegerColumn(
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Ignore,
-                    onClick = { nullHandling.value = NullHandling.Ignore }
+                    onClick = {
+                        nullHandling.value = NullHandling.Ignore
+                        numberFilter.markDirty()
+                    }
                 )
                 Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Include,
-                    onClick = { nullHandling.value = NullHandling.Include }
+                    onClick = {
+                        nullHandling.value = NullHandling.Include
+                        numberFilter.markDirty()
+                    }
                 )
                 Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
 
                 RadioButton(
                     selected = nullHandling.value == NullHandling.Exclude,
-                    onClick = { nullHandling.value = NullHandling.Exclude }
+                    onClick = {
+                        nullHandling.value = NullHandling.Exclude
+                        numberFilter.markDirty()
+                    }
                 )
                 Text("Wyklucz")
             }
