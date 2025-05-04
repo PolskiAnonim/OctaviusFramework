@@ -24,19 +24,17 @@ import org.octavius.novels.report.column.ReportColumn
 
 abstract class Report : Screen {
 
-    private val reportState = ReportState()
+    private val query: Query
+    private val columns: Map<String, ReportColumn>
     private val columnStates = mutableMapOf<String, ColumnState>()
 
-    private val query: Query by lazy {
-        createQuery()
+    init {
+        columns = this.createColumns()
+        initializeColumnStates(columns)
+        query = this.createQuery()
     }
 
-    private val columns: Map<String, ReportColumn> by lazy {
-        val cols = createColumns()
-        // Inicjalizacja stanów kolumn
-        initializeColumnStates(cols)
-        cols
-    }
+    private val reportState = ReportState()
 
     private fun initializeColumnStates(columns: Map<String, ReportColumn>) {
         for ((key, column) in columns) {
