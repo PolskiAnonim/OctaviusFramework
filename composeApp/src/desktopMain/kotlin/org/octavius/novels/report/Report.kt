@@ -21,6 +21,11 @@ import kotlinx.coroutines.launch
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.navigator.Screen
 import org.octavius.novels.report.column.ReportColumn
+import org.octavius.novels.report.column.type.BooleanColumn
+import org.octavius.novels.report.column.type.EnumColumn
+import org.octavius.novels.report.column.type.IntegerColumn
+import org.octavius.novels.report.column.type.StringColumn
+import org.octavius.novels.report.column.type.StringListColumn
 
 abstract class Report : Screen {
 
@@ -58,7 +63,35 @@ abstract class Report : Screen {
         // Dodaj warunek wyszukiwania dla searchQuery jeśli nie jest pusty
         if (reportState.searchQuery.value.isNotEmpty()) {
             val escapedQuery = reportState.searchQuery.value.replace("'", "''")
-            whereClauseBuilder.append("(CAST(id AS TEXT) ILIKE '%$escapedQuery%')")
+            val searchConditions = mutableListOf<String>()
+
+            // Dla każdej widocznej kolumny dodaj warunek wyszukiwania
+            columns.forEach { (key, column) ->
+                // Pomijamy kolumny, które są ukryte lub nie są typu tekstowego
+                if (columnStates[key]?.visible?.value == true) {
+                    when (column) {
+                        is StringColumn, is StringListColumn -> {
+                            // Dla kolumn tekstowych szukamy ILIKE
+                            searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
+                        }
+                        is EnumColumn<*> -> {
+                            // Dla enumów szukamy po wartościach wyświetlanych
+                            searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
+                        }
+                        is IntegerColumn, is BooleanColumn -> {
+                            // Dla pozostałych typów próbujemy konwersję do tekstu
+                            if (escapedQuery.toIntOrNull() != null || escapedQuery.lowercase() in listOf("true", "false", "tak", "nie")) {
+                                searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Łączymy wszystkie warunki operatorem OR
+            if (searchConditions.isNotEmpty()) {
+                whereClauseBuilder.append("(${searchConditions.joinToString(" OR ")})")
+            }
         }
 
         // Dodaj warunki filtrowania z columnStates
