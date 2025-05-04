@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.Input
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,11 +21,7 @@ import kotlinx.coroutines.launch
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.navigator.Screen
 import org.octavius.novels.report.column.ReportColumn
-import org.octavius.novels.report.column.type.BooleanColumn
-import org.octavius.novels.report.column.type.EnumColumn
-import org.octavius.novels.report.column.type.IntegerColumn
-import org.octavius.novels.report.column.type.StringColumn
-import org.octavius.novels.report.column.type.StringListColumn
+import org.octavius.novels.report.column.type.*
 
 abstract class Report : Screen {
 
@@ -45,6 +41,12 @@ abstract class Report : Screen {
         for ((key, column) in columns) {
             columnStates[key] = column.initializeState()
         }
+    }
+
+    @Composable
+    protected open fun AddMenu() {
+        // Domyślna implementacja pustego menu
+        Box {}
     }
 
     open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
@@ -227,6 +229,28 @@ abstract class Report : Screen {
                             },
                             singleLine = true
                         )
+
+                        // Menu dodawania
+                        var expanded by remember { mutableStateOf(false) }
+                        Box(
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            IconButton(
+                                onClick = { expanded = !expanded }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Input,
+                                    contentDescription = "Dodaj"
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                AddMenu()
+                            }
+                        }
 
                         // Przycisk filtrów z aktywnym wskaźnikiem
                         IconButton(

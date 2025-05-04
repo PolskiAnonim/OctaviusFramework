@@ -88,7 +88,7 @@ class NovelForm(id: Int? = null) : Form() {
             // Czytam
             if (novelStatus.dirty) {
                 result.add(SaveOperation.Insert("novel_volumes", formData["novel_volumes"]!!,
-                    listOf(ForeignKey("id","novels.id", loadedId))))
+                    listOf(ForeignKey("id","novels", loadedId))))
             } else {
                 result.add(SaveOperation.Update("novel_volumes", formData["novel_volumes"]!!, loadedId!!))
             }

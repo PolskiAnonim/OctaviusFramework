@@ -1,5 +1,11 @@
 package org.octavius.novels.report
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.NovelLanguage
 import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.NovelForm
@@ -10,7 +16,7 @@ import org.octavius.novels.report.column.type.EnumColumn
 import org.octavius.novels.report.column.type.IntegerColumn
 import org.octavius.novels.report.column.type.StringListColumn
 
-class NovelReport(navigator: Navigator) : Report() {
+class NovelReport(val navigator: Navigator) : Report() {
 
     override fun createQuery(): Query {
         val sql = """
@@ -57,6 +63,23 @@ class NovelReport(navigator: Navigator) : Report() {
                 width = 0.6f
             )
         )
+    }
+
+    @Composable
+    override fun AddMenu() {
+        DropdownMenuItem(
+            text = { Text("Nowa nowelka") },
+            onClick = {
+                navigator.addScreen(NovelForm())
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null
+                )
+            }
+        )
+        // Tutaj możesz dodać więcej opcji, jeśli potrzebujesz
     }
 
 
