@@ -81,9 +81,9 @@ class StringListColumn(
     }
 
     @Composable
-    override fun RenderCell(item: Map<String, Any?>, modifier: Modifier) {
+    override fun RenderCell(item: Any?, modifier: Modifier) {
         @Suppress("UNCHECKED_CAST")
-        val value = item[name] as? List<String>
+        val value = item as? List<String>
 
         if (value.isNullOrEmpty()) {
             Box(

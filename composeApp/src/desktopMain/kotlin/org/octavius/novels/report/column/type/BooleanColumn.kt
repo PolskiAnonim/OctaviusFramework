@@ -56,8 +56,8 @@ class BooleanColumn(
     }
 
     @Composable
-    override fun RenderCell(item: Map<String, Any?>, modifier: Modifier) {
-        val value = item[name] as? Boolean
+    override fun RenderCell(item: Any?, modifier: Modifier) {
+        val value = item as? Boolean
 
         Box(
             modifier = modifier
@@ -69,9 +69,9 @@ class BooleanColumn(
                 if (showIcon) {
                     Icon(
                         imageVector = if (value)
-                            androidx.compose.material.icons.Icons.Default.Check
+                            Icons.Default.Check
                         else
-                            androidx.compose.material.icons.Icons.Default.Close,
+                            Icons.Default.Close,
                         contentDescription = if (value) trueText else falseText,
                         tint = if (value)
                             MaterialTheme.colorScheme.primary

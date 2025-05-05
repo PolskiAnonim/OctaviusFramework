@@ -14,7 +14,7 @@ abstract class ReportColumn(
     val sortable: Boolean = false
 ) {
     @Composable
-    abstract fun RenderCell(item: Map<String, Any?>, modifier: Modifier)
+    abstract fun RenderCell(item: Any?, modifier: Modifier)
 
     @Composable
     abstract fun RenderFilter(

@@ -89,8 +89,9 @@ class EnumColumn<E : Enum<*>>(
     }
 
     @Composable
-    override fun RenderCell(item: Map<String, Any?>, modifier: Modifier) {
-        val value = item[name] as? Enum<*>
+    override fun RenderCell(item: Any?, modifier: Modifier) {
+        @Suppress("UNCHECKED_CAST")
+        val value = item as? E
 
         Box(
             modifier = modifier

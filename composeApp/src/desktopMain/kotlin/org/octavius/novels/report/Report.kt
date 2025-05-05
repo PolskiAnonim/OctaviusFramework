@@ -398,13 +398,13 @@ abstract class Report : Screen {
                                 }
                             }
                     ) {
-                        columns.forEach { (_, column) ->
+                        columns.forEach { (key, column) ->
                             Box(
                                 modifier = Modifier
                                     .weight(column.width)
                                     .padding(horizontal = 4.dp)
                             ) {
-                                column.RenderCell(rowData, Modifier)
+                                column.RenderCell(rowData[key], Modifier)
                             }
                         }
                     }

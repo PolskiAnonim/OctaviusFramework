@@ -72,8 +72,8 @@ class StringColumn(
     }
 
     @Composable
-    override fun RenderCell(item: Map<String, Any?>, modifier: Modifier) {
-        val value = item[name] as? String
+    override fun RenderCell(item: Any?, modifier: Modifier) {
+        val value = item as? String
 
         Box(
             modifier = modifier

@@ -93,8 +93,8 @@ class IntegerColumn(
     }
 
     @Composable
-    override fun RenderCell(item: Map<String, Any?>, modifier: Modifier) {
-        val value = item[name] as? Int
+    override fun RenderCell(item: Any?, modifier: Modifier) {
+        val value = item as? Int
 
         Box(
             modifier = modifier
