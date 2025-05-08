@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.novels.database.DatabaseManager
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.navigator.Screen
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.column.type.*
@@ -49,7 +50,7 @@ abstract class Report : Screen {
         Box {}
     }
 
-    open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
+    open var onRowClick: ((Map<ColumnInfo, Any?>) -> Unit)? = null
 
     abstract fun createQuery(): Query
 
@@ -57,7 +58,7 @@ abstract class Report : Screen {
 
     private fun fetchData(
         page: Int,
-        onResult: (List<Map<String, Any?>>, Long) -> Unit
+        onResult: (List<Map<ColumnInfo, Any?>>, Long) -> Unit
     ) {
         // Budowanie klauzuli WHERE dla wyszukiwania
         val whereClauseBuilder = StringBuilder()
@@ -162,8 +163,7 @@ abstract class Report : Screen {
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var showFilters by remember { mutableStateOf(false) }
-        var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
-        var totalPages by remember { mutableStateOf(1L) }
+        var dataList by remember { mutableStateOf<List<Map<ColumnInfo, Any?>>>(emptyList()) }
 
         // Dla śledzenia zmian filtrów
         val filteringState = derivedStateOf {
@@ -180,7 +180,6 @@ abstract class Report : Screen {
         ) {
             fetchData(reportState.currentPage.value) { result, pages ->
                 dataList = result
-                totalPages = pages
                 reportState.totalPages.value = pages.toInt()
             }
         }
@@ -398,13 +397,13 @@ abstract class Report : Screen {
                                 }
                             }
                     ) {
-                        columns.forEach { (key, column) ->
+                        columns.forEach { (_, column) ->
                             Box(
                                 modifier = Modifier
                                     .weight(column.width)
                                     .padding(horizontal = 4.dp)
                             ) {
-                                column.RenderCell(rowData[key], Modifier)
+                                column.RenderCell(rowData[column.columnInfo], Modifier)
                             }
                         }
                     }

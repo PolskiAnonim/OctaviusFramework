@@ -11,19 +11,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.report.*
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.IntegerFilter
 import org.octavius.novels.report.filter.type.StringFilter
 
 class IntegerColumn(
-    name: String,
+    columnInfo: ColumnInfo,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
-) : ReportColumn(name, header, width, filterable, sortable) {
+) : ReportColumn(columnInfo, header, width, filterable, sortable) {
 
     override fun createFilterValue(): FilterValue<*> {
         filter = IntegerFilter(name)

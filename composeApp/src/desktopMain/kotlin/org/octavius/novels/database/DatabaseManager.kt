@@ -34,6 +34,8 @@ object DatabaseManager {
     // Instancja konwertera typów użytkownika
     private var typesConverter: UserTypesConverter
 
+    // Instancja fabryki mapperów
+    private var rowMapperFactory: RowMapperFactory
     init {
         val config = HikariConfig().apply {
             this.jdbcUrl = this@DatabaseManager.jdbcUrl
@@ -49,27 +51,8 @@ object DatabaseManager {
         // Inicjalizacja konwertera typów
         typesConverter = UserTypesConverter(jdbcTemplate)
         typesConverter.initialize()
-    }
-
-    // RowMapper dla mapowania wyników na mapy
-    private val mapRowMapper = RowMapper<Map<String, Any?>> { rs, _ ->
-        val data = mutableMapOf<String, Any?>()
-        val metaData = rs.metaData
-
-        for (i in 1..metaData.columnCount) {
-            val columnName = metaData.getColumnName(i)
-            val columnType = metaData.getColumnTypeName(i)
-
-            val rawValue = rs.getObject(i)
-            if (rs.wasNull()) {
-                data[snakeToCamelCase(columnName)] = null
-            } else {
-                val convertedValue = typesConverter.convertToDomainType(rawValue, columnType)
-                data[snakeToCamelCase(columnName)] = convertedValue
-            }
-        }
-
-        data
+        // Inicjalizacja fabryki mapperów
+        rowMapperFactory = RowMapperFactory(typesConverter)
     }
 
     // Wykonanie zapytania z paginacją
@@ -78,7 +61,7 @@ object DatabaseManager {
         params: List<Any?> = emptyList(),
         page: Int = 1,
         pageSize: Int = 10
-    ): Pair<List<Map<String, Any?>>, Long> {
+    ): Pair<List<Map<ColumnInfo, Any?>>, Long> {
         // Pobranie całkowitej liczby wyników
         val countQuery = "SELECT COUNT(*) AS counted_query FROM ($sql)"
         val totalCount = jdbcTemplate.queryForObject(
@@ -91,35 +74,9 @@ object DatabaseManager {
         val offset = (page - 1) * pageSize
         val pagedQuery = "$sql LIMIT $pageSize OFFSET $offset"
 
-        val results = jdbcTemplate.query(pagedQuery, mapRowMapper, *params.toTypedArray())
+        val results = jdbcTemplate.query(pagedQuery, rowMapperFactory.createColumnInfoMapper(), *params.toTypedArray())
 
         return Pair(results, totalCount / pageSize + 1)
-    }
-
-    // Mapowanie ResultSet na klasę
-    private fun <T : Any> mapResultSetToClass(rs: ResultSet, resultClass: KClass<T>): T {
-        val constructor = resultClass.primaryConstructor!!
-        val parameters = constructor.parameters
-
-        val args = parameters.associateWith { param ->
-            val columnName = param.name!!
-            val columnNameSnakeCase = camelToSnakeCase(columnName)
-
-            val metaData = rs.metaData
-            val columnType = (1..metaData.columnCount)
-                .firstOrNull { metaData.getColumnName(it).equals(columnNameSnakeCase, ignoreCase = true) }
-                ?.let { metaData.getColumnTypeName(it) }
-                ?: "unknown"
-
-            val rawValue = rs.getObject(columnNameSnakeCase)
-            if (rs.wasNull()) {
-                null
-            } else {
-                typesConverter.convertToDomainType(rawValue, columnType)
-            }
-        }
-
-        return constructor.callBy(args)
     }
 
     // Pobranie encji z relacjami
@@ -142,27 +99,7 @@ object DatabaseManager {
         sqlBuilder.append("WHERE $mainTable.id = ?")
 
         // Wykonanie zapytania i pobranie wyników
-        return jdbcTemplate.query(sqlBuilder.toString(), ResultSetExtractor { rs ->
-            val result = mutableMapOf<ColumnInfo, Any?>()
-
-            if (rs.next()) {
-                val metaData = rs.metaData
-                for (i in 1..metaData.columnCount) {
-                    val columnName = metaData.getColumnName(i)
-                    val tableName = metaData.getTableName(i)
-                    val columnType = metaData.getColumnTypeName(i)
-
-                    val rawValue = rs.getObject(i)
-                    if (rs.wasNull()) {
-                        result[ColumnInfo(tableName, columnName)] = null
-                    } else {
-                        val convertedValue = typesConverter.convertToDomainType(rawValue, columnType)
-                        result[ColumnInfo(tableName, columnName)] = convertedValue
-                    }
-                }
-            }
-            result
-        }, id) ?: emptyMap()
+        return jdbcTemplate.query(sqlBuilder.toString(), rowMapperFactory.createSingleRowExtractor(), id) ?: emptyMap()
     }
 
     // Metody do operacji DML (Insert, Update, Delete)

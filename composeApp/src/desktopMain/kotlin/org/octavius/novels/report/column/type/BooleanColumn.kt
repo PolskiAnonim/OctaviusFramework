@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.report.ColumnState
 import org.octavius.novels.report.FilterValue
 import org.octavius.novels.report.NullHandling
@@ -18,7 +19,7 @@ import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.BooleanFilter
 
 class BooleanColumn(
-    name: String,
+    columnInfo: ColumnInfo,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
@@ -26,7 +27,7 @@ class BooleanColumn(
     private val trueText: String = "Tak",
     private val falseText: String = "Nie",
     private val showIcon: Boolean = true
-) : ReportColumn(name, header, width, filterable, sortable) {
+) : ReportColumn(columnInfo, header, width, filterable, sortable) {
 
     override fun createFilterValue(): FilterValue<*> {
         filter = BooleanFilter(name, falseText, trueText)

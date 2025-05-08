@@ -9,20 +9,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.report.*
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.StringFilter
 import org.octavius.novels.report.filter.type.StringListFilter
 
 class StringListColumn(
-    name: String,
+    columnInfo: ColumnInfo,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val maxVisibleItems: Int = 3,
     private val separator: String? = null
-) : ReportColumn(name, header, width, filterable, sortable) {
+) : ReportColumn(columnInfo, header, width, filterable, sortable) {
 
     override fun createFilterValue(): FilterValue<*> {
         filter = StringListFilter(name)
