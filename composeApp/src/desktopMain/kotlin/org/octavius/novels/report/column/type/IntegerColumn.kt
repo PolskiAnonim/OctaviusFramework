@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.novels.report.*
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.IntegerFilter
+import org.octavius.novels.report.filter.type.StringFilter
 
 class IntegerColumn(
     name: String,
@@ -24,19 +25,9 @@ class IntegerColumn(
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
 ) : ReportColumn(name, header, width, filterable, sortable) {
 
-    override fun initializeState(): ColumnState {
-        if (filterable) {
-            filter = IntegerFilter(name)
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(FilterValue.NumberFilter<Int>())
-            )
-        } else {
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(null)
-            )
-        }
+    override fun createFilterValue(): FilterValue<*> {
+        filter = IntegerFilter(name)
+        return FilterValue.NumberFilter<Int>()
     }
 
     @Composable

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.report.*
 import org.octavius.novels.report.column.ReportColumn
+import org.octavius.novels.report.filter.type.StringFilter
 import org.octavius.novels.report.filter.type.StringListFilter
 
 class StringListColumn(
@@ -23,21 +24,9 @@ class StringListColumn(
     private val separator: String? = null
 ) : ReportColumn(name, header, width, filterable, sortable) {
 
-    override fun initializeState(): ColumnState {
-        if (filterable) {
-            filter = StringListFilter(name)
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(FilterValue.TextFilter())
-            )
-        } else {
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(
-                    null
-                )
-            )
-        }
+    override fun createFilterValue(): FilterValue<*> {
+        filter = StringListFilter(name)
+        return FilterValue.TextFilter()
     }
 
     @Composable

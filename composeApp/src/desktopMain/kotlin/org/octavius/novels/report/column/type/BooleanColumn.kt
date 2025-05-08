@@ -28,19 +28,9 @@ class BooleanColumn(
     private val showIcon: Boolean = true
 ) : ReportColumn(name, header, width, filterable, sortable) {
 
-    override fun initializeState(): ColumnState {
-        if (filterable) {
-            filter = BooleanFilter(name, falseText, trueText)
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(FilterValue.BooleanFilter())
-            )
-        } else {
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(null)
-            )
-        }
+    override fun createFilterValue(): FilterValue<*> {
+        filter = BooleanFilter(name, falseText, trueText)
+        return FilterValue.BooleanFilter()
     }
 
     @Composable

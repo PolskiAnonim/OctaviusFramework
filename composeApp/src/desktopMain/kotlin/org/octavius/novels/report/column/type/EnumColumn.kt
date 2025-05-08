@@ -1,23 +1,15 @@
 package org.octavius.novels.report.column.type
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.report.ColumnState
 import org.octavius.novels.report.FilterValue
-import org.octavius.novels.report.FilterValue.EnumFilter
-import org.octavius.novels.report.NullHandling
-import org.octavius.novels.report.SortDirection
 import org.octavius.novels.report.column.ReportColumn
-import org.octavius.novels.util.Converters.camelToSnakeCase
+import org.octavius.novels.report.filter.type.EnumFilter
 import kotlin.reflect.KClass
 
 class EnumColumn<E : Enum<*>>(
@@ -43,19 +35,9 @@ class EnumColumn<E : Enum<*>>(
     }
 ) : ReportColumn(name, header, width, filterable, sortable) {
 
-    override fun initializeState(): ColumnState {
-        if (filterable) {
-            filter = org.octavius.novels.report.filter.type.EnumFilter(name, enumClass)
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(EnumFilter<E>())
-            )
-        } else {
-            return ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(null)
-            )
-        }
+    override fun createFilterValue(): FilterValue<*> {
+        filter = EnumFilter(name, enumClass)
+        return FilterValue.EnumFilter<E>()
     }
 
     @Composable
