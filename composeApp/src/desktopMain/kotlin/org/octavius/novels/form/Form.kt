@@ -47,8 +47,8 @@ abstract class Form : Screen {
         val data = DatabaseManager.getEntityWithRelations(id, tableRelations)
 
         for ((controlName, control) in formSchema.controls) {
-            if (control.fieldName != null && control.tableName != null) {
-                val value = data[ColumnInfo(control.tableName, control.fieldName)]
+            if (control.columnInfo != null) {
+                val value = data[control.columnInfo]
                 formState[controlName] = control.setInitValue(value)
             }
         }
@@ -58,7 +58,7 @@ abstract class Form : Screen {
     // Metoda czyszcząca formularz
     fun clearForm() {
         for ((controlName, control) in formSchema.controls) {
-            if (control.fieldName != null && control.tableName != null) {
+            if (control.columnInfo != null) {
                 formState[controlName] = control.setInitValue(null)
             }
         }
@@ -145,20 +145,19 @@ abstract class Form : Screen {
 
         for ((controlName, control) in formSchema.controls) {
             // Pobierz tablę i pole
-            val tableName = control.tableName ?: continue
-            val fieldName = control.fieldName ?: continue
+            val columnInfo = control.columnInfo ?: continue
 
             val state = formState[controlName] ?: continue
             var value = state.value.value
             value = control.getResult(value, formSchema.controls, formState)
 
             // Dodaj do odpowiedniej tabeli
-            if (!result.containsKey(tableName)) {
-                result[tableName] = mutableMapOf()
+            if (!result.containsKey(columnInfo.tableName)) {
+                result[columnInfo.tableName] = mutableMapOf()
             }
 
             // Dodaj wartość
-            result[tableName]!![fieldName] = ControlResultData(value, state.dirty.value)
+            result[columnInfo.tableName]!![columnInfo.fieldName] = ControlResultData(value, state.dirty.value)
         }
 
         @Suppress("UNCHECKED_CAST")

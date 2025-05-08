@@ -2,13 +2,13 @@ package org.octavius.novels.form.control
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.Composable
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.validation.ControlValidator
 
 abstract class Control<T: Any>(
     val label: String?,
-    val fieldName: String?,
-    val tableName: String?,
+    val columnInfo: ColumnInfo?,
     val hidden: Boolean?,
     val required: Boolean?,
     val dependencies: Map<String, ControlDependency<*>>?,

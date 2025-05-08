@@ -36,10 +36,20 @@ class NovelForm(id: Int? = null) : Form() {
                     columns = 2,
                     label = "Informacje o nowelce"
                 ),
-                "titles" to TextListControl("titles", "novels", "Tytuły"),
-                "novelType" to TextControl("novel_type", "novels", "Typ nowelki"),
-                "originalLanguage" to EnumControl("original_language", "novels", "Język oryginału", NovelLanguage::class, required = true),
-                "status" to EnumControl("status", "novels", "Status czytania", NovelStatus::class, required = true),
+                "titles" to TextListControl(ColumnInfo("novels", "titles"), "Tytuły"),
+                "novelType" to TextControl(ColumnInfo("novels", "novel_type"), "Typ nowelki"),
+                "originalLanguage" to EnumControl(
+                    ColumnInfo("novels", "original_language"),
+                    "Język oryginału",
+                    NovelLanguage::class,
+                    required = true
+                ),
+                "status" to EnumControl(
+                    ColumnInfo("novels", "status"),
+                    "Status czytania",
+                    NovelStatus::class,
+                    required = true
+                ),
                 // Sekcja tomów (widoczna tylko dla określonych statusów)
                 "volumesSection" to SectionControl(
                     ctrls = listOf("volumes", "translatedVolumes", "originalCompleted"),
@@ -56,9 +66,17 @@ class NovelForm(id: Int? = null) : Form() {
                         )
                     )
                 ),
-                "volumes" to IntegerControl("volumes", "novel_volumes", "Liczba tomów", required = true),
-                "translatedVolumes" to IntegerControl("translated_volumes", "novel_volumes", "Przetłumaczone tomy", required = true),
-                "originalCompleted" to BooleanControl("original_completed", "novel_volumes", "Oryginał ukończony", required = true)
+                "volumes" to IntegerControl(ColumnInfo("novel_volumes", "volumes"), "Liczba tomów", required = true),
+                "translatedVolumes" to IntegerControl(
+                    ColumnInfo("novel_volumes", "translated_volumes"),
+                    "Przetłumaczone tomy",
+                    required = true
+                ),
+                "originalCompleted" to BooleanControl(
+                    ColumnInfo("novel_volumes", "original_completed"),
+                    "Oryginał ukończony",
+                    required = true
+                )
             ),
             listOf("novelInfo", "volumesSection")
         )
@@ -87,8 +105,12 @@ class NovelForm(id: Int? = null) : Form() {
         } else {
             // Czytam
             if (novelStatus.dirty) {
-                result.add(SaveOperation.Insert("novel_volumes", formData["novel_volumes"]!!,
-                    listOf(ForeignKey("id","novels", loadedId))))
+                result.add(
+                    SaveOperation.Insert(
+                        "novel_volumes", formData["novel_volumes"]!!,
+                        listOf(ForeignKey("id", "novels", loadedId))
+                    )
+                )
             } else {
                 result.add(SaveOperation.Update("novel_volumes", formData["novel_volumes"]!!, loadedId!!))
             }

@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
@@ -17,16 +18,14 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 
 
 class TextControl(
-    fieldName: String?,
-    tableName: String?,
+    columnInfo: ColumnInfo?,
     label: String?,
     hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<String>(
     label,
-    fieldName,
-    tableName,
+    columnInfo,
     hidden,
     required,
     dependencies

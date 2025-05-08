@@ -35,6 +35,7 @@ import org.octavius.novels.report.filter.Filter
 class IntegerFilter(columnName: String) : Filter(columnName) {
 
     override fun constructWhereClause(filter: FilterValue<*>): String {
+        @Suppress("UNCHECKED_CAST")
         val intFilter = filter as FilterValue.NumberFilter<Int>
 
         // Jeśli nie mamy wartości do filtrowania i ignorujemy nulle, zwróć pusty string

@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
@@ -17,8 +18,7 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 import kotlin.reflect.KClass
 
 class EnumControl<T: Enum<*>>(
-    fieldName: String?,
-    tableName: String?,
+    columnInfo: ColumnInfo?,
     label: String?,
     private val enumClass: KClass<T>,
     hidden: Boolean? = null,
@@ -26,8 +26,7 @@ class EnumControl<T: Enum<*>>(
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<T>(
     label,
-    fieldName,
-    tableName,
+    columnInfo,
     hidden,
     required,
     dependencies

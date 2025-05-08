@@ -28,7 +28,7 @@ class SectionControl(
     hidden: Boolean? = null,
     required: Boolean? = null,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Unit>(label, null, null, hidden, required, dependencies) {
+) : Control<Unit>(label, null, hidden, required, dependencies) {
     override val validator: ControlValidator<Unit> = DefaultValidator()
 
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
