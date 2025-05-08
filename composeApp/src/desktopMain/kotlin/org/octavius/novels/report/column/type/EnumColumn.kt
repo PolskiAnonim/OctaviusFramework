@@ -44,47 +44,17 @@ class EnumColumn<E : Enum<*>>(
 ) : ReportColumn(name, header, width, filterable, sortable) {
 
     override fun initializeState(): ColumnState {
-        return ColumnState(
-            mutableStateOf(SortDirection.UNSPECIFIED),
-            filtering = if (filterable) mutableStateOf(EnumFilter<E>()) else mutableStateOf(null)
-        )
-    }
-
-    override fun constructWhereClause(filter: FilterValue<*>): String {
-        val enumFilter = filter as EnumFilter<*>
-
-        // Jeśli lista wartości jest pusta, nie ma sensu budować klauzuli
-        if (enumFilter.values.value.isEmpty() && enumFilter.nullHandling.value == NullHandling.Ignore) {
-            return ""
-        }
-
-        // Przygotowanie listy wartości enum jako stringi do zapytania SQL
-        val enumValues = enumFilter.values.value.joinToString(", ") {
-            "'${camelToSnakeCase(it.name).uppercase()}'"
-        }
-
-        return when {
-            // Gdy lista jest niepusta i chcemy tylko te wartości (lub ich nie chcemy)
-            enumFilter.values.value.isNotEmpty() -> {
-                val operator = if (enumFilter.include.value) "IN" else "NOT IN"
-                val valuesClause = "$name $operator ($enumValues)"
-
-                when (enumFilter.nullHandling.value) {
-                    NullHandling.Ignore -> valuesClause
-                    NullHandling.Include -> "($valuesClause OR $name IS NULL)"
-                    NullHandling.Exclude -> "($valuesClause AND $name IS NOT NULL)"
-                }
-            }
-
-            // Gdy lista jest pusta, ale chcemy obsłużyć nulle
-            else -> {
-                when (enumFilter.nullHandling.value) {
-                    NullHandling.Include -> "$name IS NULL"
-                    NullHandling.Exclude -> "$name IS NOT NULL"
-                    // Ten przypadek nie powinien wystąpić (pusta lista i ignorowanie null)
-                    else -> ""
-                }
-            }
+        if (filterable) {
+            filter = org.octavius.novels.report.filter.type.EnumFilter(name, enumClass)
+            return ColumnState(
+                mutableStateOf(SortDirection.UNSPECIFIED),
+                filtering = mutableStateOf(EnumFilter<E>())
+            )
+        } else {
+            return ColumnState(
+                mutableStateOf(SortDirection.UNSPECIFIED),
+                filtering = mutableStateOf(null)
+            )
         }
     }
 
@@ -103,124 +73,6 @@ class EnumColumn<E : Enum<*>>(
                 text = formatter(value),
                 style = MaterialTheme.typography.bodyMedium
             )
-        }
-    }
-
-    @Composable
-    override fun RenderFilter(
-        currentFilter: FilterValue<*>
-    ) {
-        if (!filterable) return
-
-        val enumValues = remember { enumClass.java.enumConstants.toList() }
-
-        val enumFilter = currentFilter as EnumFilter<E>
-        val selectedValues = enumFilter.values
-        val include = enumFilter.include
-        val nullHandling = enumFilter.nullHandling
-
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text(
-                text = "Wybierz wartości",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            // Obsługa wartości null
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Wartości puste:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-
-                RadioButton(
-                    selected = nullHandling.value == NullHandling.Ignore,
-                    onClick = {
-                        nullHandling.value = NullHandling.Ignore
-                        enumFilter.markDirty()
-                    }
-                )
-                Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
-
-                RadioButton(
-                    selected = nullHandling.value == NullHandling.Include,
-                    onClick = {
-                        nullHandling.value = NullHandling.Include
-                        enumFilter.markDirty()
-                    }
-                )
-                Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
-
-                RadioButton(
-                    selected = nullHandling.value == NullHandling.Exclude,
-                    onClick = {
-                        nullHandling.value = NullHandling.Exclude
-                        enumFilter.markDirty()
-                    }
-                )
-                Text("Wyklucz")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Przełącznik dla trybu włączania/wyłączania
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Tryb wyboru:")
-                RadioButton(
-                    selected = include.value,
-                    onClick = {
-                        include.value = true
-                        enumFilter.markDirty()
-                    }
-                )
-                Text("Uwzględnij zaznaczone", modifier = Modifier.padding(end = 8.dp))
-
-                RadioButton(
-                    selected = !include.value,
-                    onClick = {
-                        include.value = false
-                        enumFilter.markDirty()
-                    }
-                )
-                Text("Wyklucz zaznaczone")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            enumValues.forEach { enumValue ->
-                @Suppress("UNCHECKED_CAST")
-                val isSelected = selectedValues.value.contains(enumValue)
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = isSelected,
-                        onCheckedChange = { checked ->
-                            if (checked) {
-                                currentFilter.addValue(enumValue)
-                            } else {
-                                currentFilter.removeValue(enumValue)
-                            }
-                        }
-                    )
-
-                    Text(
-                        text = formatter(enumValue),
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-            }
         }
     }
 }

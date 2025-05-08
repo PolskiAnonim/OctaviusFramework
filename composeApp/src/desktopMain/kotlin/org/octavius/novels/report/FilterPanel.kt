@@ -131,7 +131,7 @@ fun FilterPanel(
                         .verticalScroll(scrollState)
                 ) {
                     key(selectedColumnIndex) {
-                        selectedColumn.RenderFilter(
+                        selectedColumn.filter!!.RenderFilter(
                             currentFilter = filter
                         )
                     }

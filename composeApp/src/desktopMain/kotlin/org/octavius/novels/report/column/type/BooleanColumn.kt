@@ -15,6 +15,7 @@ import org.octavius.novels.report.FilterValue
 import org.octavius.novels.report.NullHandling
 import org.octavius.novels.report.SortDirection
 import org.octavius.novels.report.column.ReportColumn
+import org.octavius.novels.report.filter.type.BooleanFilter
 
 class BooleanColumn(
     name: String,
@@ -28,30 +29,17 @@ class BooleanColumn(
 ) : ReportColumn(name, header, width, filterable, sortable) {
 
     override fun initializeState(): ColumnState {
-        return ColumnState(
-            mutableStateOf(SortDirection.UNSPECIFIED),
-            filtering = if (filterable) mutableStateOf(FilterValue.BooleanFilter()) else mutableStateOf(null)
-        )
-    }
-
-    override fun constructWhereClause(filter: FilterValue<*>): String {
-        val booleanFilter = filter as FilterValue.BooleanFilter
-        return when {
-            // Ignoruj filtrowanie gdy wartość null i nullHandling == Ignore
-            booleanFilter.value.value == null && booleanFilter.nullHandling.value == NullHandling.Ignore -> ""
-            // Gdy wartość określona i ignorujemy null
-            booleanFilter.value.value != null && booleanFilter.nullHandling.value == NullHandling.Ignore ->
-                "$name = ${booleanFilter.value.value}"
-            // Gdy wartość null i wykluczamy/włączamy null
-            booleanFilter.value.value == null && booleanFilter.nullHandling.value != NullHandling.Ignore -> {
-                if (booleanFilter.nullHandling.value == NullHandling.Exclude) return "$name IS NOT NULL"
-                else "$name IS NULL"
-            }
-            // Gdy wartość określona i wykluczamy/włączamy null
-            else -> {
-                if (booleanFilter.nullHandling.value == NullHandling.Include) return "($name = ${booleanFilter.value.value} OR $name IS NULL)"
-                else "$name = ${booleanFilter.value.value}"
-            }
+        if (filterable) {
+            filter = BooleanFilter(name, falseText, trueText)
+            return ColumnState(
+                mutableStateOf(SortDirection.UNSPECIFIED),
+                filtering = mutableStateOf(FilterValue.BooleanFilter())
+            )
+        } else {
+            return ColumnState(
+                mutableStateOf(SortDirection.UNSPECIFIED),
+                filtering = mutableStateOf(null)
+            )
         }
     }
 
@@ -84,107 +72,6 @@ class BooleanColumn(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-            }
-        }
-    }
-
-    @Composable
-    override fun RenderFilter(
-        currentFilter: FilterValue<*>
-    ) {
-        if (!filterable) return
-
-        val booleanFilter = currentFilter as? FilterValue.BooleanFilter ?: return
-        val filterValue = booleanFilter.value
-        val nullHandling = booleanFilter.nullHandling
-
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text(
-                text = "Filtruj według wartości",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = filterValue.value == true,
-                    onClick = {
-                        filterValue.value = if (filterValue.value == true) null else true
-                        booleanFilter.markDirty()
-                    },
-                    label = { Text(trueText) },
-                    leadingIcon = if (filterValue.value == true) {
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    } else null
-                )
-
-                FilterChip(
-                    selected = filterValue.value == false,
-                    onClick = {
-                        filterValue.value = if (filterValue.value == false) null else false
-                        booleanFilter.markDirty()
-                    },
-                    label = { Text(falseText) },
-                    leadingIcon = if (filterValue.value == false) {
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    } else null
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Opcje dla obsługi null
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Wartości puste:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-
-                RadioButton(
-                    selected = nullHandling.value == NullHandling.Ignore,
-                    onClick = {
-                        nullHandling.value = NullHandling.Ignore
-                        booleanFilter.markDirty()
-                    }
-                )
-                Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
-
-                RadioButton(
-                    selected = nullHandling.value == NullHandling.Include,
-                    onClick = {
-                        nullHandling.value = NullHandling.Include
-                        booleanFilter.markDirty()
-                    }
-                )
-                Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
-
-                RadioButton(
-                    selected = nullHandling.value == NullHandling.Exclude,
-                    onClick = {
-                        nullHandling.value = NullHandling.Exclude
-                        booleanFilter.markDirty()
-                    }
-                )
-                Text("Wyklucz")
             }
         }
     }

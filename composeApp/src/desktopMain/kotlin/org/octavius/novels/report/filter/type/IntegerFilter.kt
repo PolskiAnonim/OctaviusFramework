@@ -1,0 +1,230 @@
+package org.octavius.novels.report.filter.type
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.NullHandling
+import org.octavius.novels.report.NumberFilterType
+import org.octavius.novels.report.filter.Filter
+
+class IntegerFilter(columnName: String) : Filter(columnName) {
+
+    override fun constructWhereClause(filter: FilterValue<*>): String {
+        val intFilter = filter as FilterValue.NumberFilter<Int>
+
+        // Jeśli nie mamy wartości do filtrowania i ignorujemy nulle, zwróć pusty string
+        if ((intFilter.minValue.value == null && intFilter.maxValue.value == null) &&
+            intFilter.nullHandling.value == NullHandling.Ignore
+        ) {
+            return ""
+        }
+
+        // Budowanie podstawowej klauzuli w zależności od typu filtra
+        val baseClause = when (intFilter.filterType.value) {
+            NumberFilterType.Equals ->
+                intFilter.minValue.value?.let { "$columnName = $it" } ?: ""
+
+            NumberFilterType.NotEquals ->
+                intFilter.minValue.value?.let { "$columnName <> $it" } ?: ""
+
+            NumberFilterType.LessThan ->
+                intFilter.minValue.value?.let { "$columnName < $it" } ?: ""
+
+            NumberFilterType.LessEquals ->
+                intFilter.minValue.value?.let { "$columnName <= $it" } ?: ""
+
+            NumberFilterType.GreaterThan ->
+                intFilter.minValue.value?.let { "$columnName > $it" } ?: ""
+
+            NumberFilterType.GreaterEquals ->
+                intFilter.minValue.value?.let { "$columnName >= $it" } ?: ""
+
+            NumberFilterType.Range -> {
+                val minCond = intFilter.minValue.value?.let { "$columnName >= $it" }
+                val maxCond = intFilter.maxValue.value?.let { "$columnName <= $it" }
+
+                when {
+                    minCond != null && maxCond != null -> "($minCond AND $maxCond)"
+                    minCond != null -> minCond
+                    maxCond != null -> maxCond
+                    else -> ""
+                }
+            }
+        }
+
+        // Jeśli nie mamy podstawowej klauzuli (brak wartości), obsłuż tylko nulle
+        if (baseClause.isEmpty()) {
+            return when (intFilter.nullHandling.value) {
+                NullHandling.Include -> "$columnName IS NULL"
+                NullHandling.Exclude -> "$columnName IS NOT NULL"
+                NullHandling.Ignore -> ""
+            }
+        }
+
+        // Łączenie podstawowej klauzuli z obsługą nulli
+        return when (intFilter.nullHandling.value) {
+            NullHandling.Ignore -> baseClause
+            NullHandling.Include -> "($baseClause OR $columnName IS NULL)"
+            NullHandling.Exclude -> "($baseClause AND $columnName IS NOT NULL)"
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    override fun RenderFilter(
+        currentFilter: FilterValue<*>
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val numberFilter = currentFilter as FilterValue.NumberFilter<Int>
+        val minValue = numberFilter.minValue
+        val maxValue = numberFilter.maxValue
+        val filterType = numberFilter.filterType
+
+        var expanded by remember { mutableStateOf(false) }
+
+        Column(modifier = Modifier.padding(8.dp)) {
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it }
+            ) {
+                OutlinedTextField(
+                    value = when (filterType.value) {
+                        NumberFilterType.Equals -> "Równe"
+                        NumberFilterType.NotEquals -> "Różne od"
+                        NumberFilterType.LessThan -> "Mniejsze niż"
+                        NumberFilterType.LessEquals -> "Mniejsze lub równe"
+                        NumberFilterType.GreaterThan -> "Większe niż"
+                        NumberFilterType.GreaterEquals -> "Większe lub równe"
+                        NumberFilterType.Range -> "Zakres"
+                    },
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    listOf(
+                        NumberFilterType.Equals to "Równe",
+                        NumberFilterType.NotEquals to "Różne od",
+                        NumberFilterType.LessThan to "Mniejsze niż",
+                        NumberFilterType.LessEquals to "Mniejsze lub równe",
+                        NumberFilterType.GreaterThan to "Większe niż",
+                        NumberFilterType.GreaterEquals to "Większe lub równe",
+                        NumberFilterType.Range to "Zakres"
+                    ).forEach { (type, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                expanded = false
+                                filterType.value = type
+                                numberFilter.markDirty()
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (filterType.value == NumberFilterType.Range) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = minValue.value?.toString() ?: "",
+                        onValueChange = {
+                            try {
+                                minValue.value = if (it.isEmpty()) null else it.toInt()
+                                numberFilter.markDirty()
+                            } catch (e: NumberFormatException) {
+                                // Ignoruj niepoprawne wartości
+                            }
+                        },
+                        label = { Text("Od") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = maxValue.value?.toString() ?: "",
+                        onValueChange = {
+                            try {
+                                maxValue.value = if (it.isEmpty()) null else it.toInt()
+                                numberFilter.markDirty()
+                            } catch (e: NumberFormatException) {
+                                // Ignoruj niepoprawne wartości
+                            }
+                        },
+                        label = { Text("Do") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            } else {
+                OutlinedTextField(
+                    value = minValue.value?.toString() ?: "",
+                    onValueChange = {
+                        try {
+                            minValue.value = if (it.isEmpty()) null else it.toInt()
+                            numberFilter.markDirty()
+                        } catch (e: NumberFormatException) {
+                            // Ignoruj niepoprawne wartości
+                        }
+                    },
+                    label = { Text("Wartość") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        if (minValue.value.toString().isNotEmpty()) {
+                            IconButton(onClick = {
+                                minValue.value = null
+                                numberFilter.markDirty()
+                            }) {
+                                Icon(Icons.Default.Clear, "Wyczyść filtr")
+                            }
+                        }
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            NullHandlingPanel(numberFilter)
+        }
+    }
+}

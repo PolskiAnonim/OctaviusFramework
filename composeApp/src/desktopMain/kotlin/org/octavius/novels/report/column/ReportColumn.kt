@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.octavius.novels.report.ColumnState
 import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.filter.Filter
 
 abstract class ReportColumn(
     val name: String,
@@ -16,12 +17,7 @@ abstract class ReportColumn(
     @Composable
     abstract fun RenderCell(item: Any?, modifier: Modifier)
 
-    @Composable
-    abstract fun RenderFilter(
-        currentFilter: FilterValue<*>
-    )
+    var filter: Filter? = null
 
     abstract fun initializeState(): ColumnState
-
-    abstract fun constructWhereClause(filter: FilterValue<*>): String
 }

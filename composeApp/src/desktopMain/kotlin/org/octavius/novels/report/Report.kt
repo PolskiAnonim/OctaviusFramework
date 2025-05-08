@@ -102,8 +102,8 @@ abstract class Report : Screen {
             val filter = state.filtering.value ?: continue
             if (!filter.isActive()) continue
 
-            val column = columns[key] ?: continue
-            val whereClause = column.constructWhereClause(filter)
+            val column = columns[key]!!
+            val whereClause = column.filter!!.constructWhereClause(filter)
 
             if (whereClause.isNotEmpty()) {
                 if (whereClauseBuilder.isNotEmpty()) {
