@@ -9,7 +9,7 @@ import novelskotlin.composeapp.generated.resources.novel_icon
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.navigator.Tab
 import org.octavius.novels.navigator.TabOptions
-import org.octavius.novels.report.NovelReport
+import org.octavius.novels.domain.novel.NovelReport
 
 class NovelTab : Tab {
     private val navigator = Navigator()
