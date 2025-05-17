@@ -38,7 +38,7 @@ class SectionControl(
     }
 
     @Composable
-    override fun display(
+    override fun Display(
         controlState: ControlState<Unit>?,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
@@ -102,7 +102,7 @@ class SectionControl(
                                             .padding(horizontal = 4.dp)) {
                                             group.forEach { ctrlName ->
                                                 controls[ctrlName]?.let { control ->
-                                                    control.render(states[ctrlName], controls, states)
+                                                    control.Render(states[ctrlName], controls, states)
                                                     Spacer(modifier = Modifier.height(8.dp))
                                                 }
                                             }
@@ -113,7 +113,7 @@ class SectionControl(
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     ctrls.forEach { ctrlName ->
                                         controls[ctrlName]?.let { control ->
-                                            control.render(states[ctrlName], controls, states)
+                                            control.Render(states[ctrlName], controls, states)
                                             Spacer(modifier = Modifier.height(12.dp))
                                         }
                                     }

@@ -35,7 +35,7 @@ class EnumControl<T: Enum<*>>(
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    override fun display(
+    override fun Display(
         controlState: ControlState<T>?,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>

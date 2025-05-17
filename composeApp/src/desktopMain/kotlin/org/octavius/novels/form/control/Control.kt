@@ -23,7 +23,7 @@ abstract class Control<T: Any>(
         return // Domyślnie brak działania
     }
 
-    open fun updateState(state: ControlState<T>) {
+    fun updateState(state: ControlState<T>) {
         if (state.value.value != state.initValue.value) {
             state.dirty.value = true
         }
@@ -31,14 +31,14 @@ abstract class Control<T: Any>(
 
     // Walidacja
     // Uproszczona metoda walidacji
-    open fun validateControl(controlName: String, state: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    fun validateControl(controlName: String, state: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         if (state == null) return
         validator.validate(controlName, state, this, controls, states)
     }
 
 
     // Konwersja wyniku
-    open fun getResult(value: Any?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
+    fun getResult(value: Any?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
         if (!validator.isControlVisible(this, controls, states)) return null
         return convertToResult(value)
     }
@@ -48,17 +48,17 @@ abstract class Control<T: Any>(
     }
 
     @Composable
-    fun render(controlState: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    fun Render(controlState: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         val isVisible = validator.isControlVisible(this, controls, states)
 
         AnimatedVisibility(visible = isVisible) {
             @Suppress("UNCHECKED_CAST")
-            display(controlState as ControlState<T>?, controls, states)
+            Display(controlState as ControlState<T>?, controls, states)
         }
     }
 
     @Composable
-    protected abstract fun display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>)
+    protected abstract fun Display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>)
 
     // Metoda do ustawiania wartości
     open fun setInitValue(value: Any?) : ControlState<T> {
@@ -70,7 +70,7 @@ abstract class Control<T: Any>(
 
         try {
             @Suppress("UNCHECKED_CAST")
-            state.value.value = convertValue(value) as T
+            state.value.value = convertAtInit(value) as T
         } catch (e: ClassCastException) {
             println("Nie można skonwertować wartości $value na typ kontrolki ${this::class.simpleName}")
         }
@@ -78,7 +78,7 @@ abstract class Control<T: Any>(
     }
 
     // Metoda pomocnicza do konwersji wartości - domyślna implementacja
-    protected open fun convertValue(value: Any): Any? {
+    protected open fun convertAtInit(value: Any): Any? {
         return value
     }
 }

@@ -18,25 +18,25 @@ import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
-class IntegerControl(
+class DoubleControl(
     columnInfo: ColumnInfo?,
     label: String?,
     hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Int>(
+) : Control<Double>(
     label,
     columnInfo,
     hidden,
     required,
     dependencies
 ) {
-    override val validator: ControlValidator<Int> = DefaultValidator()
+    override val validator: ControlValidator<Double> = DefaultValidator()
 
 
     @Composable
     override fun Display(
-        controlState: ControlState<Int>?,
+        controlState: ControlState<Double>?,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
     ) {
@@ -57,11 +57,11 @@ class IntegerControl(
                             if (newValue.isEmpty()) {
                                 ctrlState.value.value = null
                             } else {
-                                ctrlState.value.value = newValue.toInt()
+                                ctrlState.value.value = newValue.toDouble()
                             }
                             ctrlState.error.value = null
                         } catch (e: NumberFormatException) {
-                            ctrlState.error.value = "Wartość musi być liczbą całkowitą"
+                            ctrlState.error.value = "Wartość musi być liczbą rzeczywistą"
                         }
                         ctrlState.dirty.value = true
                     },

@@ -78,7 +78,7 @@ abstract class Form : Screen {
                 .verticalScroll(scrollState) // Dodajemy przewijanie pionowe
         ) {
             formSchema.order.forEach {
-                formSchema.controls[it]?.render(formState[it], formSchema.controls, formState)
+                formSchema.controls[it]?.Render(formState[it], formSchema.controls, formState)
             }
 
             // Przyciski akcji na dole formularza

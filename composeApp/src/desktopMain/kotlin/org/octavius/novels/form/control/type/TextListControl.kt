@@ -35,7 +35,7 @@ class TextListControl(
 
 
     @Composable
-    override fun display(
+    override fun Display(
         controlState: ControlState<List<String>>?,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
