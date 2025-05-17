@@ -3,6 +3,7 @@ package org.octavius.novels.domain.game
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.GameStatus
+import org.octavius.novels.domain.novel.NovelForm
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
@@ -19,6 +20,14 @@ class GameReport(val navigator: Navigator) : Report() {
             LEFT JOIN game_series g_series ON g_series.id = g.series
         """.trimIndent()
         return Query(sql)
+    }
+
+    override var onRowClick: ((Map<ColumnInfo, Any?>) -> Unit)? = { rowData ->
+        // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
+        val id = rowData[ColumnInfo("games", "id")] as? Int
+        if (id != null) {
+            navigator.addScreen(GameForm(id))
+        }
     }
 
     override fun createColumns(): Map<String, ReportColumn> {
