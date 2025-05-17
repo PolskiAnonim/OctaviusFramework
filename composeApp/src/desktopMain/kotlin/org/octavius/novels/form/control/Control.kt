@@ -1,7 +1,14 @@
 package org.octavius.novels.form.control
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.validation.ControlValidator
@@ -47,19 +54,6 @@ abstract class Control<T: Any>(
         return value
     }
 
-    @Composable
-    fun Render(controlState: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
-        val isVisible = validator.isControlVisible(this, controls, states)
-
-        AnimatedVisibility(visible = isVisible) {
-            @Suppress("UNCHECKED_CAST")
-            Display(controlState as ControlState<T>?, controls, states)
-        }
-    }
-
-    @Composable
-    protected abstract fun Display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>)
-
     // Metoda do ustawiania wartości
     open fun setInitValue(value: Any?) : ControlState<T> {
         val state = ControlState<T>()
@@ -81,6 +75,45 @@ abstract class Control<T: Any>(
     protected open fun convertAtInit(value: Any): Any? {
         return value
     }
+
+    //---------------------------------------------Wyświetlanie kontrolek-----------------------------------------------
+    // Funkcja służąca do ogólnego wyświetlania kontrolki
+    @Composable
+    fun Render(controlState: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val isVisible = validator.isControlVisible(this, controls, states)
+        val isRequired = validator.isControlRequired(this, controls, states)
+        AnimatedVisibility(visible = isVisible) {
+            @Suppress("UNCHECKED_CAST")
+            Display(controlState as ControlState<T>?, controls, states, isRequired)
+        }
+    }
+
+    // Generowanie labelki - wspólne dla wszystkich kontrolek
+    @Composable
+    protected fun RenderLabel(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean) {
+        if (label == null) return
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            if (isRequired) {
+                Text(
+                    text = "*",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+
+    @Composable
+    protected abstract fun Display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean)
 }
 
 data class ControlDependency<T>(

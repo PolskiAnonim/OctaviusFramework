@@ -38,17 +38,14 @@ class DoubleControl(
     override fun Display(
         controlState: ControlState<Double>?,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
     ) {
         controlState!!.let { ctrlState ->
             val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                Text(
-                    text = label ?: "",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                )
+                RenderLabel(controls, states, isRequired)
 
                 OutlinedTextField(
                     value = textValue,

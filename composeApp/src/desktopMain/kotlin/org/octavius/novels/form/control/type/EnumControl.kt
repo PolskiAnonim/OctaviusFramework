@@ -38,34 +38,15 @@ class EnumControl<T: Enum<*>>(
     override fun Display(
         controlState: ControlState<T>?,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
     ) {
         controlState!!.let { ctrlState ->
             var expanded by remember { mutableStateOf(false) }
             val options = enumClass.java.enumConstants
 
-            // Sprawdzamy, czy kontrolka jest wymagana
-            val isRequired = validator.isControlRequired(this, controls, states)
-
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                // Label z gwiazdką jeśli pole jest wymagane
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                ) {
-                    Text(
-                        text = label ?: "",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    if (isRequired) {
-                        Text(
-                            text = " *",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
+                RenderLabel(controls, states, isRequired)
 
                 ExposedDropdownMenuBox(
                     expanded = expanded,

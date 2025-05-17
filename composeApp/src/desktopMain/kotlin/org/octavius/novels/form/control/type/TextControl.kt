@@ -37,15 +37,12 @@ class TextControl(
     override fun Display(
         controlState: ControlState<String>?,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
     ) {
         controlState!!.let { ctrlState ->
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = label ?: "",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                )
+                RenderLabel(controls, states, isRequired)
 
                 OutlinedTextField(
                     value = ctrlState.value.value ?: "",

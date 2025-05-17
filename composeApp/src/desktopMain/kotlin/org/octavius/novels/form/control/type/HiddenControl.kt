@@ -21,7 +21,8 @@ class HiddenControl<T : Any>(columnInfo: ColumnInfo?) : Control<T>(
     override fun Display(
         controlState: ControlState<T>?,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
     ) {
         //Brak widocznej zawartości
     }

@@ -26,9 +26,8 @@ class SectionControl(
     val columns: Int = 1,
     label: String,
     hidden: Boolean? = null,
-    required: Boolean? = null,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Unit>(label, null, hidden, required, dependencies) {
+) : Control<Unit>(label, null, hidden, false, dependencies) {
     override val validator: ControlValidator<Unit> = DefaultValidator()
 
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
@@ -41,7 +40,8 @@ class SectionControl(
     override fun Display(
         controlState: ControlState<Unit>?,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
     ) {
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 

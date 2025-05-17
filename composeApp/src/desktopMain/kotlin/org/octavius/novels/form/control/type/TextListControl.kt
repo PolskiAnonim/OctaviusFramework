@@ -38,18 +38,15 @@ class TextListControl(
     override fun Display(
         controlState: ControlState<List<String>>?,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
     ) {
         controlState!!.let { ctrlState ->
             var currentList by remember { mutableStateOf(ctrlState.value.value ?: listOf("")) }
             var newItemText by remember { mutableStateOf("") }
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                Text(
-                    text = label ?: "",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
-                )
+                RenderLabel(controls, states, isRequired)
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)

@@ -49,7 +49,8 @@ class DatabaseControl(
     override fun Display(
         controlState: ControlState<Int>?,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
     ) {
         controlState!!.let { ctrlState ->
             var expanded by remember { mutableStateOf(false) }
@@ -59,9 +60,6 @@ class DatabaseControl(
             var isLoading by remember { mutableStateOf(false) }
             var currentPage by remember { mutableStateOf(1) }
             var totalPages by remember { mutableStateOf(1) }
-
-            // Sprawdzamy, czy kontrolka jest wymagana
-            val isRequired = validator.isControlRequired(this, controls, states)
 
             // Efekt pobierający wybraną opcję przy inicjalizacji
             LaunchedEffect(ctrlState.value.value) {
@@ -98,24 +96,7 @@ class DatabaseControl(
             }
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                // Label z gwiazdką jeśli pole jest wymagane
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                ) {
-                    Text(
-                        text = label ?: "",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    if (isRequired) {
-                        Text(
-                            text = " *",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
+                RenderLabel(controls, states, isRequired)
 
                 ExposedDropdownMenuBox(
                     expanded = expanded,
