@@ -1,12 +1,12 @@
 package org.octavius.novels.domain
 
-enum class NovelStatus {
+enum class NovelStatus: EnumWithFormatter<NovelStatus> {
     NotReading,
     Reading,
     Completed,
     PlanToRead;
 
-    fun toDisplayString(): String {
+    override fun toDisplayString(): String {
         return when (this) {
             NotReading -> "Nie czytam"
             Reading -> "Czytam"
@@ -16,12 +16,12 @@ enum class NovelStatus {
     }
 }
 
-enum class NovelLanguage {
+enum class NovelLanguage: EnumWithFormatter<NovelLanguage> {
     Korean,
     Chinese,
     Japanese;
 
-    fun toDisplayString(): String {
+    override fun toDisplayString(): String {
         return when (this) {
             Korean -> "Koreański"
             Chinese -> "Chiński"

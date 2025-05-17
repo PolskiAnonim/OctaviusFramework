@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.novels.domain.EnumWithFormatter
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
@@ -17,7 +18,7 @@ import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 import kotlin.reflect.KClass
 
-class EnumControl<T: Enum<*>>(
+class EnumControl<T>(
     columnInfo: ColumnInfo?,
     label: String?,
     private val enumClass: KClass<T>,
@@ -30,7 +31,7 @@ class EnumControl<T: Enum<*>>(
     hidden,
     required,
     dependencies
-) {
+) where T : Enum<T>, T : EnumWithFormatter<T> {
     override val validator: ControlValidator<T> = DefaultValidator()
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -55,16 +56,14 @@ class EnumControl<T: Enum<*>>(
                 ) {
                     // Pole z wybraną wartością
                     OutlinedTextField(
-                        value = ctrlState.value.value?.let { value ->
-                            enumClass.members.firstOrNull { it.name == "toDisplayString" }
-                                ?.call(value) as String
-                        } ?: (if (!isRequired) "Brak wyboru" else "Wybierz opcję"),
+                        value = ctrlState.value.value?.toDisplayString()
+                            ?: (if (!isRequired) "Brak wyboru" else "Wybierz opcję"),
                         onValueChange = { },  // Nie pozwalamy na edycję ręczną
                         readOnly = true,      // Pole tylko do odczytu
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)     // Oznacza ten element jako kotwicę dla menu
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
 
                     // Menu z opcjami
@@ -89,10 +88,7 @@ class EnumControl<T: Enum<*>>(
                         // Standardowe opcje enum
                         options.forEach { enumOption ->
                             DropdownMenuItem(
-                                text = {
-                                    Text(enumClass.members.firstOrNull { it.name == "toDisplayString" }
-                                        ?.call(enumOption) as String)
-                                },
+                                text = { Text(enumOption.toDisplayString()) },
                                 onClick = {
                                     ctrlState.value.value = enumOption
                                     updateState(ctrlState)

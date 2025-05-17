@@ -7,53 +7,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.novels.domain.EnumWithFormatter
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.report.FilterValue
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.EnumFilter
 import kotlin.reflect.KClass
 
-class EnumColumn<E : Enum<*>>(
+class EnumColumn<T>(
     columnInfo: ColumnInfo,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
-    private val enumClass: KClass<out E>,
-    private val formatter: (Enum<*>?) -> String = {
-        it?.let {
-            try {
-                val method = it::class.members.find { member -> member.name == "toDisplayString" }
-                if (method != null) {
-                    method.call(it) as String
-                } else {
-                    it.toString()
-                }
-            } catch (e: Exception) {
-                it.toString()
-            }
-        } ?: ""
-    }
-) : ReportColumn(columnInfo, header, width, filterable, sortable) {
-
+    private val enumClass: KClass<T>,
+) : ReportColumn(columnInfo, header, width, filterable, sortable)
+        where T : Enum<T>, T : EnumWithFormatter<T> {
     override fun createFilterValue(): FilterValue<*> {
         filter = EnumFilter(name, enumClass)
-        return FilterValue.EnumFilter<E>()
+        return FilterValue.EnumFilter<T>()
     }
 
     @Composable
     override fun RenderCell(item: Any?, modifier: Modifier) {
         @Suppress("UNCHECKED_CAST")
-        val value = item as? E
+        val value = item as? T
 
         Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp, horizontal = 8.dp),
+            modifier = modifier.fillMaxWidth().padding(vertical = 4.dp, horizontal = 8.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                text = formatter(value),
+                text = value?.toDisplayString() ?: "",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

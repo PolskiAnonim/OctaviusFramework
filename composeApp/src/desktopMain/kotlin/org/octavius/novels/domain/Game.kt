@@ -1,12 +1,12 @@
 package org.octavius.novels.domain
 
-enum class GameStatus {
+enum class GameStatus: EnumWithFormatter<GameStatus> {
     NotPlaying,
     WithoutTheEnd,
     Played,
     ToPlay,
     Playing,;
-    fun toDisplayString(): String {
+    override fun toDisplayString(): String {
         return when (this) {
             NotPlaying -> "Nie gram"
             WithoutTheEnd -> "Gra bez końca"
