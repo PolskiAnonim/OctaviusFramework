@@ -17,6 +17,8 @@ import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.RenderCheckboxLabel
+import org.octavius.novels.form.control.RenderError
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
@@ -59,22 +61,10 @@ class BooleanControl(
                             }
                         )
 
-                        Text(
-                            text = label ?: "",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
+                        RenderCheckboxLabel(label, isRequired)
                     }
 
-                    // Wyświetlanie komunikatu o błędzie
-                    if (ctrlState.error.value != null) {
-                        Text(
-                            text = ctrlState.error.value ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 24.dp, bottom = 8.dp) // Wyrównane z tekstem etykiety
-                        )
-                    }
+                    RenderError(ctrlState)
                 }
             }
         }

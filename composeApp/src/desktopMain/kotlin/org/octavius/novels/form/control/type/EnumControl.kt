@@ -1,18 +1,18 @@
 package org.octavius.novels.form.control.type
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.RenderError
+import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 import kotlin.reflect.KClass
@@ -46,7 +46,7 @@ class EnumControl<T: Enum<*>>(
             val options = enumClass.java.enumConstants
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                RenderLabel(controls, states, isRequired)
+                RenderNormalLabel(label, isRequired)
 
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -103,15 +103,7 @@ class EnumControl<T: Enum<*>>(
                     }
                 }
 
-                // Komunikat o błędzie
-                if (ctrlState.error.value != null) {
-                    Text(
-                        text = ctrlState.error.value ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                    )
-                }
+                RenderError(ctrlState)
             }
         }
     }

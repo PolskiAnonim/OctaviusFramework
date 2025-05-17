@@ -88,30 +88,6 @@ abstract class Control<T: Any>(
         }
     }
 
-    // Generowanie labelki - wspólne dla wszystkich kontrolek
-    @Composable
-    protected fun RenderLabel(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean) {
-        if (label == null) return
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            if (isRequired) {
-                Text(
-                    text = "*",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        }
-    }
-
     @Composable
     protected abstract fun Display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean)
 }

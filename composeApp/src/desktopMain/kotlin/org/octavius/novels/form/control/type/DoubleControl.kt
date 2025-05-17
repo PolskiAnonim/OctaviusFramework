@@ -15,6 +15,8 @@ import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.RenderError
+import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
@@ -45,7 +47,7 @@ class DoubleControl(
             val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                RenderLabel(controls, states, isRequired)
+                RenderNormalLabel(label, isRequired)
 
                 OutlinedTextField(
                     value = textValue,
@@ -68,14 +70,7 @@ class DoubleControl(
                     singleLine = true
                 )
 
-                if (ctrlState.error.value != null) {
-                    Text(
-                        text = ctrlState.error.value ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                    )
-                }
+                RenderError(ctrlState)
             }
         }
     }

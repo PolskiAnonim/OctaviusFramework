@@ -15,6 +15,8 @@ import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.RenderError
+import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
@@ -46,7 +48,7 @@ class TextListControl(
             var newItemText by remember { mutableStateOf("") }
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                RenderLabel(controls, states, isRequired)
+                RenderNormalLabel(label, isRequired)
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)
@@ -121,6 +123,7 @@ class TextListControl(
                         )
                     }
                 }
+                RenderError(ctrlState)
             }
         }
     }
