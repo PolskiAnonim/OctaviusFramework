@@ -27,6 +27,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
             "int2",
             "float4",
             "float8",
+            "numeric",
             // Typy tekstowe
             "text",
             "varchar",
