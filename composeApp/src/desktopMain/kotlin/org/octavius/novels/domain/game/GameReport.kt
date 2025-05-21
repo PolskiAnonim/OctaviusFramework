@@ -1,9 +1,6 @@
 package org.octavius.novels.domain.game
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.GameStatus
-import org.octavius.novels.domain.novel.NovelForm
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query

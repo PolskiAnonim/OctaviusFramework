@@ -6,9 +6,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import org.octavius.novels.domain.NovelLanguage
-import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.PublicationLanguage
+import org.octavius.novels.domain.PublicationStatus
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
 import org.octavius.novels.report.Report
@@ -40,13 +40,13 @@ class NovelReport(val navigator: Navigator) : Report() {
             "status" to EnumColumn(
                 columnInfo = ColumnInfo("novels", "status"),
                 header = "Status",
-                enumClass = NovelStatus::class,
+                enumClass = PublicationStatus::class,
                 width = 1f
             ),
             "originalLanguage" to EnumColumn(
                 columnInfo = ColumnInfo("novels", "original_language"),
                 header = "Język oryginału",
-                enumClass = NovelLanguage::class,
+                enumClass = PublicationLanguage::class,
                 width = 1f
             ),
             "volumes" to IntegerColumn(

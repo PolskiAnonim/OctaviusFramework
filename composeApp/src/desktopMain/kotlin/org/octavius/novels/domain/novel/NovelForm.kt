@@ -1,8 +1,8 @@
 package org.octavius.novels.domain.novel
 
-import org.octavius.novels.domain.NovelLanguage
-import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.PublicationLanguage
+import org.octavius.novels.domain.PublicationStatus
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ForeignKey
 import org.octavius.novels.form.Form
@@ -53,13 +53,13 @@ class NovelForm(id: Int? = null) : Form() {
                 "originalLanguage" to EnumControl(
                     ColumnInfo("novels", "original_language"),
                     "Język oryginału",
-                    NovelLanguage::class,
+                    PublicationLanguage::class,
                     required = true
                 ),
                 "status" to EnumControl(
                     ColumnInfo("novels", "status"),
                     "Status czytania",
-                    NovelStatus::class,
+                    PublicationStatus::class,
                     required = true
                 ),
                 // Sekcja tomów (widoczna tylko dla określonych statusów)
@@ -72,7 +72,7 @@ class NovelForm(id: Int? = null) : Form() {
                     dependencies = mapOf(
                         "statusDependency" to ControlDependency(
                             controlName = "status",
-                            value = NovelStatus.NotReading,
+                            value = PublicationStatus.NotReading,
                             dependencyType = DependencyType.Visible,
                             comparisonType = ComparisonType.NotEquals
                         )
@@ -97,7 +97,7 @@ class NovelForm(id: Int? = null) : Form() {
     override fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation> {
         val result = mutableListOf<SaveOperation>()
 
-        var novelStatus = ControlResultData(NovelStatus.NotReading, true)
+        var publicationStatus = ControlResultData(PublicationStatus.NotReading, true)
         // Obsłuż tabelę główną
         formData["novels"]?.let { data ->
             result.add(
@@ -107,16 +107,16 @@ class NovelForm(id: Int? = null) : Form() {
                     loadedId!!
                 ) else SaveOperation.Insert("novels", data)
             )
-            novelStatus = data["status"]!!
+            publicationStatus = data["status"]!!
         }
 
-        if (novelStatus.value == NovelStatus.NotReading) {
-            if (novelStatus.dirty && loadedId != null) {
+        if (publicationStatus.value == PublicationStatus.NotReading) {
+            if (publicationStatus.dirty && loadedId != null) {
                 result.add(SaveOperation.Delete("novel_volumes", loadedId!!))
             }
         } else {
             // Czytam
-            if (novelStatus.dirty) {
+            if (publicationStatus.dirty) {
                 result.add(
                     SaveOperation.Insert(
                         "novel_volumes", formData["novel_volumes"]!!,

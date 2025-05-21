@@ -1,24 +1,12 @@
 package org.octavius.novels.domain.game
 
-import org.octavius.novels.domain.NovelLanguage
-import org.octavius.novels.domain.NovelStatus
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlResultData
-import org.octavius.novels.form.ForeignKey
 import org.octavius.novels.form.Form
 import org.octavius.novels.form.FormControls
 import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
-import org.octavius.novels.form.control.ComparisonType
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.DependencyType
-import org.octavius.novels.form.control.type.BooleanControl
 import org.octavius.novels.form.control.type.DatabaseControl
-import org.octavius.novels.form.control.type.EnumControl
-import org.octavius.novels.form.control.type.IntegerControl
-import org.octavius.novels.form.control.type.SectionControl
-import org.octavius.novels.form.control.type.TextControl
-import org.octavius.novels.form.control.type.TextListControl
 
 class GameForm(id: Int? = null) : Form() {
 
