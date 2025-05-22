@@ -22,10 +22,18 @@ class NovelReport(val navigator: Navigator) : Report() {
 
     override fun createQuery(): Query {
         val sql = """
-            SELECT n.id, n.titles, n.novel_type, n.status, n.original_language, 
-                   nv.volumes, nv.translated_volumes, nv.original_completed
-            FROM novels n
-            LEFT JOIN novel_volumes nv ON n.id = nv.id
+SELECT 
+    t.id, 
+    t.titles,
+    t.language,
+    CASE 
+        WHEN bool_or(p.status = 'COMPLETED') THEN 'COMPLETED'::publication_status
+        WHEN bool_or(p.status = 'PLAN_TO_READ') THEN 'PLAN_TO_READ'::publication_status
+        ELSE 'NOT_READING'::publication_status
+    END as status
+FROM titles t
+JOIN publications p ON p.title_id = t.id 
+GROUP BY t.id, t.titles
         """.trimIndent()
         return Query(sql)
     }
@@ -33,36 +41,22 @@ class NovelReport(val navigator: Navigator) : Report() {
     override fun createColumns(): Map<String, ReportColumn> {
         return mapOf(
             "titles" to StringListColumn(
-                columnInfo = ColumnInfo("novels", "titles"),
+                columnInfo = ColumnInfo("titles", "titles"),
                 header = "Tytuły",
                 width = 3f
             ),
             "status" to EnumColumn(
-                columnInfo = ColumnInfo("novels", "status"),
+                columnInfo = ColumnInfo("", "status"),
                 header = "Status",
                 enumClass = PublicationStatus::class,
-                width = 1f
+                width = 1f,
+                filterable = false
             ),
             "originalLanguage" to EnumColumn(
-                columnInfo = ColumnInfo("novels", "original_language"),
+                columnInfo = ColumnInfo("titles", "language"),
                 header = "Język oryginału",
                 enumClass = PublicationLanguage::class,
                 width = 1f
-            ),
-            "volumes" to IntegerColumn(
-                columnInfo = ColumnInfo("novel_volumes", "volumes"),
-                header = "Tomy",
-                width = 0.7f
-            ),
-            "translatedVolumes" to IntegerColumn(
-                columnInfo = ColumnInfo("novel_volumes", "translated_volumes"),
-                header = "Przetłumaczone",
-                width = 0.7f
-            ),
-            "originalCompleted" to BooleanColumn(
-                columnInfo = ColumnInfo("novel_volumes", "original_completed"),
-                header = "Ukończona",
-                width = 0.6f
             )
         )
     }

@@ -42,6 +42,7 @@ object DatabaseManager {
             this.username = this@DatabaseManager.username
             this.password = this@DatabaseManager.password
             maximumPoolSize = 10
+            this.connectionInitSql = "SET search_path TO public, asian_media"
         }
         dataSource = HikariDataSource(config)
 
