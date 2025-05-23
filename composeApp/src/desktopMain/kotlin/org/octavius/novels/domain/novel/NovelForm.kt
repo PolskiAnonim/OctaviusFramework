@@ -1,7 +1,9 @@
 package org.octavius.novels.domain.novel
 
+import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
+import org.octavius.novels.domain.PublicationType
 import org.octavius.novels.form.*
 import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.ControlDependency
