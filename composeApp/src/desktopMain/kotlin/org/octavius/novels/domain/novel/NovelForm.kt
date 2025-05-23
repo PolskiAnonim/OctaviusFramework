@@ -12,78 +12,66 @@ class NovelForm(id: Int? = null) : Form() {
 
     init {
         if (id != null) {
-            // Ładowanie istniejącej nowelki
             loadData(id)
         } else {
-            // Inicjalizacja formularza dla nowej nowelki
             clearForm()
         }
     }
 
     override fun initData(): Map<String, Any?> {
-        return mapOf()
+        // Dla nowego formularza, załaduj pustą listę publikacji
+        return if (loadedId == null) {
+            mapOf(
+                "publications" to listOf(
+                    mapOf(
+                        "publicationType" to PublicationType.WebNovel,
+                        "status" to PublicationStatus.NotReading,
+                        "trackProgress" to false
+                    )
+                )
+            )
+        } else {
+            // Dla istniejącego, załaduj publikacje z bazy
+            val publications = DatabaseManager.executeQuery(
+                "SELECT publication_type, status, track_progress FROM publications WHERE title_id = ?",
+                listOf(loadedId)
+            ).map { row ->
+                mapOf(
+                    "publicationType" to row[ColumnInfo("publications", "publication_type")],
+                    "status" to row[ColumnInfo("publications", "status")],
+                    "trackProgress" to row[ColumnInfo("publications", "track_progress")]
+                )
+            }
+
+            mapOf("publications" to publications)
+        }
     }
 
     override fun defineTableRelations(): List<TableRelation> {
         return listOf(
-            TableRelation("novels"), // Główna tabela
-            TableRelation("novel_volumes", "novels.id = novel_volumes.id") // Powiązana tabela
+            TableRelation("titles"),
         )
     }
 
     override fun createSchema(): FormControls {
         return FormControls(
             mapOf(
-                "novelInfo" to SectionControl(
-                    ctrls = listOf("titles", "novelType", "originalLanguage", "status"),
+                "titleInfo" to SectionControl(
+                    ctrls = listOf("titles", "language"),
                     collapsible = false,
                     initiallyExpanded = true,
                     columns = 2,
-                    label = "Informacje o nowelce"
+                    label = "Informacje o tytule"
                 ),
-                "titles" to TextListControl(ColumnInfo("novels", "titles"), "Tytuły"),
-                "novelType" to TextControl(ColumnInfo("novels", "novel_type"), "Typ nowelki"),
-                "originalLanguage" to EnumControl(
-                    ColumnInfo("novels", "original_language"),
+                "titles" to TextListControl(ColumnInfo("titles", "titles"), "Tytuły"),
+                "language" to EnumControl(
+                    ColumnInfo("titles", "language"),
                     "Język oryginału",
                     PublicationLanguage::class,
                     required = true
-                ),
-                "status" to EnumControl(
-                    ColumnInfo("novels", "status"),
-                    "Status czytania",
-                    PublicationStatus::class,
-                    required = true
-                ),
-                // Sekcja tomów (widoczna tylko dla określonych statusów)
-                "volumesSection" to SectionControl(
-                    ctrls = listOf("volumes", "translatedVolumes", "originalCompleted"),
-                    collapsible = true,
-                    initiallyExpanded = true,
-                    columns = 2,
-                    label = "Informacje o tomach",
-                    dependencies = mapOf(
-                        "statusDependency" to ControlDependency(
-                            controlName = "status",
-                            value = PublicationStatus.NotReading,
-                            dependencyType = DependencyType.Visible,
-                            comparisonType = ComparisonType.NotEquals
-                        )
-                    )
-                ),
-                "volumes" to IntegerControl(ColumnInfo("novel_volumes", "volumes"), "Liczba tomów", required = true),
-                "translatedVolumes" to IntegerControl(
-                    ColumnInfo("novel_volumes", "translated_volumes"),
-                    "Przetłumaczone tomy",
-                    required = true
-                ),
-                "originalCompleted" to BooleanControl(
-                    ColumnInfo("novel_volumes", "original_completed"),
-                    "Oryginał ukończony",
-                    required = true
                 )
             ),
-            listOf("novelInfo", "volumesSection")
+            listOf("titleInfo", "titles", "language")
         )
     }
 

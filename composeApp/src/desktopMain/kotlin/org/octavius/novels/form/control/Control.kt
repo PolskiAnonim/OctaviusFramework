@@ -51,22 +51,17 @@ abstract class Control<T: Any>(
     open fun setInitValue(value: Any?) : ControlState<T> {
         val state = ControlState<T>()
         if (value == null) {
-            state.value.value = null
             return state
         }
 
         try {
             @Suppress("UNCHECKED_CAST")
-            state.value.value = convertAtInit(value) as T
+            state.value.value = value as T
+            state.initValue.value = value
         } catch (e: ClassCastException) {
             println("Nie można skonwertować wartości $value na typ kontrolki ${this::class.simpleName}")
         }
         return state
-    }
-
-    // Metoda pomocnicza do konwersji wartości - domyślna implementacja
-    protected open fun convertAtInit(value: Any): Any? {
-        return value
     }
 
     //---------------------------------------------Wyświetlanie kontrolek-----------------------------------------------
