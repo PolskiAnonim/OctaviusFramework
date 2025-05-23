@@ -6,16 +6,14 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
+import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
 import org.octavius.novels.report.Report
 import org.octavius.novels.report.column.ReportColumn
-import org.octavius.novels.report.column.type.BooleanColumn
 import org.octavius.novels.report.column.type.EnumColumn
-import org.octavius.novels.report.column.type.IntegerColumn
 import org.octavius.novels.report.column.type.StringListColumn
 
 class NovelReport(val navigator: Navigator) : Report() {

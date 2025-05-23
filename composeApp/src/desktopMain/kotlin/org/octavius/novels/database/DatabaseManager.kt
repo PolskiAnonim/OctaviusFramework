@@ -6,18 +6,12 @@ import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
 import org.octavius.novels.util.Converters.camelToSnakeCase
-import org.octavius.novels.util.Converters.snakeToCamelCase
 import org.postgresql.util.PGobject
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.ResultSetExtractor
-import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.transaction.support.TransactionTemplate
-import java.sql.ResultSet
 import java.sql.Types
-import kotlin.reflect.KClass
-import kotlin.reflect.full.primaryConstructor
 
 object DatabaseManager {
     private val dataSource: HikariDataSource

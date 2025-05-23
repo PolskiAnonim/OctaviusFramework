@@ -1,11 +1,6 @@
 package org.octavius.novels.domain.game
 
-import org.octavius.novels.form.ColumnInfo
-import org.octavius.novels.form.ControlResultData
-import org.octavius.novels.form.Form
-import org.octavius.novels.form.FormControls
-import org.octavius.novels.form.SaveOperation
-import org.octavius.novels.form.TableRelation
+import org.octavius.novels.form.*
 import org.octavius.novels.form.control.type.DatabaseControl
 
 class GameForm(id: Int? = null) : Form() {
@@ -18,6 +13,10 @@ class GameForm(id: Int? = null) : Form() {
             // Inicjalizacja formularza dla nowej gry
             clearForm()
         }
+    }
+
+    override fun initData(): Map<String, Any?> {
+        return mapOf()
     }
 
     override fun defineTableRelations(): List<TableRelation> {

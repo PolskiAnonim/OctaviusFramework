@@ -1,20 +1,20 @@
 package org.octavius.novels.report.column.type
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ColumnInfo
-import org.octavius.novels.report.ColumnState
 import org.octavius.novels.report.FilterValue
-import org.octavius.novels.report.NullHandling
-import org.octavius.novels.report.SortDirection
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.BooleanFilter
 

@@ -31,8 +31,10 @@ abstract class Form : Screen {
         }
     }
 
-
     protected abstract fun createSchema(): FormControls
+
+    // Inicjalizacja danych
+    protected abstract fun initData(): Map<String, Any?>
 
     private val formState: MutableMap<String, ControlState<*>> = mutableMapOf()
 
@@ -43,25 +45,40 @@ abstract class Form : Screen {
     protected var loadedId: Int? = null
 
     fun loadData(id: Int) {
+        // Najpierw pobierz dane z inicjalizacji
+        val initValues = initData()
+
+        // Potem pobierz dane z bazy
         val tableRelations = defineTableRelations()
-        val data = DatabaseManager.getEntityWithRelations(id, tableRelations)
+        val databaseData = DatabaseManager.getEntityWithRelations(id, tableRelations)
 
         for ((controlName, control) in formSchema.controls) {
-            if (control.columnInfo != null) {
-                val value = data[control.columnInfo]
-                formState[controlName] = control.setInitValue(value)
+            val value = when {
+                // Priorytet dla danych z initData()
+                initValues.containsKey(controlName) -> initValues[controlName]
+                // Jeśli nie ma w init, to z bazy danych
+                control.columnInfo != null -> databaseData[control.columnInfo]
+                // W ostateczności null
+                else -> null
             }
+            formState[controlName] = control.setInitValue(value)
         }
         loadedId = id
     }
 
-    // Metoda czyszcząca formularz
     fun clearForm() {
+        val initValues = initData()
+
         for ((controlName, control) in formSchema.controls) {
-            if (control.columnInfo != null) {
-                formState[controlName] = control.setInitValue(null)
+            val value = when {
+                // Priorytet dla danych z initData()
+                initValues.containsKey(controlName) -> initValues[controlName]
+                // W ostateczności null
+                else -> null
             }
+            formState[controlName] = control.setInitValue(value)
         }
+        loadedId = null
     }
 
     // Display

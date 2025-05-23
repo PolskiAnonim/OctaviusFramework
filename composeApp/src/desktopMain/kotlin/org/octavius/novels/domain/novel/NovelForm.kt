@@ -1,23 +1,12 @@
 package org.octavius.novels.domain.novel
 
-import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
-import org.octavius.novels.form.ControlResultData
-import org.octavius.novels.form.ForeignKey
-import org.octavius.novels.form.Form
-import org.octavius.novels.form.FormControls
-import org.octavius.novels.form.SaveOperation
-import org.octavius.novels.form.TableRelation
+import org.octavius.novels.form.*
 import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.DependencyType
-import org.octavius.novels.form.control.type.BooleanControl
-import org.octavius.novels.form.control.type.EnumControl
-import org.octavius.novels.form.control.type.IntegerControl
-import org.octavius.novels.form.control.type.SectionControl
-import org.octavius.novels.form.control.type.TextControl
-import org.octavius.novels.form.control.type.TextListControl
+import org.octavius.novels.form.control.type.*
 
 class NovelForm(id: Int? = null) : Form() {
 
@@ -29,6 +18,10 @@ class NovelForm(id: Int? = null) : Form() {
             // Inicjalizacja formularza dla nowej nowelki
             clearForm()
         }
+    }
+
+    override fun initData(): Map<String, Any?> {
+        return mapOf()
     }
 
     override fun defineTableRelations(): List<TableRelation> {
