@@ -38,13 +38,18 @@ abstract class Control<T: Any>(
 
 
     // Konwersja wyniku
-    fun getResult(value: Any?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
+    fun getResult(
+        state: ControlState<*>,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>,
+        useInitValue: Boolean = false
+    ): Any? {
         if (!validator.isControlVisible(this, controls, states)) return null
-        return convertToResult(value)
+        return convertToResult(state, controls, states, useInitValue)
     }
 
-    protected open fun convertToResult(value: Any?): Any? {
-        return value
+    protected open fun convertToResult(state: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, useInitValue: Boolean): Any? {
+        return if (useInitValue) state.initValue.value else state.value.value
     }
 
     // Metoda do ustawiania wartości
@@ -56,12 +61,19 @@ abstract class Control<T: Any>(
 
         try {
             @Suppress("UNCHECKED_CAST")
-            state.value.value = value as T
-            state.initValue.value = value
+            state.initValue.value = value as T
+            state.value.value = copyInitToValue(value)
         } catch (e: ClassCastException) {
             println("Nie można skonwertować wartości $value na typ kontrolki ${this::class.simpleName}")
         }
         return state
+    }
+
+    // Funkcja jest wymagana w przypadku kontrolek potrzebujących głębokich kopii
+    open fun copyInitToValue(value: T): T {
+        // Dla podstawowych typów kopia będzie automatyczna
+        @Suppress("UNCHECKED_CAST")
+        return value
     }
 
     //---------------------------------------------Wyświetlanie kontrolek-----------------------------------------------

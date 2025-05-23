@@ -158,23 +158,14 @@ abstract class Form : Screen {
 
     // Save
     private fun collectFormData(): Map<String, Map<String, ControlResultData>> {
-        val result = mutableMapOf<String, MutableMap<String, Any?>>()
+        val result = mutableMapOf<String, Any?>()
 
         for ((controlName, control) in formSchema.controls) {
-            // Pobierz tablę i pole
-            val columnInfo = control.columnInfo ?: continue
-
             val state = formState[controlName] ?: continue
-            var value = state.value.value
-            value = control.getResult(value, formSchema.controls, formState)
-
-            // Dodaj do odpowiedniej tabeli
-            if (!result.containsKey(columnInfo.tableName)) {
-                result[columnInfo.tableName] = mutableMapOf()
-            }
+            val value = control.getResult(state, formSchema.controls, formState)
 
             // Dodaj wartość
-            result[columnInfo.tableName]!![columnInfo.fieldName] = ControlResultData(value, state.dirty.value)
+            result[controlName] = ControlResultData(value, state.dirty.value)
         }
 
         @Suppress("UNCHECKED_CAST")

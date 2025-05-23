@@ -35,6 +35,10 @@ class TextListControl(
 ) {
     override val validator: ControlValidator<List<String>> = DefaultValidator()
 
+    override fun copyInitToValue(value: List<String>): List<String> {
+        @Suppress("UNCHECKED_CAST")
+        return value.map { it }.toList()
+    }
 
     @Composable
     override fun Display(
