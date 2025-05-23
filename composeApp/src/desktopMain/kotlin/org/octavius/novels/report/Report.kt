@@ -136,7 +136,7 @@ abstract class Report : Screen {
         }
 
         try {
-            val (results, totalCount) = DatabaseManager.executeQuery(
+            val (results, totalCount) = DatabaseManager.executePagedQuery(
                 sql = finalSql,
                 params = query.params.toList(),
                 page = page,

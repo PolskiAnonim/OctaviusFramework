@@ -32,7 +32,7 @@ class DatabaseControl(
         // Załaduj z bazy danych
         try {
             val sql = "SELECT $displayColumn FROM $relatedTable WHERE id = ?"
-            val result = DatabaseManager.executeQuery(sql, listOf(value)).first.firstOrNull()
+            val result = DatabaseManager.executeQuery(sql, listOf(value)).firstOrNull()
 
             if (result != null) {
                 val displayValue = result[ColumnInfo(relatedTable, displayColumn)] as String
@@ -56,7 +56,7 @@ class DatabaseControl(
         val params = if (searchQuery.isEmpty()) emptyList() else listOf("%$searchQuery%")
 
         return try {
-            val (results, totalPages) = DatabaseManager.executeQuery(sql, params, page, pageSize)
+            val (results, totalPages) = DatabaseManager.executePagedQuery(sql, params, page, pageSize)
             val mappedResults = results.groupBy { it[ColumnInfo(relatedTable, "id")] }
                 .map { (id, items) ->
                     val displayValue = items.firstOrNull()?.get(ColumnInfo(relatedTable, displayColumn)) as? String ?: ""

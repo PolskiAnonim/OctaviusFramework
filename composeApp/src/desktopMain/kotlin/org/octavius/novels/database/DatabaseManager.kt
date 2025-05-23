@@ -54,28 +54,42 @@ object DatabaseManager {
         databaseUpdater = DatabaseUpdater(dataSource, jdbcTemplate)
     }
 
-    // Wykonanie zapytania z paginacją
+    // Wykonanie zapytania bez paginacji - zwraca wszystkie wyniki
     fun executeQuery(
+        sql: String,
+        params: List<Any?> = emptyList()
+    ): List<Map<ColumnInfo, Any?>> {
+        return jdbcTemplate.query(sql, rowMapperFactory.createColumnInfoMapper(), *params.toTypedArray())
+    }
+
+    // Wykonanie zapytania z paginacją
+    fun executePagedQuery(
         sql: String,
         params: List<Any?> = emptyList(),
         page: Int = 1,
         pageSize: Int = 10
     ): Pair<List<Map<ColumnInfo, Any?>>, Long> {
         // Pobranie całkowitej liczby wyników
-        val countQuery = "SELECT COUNT(*) AS counted_query FROM ($sql)"
-        val totalCount = jdbcTemplate.queryForObject(
-            countQuery,
-            Long::class.java,
-            *params.toTypedArray()
-        ) ?: 0L
+        val totalCount = getTotalCount(sql, params)
 
         // Pobranie wyników dla bieżącej strony
         val offset = (page - 1) * pageSize
         val pagedQuery = "$sql LIMIT $pageSize OFFSET $offset"
 
-        val results = jdbcTemplate.query(pagedQuery, rowMapperFactory.createColumnInfoMapper(), *params.toTypedArray())
+        val results = executeQuery(pagedQuery, params)
+        val totalPages = if (totalCount > 0) (totalCount - 1) / pageSize + 1 else 1
 
-        return Pair(results, totalCount / pageSize + 1)
+        return Pair(results, totalPages)
+    }
+
+    // Pomocnicza metoda do pobrania całkowitej liczby wyników
+    private fun getTotalCount(sql: String, params: List<Any?>): Long {
+        val countQuery = "SELECT COUNT(*) AS counted_query FROM ($sql) AS count_subquery"
+        return jdbcTemplate.queryForObject(
+            countQuery,
+            Long::class.java,
+            *params.toTypedArray()
+        ) ?: 0L
     }
 
     // Pobranie encji z relacjami
