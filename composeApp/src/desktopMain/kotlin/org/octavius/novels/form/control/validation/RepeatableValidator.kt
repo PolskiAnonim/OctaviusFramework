@@ -10,20 +10,18 @@ class RepeatableValidator(
 
     override fun validateSpecific(state: ControlState<*>) {
         @Suppress("UNCHECKED_CAST")
-        val rows = state.value.value as? List<Map<String, Any?>> ?: return
+        val rows = state.value.value as List<RepeatableRow>
 
         // Sprawdź unikalność
         if (uniqueFields.isNotEmpty()) {
             val seenValues = mutableSetOf<List<Any?>>()
 
             for ((index, row) in rows.withIndex()) {
-                val uniqueKey = uniqueFields.map { field -> row[field] }
+                val uniqueKey = uniqueFields.map { field -> row.states[field]!!.value.value }
 
-                if (uniqueKey.any { it != null }) { // Ignoruj puste wiersze
-                    if (!seenValues.add(uniqueKey)) {
-                        state.error.value = "Duplikat wartości w wierszu ${index + 1}"
-                        return
-                    }
+                if (!seenValues.add(uniqueKey)) {
+                    state.error.value = "Duplikat wartości w wierszu ${index + 1}"
+                    return
                 }
             }
         }
