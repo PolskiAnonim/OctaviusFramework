@@ -45,6 +45,7 @@ abstract class Form : Screen {
     protected var loadedId: Int? = null
 
     fun loadData(id: Int) {
+        loadedId = id
         // Najpierw pobierz dane z inicjalizacji
         val initValues = initData()
 
@@ -63,7 +64,7 @@ abstract class Form : Screen {
             }
             formState[controlName] = control.setInitValue(value)
         }
-        loadedId = id
+
     }
 
     fun clearForm() {

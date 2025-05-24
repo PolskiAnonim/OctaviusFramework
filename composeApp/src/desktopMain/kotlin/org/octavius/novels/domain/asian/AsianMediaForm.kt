@@ -31,7 +31,13 @@ class AsianMediaForm(id: Int? = null) : Form() {
                     mapOf(
                         "publicationType" to PublicationType.WebNovel,
                         "status" to PublicationStatus.NotReading,
-                        "trackProgress" to false
+                        "trackProgress" to false,
+                        // reszta jako null
+                        "volumes" to null,
+                        "translatedVolumes" to null,
+                        "chapters" to null,
+                        "translatedChapters" to null,
+                        "originalCompleted" to null
                     )
                 )
             )
