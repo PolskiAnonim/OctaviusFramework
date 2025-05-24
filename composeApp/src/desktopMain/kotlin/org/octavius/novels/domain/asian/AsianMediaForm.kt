@@ -61,14 +61,11 @@ class AsianMediaForm(id: Int? = null) : Form() {
                 data["status"] = row[ColumnInfo("publications", "status")]
                 data["trackProgress"] = row[ColumnInfo("publications", "track_progress")]
 
-                // Dane z publication_volumes jeśli istnieją
-                if (data["trackProgress"] == true) {
-                    data["volumes"] = row[ColumnInfo("publication_volumes", "volumes")]
-                    data["translatedVolumes"] = row[ColumnInfo("publication_volumes", "translated_volumes")]
-                    data["chapters"] = row[ColumnInfo("publication_volumes", "chapters")]
-                    data["translatedChapters"] = row[ColumnInfo("publication_volumes", "translated_chapters")]
-                    data["originalCompleted"] = row[ColumnInfo("publication_volumes", "original_completed")]
-                }
+                data["volumes"] = row[ColumnInfo("publication_volumes", "volumes")]
+                data["translatedVolumes"] = row[ColumnInfo("publication_volumes", "translated_volumes")]
+                data["chapters"] = row[ColumnInfo("publication_volumes", "chapters")]
+                data["translatedChapters"] = row[ColumnInfo("publication_volumes", "translated_chapters")]
+                data["originalCompleted"] = row[ColumnInfo("publication_volumes", "original_completed")]
 
                 data
             }
