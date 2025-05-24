@@ -145,7 +145,6 @@ abstract class Report : Screen {
 
             onResult(results, totalCount)
         } catch (e: Exception) {
-            println("Błąd podczas pobierania danych: ${e.message}")
             e.printStackTrace()
             onResult(emptyList(), 0)
         }

@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
+import org.octavius.novels.domain.PublicationType
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
@@ -21,18 +22,15 @@ class AsianMediaReport(val navigator: Navigator) : Report() {
     override fun createQuery(): Query {
         val sql = """
 SELECT 
-    t.id, 
+    t.id as title_id,
     t.titles,
     t.language,
-    CASE 
-        WHEN bool_or(p.status = 'COMPLETED') THEN 'COMPLETED'::publication_status
-        WHEN bool_or(p.status = 'PLAN_TO_READ') THEN 'PLAN_TO_READ'::publication_status
-        ELSE 'NOT_READING'::publication_status
-    END as status
+    p.publication_type,
+    p.status
 FROM titles t
 JOIN publications p ON p.title_id = t.id 
-GROUP BY t.id, t.titles
-        """.trimIndent()
+ORDER BY t.id, p.publication_type
+    """.trimIndent()
         return Query(sql)
     }
 
@@ -41,20 +39,25 @@ GROUP BY t.id, t.titles
             "titles" to StringListColumn(
                 columnInfo = ColumnInfo("titles", "titles"),
                 header = "Tytuły",
-                width = 3f
+                width = 2f
             ),
-            "status" to EnumColumn(
-                columnInfo = ColumnInfo("", "status"),
-                header = "Status",
-                enumClass = PublicationStatus::class,
-                width = 1f,
-                filterable = false
-            ),
-            "originalLanguage" to EnumColumn(
+            "language" to EnumColumn(
                 columnInfo = ColumnInfo("titles", "language"),
-                header = "Język oryginału",
+                header = "Język",
                 enumClass = PublicationLanguage::class,
                 width = 1f
+            ),
+            "publicationType" to EnumColumn(
+                columnInfo = ColumnInfo("publications", "publication_type"),
+                header = "Typ publikacji",
+                enumClass = PublicationType::class,
+                width = 1.5f
+            ),
+            "status" to EnumColumn(
+                columnInfo = ColumnInfo("publications", "status"),
+                header = "Status",
+                enumClass = PublicationStatus::class,
+                width = 1.5f
             )
         )
     }
@@ -79,7 +82,7 @@ GROUP BY t.id, t.titles
 
     override var onRowClick: ((Map<ColumnInfo, Any?>) -> Unit)? = { rowData ->
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
-        val id = rowData[ColumnInfo("titles", "id")] as? Int
+        val id = rowData[ColumnInfo("titles", "title_id")] as? Int
         if (id != null) {
             navigator.addScreen(AsianMediaForm(id))
         }
