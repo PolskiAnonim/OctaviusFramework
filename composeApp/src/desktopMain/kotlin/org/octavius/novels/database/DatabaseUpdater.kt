@@ -26,16 +26,24 @@ class DatabaseUpdater(
                     when (operation) {
                         is SaveOperation.Insert -> {
                             val id = insertIntoTable(operation)
-                            databaseOperations.filterIsInstance<SaveOperation.Insert>().forEach { op ->
-                                op.foreignKeys.filter { it.referencedTable == operation.tableName }
-                                    .forEach { it.value = id }
+                            // Aktualizuj foreign keys w kolejnych operacjach
+                            databaseOperations.forEach { op ->
+                                when (op) {
+                                    is SaveOperation.Insert -> {
+                                        op.foreignKeys.filter { it.referencedTable == operation.tableName }
+                                            .forEach { it.value = id }
+                                    }
+                                    is SaveOperation.Update -> {
+                                        op.foreignKeys.filter { it.referencedTable == operation.tableName }
+                                            .forEach { it.value = id }
+                                    }
+                                    else -> {}
+                                }
                             }
                         }
-
                         is SaveOperation.Update -> {
                             updateTable(operation)
                         }
-
                         is SaveOperation.Delete -> {
                             deleteFromTable(operation)
                         }
@@ -90,7 +98,16 @@ class DatabaseUpdater(
 
     private fun updateTable(operation: SaveOperation.Update) {
         val updatePairs = operation.data.entries.joinToString { "${it.key} = ?" }
-        val updateQuery = "UPDATE ${operation.tableName} SET $updatePairs WHERE id = ?"
+
+        val updateQuery = if (operation.id != null) {
+            "UPDATE ${operation.tableName} SET $updatePairs WHERE id = ?"
+        } else {
+            // Użyj foreign keys do identyfikacji wiersza
+            val whereClause = operation.foreignKeys
+                .filter { it.value != null }
+                .joinToString(" AND ") { "${it.columnName} = ?" }
+            "UPDATE ${operation.tableName} SET $updatePairs WHERE $whereClause"
+        }
 
         jdbcTemplate.update(updateQuery) { ps ->
             // Ustaw parametry dla danych
@@ -98,8 +115,19 @@ class DatabaseUpdater(
                 setStatementParameter(ps, index + 1, value.value)
             }
 
-            // Ustaw parametr dla id
-            ps.setInt(operation.data.size + 1, operation.id)
+            // Ustaw parametr dla WHERE clause
+            if (operation.id != null) {
+                ps.setInt(operation.data.size + 1, operation.id)
+            } else {
+                // Ustaw parametry foreign keys
+                val fkValues = operation.foreignKeys
+                    .filter { it.value != null }
+                    .map { it.value }
+
+                fkValues.forEachIndexed { index, value ->
+                    setStatementParameter(ps, operation.data.size + index + 1, value)
+                }
+            }
         }
     }
 

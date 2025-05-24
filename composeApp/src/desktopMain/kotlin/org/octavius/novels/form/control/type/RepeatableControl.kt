@@ -126,9 +126,9 @@ class RepeatableControl(
                 RepeatableRowCard(
                     row = row,
                     index = index,
-                    onDelete = if ((controlState.value.value?.size ?: 0) > minRows) {
+                    onDelete = if ((controlState.value.value!!.size) > minRows) {
                         {
-                            val currentRows = controlState.value.value?.toMutableList() ?: mutableListOf()
+                            val currentRows = controlState.value.value!!.toMutableList()
                             currentRows.removeAt(index)
                             controlState.value.value = currentRows
                             updateState(controlState)
@@ -316,26 +316,26 @@ class RepeatableControl(
         val (newRows, deletedRows, changedRows) = getRowTypes(controlState)
 
         val deletedRowsValues = deletedRows.map { row ->
-                row.states.mapValues { (name, fieldControlState) ->
-                    // Dla usuniętych wierszy, `fieldControlState` pochodzi z wiersza, który był w `initialListOfRows`.
-                    // Chcemy wynik oparty na `fieldControlState.initValue.value`.
-                    // Przekazujemy `useInitValue = true`.
-                    val value = rowControls[name]!!.getResult(fieldControlState, outerControls, outerStates, useInitValue = true)
-                    name to ControlResultData(value, fieldControlState.dirty.value)
-                }
+            row.states.mapValues { (name, fieldControlState) ->
+                // Dla usuniętych wierszy, `fieldControlState` pochodzi z wiersza, który był w `initialListOfRows`.
+                // Chcemy wynik oparty na `fieldControlState.initValue.value`.
+                // Przekazujemy `useInitValue = true`.
+                val value = rowControls[name]!!.getResult(fieldControlState, outerControls, outerStates, useInitValue = true)
+                ControlResultData(value, fieldControlState.dirty.value)
+            }
         }
 
         val newRowsValues = newRows.map { row ->
             row.states.mapValues { (name, fieldControlState) ->
                 val value = rowControls[name]!!.getResult(fieldControlState, outerControls, outerStates)
-                name to ControlResultData(value, fieldControlState.dirty.value)
+                ControlResultData(value, fieldControlState.dirty.value)
             }
         }
 
         val changedRowsValues = changedRows.map { row ->
             row.states.mapValues { (name, fieldControlState) ->
                 val value = rowControls[name]!!.getResult(fieldControlState, outerControls, outerStates)
-                name to ControlResultData(value, fieldControlState.dirty.value)
+                ControlResultData(value, fieldControlState.dirty.value)
             }
         }
 

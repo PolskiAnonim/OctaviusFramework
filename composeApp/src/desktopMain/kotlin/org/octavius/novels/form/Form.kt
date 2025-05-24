@@ -144,7 +144,7 @@ abstract class Form : Screen {
 
         for ((controlName, control) in formSchema.controls) {
             // Pobierz stan kontrolki
-            val state = formState[controlName] ?: continue
+            val state = formState[controlName]!!
             state.error.value = null
             control.validateControl(controlName, state, formSchema.controls, formState)
 
@@ -161,7 +161,7 @@ abstract class Form : Screen {
         val result = mutableMapOf<String, ControlResultData>()
 
         for ((controlName, control) in formSchema.controls) {
-            val state = formState[controlName] ?: continue
+            val state = formState[controlName]!!
             val value = control.getResult(state, formSchema.controls, formState)
 
             // Dodaj wartość

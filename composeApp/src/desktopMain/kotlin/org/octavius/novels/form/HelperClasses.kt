@@ -25,7 +25,8 @@ sealed class SaveOperation {
     data class Update(
         override val tableName: String,
         val data: Map<String, ControlResultData>,
-        val id: Int
+        val id: Int? = null,  // Może być null jeśli używamy foreign keys
+        val foreignKeys: List<ForeignKey> = emptyList()
     ) : SaveOperation()
 
     data class Delete(

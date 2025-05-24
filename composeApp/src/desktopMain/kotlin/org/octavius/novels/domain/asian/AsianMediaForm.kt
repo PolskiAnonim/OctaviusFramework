@@ -222,10 +222,10 @@ class AsianMediaForm(id: Int? = null) : Form() {
             loadedId!!
         } else {
             result.add(SaveOperation.Insert("titles", titleData))
-            null // Będzie wypełnione przez DatabaseManager
+            null
         }
 
-        // Obsługa publikacji - pobierz dane z RepeatableControl
+        // Obsługa publikacji
         val publicationsResult = formData["publications"]!!.value as RepeatableResultValue
 
         // Usunięte publikacje
@@ -242,7 +242,6 @@ class AsianMediaForm(id: Int? = null) : Form() {
             publicationData["status"] = rowData["status"]!!
             publicationData["track_progress"] = rowData["trackProgress"]!!
 
-
             result.add(
                 SaveOperation.Insert(
                     "publications",
@@ -252,7 +251,7 @@ class AsianMediaForm(id: Int? = null) : Form() {
                 )
             )
 
-            // Jeśli track_progress = true TRIGGER sprawi iż tabelka będzie istnieć
+            // Jeśli track_progress = true, UPDATE volumes (trigger już stworzył wiersz)
             if (rowData["trackProgress"]!!.value == true) {
                 val volumesData = mutableMapOf<String, ControlResultData>()
                 volumesData["volumes"] = rowData["volumes"]!!
@@ -262,10 +261,11 @@ class AsianMediaForm(id: Int? = null) : Form() {
                 volumesData["original_completed"] = rowData["originalCompleted"]!!
 
                 result.add(
-                    SaveOperation.Insert(
+                    SaveOperation.Update(
                         "publication_volumes",
                         volumesData,
-                        listOf(ForeignKey("publication_id", "publications"))
+                        id = null, // Nie wiadomo czy id istnieje
+                        foreignKeys = listOf(ForeignKey("publication_id", "publications"))
                     )
                 )
             }
@@ -282,7 +282,7 @@ class AsianMediaForm(id: Int? = null) : Form() {
 
             result.add(
                 SaveOperation.Update(
-                    "asian_media.publications",
+                    "publications",
                     publicationData,
                     pubId
                 )
@@ -298,6 +298,14 @@ class AsianMediaForm(id: Int? = null) : Form() {
                 volumesData["chapters"] = rowData["chapters"]!!
                 volumesData["translated_chapters"] = rowData["translatedChapters"]!!
                 volumesData["original_completed"] = rowData["originalCompleted"]!!
+
+                result.add(
+                    SaveOperation.Update(
+                        "publication_volumes",
+                        volumesData,
+                        id = pubId
+                    )
+                )
             }
         }
 
