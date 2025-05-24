@@ -12,9 +12,9 @@ data class RepeatableRow(
 )
 
 data class RepeatableResultValue(
-    val deletedRows: List<Map<String,Any?>>,
-    val addedRows: List<Map<String,Any?>>,
-    val modifiedRows: List<Map<String,Any?>>
+    val deletedRows: List<Map<String, ControlResultData>>,
+    val addedRows: List<Map<String,ControlResultData>>,
+    val modifiedRows: List<Map<String,ControlResultData>>
 )
 
 fun createRow(rowControls: Map<String, Control<*>>): RepeatableRow {

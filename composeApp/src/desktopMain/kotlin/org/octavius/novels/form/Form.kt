@@ -157,8 +157,8 @@ abstract class Form : Screen {
     }
 
     // Save
-    private fun collectFormData(): Map<String, Map<String, ControlResultData>> {
-        val result = mutableMapOf<String, Any?>()
+    private fun collectFormData(): Map<String, ControlResultData> {
+        val result = mutableMapOf<String, ControlResultData>()
 
         for ((controlName, control) in formSchema.controls) {
             val state = formState[controlName] ?: continue
@@ -168,12 +168,11 @@ abstract class Form : Screen {
             result[controlName] = ControlResultData(value, state.dirty.value)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        return result as Map<String, Map<String, ControlResultData>>
+        return result
     }
 
     // Metoda do przetwarzania danych przed zapisem
-    protected abstract fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation>
+    protected abstract fun processFormData(formData: Map<String, ControlResultData>): List<SaveOperation>
 
     // Metoda do zapisu formularza
     private fun saveForm(): Boolean {

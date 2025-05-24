@@ -42,7 +42,7 @@ class GameForm(id: Int? = null) : Form() {
         )
     }
 
-    override fun processFormData(formData: Map<String, Map<String, ControlResultData>>): List<SaveOperation> {
+    override fun processFormData(formData: Map<String, ControlResultData>): List<SaveOperation> {
         return listOf()
     }
 }
