@@ -8,7 +8,7 @@ data class RepeatableRow(
     // Id wiersza do wewnętrznego sprawdzania
     val id: String = java.util.UUID.randomUUID().toString(),
     // Stan kontrolek wiersza
-    val states: MutableMap<String, ControlState<*>> = mutableMapOf()
+    val states: Map<String, ControlState<*>> = mapOf()
 )
 
 data class RepeatableResultValue(

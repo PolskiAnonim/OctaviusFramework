@@ -46,12 +46,12 @@ abstract class DropdownControlBase<T: Any>(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Display(
-        controlState: ControlState<T>?,
+        controlState: ControlState<T>,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
-        controlState!!.let { ctrlState ->
+        controlState.let { ctrlState ->
             var expanded by remember { mutableStateOf(false) }
             var searchQuery by remember { mutableStateOf("") }
             var options by remember { mutableStateOf<List<DropdownOption<T>>>(emptyList()) }

@@ -79,17 +79,17 @@ abstract class Control<T: Any>(
     //---------------------------------------------Wyświetlanie kontrolek-----------------------------------------------
     // Funkcja służąca do ogólnego wyświetlania kontrolki
     @Composable
-    fun Render(controlState: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    fun Render(controlState: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
         val isVisible = validator.isControlVisible(this, controls, states)
         val isRequired = validator.isControlRequired(this, controls, states)
         AnimatedVisibility(visible = isVisible) {
             @Suppress("UNCHECKED_CAST")
-            Display(controlState as ControlState<T>?, controls, states, isRequired)
+            Display(controlState as ControlState<T>, controls, states, isRequired)
         }
     }
 
     @Composable
-    protected abstract fun Display(controlState: ControlState<T>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean)
+    protected abstract fun Display(controlState: ControlState<T>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean)
 }
 
 data class ControlDependency<T>(

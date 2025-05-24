@@ -36,12 +36,12 @@ class DoubleControl(
 
     @Composable
     override fun Display(
-        controlState: ControlState<Double>?,
+        controlState: ControlState<Double>,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
-        controlState!!.let { ctrlState ->
+        controlState.let { ctrlState ->
             val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
 
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {

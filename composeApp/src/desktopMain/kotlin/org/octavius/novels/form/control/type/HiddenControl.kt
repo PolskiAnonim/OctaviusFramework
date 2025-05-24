@@ -19,7 +19,7 @@ class HiddenControl<T : Any>(columnInfo: ColumnInfo?) : Control<T>(
 
     @Composable
     override fun Display(
-        controlState: ControlState<T>?,
+        controlState: ControlState<T>,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>,
         isRequired: Boolean

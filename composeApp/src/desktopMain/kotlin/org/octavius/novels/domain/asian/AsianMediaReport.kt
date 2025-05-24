@@ -1,4 +1,4 @@
-package org.octavius.novels.domain.novel
+package org.octavius.novels.domain.asian
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -16,7 +16,7 @@ import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.column.type.EnumColumn
 import org.octavius.novels.report.column.type.StringListColumn
 
-class NovelReport(val navigator: Navigator) : Report() {
+class AsianMediaReport(val navigator: Navigator) : Report() {
 
     override fun createQuery(): Query {
         val sql = """
@@ -64,7 +64,7 @@ GROUP BY t.id, t.titles
         DropdownMenuItem(
             text = { Text("Nowa nowelka") },
             onClick = {
-                navigator.addScreen(NovelForm())
+                navigator.addScreen(AsianMediaForm())
             },
             leadingIcon = {
                 Icon(
@@ -79,9 +79,9 @@ GROUP BY t.id, t.titles
 
     override var onRowClick: ((Map<ColumnInfo, Any?>) -> Unit)? = { rowData ->
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
-        val id = rowData[ColumnInfo("novels", "id")] as? Int
+        val id = rowData[ColumnInfo("titles", "id")] as? Int
         if (id != null) {
-            navigator.addScreen(NovelForm(id))
+            navigator.addScreen(AsianMediaForm(id))
         }
     }
 }

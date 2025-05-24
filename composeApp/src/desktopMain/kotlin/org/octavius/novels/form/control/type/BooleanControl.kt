@@ -36,8 +36,8 @@ class BooleanControl(
     override val validator: ControlValidator<Boolean> = DefaultValidator()
 
     @Composable
-    override fun Display(controlState: ControlState<Boolean>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean) {
-        controlState!!.let { ctrlState ->
+    override fun Display(controlState: ControlState<Boolean>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean) {
+        controlState.let { ctrlState ->
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()

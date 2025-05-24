@@ -35,12 +35,12 @@ class TextControl(
 
     @Composable
     override fun Display(
-        controlState: ControlState<String>?,
+        controlState: ControlState<String>,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
-        controlState!!.let { ctrlState ->
+        controlState.let { ctrlState ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 RenderNormalLabel(label, isRequired)
 

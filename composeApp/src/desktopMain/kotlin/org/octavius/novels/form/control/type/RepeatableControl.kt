@@ -1,10 +1,38 @@
 package org.octavius.novels.form.control.type
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
+import org.octavius.novels.form.control.RenderError
 import org.octavius.novels.form.control.type.repeatable.RepeatableRow
 import org.octavius.novels.form.control.type.repeatable.RepeatableResultValue
 import org.octavius.novels.form.control.type.repeatable.createRow
@@ -50,7 +78,7 @@ class RepeatableControl(
             RepeatableRow(
                 states = initialRow.mapValues { (key, value) ->
                     rowControls[key]!!.setInitValue(value)
-                }.toMutableMap()
+                }.toMap()
             )
         }
 
@@ -71,168 +99,207 @@ class RepeatableControl(
 
     @Composable
     override fun Display(
-        controlState: ControlState<List<RepeatableRow>>?,
+        controlState: ControlState<List<RepeatableRow>>,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
-        // TODO: DO NAPRAWY/ZROBIENIA
-//        var expandedStates by remember { mutableStateOf(rows.map { true }.toMutableList()) }
-//
-//        Column(modifier = Modifier.fillMaxWidth()) {
-//            // Nagłówek sekcji
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(bottom = 8.dp),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                label?.let {
-//                    Text(
-//                        text = it,
-//                        style = MaterialTheme.typography.titleLarge,
-//                        color = MaterialTheme.colorScheme.primary
-//                    )
-//                }
-//
-//                // Przycisk dodawania nowego wiersza
-//                if (maxRows == null || rows.size < maxRows) {
-//                    FilledTonalButton(
-//                        onClick = {
-//                            rows.add(createRow())
-//                            expandedStates.add(true)
-//                            controlState?.value?.value = getRowsData()
-//                            controlState?.dirty?.value = true
-//                        }
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.Add,
-//                            contentDescription = "Dodaj"
-//                        )
-//                        Spacer(modifier = Modifier.width(4.dp))
-//                        Text("Dodaj")
-//                    }
-//                }
-//            }
-//
-//            // Lista wierszy
-//            rows.forEachIndexed { index, row ->
-//                ElevatedCard(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(vertical = 4.dp)
-//                ) {
-//                    Column {
-//                        // Nagłówek wiersza
-//                        Surface(
-//                            modifier = Modifier.fillMaxWidth(),
-//                            color = MaterialTheme.colorScheme.surfaceVariant
-//                        ) {
-//                            Row(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-//                                horizontalArrangement = Arrangement.SpaceBetween,
-//                                verticalAlignment = Alignment.CenterVertically
-//                            ) {
-//                                Text(
-//                                    text = "Element ${index + 1}",
-//                                    style = MaterialTheme.typography.titleMedium
-//                                )
-//
-//                                Row {
-//                                    // Przycisk zwijania/rozwijania
-//                                    IconButton(
-//                                        onClick = {
-//                                            expandedStates = expandedStates.toMutableList().apply {
-//                                                this[index] = !this[index]
-//                                            }
-//                                        }
-//                                    ) {
-//                                        Icon(
-//                                            imageVector = if (expandedStates.getOrNull(index) == true)
-//                                                Icons.Default.KeyboardArrowUp
-//                                            else
-//                                                Icons.Default.KeyboardArrowDown,
-//                                            contentDescription = if (expandedStates.getOrNull(index) == true) "Zwiń" else "Rozwiń"
-//                                        )
-//                                    }
-//
-//                                    // Przycisk usuwania
-//                                    if (rows.size > minRows) {
-//                                        IconButton(
-//                                            onClick = {
-//                                                rows.removeAt(index)
-//                                                expandedStates.removeAt(index)
-//                                                controlState?.value?.value = getRowsData()
-//                                                controlState?.dirty?.value = true
-//                                            }
-//                                        ) {
-//                                            Icon(
-//                                                imageVector = Icons.Default.Delete,
-//                                                contentDescription = "Usuń",
-//                                                tint = MaterialTheme.colorScheme.error
-//                                            )
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//
-//                        // Zawartość wiersza
-//                        AnimatedVisibility(visible = expandedStates.getOrNull(index) == true) {
-//                            Column(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .padding(16.dp)
-//                            ) {
-//                                rowOrder.forEach { controlName ->
-//                                    row.controls[controlName]?.let { control ->
-//                                        // Renderuj kontrolkę z kontekstem wiersza
-//                                        control.Render(
-//                                            controlState = row.states[controlName],
-//                                            controls = row.controls,
-//                                            states = row.states
-//                                        )
-//                                        Spacer(modifier = Modifier.height(8.dp))
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            // Komunikat o błędzie dla całej kontrolki
-//            controlState?.error?.value?.let { error ->
-//                Text(
-//                    text = error,
-//                    color = MaterialTheme.colorScheme.error,
-//                    style = MaterialTheme.typography.bodySmall,
-//                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
-//                )
-//            }
-//        }
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Nagłówek z przyciskiem dodawania
+            RepeatableHeader(
+                label = label,
+                onAddClick = {
+                    val newRow = createRow(rowControls)
+                    val currentRows = controlState.value.value!!.toMutableList()
+                    currentRows.add(newRow)
+                    controlState.value.value = currentRows
+                    updateState(controlState)
+                },
+                canAdd = maxRows == null || (controlState.value.value!!.size) < maxRows
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Lista wierszy
+            controlState.value.value?.forEachIndexed { index, row ->
+                RepeatableRowCard(
+                    row = row,
+                    index = index,
+                    onDelete = if ((controlState.value.value?.size ?: 0) > minRows) {
+                        {
+                            val currentRows = controlState.value.value?.toMutableList() ?: mutableListOf()
+                            currentRows.removeAt(index)
+                            controlState.value.value = currentRows
+                            updateState(controlState)
+                        }
+                    } else null,
+                    content = {
+                        RepeatableRowContent(
+                            row = row,
+                            rowOrder = rowOrder,
+                            rowControls = rowControls
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Komunikat o błędzie
+            RenderError(controlState)
+        }
     }
 
-//    override fun convertToResult(state: ControlState<*>, outerControls: Map<String, Control<*>>, outerStates: Map<String, ControlState<*>>): Any? {
+    @Composable
+    private fun RepeatableHeader(
+        label: String?,
+        onAddClick: () -> Unit,
+        canAdd: Boolean
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            label?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
-//        // Kontrolka zawsze ma co najmniej pustą listę jako wartość
-//        // Nowe wiersze
-//        val newRows = controlState.value.value!!.filter { row -> row.id !in controlState.initValue.value!!.map { it.id } }
-//        // Usunięte wiersze
-//        val deletedRows = controlState.initValue.value!!.filter { row -> row.id !in controlState.value.value!!.map { it.id } }
-//        // Zmienione wiersze
-//        val changedRows = controlState.value.value!!.filter { row -> !row.states.values.none { it.dirty.value } }
-//
-//        val newRowsValues = newRows.map { row -> row.states.mapValues { (name, controlState) -> {
-//            val result = rowControls[name]!!.getResult(controlState, outerControls, outerStates)
-//            name to result
-//        }
-//        }.toMap() }
-//
-//    }
+            if (canAdd) {
+                FilledTonalButton(onClick = onAddClick) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Dodaj"
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Dodaj")
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun RepeatableRowCard(
+        row: RepeatableRow,
+        index: Int,
+        onDelete: (() -> Unit)?,
+        content: @Composable () -> Unit
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            var isExpanded by remember { mutableStateOf(true) }
+
+            Column {
+                // Nagłówek karty
+                RepeatableRowHeader(
+                    index = index,
+                    isExpanded = isExpanded,
+                    onExpandToggle = { isExpanded = !isExpanded },
+                    onDelete = onDelete
+                )
+
+                // Zawartość karty
+                AnimatedVisibility(visible = isExpanded) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(16.dp)
+                    ) {
+                        content()
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun RepeatableRowHeader(
+        index: Int,
+        isExpanded: Boolean,
+        onExpandToggle: () -> Unit,
+        onDelete: (() -> Unit)?
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            onClick = onExpandToggle
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Element ${index + 1}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Ikona rozwijania
+                    Icon(
+                        imageVector = if (isExpanded)
+                            Icons.Default.KeyboardArrowUp
+                        else
+                            Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (isExpanded) "Zwiń" else "Rozwiń",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+
+                    // Przycisk usuwania
+                    onDelete?.let {
+                        IconButton(onClick = it) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Usuń",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun RepeatableRowContent(
+        row: RepeatableRow,
+        rowOrder: List<String>,
+        rowControls: Map<String, Control<*>>
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            rowOrder.forEach { controlName ->
+                rowControls[controlName]?.let { control ->
+                    val state = row.states[controlName]
+                    if (state != null) {
+                        // Tworzymy lokalny kontekst kontrolek dla wiersza
+                        control.Render(
+                            controlState = state,
+                            controls = rowControls,
+                            states = row.states
+                        )
+
+                        // Odstęp między kontrolkami
+                        if (controlName != rowOrder.last()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // YYYY wiem co robię? W każdym razie funkcja nie jest wywoływana z nazwanymi parametrami
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
