@@ -31,7 +31,8 @@ sealed class SaveOperation {
 
     data class Delete(
         override val tableName: String,
-        val id: Int
+        val id: Int? = null, // Może być null jeśli używamy foreign keys
+        val foreignKeys: List<ForeignKey> = emptyList()
     ) : SaveOperation()
 }
 

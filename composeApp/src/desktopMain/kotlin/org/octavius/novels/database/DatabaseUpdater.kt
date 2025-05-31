@@ -132,8 +132,30 @@ class DatabaseUpdater(
     }
 
     private fun deleteFromTable(operation: SaveOperation.Delete) {
-        val deleteQuery = "DELETE FROM ${operation.tableName} WHERE id = ?"
-        jdbcTemplate.update(deleteQuery, operation.id)
+        val deleteQuery = if (operation.id != null) {
+            "DELETE FROM ${operation.tableName} WHERE id = ?"
+        } else {
+            // Użyj foreign keys do identyfikacji wiersza
+            val whereClause = operation.foreignKeys
+                .filter { it.value != null }
+                .joinToString(" AND ") { "${it.columnName} = ?" }
+            "DELETE FROM ${operation.tableName} WHERE $whereClause"
+        }
+        jdbcTemplate.update(deleteQuery, { ps ->
+            // Ustaw parametr dla WHERE clause
+            if (operation.id != null) {
+                ps.setInt(1, operation.id)
+            } else {
+                // Ustaw parametry foreign keys
+                val fkValues = operation.foreignKeys
+                    .filter { it.value != null }
+                    .map { it.value }
+
+                fkValues.forEachIndexed { index, value ->
+                    setStatementParameter(ps, index + 1, value)
+                }
+            }
+        })
     }
 
     // Pomocnicza metoda do ustawiania parametrów w PreparedStatement
