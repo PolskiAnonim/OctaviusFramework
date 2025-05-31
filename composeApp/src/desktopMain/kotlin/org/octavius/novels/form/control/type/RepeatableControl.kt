@@ -306,8 +306,7 @@ class RepeatableControl(
     override fun convertToResult(
         state: ControlState<*>, // Ten state to ControlState<List<RepeatableRow>> dla RepeatableControl
         outerControls: Map<String, Control<*>>,
-        outerStates: Map<String, ControlState<*>>,
-        useInitValue: Boolean // Nie ma jak zmienna którą sama kontrolka sobię zgotowała a jest w niej useless
+        outerStates: Map<String, ControlState<*>>
     ): Any? {
 
         @Suppress("UNCHECKED_CAST")
@@ -318,9 +317,9 @@ class RepeatableControl(
         val deletedRowsValues = deletedRows.map { row ->
             row.states.mapValues { (name, fieldControlState) ->
                 // Dla usuniętych wierszy, `fieldControlState` pochodzi z wiersza, który był w `initialListOfRows`.
-                // Chcemy wynik oparty na `fieldControlState.initValue.value`.
-                // Przekazujemy `useInitValue = true`.
-                val value = rowControls[name]!!.getResult(fieldControlState, outerControls, outerStates, useInitValue = true)
+                // Teoretycznie wynik powinien być na podstawie initValue no ale i tak potrzebne są zwykle tylko ukryte
+                // kontrolki których nie da się zmienić
+                val value = rowControls[name]!!.getResult(fieldControlState, outerControls, outerStates)
                 ControlResultData(value, fieldControlState.dirty.value)
             }
         }

@@ -41,15 +41,14 @@ abstract class Control<T: Any>(
     fun getResult(
         state: ControlState<*>,
         controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
-        useInitValue: Boolean = false
+        states: Map<String, ControlState<*>>
     ): Any? {
         if (!validator.isControlVisible(this, controls, states)) return null
-        return convertToResult(state, controls, states, useInitValue)
+        return convertToResult(state, controls, states)
     }
 
-    protected open fun convertToResult(state: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, useInitValue: Boolean): Any? {
-        return if (useInitValue) state.initValue.value else state.value.value
+    protected open fun convertToResult(state: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
+        return state.value.value
     }
 
     // Metoda do ustawiania wartości
