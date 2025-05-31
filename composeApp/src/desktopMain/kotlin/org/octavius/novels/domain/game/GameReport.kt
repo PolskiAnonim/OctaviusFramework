@@ -1,5 +1,11 @@
 package org.octavius.novels.domain.game
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.GameStatus
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.navigator.Navigator
@@ -12,9 +18,9 @@ import org.octavius.novels.report.column.type.StringColumn
 class GameReport(val navigator: Navigator) : Report() {
     override fun createQuery(): Query {
         val sql = """
-            SELECT g.id, g.name, g_series.name, g.status
+            SELECT g.id, g.name, s.name, g.status
             FROM games g
-            LEFT JOIN game_series g_series ON g_series.id = g.series
+            LEFT JOIN series s ON s.id = g.series
         """.trimIndent()
         return Query(sql)
     }
@@ -30,13 +36,29 @@ class GameReport(val navigator: Navigator) : Report() {
     override fun createColumns(): Map<String, ReportColumn> {
         return mapOf(
             "name" to StringColumn(ColumnInfo("games", "name"), "Nazwa", filterable = true),
-            "series" to StringColumn(ColumnInfo("game_series", "name"), "Seria", filterable = true),
+            "series" to StringColumn(ColumnInfo("series", "name"), "Seria", filterable = true),
             "status" to EnumColumn(
                 ColumnInfo("games", "status"),
                 "Status",
                 enumClass = GameStatus::class,
                 filterable = true
             ),
+        )
+    }
+
+    @Composable
+    override fun AddMenu() {
+        DropdownMenuItem(
+            text = { Text("Nowa gra") },
+            onClick = {
+                navigator.addScreen(GameForm())
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null
+                )
+            }
         )
     }
 }

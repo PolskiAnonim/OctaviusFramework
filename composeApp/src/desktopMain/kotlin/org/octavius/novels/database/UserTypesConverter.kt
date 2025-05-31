@@ -58,7 +58,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
                 JOIN pg_enum e ON t.oid = e.enumtypid
                 JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE 
-                n.nspname = ANY(ARRAY['public','asian_media'])
+                n.nspname = ANY(ARRAY['public','asian_media', 'games'])
             ORDER BY 
                 t.typname, e.enumsortorder
         """
@@ -94,7 +94,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
                 t.typtype = 'c'
                 AND a.attnum > 0
                 AND NOT a.attisdropped
-                AND n.nspname = ANY(ARRAY['public','asian_media'])
+                AND n.nspname = ANY(ARRAY['public','asian_media', 'games'])
             ORDER BY 
                 t.typname, a.attnum
         """
