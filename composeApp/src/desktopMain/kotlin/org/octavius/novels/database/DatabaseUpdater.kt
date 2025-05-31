@@ -72,12 +72,12 @@ class DatabaseUpdater(
         val columnsString = allColumns.joinToString()
         val placeholders = allColumns.joinToString { "?" }
 
-        val insertQuery = "INSERT INTO ${operation.tableName} ($columnsString) VALUES ($placeholders) RETURNING id"
+        val insertQuery = "INSERT INTO ${operation.tableName} ($columnsString) VALUES ($placeholders)"
 
         val keyHolder = GeneratedKeyHolder()
 
         jdbcTemplate.update({ connection ->
-            val ps = connection.prepareStatement(insertQuery, arrayOf("id"))
+            val ps = connection.prepareStatement(insertQuery, if (operation.returningId) arrayOf("id") else arrayOf())
 
             // Ustaw parametry dla zwykłych danych
             operation.data.values.forEachIndexed { index, value ->

@@ -19,7 +19,8 @@ sealed class SaveOperation {
     data class Insert(
         override val tableName: String,
         val data: Map<String, ControlResultData>,
-        val foreignKeys: List<ForeignKey> = emptyList()
+        val foreignKeys: List<ForeignKey> = emptyList(),
+        val returningId: Boolean = true  // Czy zwrócić id
     ) : SaveOperation()
 
     data class Update(

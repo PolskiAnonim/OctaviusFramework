@@ -263,7 +263,8 @@ class GameForm(id: Int? = null) : Form() {
                 SaveOperation.Insert(
                     "play_time",
                     playTimeData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
+                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
+                    returningId = false
                 )
             )
         }
@@ -291,7 +292,8 @@ class GameForm(id: Int? = null) : Form() {
                 SaveOperation.Insert(
                     "ratings",
                     ratingsData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
+                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
+                    returningId = false
                 )
             )
         }
@@ -326,7 +328,8 @@ class GameForm(id: Int? = null) : Form() {
                 SaveOperation.Insert(
                     "characters",
                     charactersData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
+                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
+                    returningId = false
                 )
             )
         }
