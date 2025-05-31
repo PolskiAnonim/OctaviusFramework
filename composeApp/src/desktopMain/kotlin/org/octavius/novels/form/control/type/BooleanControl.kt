@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
@@ -36,7 +37,14 @@ class BooleanControl(
     override val validator: ControlValidator<Boolean> = DefaultValidator()
 
     @Composable
-    override fun Display(controlState: ControlState<Boolean>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean) {
+    override fun Display(
+        controlState: ControlState<Boolean>,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
+    ) {
+
+
         controlState.let { ctrlState ->
             Surface(
                 modifier = Modifier
@@ -50,15 +58,23 @@ class BooleanControl(
                             .padding(vertical = 8.dp, horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TriStateCheckbox(
-                            state = if (ctrlState.value.value != null) ToggleableState(ctrlState.value.value!!) else ToggleableState.Indeterminate,
-                            onClick = {
-                                val mapping = mapOf(null to false, false to true, true to null)
-                                ctrlState.value.value = mapping[ctrlState.value.value]
-                                updateState(ctrlState)
-                            }
-                        )
-
+                        if (isRequired) {
+                            Checkbox(
+                                checked = ctrlState.value.value!!,
+                                onCheckedChange = {
+                                    ctrlState.value.value = !ctrlState.value.value!!
+                                    updateState(ctrlState)
+                                })
+                        } else {
+                            TriStateCheckbox(
+                                state = if (ctrlState.value.value != null) ToggleableState(ctrlState.value.value!!) else ToggleableState.Indeterminate,
+                                onClick = {
+                                    val mapping = mapOf(null to false, false to true, true to null)
+                                    ctrlState.value.value = mapping[ctrlState.value.value]
+                                    updateState(ctrlState)
+                                }
+                            )
+                        }
                         RenderCheckboxLabel(label, isRequired)
                     }
 
