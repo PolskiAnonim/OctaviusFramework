@@ -27,19 +27,7 @@ class AsianMediaForm(id: Int? = null) : Form() {
         // Dla nowego formularza, załaduj pustą listę publikacji
         return if (loadedId == null) {
             mapOf(
-                "publications" to listOf(
-                    mapOf(
-                        "publicationType" to PublicationType.WebNovel,
-                        "status" to PublicationStatus.NotReading,
-                        "trackProgress" to false,
-                        // reszta jako null
-                        "volumes" to null,
-                        "translatedVolumes" to null,
-                        "chapters" to null,
-                        "translatedChapters" to null,
-                        "originalCompleted" to null
-                    )
-                )
+                "publications" to listOf<Map<String,Any?>>()
             )
         } else {
             // Dla istniejącego, załaduj publikacje z bazy
