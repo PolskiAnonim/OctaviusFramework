@@ -30,14 +30,17 @@ class DatabaseUpdater(
                             databaseOperations.forEach { op ->
                                 when (op) {
                                     is SaveOperation.Insert -> {
-                                        op.foreignKeys.filter { it.referencedTable == operation.tableName }
+                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
                                             .forEach { it.value = id }
                                     }
                                     is SaveOperation.Update -> {
-                                        op.foreignKeys.filter { it.referencedTable == operation.tableName }
+                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null  }
                                             .forEach { it.value = id }
                                     }
-                                    else -> {}
+                                    is SaveOperation.Delete -> {
+                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null  }
+                                            .forEach { it.value = id }
+                                    }
                                 }
                             }
                         }

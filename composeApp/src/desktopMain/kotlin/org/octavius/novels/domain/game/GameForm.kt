@@ -33,7 +33,8 @@ class GameForm(id: Int? = null) : Form() {
             mapOf(
                 "visibleCharactersSection" to false,
                 "playTimeExists" to false,
-                "ratingsExists" to false
+                "ratingsExists" to false,
+                "charactersExists" to false
             )
         } else {
             val dataExists = DatabaseManager.executeQuery(

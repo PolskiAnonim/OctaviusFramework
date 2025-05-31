@@ -59,12 +59,14 @@ class BooleanControl(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (isRequired) {
+                            ctrlState.value.value = ctrlState.value.value ?: false
                             Checkbox(
-                                checked = ctrlState.value.value!!,
+                                checked = ctrlState.value.value!!, // domyślnie false
                                 onCheckedChange = {
-                                    ctrlState.value.value = !ctrlState.value.value!!
+                                    ctrlState.value.value = it
                                     updateState(ctrlState)
-                                })
+                                }
+                            )
                         } else {
                             TriStateCheckbox(
                                 state = if (ctrlState.value.value != null) ToggleableState(ctrlState.value.value!!) else ToggleableState.Indeterminate,
@@ -83,4 +85,6 @@ class BooleanControl(
             }
         }
     }
+
+
 }
