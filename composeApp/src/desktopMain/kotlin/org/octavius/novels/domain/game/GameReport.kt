@@ -21,6 +21,7 @@ class GameReport(val navigator: Navigator) : Report() {
             SELECT g.id, g.name, s.name, g.status
             FROM games g
             LEFT JOIN series s ON s.id = g.series
+            ORDER BY g.name
         """.trimIndent()
         return Query(sql)
     }
