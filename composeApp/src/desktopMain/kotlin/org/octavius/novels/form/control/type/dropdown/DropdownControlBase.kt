@@ -23,13 +23,11 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 abstract class DropdownControlBase<T: Any>(
     label: String?,
     columnInfo: ColumnInfo?,
-    hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<T>(
     label,
     columnInfo,
-    hidden,
     required,
     dependencies
 ) {

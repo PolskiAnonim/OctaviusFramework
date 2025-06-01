@@ -24,13 +24,11 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 class BooleanControl(
     columnInfo: ColumnInfo?,
     label: String?,
-    hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Boolean>(
     label,
     columnInfo,
-    hidden,
     required,
     dependencies
 ) {

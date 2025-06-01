@@ -11,11 +11,10 @@ class EnumControl<T>(
     columnInfo: ColumnInfo?,
     label: String?,
     private val enumClass: KClass<T>,
-    hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : DropdownControlBase<T>(
-    label, columnInfo, hidden, required, dependencies
+    label, columnInfo, required, dependencies
 ) where T : Enum<T>, T : EnumWithFormatter<T> {
 
     override fun getDisplayText(value: T?): String? {

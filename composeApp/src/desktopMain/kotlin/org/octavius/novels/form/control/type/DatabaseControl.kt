@@ -12,11 +12,10 @@ class DatabaseControl(
     private val relatedTable: String,
     private val displayColumn: String,
     private val pageSize: Int = 10,
-    hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : DropdownControlBase<Int>(
-    label, columnInfo, hidden, required, dependencies
+    label, columnInfo, required, dependencies
 ) {
     override val supportSearch = true
     override val supportPagination = true

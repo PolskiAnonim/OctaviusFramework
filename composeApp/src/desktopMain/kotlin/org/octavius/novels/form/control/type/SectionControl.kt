@@ -25,9 +25,8 @@ class SectionControl(
     val initiallyExpanded: Boolean = true,
     val columns: Int = 1,
     label: String,
-    hidden: Boolean? = null,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Unit>(label, null, hidden, false, dependencies) {
+) : Control<Unit>(label, null, false, dependencies) {
     override val validator: ControlValidator<Unit> = DefaultValidator()
 
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {

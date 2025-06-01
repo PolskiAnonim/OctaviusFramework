@@ -10,7 +10,6 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 class HiddenControl<T : Any>(columnInfo: ColumnInfo?) : Control<T>(
     label = null,
     columnInfo,
-    hidden = null,
     required = null,
     dependencies = null
 ) {

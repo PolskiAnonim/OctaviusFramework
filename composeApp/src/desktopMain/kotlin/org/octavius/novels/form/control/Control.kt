@@ -9,7 +9,6 @@ import org.octavius.novels.form.control.validation.ControlValidator
 abstract class Control<T: Any>(
     val label: String?,
     val columnInfo: ColumnInfo?,
-    val hidden: Boolean?,
     val required: Boolean?,
     val dependencies: Map<String, ControlDependency<*>>?,
     var parentControl: String? = null // Kontrolka nadrzędna

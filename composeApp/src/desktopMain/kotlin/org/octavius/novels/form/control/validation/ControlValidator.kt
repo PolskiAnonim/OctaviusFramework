@@ -17,8 +17,6 @@ abstract class ControlValidator<T: Any> {
             val parentControl = controls[parentName] ?: return false
             if (!isControlVisible(parentControl, controls, states)) return false
         }
-        // Jeśli hidden jest true, zawsze ukryj
-        if (control.hidden == true) return false
 
         // Sprawdź zależności
         control.dependencies?.forEach { (_, dependency) ->

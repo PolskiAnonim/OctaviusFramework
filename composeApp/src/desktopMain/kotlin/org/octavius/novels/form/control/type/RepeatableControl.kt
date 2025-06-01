@@ -48,10 +48,9 @@ class RepeatableControl(
     val minRows: Int = 0,
     val maxRows: Int? = null,
     label: String?,
-    hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<List<RepeatableRow>>(label, null, hidden, required, dependencies) {
+) : Control<List<RepeatableRow>>(label, null, required, dependencies) {
 
     override val validator: ControlValidator<List<RepeatableRow>> = RepeatableValidator(uniqueFields)
 

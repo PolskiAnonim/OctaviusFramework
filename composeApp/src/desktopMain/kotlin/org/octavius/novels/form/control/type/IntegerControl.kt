@@ -21,13 +21,11 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 class IntegerControl(
     columnInfo: ColumnInfo?,
     label: String?,
-    hidden: Boolean? = null,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Int>(
     label,
     columnInfo,
-    hidden,
     required,
     dependencies
 ) {
