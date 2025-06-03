@@ -135,7 +135,8 @@ class AsianMediaForm(id: Int? = null) : Form() {
             ),
             "trackProgress" to BooleanControl(
                 null,
-                "Śledzić postęp?"
+                "Śledzić postęp?",
+                required = true
             ),
             "volumes" to IntegerControl(
                 null,
@@ -188,6 +189,7 @@ class AsianMediaForm(id: Int? = null) : Form() {
             "originalCompleted" to BooleanControl(
                 null,
                 "Oryginał ukończony",
+                required = true,
                 dependencies = mapOf(
                     "visible" to ControlDependency(
                         controlName = "trackProgress",
