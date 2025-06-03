@@ -27,7 +27,7 @@ class AsianMediaForm(id: Int? = null) : Form() {
         // Dla nowego formularza, załaduj pustą listę publikacji
         return if (loadedId == null) {
             mapOf(
-                "publications" to listOf<Map<String,Any?>>()
+                "publications" to listOf<Map<String, Any?>>()
             )
         } else {
             // Dla istniejącego, załaduj publikacje z bazy
@@ -294,7 +294,7 @@ class AsianMediaForm(id: Int? = null) : Form() {
                     SaveOperation.Update(
                         "publication_volumes",
                         volumesData,
-                        id = pubId
+                        foreignKeys = listOf(ForeignKey("publication_id", "publications", pubId))
                     )
                 )
             }
