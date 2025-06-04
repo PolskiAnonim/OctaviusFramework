@@ -4,7 +4,7 @@ import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 
-class FormValidator {
+open class FormValidator {
     fun validateFields(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>> ): Boolean {
         var isValid = true
 
@@ -22,7 +22,7 @@ class FormValidator {
         return isValid
     }
 
-    fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
+    open fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
         return true
     }
 
