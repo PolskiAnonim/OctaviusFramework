@@ -7,6 +7,13 @@ import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
+/**
+ * Kontrolka do przechowywania ukrytych wartości w formularzu.
+ * 
+ * Nie renderuje żadnego widocznego elementu interfejsu, ale przechowuje
+ * wartość która zostanie uwzględniona w wynikach formularza. Używana
+ * do przekazywania wartości technicznych, identyfikatorów czy stanu.
+ */
 class HiddenControl<T : Any>(columnInfo: ColumnInfo?) : Control<T>(
     label = null,
     columnInfo,

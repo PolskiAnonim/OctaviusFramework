@@ -6,6 +6,13 @@ import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.type.dropdown.DropdownControlBase
 import org.octavius.novels.form.control.type.dropdown.DropdownOption
 
+/**
+ * Kontrolka do wyboru rekordu z bazy danych z listy rozwijanej.
+ * 
+ * Umożliwia wyszukiwanie i wybór rekordu z określonej tabeli bazy danych.
+ * Obsługuje wyszukiwanie i paginację wyników. Wyświetla określoną kolumnę
+ * jako tekst wyboru, a zwraca ID wybranego rekordu.
+ */
 class DatabaseControl(
     columnInfo: ColumnInfo?,
     label: String?,

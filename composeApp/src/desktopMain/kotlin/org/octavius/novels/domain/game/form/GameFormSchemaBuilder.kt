@@ -2,7 +2,6 @@ package org.octavius.novels.domain.game.form
 
 import org.octavius.novels.domain.GameStatus
 import org.octavius.novels.form.ColumnInfo
-import org.octavius.novels.form.FormControls
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormSchemaBuilder
 import org.octavius.novels.form.control.ComparisonType

@@ -5,8 +5,33 @@ import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.DependencyType
 
+/**
+ * Abstrakcyjna klasa bazowa dla wszystkich walidatorów kontrolek formularza.
+ * 
+ * Walidator odpowiada za:
+ * - Sprawdzanie widoczności kontrolek na podstawie zależności
+ * - Określanie wymagalności pól w zależności od warunków
+ * - Walidację podstawową (wymagalność, pusty stan)
+ * - Walidację specyficzną dla typu kontrolki
+ * 
+ * Każdy typ kontrolki powinien mieć własny walidator dziedziczący z tej klasy
+ * i implementujący metodę validateSpecific() dla specyficznych reguł walidacji.
+ * 
+ * @param T typ danych przechowywanych przez kontrolkę
+ */
 abstract class ControlValidator<T: Any> {
-    // Sprawdzenie czy kontrolka jest widoczna
+    /**
+     * Sprawdza czy kontrolka jest widoczna na podstawie zależności i hierarchii.
+     * 
+     * Kontrolka jest widoczna gdy:
+     * - Jej kontrolka nadrzędna (jeśli istnieje) jest widoczna
+     * - Wszystkie zależności typu Visible są spełnione
+     * 
+     * @param control kontrolka do sprawdzenia
+     * @param controls mapa wszystkich kontrolek formularza
+     * @param states mapa stanów wszystkich kontrolek
+     * @return true jeśli kontrolka powinna być widoczna
+     */
     fun isControlVisible(
         control: Control<*>,
         controls: Map<String, Control<*>>,
@@ -44,7 +69,18 @@ abstract class ControlValidator<T: Any> {
         return true
     }
 
-    // Sprawdzenie czy pole jest wymagane
+    /**
+     * Sprawdza czy kontrolka jest wymagana na podstawie jej konfiguracji i zależności.
+     * 
+     * Kontrolka jest wymagana gdy:
+     * - Ma ustawioną flagę required = true, lub
+     * - Spełnione są zależności typu Required
+     * 
+     * @param control kontrolka do sprawdzenia
+     * @param controls mapa wszystkich kontrolek formularza
+     * @param states mapa stanów wszystkich kontrolek
+     * @return true jeśli kontrolka jest wymagana
+     */
     fun isControlRequired(
         control: Control<*>,
         controls: Map<String, Control<*>>,
@@ -84,7 +120,17 @@ abstract class ControlValidator<T: Any> {
         return isRequired
     }
 
-    // Sprawdzenie, czy wartość jest pusta
+    /**
+     * Sprawdza czy wartość jest pusta lub nie została wypełniona.
+     * 
+     * Wartość jest uważana za pustą gdy:
+     * - Jest null
+     * - Jest pustym ciągiem znaków lub zawiera tylko białe znaki
+     * - Jest pustą listą
+     * 
+     * @param value wartość do sprawdzenia
+     * @return true jeśli wartość jest pusta
+     */
     fun isValueEmpty(value: Any?): Boolean {
         return when (value) {
             null -> true
@@ -94,7 +140,21 @@ abstract class ControlValidator<T: Any> {
         }
     }
 
-    // Główna metoda walidacji
+    /**
+     * Główna metoda walidacji kontrolki.
+     * 
+     * Proces walidacji:
+     * 1. Sprawdza czy kontrolka jest widoczna (jeśli nie, pomija walidację)
+     * 2. Określa czy kontrolka jest wymagana
+     * 3. Sprawdza czy wymagane pole nie jest puste
+     * 4. Uruchamia walidację specyficzną dla typu kontrolki
+     * 
+     * @param controlName nazwa kontrolki
+     * @param state stan kontrolki
+     * @param control definicja kontrolki
+     * @param controls mapa wszystkich kontrolek formularza
+     * @param states mapa stanów wszystkich kontrolek
+     */
     fun validate(
         controlName: String,
         state: ControlState<*>,
@@ -120,7 +180,17 @@ abstract class ControlValidator<T: Any> {
         validateSpecific(state)
     }
 
-    // Metoda do nadpisania przez klasy pochodne
+    /**
+     * Metoda walidacji specyficznej dla typu kontrolki.
+     * 
+     * Powinna być przesłonięta przez klasy pochodne dla implementacji
+     * walidacji specyficznej dla danego typu kontrolki (np. sprawdzanie
+     * formatu email, zakresu liczb, unikalności wartości, itp.).
+     * 
+     * Domyślna implementacja nie wykonuje żadnej dodatkowej walidacji.
+     * 
+     * @param state stan kontrolki do walidacji
+     */
     protected open fun validateSpecific(state: ControlState<*>) {
         // Domyślnie nic nie robimy
     }

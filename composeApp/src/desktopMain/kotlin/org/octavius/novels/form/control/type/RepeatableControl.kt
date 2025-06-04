@@ -40,7 +40,14 @@ import org.octavius.novels.form.control.type.repeatable.getRowTypes
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.RepeatableValidator
 
-
+/**
+ * Kontrolka do tworzenia dynamicznych list kontrolek (wierszy).
+ * 
+ * Umożliwia użytkownikowi dodawanie i usuwanie wierszy, gdzie każdy wiersz
+ * zawiera zestaw kontrolek. Obsługuje walidację unikalności pól, ograniczenia
+ * minimalnej i maksymalnej liczby wierszy oraz składanie/rozwijanie wierszy.
+ * Każdy wiersz może być niezależnie edytowany i usuwany.
+ */
 class RepeatableControl(
     val rowControls: Map<String, Control<*>>,
     val rowOrder: List<String>,

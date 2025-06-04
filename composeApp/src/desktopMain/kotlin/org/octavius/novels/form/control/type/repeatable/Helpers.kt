@@ -4,19 +4,36 @@ import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 
+/**
+ * Reprezentuje jeden wiersz w kontrolce powtarzalnej.
+ * 
+ * @param id unikalny identyfikator wiersza (generowany automatycznie)
+ * @param states mapa stanów kontrolek w tym wierszu
+ */
 data class RepeatableRow(
-    // Id wiersza do wewnętrznego sprawdzania
     val id: String = java.util.UUID.randomUUID().toString(),
-    // Stan kontrolek wiersza
     val states: Map<String, ControlState<*>> = mapOf()
 )
 
+/**
+ * Reprezentuje wynik kontrolki powtarzalnej z podziałem na typy operacji.
+ * 
+ * @param deletedRows wiersze do usunięcia z bazy danych
+ * @param addedRows nowe wiersze do dodania
+ * @param modifiedRows wiersze do zaktualizowania
+ */
 data class RepeatableResultValue(
     val deletedRows: List<Map<String, ControlResultData>>,
     val addedRows: List<Map<String,ControlResultData>>,
     val modifiedRows: List<Map<String,ControlResultData>>
 )
 
+/**
+ * Tworzy nowy wiersz z pustymi stanami kontrolek.
+ * 
+ * @param rowControls mapa kontrolek które mają być w wierszu
+ * @return nowy wiersz z zainicjalizowanymi stanami
+ */
 fun createRow(rowControls: Map<String, Control<*>>): RepeatableRow {
     val states = mutableMapOf<String, ControlState<*>>()
 
@@ -27,6 +44,12 @@ fun createRow(rowControls: Map<String, Control<*>>): RepeatableRow {
     return RepeatableRow(states = states)
 }
 
+/**
+ * Analizuje stan kontrolki powtarzalnej i klasyfikuje wiersze według typu operacji.
+ * 
+ * @param controlState stan kontrolki powtarzalnej
+ * @return Triple(nowe wiersze, usunięte wiersze, zmienione wiersze)
+ */
 fun getRowTypes(controlState: ControlState<List<RepeatableRow>>): Triple<List<RepeatableRow>, List<RepeatableRow>, List<RepeatableRow>> {
     val currentRowIds = controlState.value.value!!.map { it.id }.toSet()
     val initialRowIds = controlState.initValue.value!!.map { it.id }.toSet()
@@ -35,7 +58,6 @@ fun getRowTypes(controlState: ControlState<List<RepeatableRow>>): Triple<List<Re
     val newRows = controlState.value.value!!.filter { it.id !in initialRowIds }
 
     // Usunięte wiersze: te w initial, których ID nie ma w current
-    // Potrzebujemy dostępu do ich `ControlState`ów pól, aby przekazać do getResult
     val deletedRows = controlState.initValue.value!!.filter { it.id !in currentRowIds }
 
     // Zmienione wiersze: te, które są w obu listach (wg ID) I mają przynajmniej jedno pole "dirty"

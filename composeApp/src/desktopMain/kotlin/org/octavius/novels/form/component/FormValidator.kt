@@ -4,12 +4,30 @@ import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 
+/**
+ * Klasa odpowiedzialna za walidację formularza na dwóch poziomach:
+ * 1. Walidacja pól - sprawdza wymagalność, format, zależności między kontrolkami
+ * 2. Walidacja reguł biznesowych - sprawdza niestandardowe reguły specyficzne dla domeny
+ * 
+ * Klasa może być rozszerzona dla implementacji niestandardowych reguł walidacji.
+ */
 open class FormValidator {
+    /**
+     * Waliduje wszystkie pola formularza.
+     * 
+     * Proces walidacji:
+     * 1. Czyści poprzednie błędy
+     * 2. Uruchamia walidację każdej kontrolki przez jej validator
+     * 3. Sprawdza wymagalność, format, zależności
+     * 
+     * @param controls mapa wszystkich kontrolek formularza
+     * @param states mapa stanów wszystkich kontrolek
+     * @return true jeśli wszystkie pola są poprawne
+     */
     fun validateFields(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>> ): Boolean {
         var isValid = true
 
         for ((controlName, control) in controls) {
-            // Pobierz stan kontrolki
             val state = states[controlName]!!
             state.error.value = null
             control.validateControl(controlName, state, controls, states)
@@ -22,6 +40,17 @@ open class FormValidator {
         return isValid
     }
 
+    /**
+     * Waliduje reguły biznesowe specyficzne dla domeny.
+     * 
+     * Domyślna implementacja zawsze zwraca true.
+     * Klasy pochodne powinny przesłonić tę metodę dla implementacji
+     * niestandardowych reguł walidacji (np. sprawdzanie duplikatów,
+     * weryfikacja relacji między polami, itp.)
+     * 
+     * @param formData zebrane dane z formularza
+     * @return true jeśli reguły biznesowe są spełnione
+     */
     open fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
         return true
     }

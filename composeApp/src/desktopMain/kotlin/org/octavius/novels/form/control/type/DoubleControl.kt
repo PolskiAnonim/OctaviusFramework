@@ -18,6 +18,13 @@ import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
+/**
+ * Kontrolka do wprowadzania liczb rzeczywistych (zmiennoprzecinkowych).
+ * 
+ * Renderuje pole tekstowe z numeryczną klawiaturą i walidacją danych wejściowych.
+ * Automatycznie sprawdza czy wprowadzona wartość jest poprawną liczbą rzeczywistą
+ * i wyświetla komunikat błędu w przypadku nieprawidłowych danych.
+ */
 class DoubleControl(
     columnInfo: ColumnInfo?,
     label: String?,

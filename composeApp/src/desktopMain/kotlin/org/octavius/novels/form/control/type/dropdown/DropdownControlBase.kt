@@ -20,6 +20,22 @@ import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
+/**
+ * Bazowa klasa abstrakcyjna dla kontrolek listy rozwijanej (dropdown).
+ * 
+ * Zapewnia wspólną funkcjonalność dla wszystkich kontrolek typu dropdown, w tym:
+ * - Obsługę ładowania opcji z różnych źródeł danych
+ * - Opcjonalne wyszukiwanie w opcjach
+ * - Opcjonalną paginację wyników
+ * - Standardowy interfejs użytkownika z Material Design 3
+ * - Obsługę wartości null dla kontrolek niewymaganych
+ * 
+ * Podklasy muszą zaimplementować metody abstrakcyjne:
+ * - [getDisplayText] - formatowanie wyświetlanego tekstu dla wybranej wartości
+ * - [loadOptions] - ładowanie opcji z uwzględnieniem wyszukiwania i paginacji
+ * 
+ * @param T typ wartości przechowywanych w opcjach dropdown
+ */
 abstract class DropdownControlBase<T: Any>(
     label: String?,
     columnInfo: ColumnInfo?,

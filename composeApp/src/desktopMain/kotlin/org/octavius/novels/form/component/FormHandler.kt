@@ -4,6 +4,17 @@ import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 
+/**
+ * Abstrakcyjna klasa obsługująca cykl życia formularza.
+ * 
+ * FormHandler koordynuje pracę wszystkich komponentów formularza:
+ * - FormSchema - definicja struktury formularza
+ * - FormState - zarządzanie stanem kontrolek
+ * - FormDataManager - ładowanie i przetwarzanie danych
+ * - FormValidator - walidacja pól i reguł biznesowych
+ * 
+ * @param entityId ID edytowanej encji (null dla nowych rekordów)
+ */
 abstract class FormHandler(protected val entityId: Int? = null) {
     protected val formSchema: FormSchema
     protected val formState: FormState = FormState()
@@ -22,24 +33,37 @@ abstract class FormHandler(protected val entityId: Int? = null) {
     }
 
 
-    // Publiczne API dla FormScreen
+    /**
+     * Publiczne API dla FormScreen - metody dostępu do komponentów formularza
+     */
     fun getControlsInOrder(): List<String> = formSchema.order
     fun getControl(name: String): Control<*>? = formSchema.getControl(name)
     fun getControlState(name: String): ControlState<*>? = formState.getControlState(name)
     fun getAllControls(): Map<String, Control<*>> = formSchema.getAllControls()
     fun getAllStates(): Map<String, ControlState<*>> = formState.getAllStates()
 
-    // Metody dla akcji z UI
+    /**
+     * Metody obsługi akcji użytkownika z UI
+     */
     fun onSaveClicked(): Boolean = saveForm()
     fun onCancelClicked() { /* logika anulowania */ }
 
-    // Metody abstrakcyjne
+    /**
+     * Metody abstrakcyjne do implementacji w klasach pochodnych
+     */
     protected abstract fun createFormSchema(): FormSchema
     protected abstract fun createDataManager(): FormDataManager
+    
+    /**
+     * Tworzy validator dla formularza. Można przesłonić dla niestandardowych reguł walidacji.
+     */
     protected open fun createFormValidator(): FormValidator {
         return FormValidator()
     }
 
+    /**
+     * Ładuje dane dla edytowanej encji z bazy danych i inicjalizuje stan formularza.
+     */
     fun loadData() {
         val initValues = formDataManager.initData(entityId!!)
         val databaseData = formDataManager.loadEntityData(entityId)
@@ -57,11 +81,26 @@ abstract class FormHandler(protected val entityId: Int? = null) {
         formState.initializeStates(formSchema, mergedData)
     }
 
+    /**
+     * Czyści formularz i ustawia wartości domyślne dla nowego rekordu.
+     */
     fun clearForm() {
         val initValues = formDataManager.initData(null)
         formState.initializeStates(formSchema, initValues)
     }
 
+    /**
+     * Przetwarza i zapisuje dane formularza do bazy danych.
+     * 
+     * Proces zapisu:
+     * 1. Walidacja pól (wymagalność, format, zależności)
+     * 2. Zbieranie danych z kontrolek
+     * 3. Walidacja reguł biznesowych
+     * 4. Przetwarzanie danych do operacji bazodanowych
+     * 5. Wykonanie operacji w bazie danych
+     * 
+     * @return true jeśli zapis się powiódł, false w przypadku błędów
+     */
     private fun saveForm(): Boolean {
         if (!formValidator.validateFields(formSchema.getAllControls(), formState.getAllStates())) return false
 
