@@ -111,7 +111,7 @@ class TextListControl(
                         onClick = {
                             if (newItemText.isNotBlank()) {
                                 val updatedList = currentList.toMutableList()
-                                updatedList.add(newItemText)
+                                updatedList.add(newItemText.trim())
                                 currentList = updatedList
                                 ctrlState.value.value = updatedList
                                 newItemText = ""

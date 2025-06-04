@@ -8,12 +8,12 @@ abstract class FormHandler(protected val entityId: Int? = null) {
     protected val formSchema: FormSchema
     protected val formState: FormState = FormState()
     protected val formDataManager: FormDataManager
-    protected val formValidator: FormValidator = FormValidator()
+    protected val formValidator: FormValidator
 
     init {
         formSchema = createFormSchema()
         formDataManager = createDataManager()
-
+        formValidator = createFormValidator()
         if (entityId != null) {
             loadData()
         } else {
@@ -36,6 +36,9 @@ abstract class FormHandler(protected val entityId: Int? = null) {
     // Metody abstrakcyjne
     protected abstract fun createFormSchema(): FormSchema
     protected abstract fun createDataManager(): FormDataManager
+    protected open fun createFormValidator(): FormValidator {
+        return FormValidator()
+    }
 
     fun loadData() {
         val initValues = formDataManager.initData(entityId!!)
