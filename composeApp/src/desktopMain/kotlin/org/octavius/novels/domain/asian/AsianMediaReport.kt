@@ -16,6 +16,7 @@ import org.octavius.novels.report.Report
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.column.type.EnumColumn
 import org.octavius.novels.report.column.type.StringListColumn
+import org.octavius.novels.screens.AsianMediaFormScreen
 
 class AsianMediaReport(val navigator: Navigator) : Report() {
 
@@ -67,7 +68,7 @@ ORDER BY t.id, p.publication_type
         DropdownMenuItem(
             text = { Text("Nowa nowelka") },
             onClick = {
-                navigator.addScreen(AsianMediaForm())
+                navigator.addScreen(AsianMediaFormScreen())
             },
             leadingIcon = {
                 Icon(
@@ -84,7 +85,7 @@ ORDER BY t.id, p.publication_type
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
         val id = rowData[ColumnInfo("titles", "title_id")] as? Int
         if (id != null) {
-            navigator.addScreen(AsianMediaForm(id))
+            navigator.addScreen(AsianMediaFormScreen(id))
         }
     }
 }

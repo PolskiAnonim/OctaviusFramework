@@ -7,6 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.GameStatus
+import org.octavius.novels.domain.game.form.GameFormHandler
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
@@ -14,6 +15,7 @@ import org.octavius.novels.report.Report
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.column.type.EnumColumn
 import org.octavius.novels.report.column.type.StringColumn
+import org.octavius.novels.screens.GameFormScreen
 
 class GameReport(val navigator: Navigator) : Report() {
     override fun createQuery(): Query {
@@ -30,7 +32,7 @@ class GameReport(val navigator: Navigator) : Report() {
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
         val id = rowData[ColumnInfo("games", "id")] as? Int
         if (id != null) {
-            navigator.addScreen(GameForm(id))
+            navigator.addScreen(GameFormScreen(id))
         }
     }
 
@@ -52,7 +54,7 @@ class GameReport(val navigator: Navigator) : Report() {
         DropdownMenuItem(
             text = { Text("Nowa gra") },
             onClick = {
-                navigator.addScreen(GameForm())
+                navigator.addScreen(GameFormScreen())
             },
             leadingIcon = {
                 Icon(
