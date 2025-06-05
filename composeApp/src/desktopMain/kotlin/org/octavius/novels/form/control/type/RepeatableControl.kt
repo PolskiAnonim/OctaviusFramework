@@ -337,7 +337,7 @@ class RepeatableControl(
                 rowControls[fieldName]?.let { control ->
                     val hierarchicalName = "$controlName[${row.id}].$fieldName"
                     // Pobierz stan bezpośrednio z FormState zamiast z przekazanej mapy
-                    val state = formState!!.getControlState(hierarchicalName)
+                    val state = globalStates[hierarchicalName]
                     if (state != null) {
                         // Używamy globalnego kontekstu - states jest teraz reactive
                         control.Render(
