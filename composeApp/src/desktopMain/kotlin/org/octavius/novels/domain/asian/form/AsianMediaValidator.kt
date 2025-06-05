@@ -23,7 +23,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         val placeholders = titles.joinToString { "?" }
         val sql = """
             SELECT COUNT(*) FROM (
-                SELECT UNNEST(titles) AS title
+                SELECT id, UNNEST(titles) AS title
                 FROM titles
             ) WHERE title = ANY(ARRAY[$placeholders])
             ${if (entityId != null) "AND id != ?" else ""}
