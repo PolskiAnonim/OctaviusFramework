@@ -57,7 +57,7 @@ class RepeatableValidator(
 
             for ((index, row) in rows.withIndex()) {
                 val uniqueKey = uniqueFields.map { field -> 
-                    val hierarchicalName = "$controlName[${row.index}].$field"
+                    val hierarchicalName = "$controlName[${row.id}].$field"
                     states[hierarchicalName]?.value?.value
                 }
 

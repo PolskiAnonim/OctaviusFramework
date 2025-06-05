@@ -97,7 +97,7 @@ class RepeatableControl(
             
             // Dodaj stany kontrolek dla tego wiersza do globalnego FormState
             initialRow.forEach { (fieldName, fieldValue) ->
-                val hierarchicalName = "$controlName[$index].$fieldName"
+                val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val control = rowControls[fieldName]!!
                 val fieldState = control.setInitValue(fieldValue)
                 formState!!.setControlState(hierarchicalName, fieldState)
@@ -158,27 +158,23 @@ class RepeatableControl(
                             val currentRows = controlState.value.value!!.toMutableList()
                             val rowToRemove = currentRows[index]
                             
-                            // Usuń stany kontrolek tego wiersza z globalnego FormState
-                            formState!!.removeControlStatesWithPrefix("$controlName[${rowToRemove.index}]")
+                            // Sprawdź czy wiersz był w oryginalnych danych
+                            val wasOriginal = controlState.initValue.value!!.any { it.id == rowToRemove.id }
                             
+                            if (wasOriginal) {
+                                // Istniejący wiersz - zostaw stany dla convertToResult
+                                // (będą usunięte później w convertToResult)
+                            } else {
+                                // Nowy wiersz - usuń stany od razu, bo nie potrzebujemy ich w DB
+                                formState!!.removeControlStatesWithPrefix("$controlName[${rowToRemove.id}]")
+                            }
+                            
+                            // Usuń wiersz z listy
                             currentRows.removeAt(index)
                             
-                            // Zaktualizuj indeksy pozostałych wierszy
+                            // Zaktualizuj tylko indeksy dla wyświetlania (UUID pozostaje bez zmian)
                             currentRows.forEachIndexed { newIndex, row ->
-                                if (row.index != newIndex) {
-                                    // Przenieś stany kontrolek na nowe pozycje
-                                    rowControls.keys.forEach { fieldName ->
-                                        val oldName = "$controlName[${row.index}].$fieldName"
-                                        val newName = "$controlName[$newIndex].$fieldName"
-                                        val state = formState!!.getControlState(oldName)
-                                        if (state != null) {
-                                            formState!!.removeControlState(oldName)
-                                            formState!!.setControlState(newName, state)
-                                        }
-                                    }
-                                    // Zaktualizuj indeks wiersza
-                                    currentRows[newIndex] = row.copy(index = newIndex)
-                                }
+                                currentRows[newIndex] = row.copy(index = newIndex)
                             }
                             
                             controlState.value.value = currentRows
@@ -339,7 +335,7 @@ class RepeatableControl(
         Column(modifier = Modifier.fillMaxWidth()) {
             rowOrder.forEach { fieldName ->
                 rowControls[fieldName]?.let { control ->
-                    val hierarchicalName = "$controlName[${row.index}].$fieldName"
+                    val hierarchicalName = "$controlName[${row.id}].$fieldName"
                     // Pobierz stan bezpośrednio z FormState zamiast z przekazanej mapy
                     val state = formState!!.getControlState(hierarchicalName)
                     if (state != null) {
@@ -383,7 +379,7 @@ class RepeatableControl(
 
         val deletedRowsValues = deletedRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
-                val hierarchicalName = "$controlName[${row.index}].$fieldName"
+                val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val fieldControlState = outerStates[hierarchicalName]!!
                 val value = control.getResult(hierarchicalName, fieldControlState, outerControls, outerStates)
                 ControlResultData(value, fieldControlState.dirty.value)
@@ -392,7 +388,7 @@ class RepeatableControl(
 
         val newRowsValues = newRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
-                val hierarchicalName = "$controlName[${row.index}].$fieldName"
+                val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val fieldControlState = outerStates[hierarchicalName]!!
                 val value = control.getResult(hierarchicalName, fieldControlState, outerControls, outerStates)
                 ControlResultData(value, fieldControlState.dirty.value)
@@ -401,13 +397,18 @@ class RepeatableControl(
 
         val changedRowsValues = changedRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
-                val hierarchicalName = "$controlName[${row.index}].$fieldName"
+                val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val fieldControlState = outerStates[hierarchicalName]!!
                 val value = control.getResult(hierarchicalName, fieldControlState, outerControls, outerStates)
                 ControlResultData(value, fieldControlState.dirty.value)
             }
         }
 
+        // Wyczyść stany usuniętych wierszy które były oryginalne
+        deletedRows.forEach { row ->
+            formState!!.removeControlStatesWithPrefix("$controlName[${row.id}]")
+        }
+        
         return RepeatableResultValue(
             deletedRows = deletedRowsValues,
             addedRows = newRowsValues,

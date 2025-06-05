@@ -45,14 +45,15 @@ fun createRow(
     rowControls: Map<String, Control<*>>,
     formState: FormState
 ): RepeatableRow {
+    val row = RepeatableRow(index = index)
     // Utwórz stany dla wszystkich kontrolek w wierszu
     rowControls.forEach { (fieldName, control) ->
-        val hierarchicalName = "$controlName[$index].$fieldName"
+        val hierarchicalName = "$controlName[${row.id}].$fieldName"
         val state = control.setInitValue(null)
         formState.setControlState(hierarchicalName, state)
     }
 
-    return RepeatableRow(index = index)
+    return row
 }
 
 /**
@@ -86,7 +87,7 @@ fun getRowTypes(
         
         // Sprawdź czy jakiekolwiek pole w tym wierszu jest dirty
         rowControls.keys.any { fieldName ->
-            val hierarchicalName = "$controlName[${currentRow.index}].$fieldName"
+            val hierarchicalName = "$controlName[${currentRow.id}].$fieldName"
             globalStates[hierarchicalName]?.dirty?.value == true
         }
     }

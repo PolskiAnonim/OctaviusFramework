@@ -155,11 +155,12 @@ abstract class ControlValidator<T: Any> {
     ): String {
         return if (dependency.scope == DependencyScope.Local) {
             // Jeśli to lokalna zależność, spróbuj wydobyć prefiks z currentControlName
-            val regex = "(\\w+)\\[(\\d+)\\]\\.(\\w+)".toRegex()
+            // UUID pattern: controlName[uuid].fieldName
+            val regex = "(\\w+)\\[([a-f0-9-]+)\\]\\.(\\w+)".toRegex()
             val match = regex.find(currentControlName)
             if (match != null) {
-                val (parentName, index, _) = match.destructured
-                "$parentName[$index].${dependency.controlName}"
+                val (parentName, uuid, _) = match.destructured
+                "$parentName[$uuid].${dependency.controlName}"
             } else {
                 // Jeśli nie ma wzorca hierarchicznego, użyj oryginalnej nazwy
                 dependency.controlName

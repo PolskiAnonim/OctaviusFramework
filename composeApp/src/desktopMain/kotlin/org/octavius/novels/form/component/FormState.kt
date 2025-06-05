@@ -13,11 +13,6 @@ class FormState {
      * Stan kontrolek formularza - reactive map która automatycznie triggeruje recomposition
      */
     private val _controlStates = mutableStateMapOf<String, ControlState<*>>()
-    
-    /**
-     * Read-only view of control states for external access
-     */
-    val controlStates: Map<String, ControlState<*>> = _controlStates
 
     /**
      * Funkcja zwraca stan kontrolki o danej nazwie
