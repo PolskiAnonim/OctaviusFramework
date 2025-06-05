@@ -3,7 +3,9 @@ package org.octavius.novels.form.control.validation
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.Control
+import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.DependencyType
+import org.octavius.novels.form.control.DependencyScope
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich walidatorów kontrolek formularza.
@@ -28,27 +30,29 @@ abstract class ControlValidator<T: Any> {
      * - Wszystkie zależności typu Visible są spełnione
      * 
      * @param control kontrolka do sprawdzenia
+     * @param controlName nazwa stanu kontrolki (do rozwiązywania lokalnych zależności)
      * @param controls mapa wszystkich kontrolek formularza
      * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli kontrolka powinna być widoczna
      */
     fun isControlVisible(
         control: Control<*>,
+        controlName: String,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
     ): Boolean {
         // Jeśli kontrolka ma rodzica, najpierw sprawdź czy rodzic jest widoczny
         control.parentControl?.let { parentName ->
             val parentControl = controls[parentName] ?: return false
-            if (!isControlVisible(parentControl, controls, states)) return false
+            if (!isControlVisible(parentControl, parentName, controls, states)) return false
         }
 
         // Sprawdź zależności
         control.dependencies?.forEach { (_, dependency) ->
             if (dependency.dependencyType != DependencyType.Visible) return@forEach
 
-            val dependentControl = controls[dependency.controlName] ?: return@forEach
-            val dependentState = states[dependency.controlName] ?: return@forEach
+            val resolvedControlName = resolveDependencyControlName(dependency, controlName)
+            val dependentState = states[resolvedControlName] ?: return@forEach
             val dependentValue = dependentState.value.value
 
             when (dependency.comparisonType) {
@@ -77,12 +81,14 @@ abstract class ControlValidator<T: Any> {
      * - Spełnione są zależności typu Required
      * 
      * @param control kontrolka do sprawdzenia
+     * @param controlName nazwa stanu kontrolki (do rozwiązywania lokalnych zależności)
      * @param controls mapa wszystkich kontrolek formularza
      * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli kontrolka jest wymagana
      */
     fun isControlRequired(
         control: Control<*>,
+        controlName: String,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
     ): Boolean {
@@ -91,8 +97,8 @@ abstract class ControlValidator<T: Any> {
         // Sprawdzamy zależności typu Required
         control.dependencies?.forEach { (_, dependency) ->
             if (dependency.dependencyType == DependencyType.Required) {
-                val dependentControl = controls[dependency.controlName] ?: return@forEach
-                val dependentState = states[dependency.controlName] ?: return@forEach
+                val resolvedControlName = resolveDependencyControlName(dependency, controlName)
+                val dependentState = states[resolvedControlName] ?: return@forEach
                 val dependentValue = dependentState.value.value
 
                 when (dependency.comparisonType) {
@@ -141,6 +147,30 @@ abstract class ControlValidator<T: Any> {
     }
 
     /**
+     * Rozwiązuje nazwę kontrolki dla zależności, uwzględniając scope (Local/Global)
+     */
+    private fun resolveDependencyControlName(
+        dependency: ControlDependency<*>,
+        currentControlName: String
+    ): String {
+        return if (dependency.scope == DependencyScope.Local) {
+            // Jeśli to lokalna zależność, spróbuj wydobyć prefiks z currentControlName
+            val regex = "(\\w+)\\[(\\d+)\\]\\.(\\w+)".toRegex()
+            val match = regex.find(currentControlName)
+            if (match != null) {
+                val (parentName, index, _) = match.destructured
+                "$parentName[$index].${dependency.controlName}"
+            } else {
+                // Jeśli nie ma wzorca hierarchicznego, użyj oryginalnej nazwy
+                dependency.controlName
+            }
+        } else {
+            // Globalna zależność - użyj oryginalnej nazwy
+            dependency.controlName
+        }
+    }
+
+    /**
      * Główna metoda walidacji kontrolki.
      * 
      * Proces walidacji:
@@ -155,7 +185,7 @@ abstract class ControlValidator<T: Any> {
      * @param controls mapa wszystkich kontrolek formularza
      * @param states mapa stanów wszystkich kontrolek
      */
-    fun validate(
+    open fun validate(
         controlName: String,
         state: ControlState<*>,
         control: Control<*>,
@@ -163,12 +193,12 @@ abstract class ControlValidator<T: Any> {
         states: Map<String, ControlState<*>>
     ) {
         // Jeśli kontrolka nie jest widoczna, pomijamy walidację
-        if (!isControlVisible(control, controls, states)) {
+        if (!isControlVisible(control, controlName, controls, states)) {
             return
         }
 
         // Sprawdzamy, czy pole jest wymagane
-        val isRequired = isControlRequired(control, controls, states)
+        val isRequired = isControlRequired(control, controlName, controls, states)
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd
         if (isRequired && isValueEmpty(state.value.value)) {

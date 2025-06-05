@@ -38,6 +38,14 @@ abstract class Control<T: Any>(
     open fun setupParentRelationships(parentControlName: String ,controls: Map<String, Control<*>>) {
         return // Domyślnie brak działania
     }
+    
+    /**
+     * Ustawia referencje do FormState dla kontrolek które tego wymagają.
+     * Używane przez RepeatableControl do zarządzania globalnym stanem.
+     */
+    open fun setupFormStateReference(formState: org.octavius.novels.form.component.FormState, controlName: String) {
+        return // Domyślnie brak działania
+    }
 
     /**
      * Aktualizuje stan kontrolki, ustawiając flagę dirty jeśli wartość się zmieniła.
@@ -62,11 +70,12 @@ abstract class Control<T: Any>(
      * Zwraca null jeśli kontrolka jest niewidoczna.
      */
     fun getResult(
+        controlName: String,
         state: ControlState<*>,
         controls: Map<String, Control<*>>,
         states: Map<String, ControlState<*>>
     ): Any? {
-        if (!validator.isControlVisible(this, controls, states)) return null
+        if (!validator.isControlVisible(this, controlName, controls, states)) return null
         return convertToResult(state, controls, states)
     }
 
@@ -117,9 +126,9 @@ abstract class Control<T: Any>(
      * Obsługuje widoczność i animacje na podstawie zależności.
      */
     @Composable
-    fun Render(controlState: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
-        val isVisible = validator.isControlVisible(this, controls, states)
-        val isRequired = validator.isControlRequired(this, controls, states)
+    fun Render(controlName: String, controlState: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+        val isVisible = validator.isControlVisible(this, controlName, controls, states)
+        val isRequired = validator.isControlRequired(this, controlName, controls, states)
         AnimatedVisibility(visible = isVisible) {
             @Suppress("UNCHECKED_CAST")
             Display(controlState as ControlState<T>, controls, states, isRequired)
@@ -141,12 +150,14 @@ abstract class Control<T: Any>(
  * @param value wartość kontrolki która powoduje aktywację zależności
  * @param dependencyType typ zależności (widoczność lub wymagalność)
  * @param comparisonType sposób porównania wartości
+ * @param scope zasięg zależności (lokalny w obrębie wiersza lub globalny)
  */
 data class ControlDependency<T>(
     val controlName: String,
     val value: T,
     val dependencyType: DependencyType,
-    val comparisonType: ComparisonType
+    val comparisonType: ComparisonType,
+    val scope: DependencyScope = DependencyScope.Global
 )
 
 /**
@@ -169,4 +180,14 @@ enum class ComparisonType {
     Equals,
     /** Wartość musi być różna od podanej wartości */
     NotEquals
+}
+
+/**
+ * Zasięg zależności między kontrolkami.
+ */
+enum class DependencyScope {
+    /** Zależność lokalna - w obrębie tego samego wiersza RepeatableControl */
+    Local,
+    /** Zależność globalna - w całym formularzu */
+    Global
 }

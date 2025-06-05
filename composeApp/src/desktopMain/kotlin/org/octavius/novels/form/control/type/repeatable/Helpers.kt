@@ -3,16 +3,18 @@ package org.octavius.novels.form.control.type.repeatable
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
+import org.octavius.novels.form.component.FormState
 
 /**
  * Reprezentuje jeden wiersz w kontrolce powtarzalnej.
+ * Uproszczona wersja - stan jest teraz zarządzany globalnie.
  * 
  * @param id unikalny identyfikator wiersza (generowany automatycznie)
- * @param states mapa stanów kontrolek w tym wierszu
+ * @param index pozycja wiersza w liście (używana do budowania hierarchicznych nazw)
  */
 data class RepeatableRow(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val states: Map<String, ControlState<*>> = mapOf()
+    val index: Int = 0
 )
 
 /**
@@ -29,28 +31,46 @@ data class RepeatableResultValue(
 )
 
 /**
- * Tworzy nowy wiersz z pustymi stanami kontrolek.
+ * Tworzy nowy wiersz i dodaje stany jego kontrolek do globalnego FormState.
  * 
+ * @param index pozycja wiersza w liście
+ * @param controlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
  * @param rowControls mapa kontrolek które mają być w wierszu
- * @return nowy wiersz z zainicjalizowanymi stanami
+ * @param formState globalny stan formularza
+ * @return nowy wiersz z ustawionym indeksem
  */
-fun createRow(rowControls: Map<String, Control<*>>): RepeatableRow {
-    val states = mutableMapOf<String, ControlState<*>>()
-
-    rowControls.forEach { (name, control) ->
-        states[name] = control.setInitValue(null)
+fun createRow(
+    index: Int,
+    controlName: String, 
+    rowControls: Map<String, Control<*>>,
+    formState: FormState
+): RepeatableRow {
+    // Utwórz stany dla wszystkich kontrolek w wierszu
+    rowControls.forEach { (fieldName, control) ->
+        val hierarchicalName = "$controlName[$index].$fieldName"
+        val state = control.setInitValue(null)
+        formState.setControlState(hierarchicalName, state)
     }
 
-    return RepeatableRow(states = states)
+    return RepeatableRow(index = index)
 }
 
 /**
  * Analizuje stan kontrolki powtarzalnej i klasyfikuje wiersze według typu operacji.
+ * Używa globalnego stanu zamiast lokalnych stanów wierszy.
  * 
  * @param controlState stan kontrolki powtarzalnej
+ * @param controlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
+ * @param rowControls mapa kontrolek w wierszu
+ * @param globalStates mapa wszystkich stanów formularza
  * @return Triple(nowe wiersze, usunięte wiersze, zmienione wiersze)
  */
-fun getRowTypes(controlState: ControlState<List<RepeatableRow>>): Triple<List<RepeatableRow>, List<RepeatableRow>, List<RepeatableRow>> {
+fun getRowTypes(
+    controlState: ControlState<List<RepeatableRow>>,
+    controlName: String,
+    rowControls: Map<String, Control<*>>,
+    globalStates: Map<String, ControlState<*>>
+): Triple<List<RepeatableRow>, List<RepeatableRow>, List<RepeatableRow>> {
     val currentRowIds = controlState.value.value!!.map { it.id }.toSet()
     val initialRowIds = controlState.initValue.value!!.map { it.id }.toSet()
 
@@ -62,7 +82,13 @@ fun getRowTypes(controlState: ControlState<List<RepeatableRow>>): Triple<List<Re
 
     // Zmienione wiersze: te, które są w obu listach (wg ID) I mają przynajmniej jedno pole "dirty"
     val changedRows = controlState.value.value!!.filter { currentRow ->
-        currentRow.id in initialRowIds && currentRow.states.values.any { it.dirty.value }
+        if (currentRow.id !in initialRowIds) return@filter false
+        
+        // Sprawdź czy jakiekolwiek pole w tym wierszu jest dirty
+        rowControls.keys.any { fieldName ->
+            val hierarchicalName = "$controlName[${currentRow.index}].$fieldName"
+            globalStates[hierarchicalName]?.dirty?.value == true
+        }
     }
     return Triple(newRows, deletedRows, changedRows)
 }

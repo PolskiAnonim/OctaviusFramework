@@ -108,7 +108,7 @@ class SectionControl(
                                             .padding(horizontal = 4.dp)) {
                                             group.forEach { ctrlName ->
                                                 controls[ctrlName]?.let { control ->
-                                                    control.Render(states[ctrlName]!!, controls, states)
+                                                    control.Render(ctrlName, states[ctrlName]!!, controls, states)
                                                     Spacer(modifier = Modifier.height(8.dp))
                                                 }
                                             }
@@ -119,7 +119,7 @@ class SectionControl(
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     ctrls.forEach { ctrlName ->
                                         controls[ctrlName]?.let { control ->
-                                            control.Render(states[ctrlName]!!, controls, states)
+                                            control.Render(ctrlName, states[ctrlName]!!, controls, states)
                                             Spacer(modifier = Modifier.height(12.dp))
                                         }
                                     }

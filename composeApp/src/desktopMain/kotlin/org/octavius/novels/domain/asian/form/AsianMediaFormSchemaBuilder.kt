@@ -10,6 +10,7 @@ import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.DependencyType
+import org.octavius.novels.form.control.DependencyScope
 import org.octavius.novels.form.control.type.BooleanControl
 import org.octavius.novels.form.control.type.EnumControl
 import org.octavius.novels.form.control.type.HiddenControl
@@ -91,7 +92,8 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         controlName = "trackProgress",
                         value = true,
                         dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals
+                        comparisonType = ComparisonType.Equals,
+                        scope = DependencyScope.Local
                     )
                 )
             ),
@@ -103,7 +105,8 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         controlName = "trackProgress",
                         value = true,
                         dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals
+                        comparisonType = ComparisonType.Equals,
+                        scope = DependencyScope.Local
                     )
                 )
             ),
@@ -115,7 +118,8 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         controlName = "trackProgress",
                         value = true,
                         dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals
+                        comparisonType = ComparisonType.Equals,
+                        scope = DependencyScope.Local
                     )
                 )
             ),
@@ -127,7 +131,8 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         controlName = "trackProgress",
                         value = true,
                         dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals
+                        comparisonType = ComparisonType.Equals,
+                        scope = DependencyScope.Local
                     )
                 )
             ),
@@ -140,7 +145,8 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         controlName = "trackProgress",
                         value = true,
                         dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals
+                        comparisonType = ComparisonType.Equals,
+                        scope = DependencyScope.Local
                     )
                 )
             )

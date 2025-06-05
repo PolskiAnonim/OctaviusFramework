@@ -29,6 +29,15 @@ class FormSchema(
             control.value.setupParentRelationships(control.key, controls)
         }
     }
+    
+    /**
+     * Funkcja ustawia referencje do FormState dla kontrolek które tego wymagają
+     */
+    fun setupFormStateReferences(formState: FormState) {
+        controls.forEach { (controlName, control) ->
+            control.setupFormStateReference(formState, controlName)
+        }
+    }
 
     /**
      * Zwraca kontrolkę o danej nazwie

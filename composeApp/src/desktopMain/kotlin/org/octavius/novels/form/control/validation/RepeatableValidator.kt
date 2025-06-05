@@ -1,7 +1,9 @@
 package org.octavius.novels.form.control.validation
 
 import org.octavius.novels.form.ControlState
+import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.type.repeatable.RepeatableRow
+import org.octavius.novels.form.control.type.RepeatableControl
 
 /**
  * Walidator dla kontrolek typu RepeatableControl.
@@ -21,6 +23,7 @@ class RepeatableValidator(
 
     /**
      * Waliduje unikalność wartości w wierszach kontrolki powtarzalnej.
+     * Używa globalnego stanu zamiast lokalnych stanów wierszy.
      * 
      * Algorytm walidacji:
      * 1. Pobiera wszystkie wiersze z kontrolki
@@ -30,18 +33,33 @@ class RepeatableValidator(
      * 
      * Sprawdzanie odbywa się tylko gdy lista uniqueFields nie jest pusta.
      * 
+     * @param controlName nazwa kontrolki (potrzebna do budowania hierarchicznych nazw)
      * @param state stan kontrolki powtarzalnej zawierający listę wierszy
+     * @param control referencja do kontrolki (RepeatableControl)
+     * @param controls mapa wszystkich kontrolek
+     * @param states mapa wszystkich stanów formularza
      */
-    override fun validateSpecific(state: ControlState<*>) {
+    override fun validate(
+        controlName: String,
+        state: ControlState<*>,
+        control: Control<*>,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
+
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
+        val repeatableControl = control as RepeatableControl
 
         // Sprawdź unikalność
         if (uniqueFields.isNotEmpty()) {
             val seenValues = mutableSetOf<List<Any?>>()
 
             for ((index, row) in rows.withIndex()) {
-                val uniqueKey = uniqueFields.map { field -> row.states[field]!!.value.value }
+                val uniqueKey = uniqueFields.map { field -> 
+                    val hierarchicalName = "$controlName[${row.index}].$field"
+                    states[hierarchicalName]?.value?.value
+                }
 
                 if (!seenValues.add(uniqueKey)) {
                     state.error.value = "Duplikat wartości w wierszu ${index + 1}"
@@ -49,5 +67,12 @@ class RepeatableValidator(
                 }
             }
         }
+        
+        // Wyczyść błąd jeśli walidacja przeszła
+        state.error.value = null
+    }
+    
+    override fun validateSpecific(state: ControlState<*>) {
+        // Ta metoda nie jest używana - używamy nadpisanej validate() z dodatkowymi parametrami
     }
 }
