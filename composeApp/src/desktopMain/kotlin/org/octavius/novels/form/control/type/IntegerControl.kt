@@ -1,7 +1,6 @@
 package org.octavius.novels.form.control.type
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -57,7 +56,6 @@ class IntegerControl(
                 controlState.dirty.value = true
             },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = controlState.error.value != null,
             singleLine = true
         )

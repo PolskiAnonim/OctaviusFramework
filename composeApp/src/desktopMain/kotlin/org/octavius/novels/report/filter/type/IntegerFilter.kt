@@ -1,7 +1,6 @@
 package org.octavius.novels.report.filter.type
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
@@ -157,7 +156,6 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                         },
                         label = { Text("Od") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f)
                     )
 
@@ -173,7 +171,6 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                         },
                         label = { Text("Do") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -190,7 +187,6 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                     },
                     label = { Text("Wartość") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         if (minValue.value.toString().isNotEmpty()) {
