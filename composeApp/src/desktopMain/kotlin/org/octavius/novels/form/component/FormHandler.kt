@@ -16,20 +16,30 @@ import org.octavius.novels.form.control.Control
  * @param entityId ID edytowanej encji (null dla nowych rekordów)
  */
 abstract class FormHandler(protected val entityId: Int? = null) {
-    protected val formSchema: FormSchema
+    val errorManager: ErrorManager = ErrorManager()
     protected val formState: FormState = FormState()
+    protected val formSchema: FormSchema
     protected val formDataManager: FormDataManager
     protected val formValidator: FormValidator
-    val errorManager: ErrorManager = ErrorManager()
 
     init {
         formSchema = createFormSchema()
         formDataManager = createDataManager()
         formValidator = createFormValidator()
+        setupFormReferences()
         if (entityId != null) {
             loadData()
         } else {
             clearForm()
+        }
+    }
+
+    /**
+     * Funkcja ustawia referencje do komponentów formularza dla kontrolek które tego wymagają
+     */
+    private fun setupFormReferences() {
+        formSchema.getAllControls().forEach { (controlName, control) ->
+            control.setupFormReferences(formState, formSchema, errorManager, controlName)
         }
     }
 

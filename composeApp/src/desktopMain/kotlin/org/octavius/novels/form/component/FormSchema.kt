@@ -31,15 +31,6 @@ class FormSchema(
     }
 
     /**
-     * Funkcja ustawia referencje do komponentów formularza dla kontrolek które tego wymagają
-     */
-    fun setupFormReferences(formState: FormState, errorManager: ErrorManager) {
-        controls.forEach { (controlName, control) ->
-            control.setupFormReferences(formState, this, errorManager, controlName)
-        }
-    }
-
-    /**
      * Zwraca kontrolkę o danej nazwie
      */
     fun getControl(name: String): Control<*>? = controls[name]

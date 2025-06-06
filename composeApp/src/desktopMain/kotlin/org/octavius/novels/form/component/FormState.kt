@@ -28,9 +28,6 @@ class FormState {
      * Funkcja inicjalizuje stany kontrolek na podstawie wartości inicjalnych
      */
     fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>, errorManager: ErrorManager) {
-        // Najpierw ustaw referencje do komponentów formularza
-        schema.setupFormReferences(this, errorManager)
-
         // Potem inicjalizuj stany kontrolek
         schema.getAllControls().forEach { (controlName, control) ->
             val value = initValues[controlName]
