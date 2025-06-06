@@ -30,7 +30,7 @@ open class FormValidator(protected val errorManager: ErrorManager) {
         for ((controlName, control) in controls) {
             val state = states[controlName]!!
             state.error.value = null
-            control.validateControl(controlName, state, controls, states)
+            control.validateControl(controlName, state)
 
             if (state.error.value != null) {
                 isValid = false

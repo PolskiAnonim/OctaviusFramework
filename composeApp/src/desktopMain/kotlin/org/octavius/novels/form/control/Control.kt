@@ -64,6 +64,7 @@ abstract class Control<T : Any>(
         this.formState = formState
         this.formSchema = formSchema
         this.errorManager = errorManager
+        validator.setupFormReferences(formState, formSchema, errorManager)
     }
 
     /**
@@ -80,12 +81,10 @@ abstract class Control<T : Any>(
      */
     fun validateControl(
         controlName: String,
-        state: ControlState<*>?,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        state: ControlState<*>?
     ) {
         if (state == null) return
-        validator.validate(controlName, state, this, controls, states)
+        validator.validate(controlName, state, this)
     }
 
 
@@ -95,12 +94,10 @@ abstract class Control<T : Any>(
      */
     fun getResult(
         controlName: String,
-        state: ControlState<*>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        state: ControlState<*>
     ): Any? {
-        if (!validator.isControlVisible(this, controlName, controls, states)) return null
-        return convertToResult(state, controls, states)
+        if (!validator.isControlVisible(this, controlName)) return null
+        return convertToResult(state)
     }
 
     /**
@@ -108,9 +105,7 @@ abstract class Control<T : Any>(
      * Może być przesłonięta dla niestandardowych konwersji.
      */
     protected open fun convertToResult(
-        state: ControlState<*>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        state: ControlState<*>
     ): Any? {
         return state.value.value
     }
@@ -171,11 +166,8 @@ abstract class Control<T : Any>(
         controlName: String,
         controlState: ControlState<*>
     ) {
-        val controls = formSchema?.getAllControls() ?: emptyMap()
-        val states = formState?.getAllStates() ?: emptyMap()
-        
-        val isVisible = validator.isControlVisible(this, controlName, controls, states)
-        val isRequired = validator.isControlRequired(this, controlName, controls, states)
+        val isVisible = validator.isControlVisible(this, controlName)
+        val isRequired = validator.isControlRequired(this, controlName)
         
         AnimatedVisibility(visible = isVisible) {
             if (hasStandardLayout) {

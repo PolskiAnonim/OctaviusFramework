@@ -68,7 +68,7 @@ class FormState {
 
         schema.getAllControls().forEach { (controlName, control) ->
             val state = _controlStates[controlName]!!
-            val value = control.getResult(controlName, state, schema.getAllControls(), _controlStates)
+            val value = control.getResult(controlName, state)
             result[controlName] = ControlResultData(value, state.dirty.value)
         }
 

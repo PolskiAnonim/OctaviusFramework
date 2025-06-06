@@ -2,6 +2,9 @@ package org.octavius.novels.form.control.validation
 
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.*
+import org.octavius.novels.form.component.ErrorManager
+import org.octavius.novels.form.component.FormSchema
+import org.octavius.novels.form.component.FormState
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich walidatorów kontrolek formularza.
@@ -18,6 +21,22 @@ import org.octavius.novels.form.control.*
  * @param T typ danych przechowywanych przez kontrolkę
  */
 abstract class ControlValidator<T : Any> {
+    protected var formState: FormState? = null
+    protected var formSchema: FormSchema? = null
+    protected var errorManager: ErrorManager? = null
+
+    /**
+     * Ustawia referencje do komponentów formularza dla walidatora.
+     */
+    open fun setupFormReferences(
+        formState: FormState,
+        formSchema: FormSchema,
+        errorManager: ErrorManager
+    ) {
+        this.formState = formState
+        this.formSchema = formSchema
+        this.errorManager = errorManager
+    }
     /**
      * Sprawdza czy kontrolka jest widoczna na podstawie zależności i hierarchii.
      *
@@ -33,14 +52,14 @@ abstract class ControlValidator<T : Any> {
      */
     fun isControlVisible(
         control: Control<*>,
-        controlName: String,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        controlName: String
     ): Boolean {
+        val controls = formSchema?.getAllControls() ?: emptyMap()
+        val states = formState?.getAllStates() ?: emptyMap()
         // Jeśli kontrolka ma rodzica, najpierw sprawdź czy rodzic jest widoczny
         control.parentControl?.let { parentName ->
             val parentControl = controls[parentName] ?: return false
-            if (!isControlVisible(parentControl, parentName, controls, states)) return false
+            if (!isControlVisible(parentControl, parentName)) return false
         }
 
         // Sprawdź zależności
@@ -86,10 +105,10 @@ abstract class ControlValidator<T : Any> {
      */
     fun isControlRequired(
         control: Control<*>,
-        controlName: String,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        controlName: String
     ): Boolean {
+        val controls = formSchema?.getAllControls() ?: emptyMap()
+        val states = formState?.getAllStates() ?: emptyMap()
         var isRequired = control.required == true
 
         // Sprawdzamy zależności typu Required
@@ -189,17 +208,15 @@ abstract class ControlValidator<T : Any> {
     open fun validate(
         controlName: String,
         state: ControlState<*>,
-        control: Control<*>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        control: Control<*>
     ) {
         // Jeśli kontrolka nie jest widoczna, pomijamy walidację
-        if (!isControlVisible(control, controlName, controls, states)) {
+        if (!isControlVisible(control, controlName)) {
             return
         }
 
         // Sprawdzamy, czy pole jest wymagane
-        val isRequired = isControlRequired(control, controlName, controls, states)
+        val isRequired = isControlRequired(control, controlName)
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd
         if (isRequired && isValueEmpty(state.value.value)) {

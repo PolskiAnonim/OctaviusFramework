@@ -336,31 +336,26 @@ class RepeatableControl(
         }
     }
 
-    // YYYY wiem co robię? W każdym razie funkcja nie jest wywoływana z nazwanymi parametrami
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override fun convertToResult(
         state: ControlState<*>, // Ten state to ControlState<List<RepeatableRow>> dla RepeatableControl
-        outerControls: Map<String, Control<*>>,
-        outerStates: Map<String, ControlState<*>>
     ): Any? {
-
         @Suppress("UNCHECKED_CAST")
         val controlState = state as ControlState<List<RepeatableRow>>
-
+        val states = formState!!.getAllStates()
         requireNotNull(controlName) { "controlName nie został ustawiony dla RepeatableControl" }
 
         val (newRows, deletedRows, changedRows) = getRowTypes(
             controlState,
             controlName!!,
             rowControls,
-            outerStates
+            states
         )
 
         val deletedRowsValues = deletedRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldControlState = outerStates[hierarchicalName]!!
-                val value = control.getResult(hierarchicalName, fieldControlState, outerControls, outerStates)
+                val fieldControlState = states[hierarchicalName]!!
+                val value = control.getResult(hierarchicalName, fieldControlState)
                 ControlResultData(value, fieldControlState.dirty.value)
             }
         }
@@ -368,8 +363,8 @@ class RepeatableControl(
         val newRowsValues = newRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldControlState = outerStates[hierarchicalName]!!
-                val value = control.getResult(hierarchicalName, fieldControlState, outerControls, outerStates)
+                val fieldControlState = states[hierarchicalName]!!
+                val value = control.getResult(hierarchicalName, fieldControlState)
                 ControlResultData(value, fieldControlState.dirty.value)
             }
         }
@@ -377,8 +372,8 @@ class RepeatableControl(
         val changedRowsValues = changedRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldControlState = outerStates[hierarchicalName]!!
-                val value = control.getResult(hierarchicalName, fieldControlState, outerControls, outerStates)
+                val fieldControlState = states[hierarchicalName]!!
+                val value = control.getResult(hierarchicalName, fieldControlState)
                 ControlResultData(value, fieldControlState.dirty.value)
             }
         }

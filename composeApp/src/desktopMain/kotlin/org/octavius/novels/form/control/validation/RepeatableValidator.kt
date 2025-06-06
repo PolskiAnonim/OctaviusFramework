@@ -40,10 +40,9 @@ class RepeatableValidator(
     override fun validate(
         controlName: String,
         state: ControlState<*>,
-        control: Control<*>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        control: Control<*>
     ) {
+        val states = formState?.getAllStates() ?: emptyMap()
 
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
