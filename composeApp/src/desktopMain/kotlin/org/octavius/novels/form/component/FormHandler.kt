@@ -20,6 +20,7 @@ abstract class FormHandler(protected val entityId: Int? = null) {
     protected val formState: FormState = FormState()
     protected val formDataManager: FormDataManager
     protected val formValidator: FormValidator
+    val errorManager: ErrorManager = ErrorManager()
 
     init {
         formSchema = createFormSchema()
