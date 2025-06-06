@@ -25,6 +25,7 @@ import org.octavius.novels.form.control.type.repeatable.createRow
 import org.octavius.novels.form.control.type.repeatable.getRowTypes
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.RepeatableValidator
+import org.octavius.novels.form.control.validation.RepeatableValidation
 import org.octavius.novels.form.component.ErrorManager
 import org.octavius.novels.form.component.FormSchema
 
@@ -39,13 +40,11 @@ import org.octavius.novels.form.component.FormSchema
 class RepeatableControl(
     val rowControls: Map<String, Control<*>>,
     val rowOrder: List<String>,
-    val uniqueFields: List<String> = emptyList(),
-    val minRows: Int = 0,
-    val maxRows: Int? = null,
     label: String?,
     required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<List<RepeatableRow>>(label, null, required, dependencies, hasStandardLayout = false) {
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: RepeatableValidation? = null
+) : Control<List<RepeatableRow>>(label, null, required, dependencies, hasStandardLayout = false, validationOptions = validationOptions) {
 
     // Referencja do nazwy kontrolki - będzie ustawiona przez setupFormReferences
     private var controlName: String? = null
@@ -67,7 +66,9 @@ class RepeatableControl(
         }
     }
 
-    override val validator: ControlValidator<List<RepeatableRow>> = RepeatableValidator(uniqueFields)
+    override val validator: ControlValidator<List<RepeatableRow>> = RepeatableValidator(
+        validationOptions as? RepeatableValidation
+    )
 
     override fun copyInitToValue(init: List<RepeatableRow>): List<RepeatableRow> {
         // Dla globalnego stanu nie trzeba kopiować stanów - są już w FormState
@@ -95,7 +96,7 @@ class RepeatableControl(
         }
 
         val additionalRows = mutableListOf<RepeatableRow>()
-
+        val minRows = (validationOptions as? RepeatableValidation)?.minItems ?: 0
         // Dodaj minimalne wiersze jeśli potrzeba
         while (initialRowsList.size + additionalRows.size < minRows) {
             val index = initialRowsList.size + additionalRows.size
@@ -129,7 +130,10 @@ class RepeatableControl(
                     controlState.value.value = currentRows
                     updateState(controlState)
                 },
-                canAdd = maxRows == null || (controlState.value.value!!.size) < maxRows
+                canAdd = {
+                    val maxRows = (validationOptions as? RepeatableValidation)?.maxItems
+                    maxRows == null || (controlState.value.value!!.size) < maxRows
+                }()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -139,8 +143,9 @@ class RepeatableControl(
                 RepeatableRowCard(
                     row = row,
                     index = index,
-                    onDelete = if ((controlState.value.value!!.size) > minRows) {
-                        {
+                    onDelete = {
+                        val minRows = (validationOptions as? RepeatableValidation)?.minItems ?: 0
+                        if ((controlState.value.value!!.size) > minRows) {
                             val currentRows = controlState.value.value!!.toMutableList()
                             val rowToRemove = currentRows[index]
 
@@ -165,8 +170,8 @@ class RepeatableControl(
 
                             controlState.value.value = currentRows
                             updateState(controlState)
-                        }
-                    } else null,
+                        } else null
+                    },
                     content = {
                         RepeatableRowContent(
                             row = row

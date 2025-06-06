@@ -9,6 +9,7 @@ import org.octavius.novels.form.component.ErrorManager
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormState
 import org.octavius.novels.form.control.validation.ControlValidator
+import org.octavius.novels.form.control.validation.ValidationOptions
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich kontrolek formularza.
@@ -28,7 +29,8 @@ abstract class Control<T : Any>(
     val required: Boolean?,
     val dependencies: Map<String, ControlDependency<*>>?,
     var parentControl: String? = null,
-    protected val hasStandardLayout: Boolean = true
+    protected val hasStandardLayout: Boolean = true,
+    val validationOptions: ValidationOptions? = null
 ) {
     /**
      * Validator odpowiedzialny za walidację tej kontrolki.

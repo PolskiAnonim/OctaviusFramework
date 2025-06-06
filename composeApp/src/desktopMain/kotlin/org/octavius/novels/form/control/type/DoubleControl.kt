@@ -9,7 +9,8 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.validation.DoubleValidation
+import org.octavius.novels.form.control.validation.DoubleValidator
 
 /**
  * Kontrolka do wprowadzania liczb rzeczywistych (zmiennoprzecinkowych).
@@ -22,14 +23,16 @@ class DoubleControl(
     columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: DoubleValidation? = null
 ) : Control<Double>(
     label,
     columnInfo,
     required,
-    dependencies
+    dependencies,
+    validationOptions = validationOptions
 ) {
-    override val validator: ControlValidator<Double> = DefaultValidator()
+    override val validator: ControlValidator<Double> = DoubleValidator(validationOptions)
 
     @Composable
     override fun Display(

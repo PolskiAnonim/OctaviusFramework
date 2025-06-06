@@ -8,6 +8,8 @@ import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormSchemaBuilder
 import org.octavius.novels.form.control.*
 import org.octavius.novels.form.control.type.*
+import org.octavius.novels.form.control.validation.RepeatableValidation
+import org.octavius.novels.form.control.validation.TextListValidation
 
 class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {
@@ -23,7 +25,8 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 "titles" to TextListControl(
                     ColumnInfo("titles", "titles"),
                     "Tytuły",
-                    required = true
+                    required = true,
+                    validationOptions = TextListValidation(minItems = 1)
                 ),
                 "language" to EnumControl(
                     ColumnInfo("titles", "language"),
@@ -45,8 +48,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         "translatedChapters",
                         "originalCompleted"
                     ),
-                    uniqueFields = listOf("publicationType"),
-                    minRows = 1,
+                    validationOptions = RepeatableValidation(uniqueFields = listOf("publicationType"), minItems = 1, maxItems = 7),
                     label = "Publikacje"
                 )
             ),

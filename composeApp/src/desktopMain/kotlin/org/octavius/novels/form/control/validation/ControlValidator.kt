@@ -222,7 +222,7 @@ abstract class ControlValidator<T : Any> {
      *
      * @param state stan kontrolki do walidacji
      */
-    protected open fun validateSpecific(state: ControlState<*>) {
+    open fun validateSpecific(state: ControlState<*>) {
         // Domyślnie nic nie robimy
     }
 }

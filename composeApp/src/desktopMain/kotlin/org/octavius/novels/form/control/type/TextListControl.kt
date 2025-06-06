@@ -19,7 +19,8 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.validation.TextListValidation
+import org.octavius.novels.form.control.validation.TextListValidator
 
 /**
  * Kontrolka do wprowadzania i zarządzania listą tekstów.
@@ -32,11 +33,12 @@ class TextListControl(
     columnInfo: ColumnInfo,
     label: String?,
     required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: TextListValidation? = null
 ) : Control<List<String>>(
-    label, columnInfo, required, dependencies
+    label, columnInfo, required, dependencies, validationOptions = validationOptions
 ) {
-    override val validator: ControlValidator<List<String>> = DefaultValidator()
+    override val validator: ControlValidator<List<String>> = TextListValidator(validationOptions)
 
     override fun copyInitToValue(value: List<String>): List<String> {
         @Suppress("UNCHECKED_CAST") return value.map { it }.toList()

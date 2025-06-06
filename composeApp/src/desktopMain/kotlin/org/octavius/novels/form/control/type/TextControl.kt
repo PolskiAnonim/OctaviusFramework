@@ -11,7 +11,8 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.validation.TextValidation
+import org.octavius.novels.form.control.validation.TextValidator
 
 /**
  * Kontrolka do wprowadzania tekstu jednoliniowego.
@@ -24,14 +25,16 @@ class TextControl(
     columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: TextValidation? = null
 ) : Control<String>(
     label,
     columnInfo,
     required,
-    dependencies
+    dependencies,
+    validationOptions = validationOptions
 ) {
-    override val validator: ControlValidator<String> = DefaultValidator()
+    override val validator: ControlValidator<String> = TextValidator(validationOptions)
 
 
     @Composable

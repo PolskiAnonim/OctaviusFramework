@@ -10,7 +10,8 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.validation.IntegerValidation
+import org.octavius.novels.form.control.validation.IntegerValidator
 
 /**
  * Kontrolka do wprowadzania liczb całkowitych.
@@ -23,14 +24,16 @@ class IntegerControl(
     columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: IntegerValidation? = null
 ) : Control<Int>(
     label,
     columnInfo,
     required,
-    dependencies
+    dependencies,
+    validationOptions = validationOptions
 ) {
-    override val validator: ControlValidator<Int> = DefaultValidator()
+    override val validator: ControlValidator<Int> = IntegerValidator(validationOptions)
 
 
     @Composable

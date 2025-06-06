@@ -11,14 +11,12 @@ import org.octavius.novels.form.control.type.repeatable.RepeatableRow
  * Odpowiada za walidację kontrolek umożliwiających dodawanie
  * wielu wierszy danych (np. lista autorów, tagów, kategorii).
  *
- * Główną funkcjonalnością jest sprawdzanie unikalności wartości
- * w określonych polach - zapobiega dodawaniu duplikatów
- * w polach które muszą być unikalne.
- *
- * @param uniqueFields lista nazw pól, które muszą być unikalne w ramach kontrolki
+ * Funkcjonalności:
+ * - Sprawdzanie unikalności wartości w określonych polach
+ * - Walidacja minimalnej i maksymalnej liczby elementów
  */
 class RepeatableValidator(
-    private val uniqueFields: List<String>
+    private val validationOptions: RepeatableValidation? = null
 ) : ControlValidator<List<RepeatableRow>>() {
 
     /**
@@ -50,19 +48,37 @@ class RepeatableValidator(
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
 
-        // Sprawdź unikalność
-        if (uniqueFields.isNotEmpty()) {
-            val seenValues = mutableSetOf<List<Any?>>()
-
-            for ((index, row) in rows.withIndex()) {
-                val uniqueKey = uniqueFields.map { field ->
-                    val hierarchicalName = "$controlName[${row.id}].$field"
-                    states[hierarchicalName]?.value?.value
-                }
-
-                if (!seenValues.add(uniqueKey)) {
-                    state.error.value = "Duplikat wartości w wierszu ${index + 1}"
+        validationOptions?.let { options ->
+            // Sprawdź minimalną liczbę elementów
+            options.minItems?.let { minItems ->
+                if (rows.size < minItems) {
+                    state.error.value = "Wymagane minimum $minItems elementów"
                     return
+                }
+            }
+
+            // Sprawdź maksymalną liczbę elementów
+            options.maxItems?.let { maxItems ->
+                if (rows.size > maxItems) {
+                    state.error.value = "Maksymalnie $maxItems elementów"
+                    return
+                }
+            }
+
+            // Sprawdź unikalność
+            if (options.uniqueFields.isNotEmpty()) {
+                val seenValues = mutableSetOf<List<Any?>>()
+
+                for ((index, row) in rows.withIndex()) {
+                    val uniqueKey = options.uniqueFields.map { field ->
+                        val hierarchicalName = "$controlName[${row.id}].$field"
+                        states[hierarchicalName]?.value?.value
+                    }
+
+                    if (!seenValues.add(uniqueKey)) {
+                        state.error.value = "Duplikat wartości w wierszu ${index + 1}"
+                        return
+                    }
                 }
             }
         }
