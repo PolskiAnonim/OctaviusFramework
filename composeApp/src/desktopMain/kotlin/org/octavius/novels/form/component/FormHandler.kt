@@ -6,13 +6,13 @@ import org.octavius.novels.form.control.Control
 
 /**
  * Abstrakcyjna klasa obsługująca cykl życia formularza.
- * 
+ *
  * FormHandler koordynuje pracę wszystkich komponentów formularza:
  * - FormSchema - definicja struktury formularza
  * - FormState - zarządzanie stanem kontrolek
  * - FormDataManager - ładowanie i przetwarzanie danych
  * - FormValidator - walidacja pól i reguł biznesowych
- * 
+ *
  * @param entityId ID edytowanej encji (null dla nowych rekordów)
  */
 abstract class FormHandler(protected val entityId: Int? = null) {
@@ -47,19 +47,20 @@ abstract class FormHandler(protected val entityId: Int? = null) {
      * Metody obsługi akcji użytkownika z UI
      */
     fun onSaveClicked(): Boolean = saveForm()
-    fun onCancelClicked() { /* logika anulowania */ }
+    fun onCancelClicked() { /* logika anulowania */
+    }
 
     /**
      * Metody abstrakcyjne do implementacji w klasach pochodnych
      */
     protected abstract fun createFormSchema(): FormSchema
     protected abstract fun createDataManager(): FormDataManager
-    
+
     /**
      * Tworzy validator dla formularza. Można przesłonić dla niestandardowych reguł walidacji.
      */
     protected open fun createFormValidator(): FormValidator {
-        return FormValidator()
+        return FormValidator(errorManager)
     }
 
     /**
@@ -92,17 +93,19 @@ abstract class FormHandler(protected val entityId: Int? = null) {
 
     /**
      * Przetwarza i zapisuje dane formularza do bazy danych.
-     * 
+     *
      * Proces zapisu:
      * 1. Walidacja pól (wymagalność, format, zależności)
      * 2. Zbieranie danych z kontrolek
      * 3. Walidacja reguł biznesowych
      * 4. Przetwarzanie danych do operacji bazodanowych
      * 5. Wykonanie operacji w bazie danych
-     * 
+     *
      * @return true jeśli zapis się powiódł, false w przypadku błędów
      */
     private fun saveForm(): Boolean {
+        errorManager.clearAll()
+
         if (!formValidator.validateFields(formSchema.getAllControls(), formState.getAllStates())) return false
 
         val rawFormData = formState.collectFormData(formSchema)
@@ -114,7 +117,7 @@ abstract class FormHandler(protected val entityId: Int? = null) {
             DatabaseManager.updateDatabase(databaseOperations)
             true
         } catch (e: Exception) {
-            println("Błąd zapisu formularza: ${e.message}")
+            errorManager.addGlobalError("Błąd zapisu do bazy danych: ${e.message}")
             false
         }
     }

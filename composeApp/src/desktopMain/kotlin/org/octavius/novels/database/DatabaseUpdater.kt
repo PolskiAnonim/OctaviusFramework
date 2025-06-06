@@ -33,20 +33,24 @@ class DatabaseUpdater(
                                         op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
                                             .forEach { it.value = id }
                                     }
+
                                     is SaveOperation.Update -> {
-                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null  }
+                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
                                             .forEach { it.value = id }
                                     }
+
                                     is SaveOperation.Delete -> {
-                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null  }
+                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
                                             .forEach { it.value = id }
                                     }
                                 }
                             }
                         }
+
                         is SaveOperation.Update -> {
                             updateTable(operation)
                         }
+
                         is SaveOperation.Delete -> {
                             deleteFromTable(operation)
                         }

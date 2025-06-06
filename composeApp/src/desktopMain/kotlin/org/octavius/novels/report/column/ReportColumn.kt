@@ -18,6 +18,7 @@ abstract class ReportColumn(
     val sortable: Boolean = false
 ) {
     val name: String get() = columnInfo.fieldName // Dla zachowania kompatybilności 
+
     @Composable
     abstract fun RenderCell(item: Any?, modifier: Modifier)
 

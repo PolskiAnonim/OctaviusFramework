@@ -7,14 +7,7 @@ import org.octavius.novels.form.component.FormSchemaBuilder
 import org.octavius.novels.form.control.ComparisonType
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.DependencyType
-import org.octavius.novels.form.control.type.BooleanControl
-import org.octavius.novels.form.control.type.DatabaseControl
-import org.octavius.novels.form.control.type.DoubleControl
-import org.octavius.novels.form.control.type.EnumControl
-import org.octavius.novels.form.control.type.HiddenControl
-import org.octavius.novels.form.control.type.IntegerControl
-import org.octavius.novels.form.control.type.SectionControl
-import org.octavius.novels.form.control.type.TextControl
+import org.octavius.novels.form.control.type.*
 
 class GameFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {

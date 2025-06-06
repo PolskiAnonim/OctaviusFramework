@@ -2,14 +2,10 @@ package org.octavius.novels.domain.game.form
 
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.domain.GameStatus
-import org.octavius.novels.form.ColumnInfo
-import org.octavius.novels.form.ControlResultData
-import org.octavius.novels.form.ForeignKey
-import org.octavius.novels.form.SaveOperation
-import org.octavius.novels.form.TableRelation
+import org.octavius.novels.form.*
 import org.octavius.novels.form.component.FormDataManager
 
-class GameFormDataManager: FormDataManager() {
+class GameFormDataManager : FormDataManager() {
     override fun defineTableRelations(): List<TableRelation> {
         return listOf(
             TableRelation("games"), // Główna tabela

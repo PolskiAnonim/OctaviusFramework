@@ -12,7 +12,7 @@ import org.octavius.novels.report.NullHandling
 import org.octavius.novels.report.TextFilterType
 import org.octavius.novels.report.filter.Filter
 
-class StringListFilter(columnName: String): Filter(columnName) {
+class StringListFilter(columnName: String) : Filter(columnName) {
 
     override fun constructWhereClause(filter: FilterValue<*>): String {
         val textFilter = filter as FilterValue.TextFilter

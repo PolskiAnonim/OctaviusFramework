@@ -20,7 +20,7 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 
 /**
  * Kontrolka do wprowadzania liczb całkowitych.
- * 
+ *
  * Renderuje pole tekstowe z numeryczną klawiaturą i walidacją danych wejściowych.
  * Automatycznie sprawdza czy wprowadzona wartość jest poprawną liczbą całkowitą
  * i wyświetla komunikat błędu w przypadku nieprawidłowych danych.

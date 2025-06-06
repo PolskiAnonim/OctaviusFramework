@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 
 /**
  * Kontrolka do wyboru wartości z enumeracji (enum) z listy rozwijanej.
- * 
+ *
  * Automatycznie generuje opcje wyboru na podstawie wartości enumeracji.
  * Wymaga aby enum implementował interfejs EnumWithFormatter dla formatowania
  * tekstu wyświetlanego użytkownikowi. Obsługuje wyszukiwanie w opcjach.

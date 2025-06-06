@@ -30,7 +30,7 @@ class FormState {
     fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>) {
         // Najpierw ustaw referencje do FormState dla RepeatableControl
         schema.setupFormStateReferences(this)
-        
+
         // Potem inicjalizuj stany kontrolek
         schema.getAllControls().forEach { (controlName, control) ->
             val value = initValues[controlName]

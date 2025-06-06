@@ -52,11 +52,10 @@ class Navigator {
     }
 
     fun addScreen(screen: Screen) {
-        if (stack.size>1 && screen::class == stack.last()::class) {
+        if (stack.size > 1 && screen::class == stack.last()::class) {
             stack.removeLast()
             stack.add(screen)
-        }
-        else
+        } else
             stack.add(screen)
     }
 

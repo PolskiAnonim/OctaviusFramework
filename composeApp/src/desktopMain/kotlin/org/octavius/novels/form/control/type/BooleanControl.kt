@@ -23,7 +23,7 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 
 /**
  * Kontrolka do wprowadzania wartości logicznych (prawda/fałsz).
- * 
+ *
  * Renderuje checkbox z etykietą. Dla pól wymaganych używa standardowego
  * checkboxa (true/false), dla opcjonalnych używa checkboxa z trzema stanami
  * (true/false/null). Obsługuje automatyczne przełączanie między stanami.

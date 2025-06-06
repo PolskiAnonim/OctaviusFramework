@@ -29,7 +29,7 @@ class FormSchema(
             control.value.setupParentRelationships(control.key, controls)
         }
     }
-    
+
     /**
      * Funkcja ustawia referencje do FormState dla kontrolek które tego wymagają
      */
@@ -54,7 +54,7 @@ class FormSchema(
  * Fabryka do tworzenia schematów
  * Zawiera jedną funkcję - build
  * Służy do tworzenia klasy FormSchema
-  */
+ */
 abstract class FormSchemaBuilder {
     abstract fun build(): FormSchema
 }

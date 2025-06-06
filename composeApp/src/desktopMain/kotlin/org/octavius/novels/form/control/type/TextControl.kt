@@ -18,7 +18,7 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 
 /**
  * Kontrolka do wprowadzania tekstu jednoliniowego.
- * 
+ *
  * Renderuje standardowe pole tekstowe z etykietą i walidacją.
  * Wspiera wszystkie standardowe funkcje kontrolek jak zależności,
  * wymagalność i komunikaty błędów.

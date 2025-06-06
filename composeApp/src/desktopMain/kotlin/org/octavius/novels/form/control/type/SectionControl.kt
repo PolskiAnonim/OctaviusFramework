@@ -21,7 +21,7 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 
 /**
  * Kontrolka do grupowania i organizacji innych kontrolek w sekcje.
- * 
+ *
  * Renderuje grupę kontrolek w karcie z nagłówkiem. Obsługuje składanie/rozwijanie sekcji,
  * układanie kontrolek w kolumnach oraz zarządzanie relacjami rodzic-dziecko między kontrolkami.
  * Umożliwia logiczne organizowanie formularza w tematyczne sekcje.
@@ -99,13 +99,16 @@ class SectionControl(
                                 .padding(16.dp)
                         ) {
                             if (columns > 1) {
-                                val controlGroups = ctrls.chunked(ctrls.size / columns + if (ctrls.size % columns > 0) 1 else 0)
+                                val controlGroups =
+                                    ctrls.chunked(ctrls.size / columns + if (ctrls.size % columns > 0) 1 else 0)
 
                                 Row(modifier = Modifier.fillMaxWidth()) {
                                     controlGroups.forEach { group ->
-                                        Column(modifier = Modifier
-                                            .weight(1f)
-                                            .padding(horizontal = 4.dp)) {
+                                        Column(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(horizontal = 4.dp)
+                                        ) {
                                             group.forEach { ctrlName ->
                                                 controls[ctrlName]?.let { control ->
                                                     control.Render(ctrlName, states[ctrlName]!!, controls, states)

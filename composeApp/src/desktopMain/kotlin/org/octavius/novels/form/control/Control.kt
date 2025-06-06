@@ -8,17 +8,17 @@ import org.octavius.novels.form.control.validation.ControlValidator
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich kontrolek formularza.
- * 
+ *
  * Każda kontrolka zawiera:
  * - Label - etykietę wyświetlaną użytkownikowi
  * - ColumnInfo - powiązanie z kolumną w bazie danych
  * - Required - informację o wymagalności
  * - Dependencies - zależności od innych kontrolek (widoczność, wymagalność)
  * - ParentControl - hierarchię kontrolek (dla kontrolek zagnieżdżonych)
- * 
+ *
  * @param T typ danych przechowywanych przez kontrolkę
  */
-abstract class Control<T: Any>(
+abstract class Control<T : Any>(
     val label: String?,
     val columnInfo: ColumnInfo?,
     val required: Boolean?,
@@ -35,10 +35,10 @@ abstract class Control<T: Any>(
      * Ustawia relacje hierarchiczne między kontrolkami.
      * Używane gdy kontrolka powinna zależeć od widoczności kontrolki nadrzędnej.
      */
-    open fun setupParentRelationships(parentControlName: String ,controls: Map<String, Control<*>>) {
+    open fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
         return // Domyślnie brak działania
     }
-    
+
     /**
      * Ustawia referencje do FormState dla kontrolek które tego wymagają.
      * Używane przez RepeatableControl do zarządzania globalnym stanem.
@@ -59,7 +59,12 @@ abstract class Control<T: Any>(
     /**
      * Waliduje kontrolkę przy użyciu przypisanego validatora.
      */
-    fun validateControl(controlName: String, state: ControlState<*>?, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    fun validateControl(
+        controlName: String,
+        state: ControlState<*>?,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
         if (state == null) return
         validator.validate(controlName, state, this, controls, states)
     }
@@ -83,17 +88,21 @@ abstract class Control<T: Any>(
      * Konwertuje stan kontrolki na wynik do zapisu.
      * Może być przesłonięta dla niestandardowych konwersji.
      */
-    protected open fun convertToResult(state: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Any? {
+    protected open fun convertToResult(
+        state: ControlState<*>,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ): Any? {
         return state.value.value
     }
 
     /**
      * Ustawia początkową wartość kontrolki i tworzy stan.
-     * 
+     *
      * @param value wartość z bazy danych lub wartość domyślna
      * @return utworzony stan kontrolki
      */
-    open fun setInitValue(value: Any?) : ControlState<T> {
+    open fun setInitValue(value: Any?): ControlState<T> {
         val state = ControlState<T>()
         if (value == null) {
             return state
@@ -112,7 +121,7 @@ abstract class Control<T: Any>(
     /**
      * Tworzy kopię wartości początkowej dla bieżącej wartości.
      * Wymagane dla kontrolek przechowujących złożone obiekty (listy, mapy).
-     * 
+     *
      * @param value wartość do skopiowania
      * @return kopia wartości
      */
@@ -126,7 +135,12 @@ abstract class Control<T: Any>(
      * Obsługuje widoczność i animacje na podstawie zależności.
      */
     @Composable
-    fun Render(controlName: String, controlState: ControlState<*>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>) {
+    fun Render(
+        controlName: String,
+        controlState: ControlState<*>,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>
+    ) {
         val isVisible = validator.isControlVisible(this, controlName, controls, states)
         val isRequired = validator.isControlRequired(this, controlName, controls, states)
         AnimatedVisibility(visible = isVisible) {
@@ -140,12 +154,17 @@ abstract class Control<T: Any>(
      * Każdy typ kontrolki implementuje własny wygląd i zachowanie.
      */
     @Composable
-    protected abstract fun Display(controlState: ControlState<T>, controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>, isRequired: Boolean)
+    protected abstract fun Display(
+        controlState: ControlState<T>,
+        controls: Map<String, Control<*>>,
+        states: Map<String, ControlState<*>>,
+        isRequired: Boolean
+    )
 }
 
 /**
  * Definuje zależność między kontrolkami.
- * 
+ *
  * @param controlName nazwa kontrolki od której zależy ta kontrolka
  * @param value wartość kontrolki która powoduje aktywację zależności
  * @param dependencyType typ zależności (widoczność lub wymagalność)
@@ -166,6 +185,7 @@ data class ControlDependency<T>(
 enum class DependencyType {
     /** Kontrolka jest widoczna/niewidoczna w zależności od wartości innej kontrolki */
     Visible,
+
     /** Kontrolka jest wymagana/niewymagana w zależności od wartości innej kontrolki */
     Required,
 }
@@ -176,8 +196,10 @@ enum class DependencyType {
 enum class ComparisonType {
     /** Wartość musi być jedną z podanych wartości */
     OneOf,
+
     /** Wartość musi być równa podanej wartości */
     Equals,
+
     /** Wartość musi być różna od podanej wartości */
     NotEquals
 }
@@ -188,6 +210,7 @@ enum class ComparisonType {
 enum class DependencyScope {
     /** Zależność lokalna - w obrębie tego samego wiersza RepeatableControl */
     Local,
+
     /** Zależność globalna - w całym formularzu */
     Global
 }

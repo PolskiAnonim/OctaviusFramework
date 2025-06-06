@@ -1,34 +1,30 @@
 package org.octavius.novels.form.control.validation
 
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.ComparisonType
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.DependencyType
-import org.octavius.novels.form.control.DependencyScope
+import org.octavius.novels.form.control.*
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich walidatorów kontrolek formularza.
- * 
+ *
  * Walidator odpowiada za:
  * - Sprawdzanie widoczności kontrolek na podstawie zależności
  * - Określanie wymagalności pól w zależności od warunków
  * - Walidację podstawową (wymagalność, pusty stan)
  * - Walidację specyficzną dla typu kontrolki
- * 
+ *
  * Każdy typ kontrolki powinien mieć własny walidator dziedziczący z tej klasy
  * i implementujący metodę validateSpecific() dla specyficznych reguł walidacji.
- * 
+ *
  * @param T typ danych przechowywanych przez kontrolkę
  */
-abstract class ControlValidator<T: Any> {
+abstract class ControlValidator<T : Any> {
     /**
      * Sprawdza czy kontrolka jest widoczna na podstawie zależności i hierarchii.
-     * 
+     *
      * Kontrolka jest widoczna gdy:
      * - Jej kontrolka nadrzędna (jeśli istnieje) jest widoczna
      * - Wszystkie zależności typu Visible są spełnione
-     * 
+     *
      * @param control kontrolka do sprawdzenia
      * @param controlName nazwa stanu kontrolki (do rozwiązywania lokalnych zależności)
      * @param controls mapa wszystkich kontrolek formularza
@@ -61,9 +57,11 @@ abstract class ControlValidator<T: Any> {
                     val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
                     if (dependentValue !in acceptedValues) return false
                 }
+
                 ComparisonType.NotEquals -> {
                     if (dependentValue == dependency.value) return false
                 }
+
                 ComparisonType.Equals -> {
                     if (dependentValue != dependency.value) return false
                 }
@@ -75,11 +73,11 @@ abstract class ControlValidator<T: Any> {
 
     /**
      * Sprawdza czy kontrolka jest wymagana na podstawie jej konfiguracji i zależności.
-     * 
+     *
      * Kontrolka jest wymagana gdy:
      * - Ma ustawioną flagę required = true, lub
      * - Spełnione są zależności typu Required
-     * 
+     *
      * @param control kontrolka do sprawdzenia
      * @param controlName nazwa stanu kontrolki (do rozwiązywania lokalnych zależności)
      * @param controls mapa wszystkich kontrolek formularza
@@ -109,11 +107,13 @@ abstract class ControlValidator<T: Any> {
                             isRequired = true
                         }
                     }
+
                     ComparisonType.Equals -> {
                         if (dependentValue == dependency.value) {
                             isRequired = true
                         }
                     }
+
                     ComparisonType.NotEquals -> {
                         if (dependentValue != dependency.value) {
                             isRequired = true
@@ -128,12 +128,12 @@ abstract class ControlValidator<T: Any> {
 
     /**
      * Sprawdza czy wartość jest pusta lub nie została wypełniona.
-     * 
+     *
      * Wartość jest uważana za pustą gdy:
      * - Jest null
      * - Jest pustym ciągiem znaków lub zawiera tylko białe znaki
      * - Jest pustą listą
-     * 
+     *
      * @param value wartość do sprawdzenia
      * @return true jeśli wartość jest pusta
      */
@@ -173,13 +173,13 @@ abstract class ControlValidator<T: Any> {
 
     /**
      * Główna metoda walidacji kontrolki.
-     * 
+     *
      * Proces walidacji:
      * 1. Sprawdza czy kontrolka jest widoczna (jeśli nie, pomija walidację)
      * 2. Określa czy kontrolka jest wymagana
      * 3. Sprawdza czy wymagane pole nie jest puste
      * 4. Uruchamia walidację specyficzną dla typu kontrolki
-     * 
+     *
      * @param controlName nazwa kontrolki
      * @param state stan kontrolki
      * @param control definicja kontrolki
@@ -213,13 +213,13 @@ abstract class ControlValidator<T: Any> {
 
     /**
      * Metoda walidacji specyficznej dla typu kontrolki.
-     * 
+     *
      * Powinna być przesłonięta przez klasy pochodne dla implementacji
      * walidacji specyficznej dla danego typu kontrolki (np. sprawdzanie
      * formatu email, zakresu liczb, unikalności wartości, itp.).
-     * 
+     *
      * Domyślna implementacja nie wykonuje żadnej dodatkowej walidacji.
-     * 
+     *
      * @param state stan kontrolki do walidacji
      */
     protected open fun validateSpecific(state: ControlState<*>) {

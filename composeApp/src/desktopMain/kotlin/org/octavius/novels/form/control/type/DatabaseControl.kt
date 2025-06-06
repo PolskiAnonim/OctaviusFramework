@@ -8,7 +8,7 @@ import org.octavius.novels.form.control.type.dropdown.DropdownOption
 
 /**
  * Kontrolka do wyboru rekordu z bazy danych z listy rozwijanej.
- * 
+ *
  * Umożliwia wyszukiwanie i wybór rekordu z określonej tabeli bazy danych.
  * Obsługuje wyszukiwanie i paginację wyników. Wyświetla określoną kolumnę
  * jako tekst wyboru, a zwraca ID wybranego rekordu.
@@ -65,7 +65,8 @@ class DatabaseControl(
             val (results, totalPages) = DatabaseManager.executePagedQuery(sql, params, page, pageSize)
             val mappedResults = results.groupBy { it[ColumnInfo(relatedTable, "id")] }
                 .map { (id, items) ->
-                    val displayValue = items.firstOrNull()?.get(ColumnInfo(relatedTable, displayColumn)) as? String ?: ""
+                    val displayValue =
+                        items.firstOrNull()?.get(ColumnInfo(relatedTable, displayColumn)) as? String ?: ""
                     DropdownOption(id as Int, displayValue)
                 }
             Pair(mappedResults, totalPages.toInt())

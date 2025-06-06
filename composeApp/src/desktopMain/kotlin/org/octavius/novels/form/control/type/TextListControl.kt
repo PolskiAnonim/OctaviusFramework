@@ -22,7 +22,7 @@ import org.octavius.novels.form.control.validation.DefaultValidator
 
 /**
  * Kontrolka do wprowadzania i zarządzania listą tekstów.
- * 
+ *
  * Umożliwia dodawanie, edytowanie i usuwanie elementów tekstowych z listy.
  * Każdy element może być indywidualnie edytowany. Obsługuje dodawanie nowych
  * elementów poprzez dedykowane pole oraz usuwanie istniejących elementów.

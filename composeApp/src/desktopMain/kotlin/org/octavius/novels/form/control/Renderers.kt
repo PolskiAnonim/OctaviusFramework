@@ -64,7 +64,7 @@ fun RenderCheckboxLabel(label: String?, isRequired: Boolean) {
 /**
  * Renderuje komunikat błędu walidacji kontrolki.
  * Wyświetla się tylko gdy kontrolka ma błąd walidacji.
- * 
+ *
  * @param ctrlState stan kontrolki zawierający informacje o błędzie
  */
 @Composable

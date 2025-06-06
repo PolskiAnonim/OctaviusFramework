@@ -77,13 +77,21 @@ abstract class Report : Screen {
                             // Dla kolumn tekstowych szukamy ILIKE
                             searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
                         }
+
                         is EnumColumn<*> -> {
                             // Dla enumów szukamy po wartościach wyświetlanych
                             searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
                         }
+
                         is IntegerColumn, is BooleanColumn -> {
                             // Dla pozostałych typów próbujemy konwersję do tekstu
-                            if (escapedQuery.toIntOrNull() != null || escapedQuery.lowercase() in listOf("true", "false", "tak", "nie")) {
+                            if (escapedQuery.toIntOrNull() != null || escapedQuery.lowercase() in listOf(
+                                    "true",
+                                    "false",
+                                    "tak",
+                                    "nie"
+                                )
+                            ) {
                                 searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
                             }
                         }
@@ -122,11 +130,21 @@ abstract class Report : Screen {
 
             when {
                 whereClauseIndex != -1 -> {
-                    "${query.sql.substring(0, whereClauseIndex+5)} $whereClauseBuilder AND ${query.sql.substring(whereClauseIndex+5)}"
+                    "${query.sql.substring(0, whereClauseIndex + 5)} $whereClauseBuilder AND ${
+                        query.sql.substring(
+                            whereClauseIndex + 5
+                        )
+                    }"
                 }
+
                 orderClauseIndex != -1 -> {
-                    "${query.sql.substring(0, orderClauseIndex)} WHERE $whereClauseBuilder ${query.sql.substring(orderClauseIndex)}"
+                    "${query.sql.substring(0, orderClauseIndex)} WHERE $whereClauseBuilder ${
+                        query.sql.substring(
+                            orderClauseIndex
+                        )
+                    }"
                 }
+
                 else -> {
                     "${query.sql} WHERE $whereClauseBuilder"
                 }

@@ -8,6 +8,6 @@ import org.octavius.novels.theme.NovelsTheme
 @Composable
 fun App() {
     NovelsTheme(darkTheme = false) { // Ustaw false dla jasnego motywu
-            MainScreen.Content()
+        MainScreen.Content()
     }
 }

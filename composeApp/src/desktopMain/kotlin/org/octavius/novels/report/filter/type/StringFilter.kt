@@ -14,7 +14,7 @@ import org.octavius.novels.report.NullHandling
 import org.octavius.novels.report.TextFilterType
 import org.octavius.novels.report.filter.Filter
 
-class StringFilter(columnName: String): Filter(columnName) {
+class StringFilter(columnName: String) : Filter(columnName) {
 
     override fun constructWhereClause(filter: FilterValue<*>): String {
         val textFilter = filter as FilterValue.TextFilter
@@ -67,7 +67,6 @@ class StringFilter(columnName: String): Filter(columnName) {
         val filterText = textFilter.value
         val filterType = textFilter.filterType
         val caseSensitive = textFilter.caseSensitive
-        val nullHandling = textFilter.nullHandling
 
         Column(modifier = Modifier.padding(8.dp)) {
             OutlinedTextField(

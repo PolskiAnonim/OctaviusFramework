@@ -1,6 +1,6 @@
 package org.octavius.novels.domain
 
-enum class PublicationStatus: EnumWithFormatter<PublicationStatus> {
+enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
     NotReading,
     Reading,
     Completed,
@@ -16,7 +16,7 @@ enum class PublicationStatus: EnumWithFormatter<PublicationStatus> {
     }
 }
 
-enum class PublicationLanguage: EnumWithFormatter<PublicationLanguage> {
+enum class PublicationLanguage : EnumWithFormatter<PublicationLanguage> {
     Korean,
     Chinese,
     Japanese;
@@ -30,7 +30,7 @@ enum class PublicationLanguage: EnumWithFormatter<PublicationLanguage> {
     }
 }
 
-enum class PublicationType: EnumWithFormatter<PublicationType> {
+enum class PublicationType : EnumWithFormatter<PublicationType> {
     Manga,
     LightNovel,
     WebNovel,

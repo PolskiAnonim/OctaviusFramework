@@ -2,49 +2,33 @@ package org.octavius.novels.form.control.type
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
+import org.octavius.novels.form.component.FormState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.RenderError
-import org.octavius.novels.form.control.type.repeatable.RepeatableRow
 import org.octavius.novels.form.control.type.repeatable.RepeatableResultValue
+import org.octavius.novels.form.control.type.repeatable.RepeatableRow
 import org.octavius.novels.form.control.type.repeatable.createRow
 import org.octavius.novels.form.control.type.repeatable.getRowTypes
-import org.octavius.novels.form.component.FormState
-import org.octavius.novels.form.control.DependencyScope
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.RepeatableValidator
 
 /**
  * Kontrolka do tworzenia dynamicznych list kontrolek (wierszy).
- * 
+ *
  * Umożliwia użytkownikowi dodawanie i usuwanie wierszy, gdzie każdy wiersz
  * zawiera zestaw kontrolek. Obsługuje walidację unikalności pól, ograniczenia
  * minimalnej i maksymalnej liczby wierszy oraz składanie/rozwijanie wierszy.
@@ -64,12 +48,12 @@ class RepeatableControl(
     // Referencja do FormState - będzie ustawiona przez FormSchema
     private var formState: FormState? = null
     private var controlName: String? = null
-    
+
     override fun setupFormStateReference(formState: FormState, controlName: String) {
         this.formState = formState
         this.controlName = controlName
     }
-    
+
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
         // Ustaw parent dla wszystkich kontrolek w wierszu
         rowControls.values.forEach { childControl ->
@@ -87,14 +71,14 @@ class RepeatableControl(
     override fun setInitValue(value: Any?): ControlState<List<RepeatableRow>> {
         @Suppress("UNCHECKED_CAST")
         val initialRows = value as? List<Map<String, Any?>> ?: emptyList()
-        
+
         requireNotNull(formState) { "FormState nie został ustawiony dla RepeatableControl" }
         requireNotNull(controlName) { "controlName nie został ustawiony dla RepeatableControl" }
 
         // Utwórz wiersze i dodaj ich stany do globalnego FormState
         val initialRowsList = initialRows.mapIndexed { index, initialRow ->
             val row = RepeatableRow(index = index)
-            
+
             // Dodaj stany kontrolek dla tego wiersza do globalnego FormState
             initialRow.forEach { (fieldName, fieldValue) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
@@ -102,12 +86,12 @@ class RepeatableControl(
                 val fieldState = control.setInitValue(fieldValue)
                 formState!!.setControlState(hierarchicalName, fieldState)
             }
-            
+
             row
         }
 
         val additionalRows = mutableListOf<RepeatableRow>()
-        
+
         // Dodaj minimalne wiersze jeśli potrzeba
         while (initialRowsList.size + additionalRows.size < minRows) {
             val index = initialRowsList.size + additionalRows.size
@@ -157,10 +141,10 @@ class RepeatableControl(
                         {
                             val currentRows = controlState.value.value!!.toMutableList()
                             val rowToRemove = currentRows[index]
-                            
+
                             // Sprawdź czy wiersz był w oryginalnych danych
                             val wasOriginal = controlState.initValue.value!!.any { it.id == rowToRemove.id }
-                            
+
                             if (wasOriginal) {
                                 // Istniejący wiersz - zostaw stany dla convertToResult
                                 // (będą usunięte później w convertToResult)
@@ -168,15 +152,15 @@ class RepeatableControl(
                                 // Nowy wiersz - usuń stany od razu, bo nie potrzebujemy ich w DB
                                 formState!!.removeControlStatesWithPrefix("$controlName[${rowToRemove.id}]")
                             }
-                            
+
                             // Usuń wiersz z listy
                             currentRows.removeAt(index)
-                            
+
                             // Zaktualizuj tylko indeksy dla wyświetlania (UUID pozostaje bez zmian)
                             currentRows.forEachIndexed { newIndex, row ->
                                 currentRows[newIndex] = row.copy(index = newIndex)
                             }
-                            
+
                             controlState.value.value = currentRows
                             updateState(controlState)
                         }
@@ -367,13 +351,13 @@ class RepeatableControl(
 
         @Suppress("UNCHECKED_CAST")
         val controlState = state as ControlState<List<RepeatableRow>>
-        
+
         requireNotNull(controlName) { "controlName nie został ustawiony dla RepeatableControl" }
 
         val (newRows, deletedRows, changedRows) = getRowTypes(
-            controlState, 
-            controlName!!, 
-            rowControls, 
+            controlState,
+            controlName!!,
+            rowControls,
             outerStates
         )
 
@@ -408,7 +392,7 @@ class RepeatableControl(
         deletedRows.forEach { row ->
             formState!!.removeControlStatesWithPrefix("$controlName[${row.id}]")
         }
-        
+
         return RepeatableResultValue(
             deletedRows = deletedRowsValues,
             addedRows = newRowsValues,

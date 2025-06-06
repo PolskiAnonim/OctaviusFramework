@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 
 /**
  * Opisuje relację między tabelami w zapytaniach JOIN.
- * 
+ *
  * @param tableName nazwa tabeli
  * @param joinCondition warunek JOIN (pusty dla głównej tabeli)
  * @param primaryKey nazwa kolumny klucza głównego (domyślnie "id")
@@ -18,7 +18,7 @@ data class TableRelation(
 
 /**
  * Identyfikuje kolumnę w bazie danych przez tabelę i nazwę pola.
- * 
+ *
  * @param tableName nazwa tabeli
  * @param fieldName nazwa kolumny
  */
@@ -26,7 +26,7 @@ data class ColumnInfo(val tableName: String, val fieldName: String)
 
 /**
  * Sealed class reprezentująca operacje zapisu w bazie danych.
- * 
+ *
  * Wszystkie operacje zawierają nazwę tabeli i mogą używać foreign key
  * do definiowania relacji między rekordami.
  */
@@ -35,7 +35,7 @@ sealed class SaveOperation {
 
     /**
      * Operacja wstawienia nowego rekordu.
-     * 
+     *
      * @param tableName nazwa tabeli
      * @param data dane do wstawienia (kontrolka -> wartość)
      * @param foreignKeys lista kluczy obcych
@@ -50,7 +50,7 @@ sealed class SaveOperation {
 
     /**
      * Operacja aktualizacji istniejącego rekordu.
-     * 
+     *
      * @param tableName nazwa tabeli
      * @param data dane do zaktualizowania
      * @param id ID rekordu (może być null jeśli używamy foreign keys)
@@ -65,7 +65,7 @@ sealed class SaveOperation {
 
     /**
      * Operacja usunięcia rekordu.
-     * 
+     *
      * @param tableName nazwa tabeli
      * @param id ID rekordu do usunięcia (może być null jeśli używamy foreign keys)
      * @param foreignKeys lista kluczy obcych do identyfikacji rekordu
@@ -79,7 +79,7 @@ sealed class SaveOperation {
 
 /**
  * Reprezentuje klucz obcy w operacjach bazodanowych.
- * 
+ *
  * @param columnName nazwa kolumny klucza obcego
  * @param referencedTable nazwa tabeli, do której odnosi się klucz
  * @param value wartość klucza (może być ustawiona później)
@@ -92,7 +92,7 @@ data class ForeignKey(
 
 /**
  * Dane wyniku kontrolki zebrane podczas przetwarzania formularza.
- * 
+ *
  * @param value wartość kontrolki przygotowana do zapisu w bazie danych
  * @param dirty czy wartość została zmieniona przez użytkownika
  */
@@ -103,10 +103,10 @@ data class ControlResultData(
 
 /**
  * Stan pojedynczej kontrolki w formularzu.
- * 
+ *
  * Przechowuje wszystkie informacje o stanie kontrolki potrzebne
  * do renderowania, walidacji i śledzenia zmian.
- * 
+ *
  * @param T typ danych przechowywanych przez kontrolkę
  * @param value bieżąca wartość kontrolki (edytowana przez użytkownika)
  * @param initValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie

@@ -2,13 +2,13 @@ package org.octavius.novels.form.control.type.repeatable
 
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.component.FormState
+import org.octavius.novels.form.control.Control
 
 /**
  * Reprezentuje jeden wiersz w kontrolce powtarzalnej.
  * Uproszczona wersja - stan jest teraz zarządzany globalnie.
- * 
+ *
  * @param id unikalny identyfikator wiersza (generowany automatycznie)
  * @param index pozycja wiersza w liście (używana do budowania hierarchicznych nazw)
  */
@@ -19,20 +19,20 @@ data class RepeatableRow(
 
 /**
  * Reprezentuje wynik kontrolki powtarzalnej z podziałem na typy operacji.
- * 
+ *
  * @param deletedRows wiersze do usunięcia z bazy danych
  * @param addedRows nowe wiersze do dodania
  * @param modifiedRows wiersze do zaktualizowania
  */
 data class RepeatableResultValue(
     val deletedRows: List<Map<String, ControlResultData>>,
-    val addedRows: List<Map<String,ControlResultData>>,
-    val modifiedRows: List<Map<String,ControlResultData>>
+    val addedRows: List<Map<String, ControlResultData>>,
+    val modifiedRows: List<Map<String, ControlResultData>>
 )
 
 /**
  * Tworzy nowy wiersz i dodaje stany jego kontrolek do globalnego FormState.
- * 
+ *
  * @param index pozycja wiersza w liście
  * @param controlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
  * @param rowControls mapa kontrolek które mają być w wierszu
@@ -41,7 +41,7 @@ data class RepeatableResultValue(
  */
 fun createRow(
     index: Int,
-    controlName: String, 
+    controlName: String,
     rowControls: Map<String, Control<*>>,
     formState: FormState
 ): RepeatableRow {
@@ -59,7 +59,7 @@ fun createRow(
 /**
  * Analizuje stan kontrolki powtarzalnej i klasyfikuje wiersze według typu operacji.
  * Używa globalnego stanu zamiast lokalnych stanów wierszy.
- * 
+ *
  * @param controlState stan kontrolki powtarzalnej
  * @param controlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
  * @param rowControls mapa kontrolek w wierszu
@@ -84,7 +84,7 @@ fun getRowTypes(
     // Zmienione wiersze: te, które są w obu listach (wg ID) I mają przynajmniej jedno pole "dirty"
     val changedRows = controlState.value.value!!.filter { currentRow ->
         if (currentRow.id !in initialRowIds) return@filter false
-        
+
         // Sprawdź czy jakiekolwiek pole w tym wierszu jest dirty
         rowControls.keys.any { fieldName ->
             val hierarchicalName = "$controlName[${currentRow.id}].$fieldName"

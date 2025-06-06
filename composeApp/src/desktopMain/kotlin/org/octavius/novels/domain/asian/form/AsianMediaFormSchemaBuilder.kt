@@ -6,18 +6,8 @@ import org.octavius.novels.domain.PublicationType
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormSchemaBuilder
-import org.octavius.novels.form.control.ComparisonType
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.DependencyType
-import org.octavius.novels.form.control.DependencyScope
-import org.octavius.novels.form.control.type.BooleanControl
-import org.octavius.novels.form.control.type.EnumControl
-import org.octavius.novels.form.control.type.HiddenControl
-import org.octavius.novels.form.control.type.IntegerControl
-import org.octavius.novels.form.control.type.RepeatableControl
-import org.octavius.novels.form.control.type.SectionControl
-import org.octavius.novels.form.control.type.TextListControl
+import org.octavius.novels.form.control.*
+import org.octavius.novels.form.control.type.*
 
 class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {

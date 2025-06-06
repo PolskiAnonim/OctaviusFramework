@@ -126,7 +126,6 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
     }
 
 
-
     // Konwersja wartości PostgreSQL na typ Kotlina
     fun convertToDomainType(value: Any?, pgTypeName: String): Any? {
         if (value == null) return null
@@ -151,6 +150,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
             TypeCategory.STANDARD -> {
                 convertStandardType(value, pgTypeName)
             }
+
             else -> {
                 throw IllegalArgumentException("Unsupported type $pgTypeName")
             }
@@ -238,7 +238,11 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
 
     // Pomocnicze klasy do mapowania wyników zapytań
     private data class EnumTypeInfo(val typeName: String, val value: String)
-    private data class CompositeAttributeInfo(val typeName: String, val attributeName: String, val attributeType: String)
+    private data class CompositeAttributeInfo(
+        val typeName: String,
+        val attributeName: String,
+        val attributeType: String
+    )
 }
 
 // Kategorie typów PostgreSQL
