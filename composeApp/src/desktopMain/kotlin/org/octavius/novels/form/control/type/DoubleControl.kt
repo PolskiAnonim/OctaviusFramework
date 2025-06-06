@@ -41,7 +41,7 @@ class DoubleControl(
         controlState: ControlState<Double>,
         isRequired: Boolean
     ) {
-        val textValue = if (controlState.value.value != null) controlState.value.value.toString() else ""
+        val textValue = controlState.value.value?.toString().orEmpty()
 
         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
 

@@ -30,7 +30,7 @@ class DatabaseControl(
     private var cachedValue: DropdownOption<Int>? = null
 
     override fun getDisplayText(value: Int?): String? {
-        if (value == null) return value
+        if (value == null) return null
 
         // Próbuj użyć cache
         if (cachedValue?.value == value) return cachedValue!!.displayText

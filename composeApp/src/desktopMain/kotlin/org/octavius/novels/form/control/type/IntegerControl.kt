@@ -39,7 +39,7 @@ class IntegerControl(
         controlState: ControlState<Int>,
         isRequired: Boolean
     ) {
-        val textValue = if (controlState.value.value != null) controlState.value.value.toString() else ""
+        val textValue = controlState.value.value?.toString().orEmpty()
 
         OutlinedTextField(
             value = textValue,

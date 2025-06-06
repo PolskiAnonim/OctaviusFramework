@@ -50,43 +50,42 @@ class BooleanControl(
     ) {
 
 
-        controlState.let { ctrlState ->
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (isRequired) {
-                            ctrlState.value.value = ctrlState.value.value ?: false
-                            Checkbox(
-                                checked = ctrlState.value.value!!, // domyślnie false
-                                onCheckedChange = {
-                                    ctrlState.value.value = it
-                                    updateState(ctrlState)
-                                }
-                            )
-                        } else {
-                            TriStateCheckbox(
-                                state = if (ctrlState.value.value != null) ToggleableState(ctrlState.value.value!!) else ToggleableState.Indeterminate,
-                                onClick = {
-                                    val mapping = mapOf(null to false, false to true, true to null)
-                                    ctrlState.value.value = mapping[ctrlState.value.value]
-                                    updateState(ctrlState)
-                                }
-                            )
-                        }
-                        RenderCheckboxLabel(label, isRequired)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp, horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isRequired) {
+                        val currentValue = controlState.value.value ?: false
+                        controlState.value.value = currentValue
+                        Checkbox(
+                            checked = currentValue,
+                            onCheckedChange = {
+                                controlState.value.value = it
+                                updateState(controlState)
+                            }
+                        )
+                    } else {
+                        TriStateCheckbox(
+                            state = controlState.value.value?.let { ToggleableState(it) } ?: ToggleableState.Indeterminate,
+                            onClick = {
+                                val mapping = mapOf(null to false, false to true, true to null)
+                                controlState.value.value = mapping[controlState.value.value]
+                                updateState(controlState)
+                            }
+                        )
                     }
-
-                    RenderError(ctrlState)
+                    RenderCheckboxLabel(label, isRequired)
                 }
+
+                RenderError(controlState)
             }
         }
     }

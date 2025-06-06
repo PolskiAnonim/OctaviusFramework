@@ -40,7 +40,7 @@ class TextControl(
         isRequired: Boolean
     ) {
         OutlinedTextField(
-            value = controlState.value.value ?: "",
+            value = controlState.value.value.orEmpty(),
             onValueChange = {
                 controlState.value.value = it
                 controlState.dirty.value = true

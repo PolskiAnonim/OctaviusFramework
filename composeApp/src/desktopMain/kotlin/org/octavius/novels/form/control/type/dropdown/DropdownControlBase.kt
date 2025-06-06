@@ -65,179 +65,176 @@ abstract class DropdownControlBase<T : Any>(
         controlState: ControlState<T>,
         isRequired: Boolean
     ) {
-        controlState.let { ctrlState ->
-            var expanded by remember { mutableStateOf(false) }
-            var searchQuery by remember { mutableStateOf("") }
-            var options by remember { mutableStateOf<List<DropdownOption<T>>>(emptyList()) }
-            var isLoading by remember { mutableStateOf(false) }
-            var currentPage by remember { mutableStateOf(1) }
-            var totalPages by remember { mutableStateOf(1) }
+        var expanded by remember { mutableStateOf(false) }
+        var searchQuery by remember { mutableStateOf("") }
+        var options by remember { mutableStateOf<List<DropdownOption<T>>>(emptyList()) }
+        var isLoading by remember { mutableStateOf(false) }
+        var currentPage by remember { mutableStateOf(1) }
+        var totalPages by remember { mutableStateOf(1) }
 
-            // Efekt pobierający opcje gdy menu jest otwarte
-            LaunchedEffect(expanded, searchQuery, currentPage) {
-                if (expanded) {
-                    isLoading = true
-                    try {
-                        val (items, pages) = loadOptions(searchQuery, currentPage)
-                        options = items
-                        totalPages = pages
-                    } finally {
-                        isLoading = false
-                    }
+        // Efekt pobierający opcje gdy menu jest otwarte
+        LaunchedEffect(expanded, searchQuery, currentPage) {
+            if (expanded) {
+                isLoading = true
+                try {
+                    val (items, pages) = loadOptions(searchQuery, currentPage)
+                    options = items
+                    totalPages = pages
+                } finally {
+                    isLoading = false
                 }
             }
+        }
 
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                RenderNormalLabel(label, isRequired)
+        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+            RenderNormalLabel(label, isRequired)
 
-                ExposedDropdownMenuBox(
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Pole z wybraną wartością
+                OutlinedTextField(
+                    value = getDisplayText(controlState.value.value)
+                        ?: (if (!isRequired) "Brak wyboru" else "Wybierz opcję"),
+                    onValueChange = { },  // Nie pozwalamy na edycję ręczną
+                    readOnly = true,      // Pole tylko do odczytu
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                )
+
+                // Menu z opcjami
+                ExposedDropdownMenu(
                     expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    modifier = Modifier.fillMaxWidth()
+                    onDismissRequest = { expanded = false }
                 ) {
-                    // Pole z wybraną wartością
-                    OutlinedTextField(
-                        value = getDisplayText(ctrlState.value.value)
-                            ?: (if (!isRequired) "Brak wyboru" else "Wybierz opcję"),
-                        onValueChange = { },  // Nie pozwalamy na edycję ręczną
-                        readOnly = true,      // Pole tylko do odczytu
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                    )
-
-                    // Menu z opcjami
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        // Pole wyszukiwania jeśli obsługiwane
-                        if (supportSearch) {
-                            OutlinedTextField(
-                                value = searchQuery,
-                                onValueChange = {
-                                    searchQuery = it
-                                    currentPage = 1  // Reset page on search
-                                },
-                                placeholder = { Text("Szukaj...") },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = "Szukaj"
-                                    )
-                                },
-                                trailingIcon = {
-                                    if (searchQuery.isNotEmpty()) {
-                                        IconButton(onClick = {
-                                            searchQuery = ""
-                                            currentPage = 1
-                                        }) {
-                                            Icon(
-                                                imageVector = Icons.Default.Clear,
-                                                contentDescription = "Wyczyść"
-                                            )
-                                        }
+                    // Pole wyszukiwania jeśli obsługiwane
+                    if (supportSearch) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = {
+                                searchQuery = it
+                                currentPage = 1  // Reset page on search
+                            },
+                            placeholder = { Text("Szukaj...") },
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Szukaj"
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = {
+                                        searchQuery = ""
+                                        currentPage = 1
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Clear,
+                                            contentDescription = "Wyczyść"
+                                        )
                                     }
                                 }
+                            }
+                        )
+                    }
+
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp)
                             )
                         }
+                    } else {
+                        // Opcja null tylko jeśli kontrolka nie jest wymagana
+                        if (!isRequired) {
+                            DropdownMenuItem(
+                                text = { Text("Brak wyboru") },
+                                onClick = {
+                                    controlState.value.value = null
+                                    updateState(controlState)
+                                    expanded = false
+                                }
+                            )
 
-                        if (isLoading) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                            HorizontalDivider()
+                        }
+
+                        if (options.isEmpty() && !isLoading) {
+                            DropdownMenuItem(
+                                enabled = false,
+                                text = {
+                                    Text(
+                                        "Brak wyników",
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                },
+                                onClick = {}
+                            )
                         } else {
-                            // Opcja null tylko jeśli kontrolka nie jest wymagana
-                            if (!isRequired) {
+                            // Lista opcji
+                            options.forEach { option ->
                                 DropdownMenuItem(
-                                    text = { Text("Brak wyboru") },
+                                    text = { Text(option.displayText) },
                                     onClick = {
-                                        ctrlState.value.value = null
-                                        updateState(ctrlState)
+                                        controlState.value.value = option.value
+                                        updateState(controlState)
                                         expanded = false
                                     }
                                 )
-
-                                HorizontalDivider()
                             }
 
-                            if (options.isEmpty() && !isLoading) {
-                                DropdownMenuItem(
-                                    enabled = false,
-                                    text = {
-                                        Text(
-                                            "Brak wyników",
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                        )
-                                    },
-                                    onClick = {}
-                                )
-                            } else {
-                                // Lista opcji
-                                options.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(option.displayText) },
-                                        onClick = {
-                                            ctrlState.value.value = option.value
-                                            updateState(ctrlState)
-                                            expanded = false
-                                        }
-                                    )
-                                }
+                            // Panel paginacji, tylko jeśli jest więcej niż jedna strona
+                            if (supportPagination && totalPages > 1) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                                // Panel paginacji, tylko jeśli jest więcej niż jedna strona
-                                if (supportPagination && totalPages > 1) {
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(
+                                        onClick = { if (currentPage > 1) currentPage-- },
+                                        enabled = currentPage > 1
                                     ) {
-                                        IconButton(
-                                            onClick = { if (currentPage > 1) currentPage-- },
-                                            enabled = currentPage > 1
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                                contentDescription = "Poprzednia strona"
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Poprzednia strona"
+                                        )
+                                    }
 
-                                        Text("Strona $currentPage z $totalPages")
+                                    Text("Strona $currentPage z $totalPages")
 
-                                        IconButton(
-                                            onClick = { if (currentPage < totalPages) currentPage++ },
-                                            enabled = currentPage < totalPages
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                                contentDescription = "Następna strona"
-                                            )
-                                        }
+                                    IconButton(
+                                        onClick = { if (currentPage < totalPages) currentPage++ },
+                                        enabled = currentPage < totalPages
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                            contentDescription = "Następna strona"
+                                        )
                                     }
                                 }
                             }
                         }
                     }
                 }
-
-                RenderError(ctrlState)
             }
+            RenderError(controlState)
         }
     }
 }
