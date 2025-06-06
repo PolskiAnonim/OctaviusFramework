@@ -162,6 +162,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
         return when (pgTypeName) {
             "int4", "int8", "int2" -> if (value is Number) value.toInt() else value
             "float4", "float8" -> if (value is Number) value.toDouble() else value
+            "numeric" -> if (value is Number) value.toDouble() else value
             "bool" -> if (value is Boolean) value else value.toString().equals("t", ignoreCase = true)
             "varchar", "text", "char" -> value.toString()
             // Można dodać więcej typów w miarę potrzeby
