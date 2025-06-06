@@ -1,6 +1,5 @@
 package org.octavius.novels.form.control.type
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
@@ -11,8 +10,6 @@ import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.RenderError
-import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
@@ -40,26 +37,16 @@ class TextControl(
     @Composable
     override fun Display(
         controlState: ControlState<String>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
-        controlState.let { ctrlState ->
-            Column(modifier = Modifier.fillMaxWidth()) {
-                RenderNormalLabel(label, isRequired)
-
-                OutlinedTextField(
-                    value = ctrlState.value.value ?: "",
-                    onValueChange = {
-                        ctrlState.value.value = it
-                        ctrlState.dirty.value = true
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp),
-                    singleLine = true
-                )
-
-                RenderError(ctrlState)
-            }
-        }
+        OutlinedTextField(
+            value = controlState.value.value ?: "",
+            onValueChange = {
+                controlState.value.value = it
+                controlState.dirty.value = true
+            },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp),
+            singleLine = true
+        )
     }
 }

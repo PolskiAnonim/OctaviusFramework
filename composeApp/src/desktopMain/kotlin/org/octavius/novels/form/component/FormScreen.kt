@@ -46,9 +46,7 @@ abstract class FormScreen : Screen {
                     formHandler.getControlState(controlName)!!.let { state ->
                         control.Render(
                             controlName = controlName,
-                            controlState = state,
-                            controls = formHandler.getAllControls(),
-                            states = formHandler.getAllStates() // Now reactive thanks to mutableStateMapOf
+                            controlState = state
                         )
                     }
                 }

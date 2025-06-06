@@ -6,6 +6,7 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.component.ErrorManager
 
 /**
  * Kontrolka do przechowywania ukrytych wartości w formularzu.
@@ -18,7 +19,8 @@ class HiddenControl<T : Any>(columnInfo: ColumnInfo?) : Control<T>(
     label = null,
     columnInfo,
     required = null,
-    dependencies = null
+    dependencies = null,
+    hasStandardLayout = false // Nie ma nic
 ) {
     override val validator: ControlValidator<T> = DefaultValidator()
 
@@ -26,8 +28,6 @@ class HiddenControl<T : Any>(columnInfo: ColumnInfo?) : Control<T>(
     @Composable
     override fun Display(
         controlState: ControlState<T>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
         //Brak widocznej zawartości

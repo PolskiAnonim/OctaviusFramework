@@ -19,6 +19,7 @@ import org.octavius.novels.form.control.RenderError
 import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.component.ErrorManager
 
 /**
  * Bazowa klasa abstrakcyjna dla kontrolek listy rozwijanej (dropdown).
@@ -45,7 +46,8 @@ abstract class DropdownControlBase<T : Any>(
     label,
     columnInfo,
     required,
-    dependencies
+    dependencies,
+    hasStandardLayout = false
 ) {
     override val validator: ControlValidator<T> = DefaultValidator()
 
@@ -61,8 +63,6 @@ abstract class DropdownControlBase<T : Any>(
     @Composable
     override fun Display(
         controlState: ControlState<T>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
         controlState.let { ctrlState ->

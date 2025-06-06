@@ -13,8 +13,6 @@ import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.RenderError
-import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
@@ -38,43 +36,36 @@ class DoubleControl(
 ) {
     override val validator: ControlValidator<Double> = DefaultValidator()
 
-
     @Composable
     override fun Display(
         controlState: ControlState<Double>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
-        controlState.let { ctrlState ->
-            val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
+        val textValue = if (controlState.value.value != null) controlState.value.value.toString() else ""
 
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                RenderNormalLabel(label, isRequired)
+        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
 
-                OutlinedTextField(
-                    value = textValue,
-                    onValueChange = { newValue ->
-                        try {
-                            if (newValue.isEmpty()) {
-                                ctrlState.value.value = null
-                            } else {
-                                ctrlState.value.value = newValue.toDouble()
-                            }
-                            ctrlState.error.value = null
-                        } catch (e: NumberFormatException) {
-                            ctrlState.error.value = "Wartość musi być liczbą rzeczywistą"
+            OutlinedTextField(
+                value = textValue,
+                onValueChange = { newValue ->
+                    try {
+                        if (newValue.isEmpty()) {
+                            controlState.value.value = null
+                        } else {
+                            controlState.value.value = newValue.toDouble()
                         }
-                        ctrlState.dirty.value = true
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = ctrlState.error.value != null,
-                    singleLine = true
-                )
+                        controlState.error.value = null
+                    } catch (e: NumberFormatException) {
+                        controlState.error.value = "Wartość musi być liczbą rzeczywistą"
+                    }
+                    controlState.dirty.value = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = controlState.error.value != null,
+                singleLine = true
+            )
 
-                RenderError(ctrlState)
-            }
         }
     }
 }

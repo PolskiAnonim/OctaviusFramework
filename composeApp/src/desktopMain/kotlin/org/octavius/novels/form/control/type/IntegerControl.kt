@@ -1,20 +1,15 @@
 package org.octavius.novels.form.control.type
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.RenderError
-import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 
@@ -42,39 +37,29 @@ class IntegerControl(
     @Composable
     override fun Display(
         controlState: ControlState<Int>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
-        controlState.let { ctrlState ->
-            val textValue = if (ctrlState.value.value != null) ctrlState.value.value.toString() else ""
+        val textValue = if (controlState.value.value != null) controlState.value.value.toString() else ""
 
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                RenderNormalLabel(label, isRequired)
-
-                OutlinedTextField(
-                    value = textValue,
-                    onValueChange = { newValue ->
-                        try {
-                            if (newValue.isEmpty()) {
-                                ctrlState.value.value = null
-                            } else {
-                                ctrlState.value.value = newValue.toInt()
-                            }
-                            ctrlState.error.value = null
-                        } catch (e: NumberFormatException) {
-                            ctrlState.error.value = "Wartość musi być liczbą całkowitą"
-                        }
-                        ctrlState.dirty.value = true
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = ctrlState.error.value != null,
-                    singleLine = true
-                )
-
-                RenderError(ctrlState)
-            }
-        }
+        OutlinedTextField(
+            value = textValue,
+            onValueChange = { newValue ->
+                try {
+                    if (newValue.isEmpty()) {
+                        controlState.value.value = null
+                    } else {
+                        controlState.value.value = newValue.toInt()
+                    }
+                    controlState.error.value = null
+                } catch (e: NumberFormatException) {
+                    controlState.error.value = "Wartość musi być liczbą całkowitą"
+                }
+                controlState.dirty.value = true
+            },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            isError = controlState.error.value != null,
+            singleLine = true
+        )
     }
 }

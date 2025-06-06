@@ -33,7 +33,7 @@ class SectionControl(
     val columns: Int = 1,
     label: String,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Unit>(label, null, false, dependencies) {
+) : Control<Unit>(label, null, false, dependencies, hasStandardLayout = false) {
     override val validator: ControlValidator<Unit> = DefaultValidator()
 
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
@@ -45,8 +45,6 @@ class SectionControl(
     @Composable
     override fun Display(
         controlState: ControlState<Unit>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
         val expanded = remember { mutableStateOf(initiallyExpanded) }
@@ -110,8 +108,12 @@ class SectionControl(
                                                 .padding(horizontal = 4.dp)
                                         ) {
                                             group.forEach { ctrlName ->
+                                                val controls = this@SectionControl.formSchema?.getAllControls() ?: emptyMap()
+                                                val states = this@SectionControl.formState?.getAllStates() ?: emptyMap()
                                                 controls[ctrlName]?.let { control ->
-                                                    control.Render(ctrlName, states[ctrlName]!!, controls, states)
+                                                    states[ctrlName]?.let { controlState ->
+                                                        control.Render(ctrlName, controlState)
+                                                    }
                                                     Spacer(modifier = Modifier.height(8.dp))
                                                 }
                                             }
@@ -121,8 +123,12 @@ class SectionControl(
                             } else {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     ctrls.forEach { ctrlName ->
+                                        val controls = this@SectionControl.formSchema?.getAllControls() ?: emptyMap()
+                                        val states = this@SectionControl.formState?.getAllStates() ?: emptyMap()
                                         controls[ctrlName]?.let { control ->
-                                            control.Render(ctrlName, states[ctrlName]!!, controls, states)
+                                            states[ctrlName]?.let { controlState ->
+                                                control.Render(ctrlName, controlState)
+                                            }
                                             Spacer(modifier = Modifier.height(12.dp))
                                         }
                                     }

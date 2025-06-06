@@ -78,3 +78,18 @@ fun RenderError(ctrlState: ControlState<*>) {
         modifier = Modifier.padding(start = 24.dp, bottom = 8.dp)
     )
 }
+
+/**
+ * Renderuje pojedynczy błąd pola z ErrorManagera.
+ *
+ * @param error tekst błędu do wyświetlenia
+ */
+@Composable
+fun RenderFieldError(error: String) {
+    Text(
+        text = error,
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+        modifier = Modifier.padding(start = 24.dp, bottom = 8.dp)
+    )
+}

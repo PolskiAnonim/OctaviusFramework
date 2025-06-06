@@ -20,6 +20,7 @@ import org.octavius.novels.form.control.RenderCheckboxLabel
 import org.octavius.novels.form.control.RenderError
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.component.ErrorManager
 
 /**
  * Kontrolka do wprowadzania wartości logicznych (prawda/fałsz).
@@ -37,15 +38,14 @@ class BooleanControl(
     label,
     columnInfo,
     required,
-    dependencies
+    dependencies,
+    hasStandardLayout = false
 ) {
     override val validator: ControlValidator<Boolean> = DefaultValidator()
 
     @Composable
     override fun Display(
         controlState: ControlState<Boolean>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
 

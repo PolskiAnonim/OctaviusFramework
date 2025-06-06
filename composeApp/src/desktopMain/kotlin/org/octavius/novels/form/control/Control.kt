@@ -1,9 +1,13 @@
 package org.octavius.novels.form.control
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
+import org.octavius.novels.form.component.ErrorManager
+import org.octavius.novels.form.component.FormSchema
+import org.octavius.novels.form.component.FormState
 import org.octavius.novels.form.control.validation.ControlValidator
 
 /**
@@ -23,13 +27,19 @@ abstract class Control<T : Any>(
     val columnInfo: ColumnInfo?,
     val required: Boolean?,
     val dependencies: Map<String, ControlDependency<*>>?,
-    var parentControl: String? = null
+    var parentControl: String? = null,
+    protected val hasStandardLayout: Boolean = true
 ) {
     /**
      * Validator odpowiedzialny za walidację tej kontrolki.
      * Każdy typ kontrolki ma własny validator dostosowany do typu danych.
      */
     protected abstract val validator: ControlValidator<T>
+    
+    // Referencje do komponentów formularza - ustawiane przez setupFormReferences
+    protected var formState: FormState? = null
+    protected var formSchema: FormSchema? = null
+    protected var errorManager: ErrorManager? = null
 
     /**
      * Ustawia relacje hierarchiczne między kontrolkami.
@@ -40,11 +50,18 @@ abstract class Control<T : Any>(
     }
 
     /**
-     * Ustawia referencje do FormState dla kontrolek które tego wymagają.
-     * Używane przez RepeatableControl do zarządzania globalnym stanem.
+     * Ustawia referencje do komponentów formularza dla kontrolek które tego wymagają.
+     * Używane przez kontrolki do dostępu do globalnego stanu, schemy i zarządzania błędami.
      */
-    open fun setupFormStateReference(formState: org.octavius.novels.form.component.FormState, controlName: String) {
-        return // Domyślnie brak działania
+    open fun setupFormReferences(
+        formState: FormState,
+        formSchema: FormSchema,
+        errorManager: ErrorManager,
+        controlName: String
+    ) {
+        this.formState = formState
+        this.formSchema = formSchema
+        this.errorManager = errorManager
     }
 
     /**
@@ -131,21 +148,48 @@ abstract class Control<T : Any>(
     }
 
     /**
+     * Renderuje błędy pól z ErrorManagera.
+     */
+    @Composable
+    protected fun DisplayFieldErrors(controlName: String) {
+        errorManager?.let { em ->
+            val fieldErrors = em.getFieldErrors(controlName)
+            fieldErrors.forEach { error ->
+                RenderFieldError(error)
+            }
+        }
+    }
+
+    /**
      * Renderuje kontrolkę w interfejsie użytkownika.
      * Obsługuje widoczność i animacje na podstawie zależności.
      */
     @Composable
     fun Render(
         controlName: String,
-        controlState: ControlState<*>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>
+        controlState: ControlState<*>
     ) {
+        val controls = formSchema?.getAllControls() ?: emptyMap()
+        val states = formState?.getAllStates() ?: emptyMap()
+        
         val isVisible = validator.isControlVisible(this, controlName, controls, states)
         val isRequired = validator.isControlRequired(this, controlName, controls, states)
+        
         AnimatedVisibility(visible = isVisible) {
-            @Suppress("UNCHECKED_CAST")
-            Display(controlState as ControlState<T>, controls, states, isRequired)
+            if (hasStandardLayout) {
+                Column {
+                    RenderNormalLabel(label, isRequired)
+                    
+                    @Suppress("UNCHECKED_CAST")
+                    Display(controlState as ControlState<T>, isRequired)
+                    
+                    DisplayFieldErrors(controlName)
+                    RenderError(controlState) // Stary system tymczasowo
+                }
+            } else {
+                @Suppress("UNCHECKED_CAST")
+                Display(controlState as ControlState<T>, isRequired)
+            }
         }
     }
 
@@ -156,8 +200,6 @@ abstract class Control<T : Any>(
     @Composable
     protected abstract fun Display(
         controlState: ControlState<T>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     )
 }

@@ -31,11 +31,11 @@ class FormSchema(
     }
 
     /**
-     * Funkcja ustawia referencje do FormState dla kontrolek które tego wymagają
+     * Funkcja ustawia referencje do komponentów formularza dla kontrolek które tego wymagają
      */
-    fun setupFormStateReferences(formState: FormState) {
+    fun setupFormReferences(formState: FormState, errorManager: ErrorManager) {
         controls.forEach { (controlName, control) ->
-            control.setupFormStateReference(formState, controlName)
+            control.setupFormReferences(formState, this, errorManager, controlName)
         }
     }
 

@@ -25,6 +25,8 @@ import org.octavius.novels.form.control.type.repeatable.createRow
 import org.octavius.novels.form.control.type.repeatable.getRowTypes
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.RepeatableValidator
+import org.octavius.novels.form.component.ErrorManager
+import org.octavius.novels.form.component.FormSchema
 
 /**
  * Kontrolka do tworzenia dynamicznych list kontrolek (wierszy).
@@ -43,14 +45,18 @@ class RepeatableControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<List<RepeatableRow>>(label, null, required, dependencies) {
+) : Control<List<RepeatableRow>>(label, null, required, dependencies, hasStandardLayout = false) {
 
-    // Referencja do FormState - będzie ustawiona przez FormSchema
-    private var formState: FormState? = null
+    // Referencja do nazwy kontrolki - będzie ustawiona przez setupFormReferences
     private var controlName: String? = null
 
-    override fun setupFormStateReference(formState: FormState, controlName: String) {
-        this.formState = formState
+    override fun setupFormReferences(
+        formState: FormState,
+        formSchema: FormSchema,
+        errorManager: ErrorManager,
+        controlName: String
+    ) {
+        super.setupFormReferences(formState, formSchema, errorManager, controlName)
         this.controlName = controlName
     }
 
@@ -72,9 +78,6 @@ class RepeatableControl(
         @Suppress("UNCHECKED_CAST")
         val initialRows = value as? List<Map<String, Any?>> ?: emptyList()
 
-        requireNotNull(formState) { "FormState nie został ustawiony dla RepeatableControl" }
-        requireNotNull(controlName) { "controlName nie został ustawiony dla RepeatableControl" }
-
         // Utwórz wiersze i dodaj ich stany do globalnego FormState
         val initialRowsList = initialRows.mapIndexed { index, initialRow ->
             val row = RepeatableRow(index = index)
@@ -83,6 +86,7 @@ class RepeatableControl(
             initialRow.forEach { (fieldName, fieldValue) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val control = rowControls[fieldName]!!
+                control.setupFormReferences(formState!!, formSchema!!, errorManager!!, hierarchicalName)
                 val fieldState = control.setInitValue(fieldValue)
                 formState!!.setControlState(hierarchicalName, fieldState)
             }
@@ -110,8 +114,6 @@ class RepeatableControl(
     @Composable
     override fun Display(
         controlState: ControlState<List<RepeatableRow>>,
-        controls: Map<String, Control<*>>,
-        states: Map<String, ControlState<*>>,
         isRequired: Boolean
     ) {
 
@@ -167,12 +169,7 @@ class RepeatableControl(
                     } else null,
                     content = {
                         RepeatableRowContent(
-                            row = row,
-                            rowOrder = rowOrder,
-                            rowControls = rowControls,
-                            controlName = controlName!!,
-                            globalControls = controls,
-                            globalStates = states
+                            row = row
                         )
                     }
                 )
@@ -309,26 +306,19 @@ class RepeatableControl(
 
     @Composable
     private fun RepeatableRowContent(
-        row: RepeatableRow,
-        rowOrder: List<String>,
-        rowControls: Map<String, Control<*>>,
-        controlName: String,
-        globalControls: Map<String, Control<*>>,
-        globalStates: Map<String, ControlState<*>>
+        row: RepeatableRow
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             rowOrder.forEach { fieldName ->
                 rowControls[fieldName]?.let { control ->
                     val hierarchicalName = "$controlName[${row.id}].$fieldName"
                     // Pobierz stan bezpośrednio z FormState zamiast z przekazanej mapy
-                    val state = globalStates[hierarchicalName]
+                    val state = this@RepeatableControl.formState!!.getControlState(hierarchicalName)
                     if (state != null) {
                         // Używamy globalnego kontekstu - states jest teraz reactive
                         control.Render(
                             controlName = hierarchicalName,
-                            controlState = state,
-                            controls = globalControls,
-                            states = globalStates
+                            controlState = state
                         )
 
                         // Odstęp między kontrolkami

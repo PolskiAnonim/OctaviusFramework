@@ -40,8 +40,6 @@ abstract class FormHandler(protected val entityId: Int? = null) {
     fun getControlsInOrder(): List<String> = formSchema.order
     fun getControl(name: String): Control<*>? = formSchema.getControl(name)
     fun getControlState(name: String): ControlState<*>? = formState.getControlState(name)
-    fun getAllControls(): Map<String, Control<*>> = formSchema.getAllControls()
-    fun getAllStates(): Map<String, ControlState<*>> = formState.getAllStates()
 
     /**
      * Metody obsługi akcji użytkownika z UI
@@ -80,7 +78,7 @@ abstract class FormHandler(protected val entityId: Int? = null) {
             }
         }
 
-        formState.initializeStates(formSchema, mergedData)
+        formState.initializeStates(formSchema, mergedData, errorManager)
     }
 
     /**
@@ -88,7 +86,7 @@ abstract class FormHandler(protected val entityId: Int? = null) {
      */
     fun clearForm() {
         val initValues = formDataManager.initData(null)
-        formState.initializeStates(formSchema, initValues)
+        formState.initializeStates(formSchema, initValues, errorManager)
     }
 
     /**
