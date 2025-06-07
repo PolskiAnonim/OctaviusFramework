@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
+import org.octavius.novels.form.component.ErrorManager
+import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
@@ -23,10 +25,8 @@ import org.octavius.novels.form.control.type.repeatable.RepeatableRow
 import org.octavius.novels.form.control.type.repeatable.createRow
 import org.octavius.novels.form.control.type.repeatable.getRowTypes
 import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.RepeatableValidator
 import org.octavius.novels.form.control.validation.RepeatableValidation
-import org.octavius.novels.form.component.ErrorManager
-import org.octavius.novels.form.component.FormSchema
+import org.octavius.novels.form.control.validation.RepeatableValidator
 
 /**
  * Kontrolka do tworzenia dynamicznych list kontrolek (wierszy).
@@ -43,7 +43,14 @@ class RepeatableControl(
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     validationOptions: RepeatableValidation? = null
-) : Control<List<RepeatableRow>>(label, null, required, dependencies, hasStandardLayout = false, validationOptions = validationOptions) {
+) : Control<List<RepeatableRow>>(
+    label,
+    null,
+    required,
+    dependencies,
+    hasStandardLayout = false,
+    validationOptions = validationOptions
+) {
 
     // Referencja do nazwy kontrolki - będzie ustawiona przez setupFormReferences
     private var controlName: String? = null

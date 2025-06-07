@@ -48,7 +48,11 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         "translatedChapters",
                         "originalCompleted"
                     ),
-                    validationOptions = RepeatableValidation(uniqueFields = listOf("publicationType"), minItems = 1, maxItems = 7),
+                    validationOptions = RepeatableValidation(
+                        uniqueFields = listOf("publicationType"),
+                        minItems = 1,
+                        maxItems = 7
+                    ),
                     label = "Publikacje"
                 )
             ),

@@ -27,7 +27,7 @@ open class FormValidator(protected val errorManager: ErrorManager) {
     fun validateFields(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Boolean {
         // Wyczyść poprzednie błędy pól
         errorManager.clearFieldErrors()
-        
+
         for ((controlName, control) in controls) {
             val state = states[controlName]!!
             control.validateControl(controlName, state)

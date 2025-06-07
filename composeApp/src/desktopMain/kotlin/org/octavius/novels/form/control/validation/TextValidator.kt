@@ -12,7 +12,7 @@ class TextValidator(
     override fun validateSpecific(controlName: String, state: ControlState<*>) {
         val value = state.value.value as? String ?: return
         val errors = mutableListOf<String>()
-        
+
         if (value.isBlank()) {
             errorManager?.setFieldErrors(controlName, errors)
             return

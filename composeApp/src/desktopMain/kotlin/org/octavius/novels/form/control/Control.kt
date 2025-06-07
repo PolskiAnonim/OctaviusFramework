@@ -37,7 +37,7 @@ abstract class Control<T : Any>(
      * Każdy typ kontrolki ma własny validator dostosowany do typu danych.
      */
     protected abstract val validator: ControlValidator<T>
-    
+
     // Referencje do komponentów formularza - ustawiane przez setupFormReferences
     protected var formState: FormState? = null
     protected var formSchema: FormSchema? = null
@@ -65,7 +65,7 @@ abstract class Control<T : Any>(
         this.formSchema = formSchema
         this.errorManager = errorManager
         validator.setupFormReferences(formState, formSchema, errorManager)
-        
+
     }
 
     /**
@@ -169,15 +169,15 @@ abstract class Control<T : Any>(
     ) {
         val isVisible = validator.isControlVisible(this, controlName)
         val isRequired = validator.isControlRequired(this, controlName)
-        
+
         AnimatedVisibility(visible = isVisible) {
             if (hasStandardLayout) {
                 Column {
                     RenderNormalLabel(label, isRequired)
-                    
+
                     @Suppress("UNCHECKED_CAST")
                     Display(controlState as ControlState<T>, isRequired)
-                    
+
                     DisplayFieldErrors(controlName)
                 }
             } else {

@@ -43,11 +43,11 @@ class RepeatableValidator(
         control: Control<*>
     ) {
         val states = formState?.getAllStates() ?: emptyMap()
-        val controls = formSchema?.getAllControls() ?: emptyMap()
+        formSchema?.getAllControls() ?: emptyMap()
 
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
-        
+
         @Suppress("UNCHECKED_CAST")
         val repeatableControl = control as RepeatableControl
 
@@ -64,7 +64,7 @@ class RepeatableValidator(
 
         validationOptions?.let { options ->
             val errors = mutableListOf<String>()
-            
+
             // Sprawdź minimalną liczbę elementów
             options.minItems?.let { minItems ->
                 if (rows.size < minItems) {
@@ -95,7 +95,7 @@ class RepeatableValidator(
                     }
                 }
             }
-            
+
             errorManager?.setFieldErrors(controlName, errors)
             return
         }

@@ -18,9 +18,6 @@ import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
-import org.octavius.novels.form.component.ErrorManager
-import org.octavius.novels.form.component.FormSchema
-import org.octavius.novels.form.component.FormState
 
 /**
  * Bazowa klasa abstrakcyjna dla kontrolek listy rozwijanej (dropdown).

@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.form.ControlState
 
 /**
  * Zestaw funkcji renderujących wspólne elementy kontrolek.

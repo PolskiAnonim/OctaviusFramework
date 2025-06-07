@@ -6,7 +6,6 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
-import org.octavius.novels.form.component.ErrorManager
 
 /**
  * Kontrolka do przechowywania ukrytych wartości w formularzu.

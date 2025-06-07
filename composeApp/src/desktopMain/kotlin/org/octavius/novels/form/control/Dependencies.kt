@@ -34,8 +34,10 @@ enum class DependencyType {
 enum class ComparisonType {
     /** Wartość musi być jedną z podanych wartości */
     OneOf,
+
     /** Wartość musi być równa podanej wartości */
     Equals,
+
     /** Wartość musi być różna od podanej wartości */
     NotEquals
 }

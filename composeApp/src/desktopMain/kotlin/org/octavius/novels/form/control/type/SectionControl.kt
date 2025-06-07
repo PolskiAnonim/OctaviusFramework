@@ -108,7 +108,8 @@ class SectionControl(
                                                 .padding(horizontal = 4.dp)
                                         ) {
                                             group.forEach { ctrlName ->
-                                                val controls = this@SectionControl.formSchema?.getAllControls() ?: emptyMap()
+                                                val controls =
+                                                    this@SectionControl.formSchema?.getAllControls() ?: emptyMap()
                                                 val states = this@SectionControl.formState?.getAllStates() ?: emptyMap()
                                                 controls[ctrlName]?.let { control ->
                                                     states[ctrlName]?.let { controlState ->

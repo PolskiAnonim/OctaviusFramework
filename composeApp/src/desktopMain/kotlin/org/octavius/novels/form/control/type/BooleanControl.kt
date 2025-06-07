@@ -19,7 +19,6 @@ import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.RenderCheckboxLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
-import org.octavius.novels.form.component.ErrorManager
 
 /**
  * Kontrolka do wprowadzania wartości logicznych (prawda/fałsz).
@@ -73,7 +72,8 @@ class BooleanControl(
                         )
                     } else {
                         TriStateCheckbox(
-                            state = controlState.value.value?.let { ToggleableState(it) } ?: ToggleableState.Indeterminate,
+                            state = controlState.value.value?.let { ToggleableState(it) }
+                                ?: ToggleableState.Indeterminate,
                             onClick = {
                                 val mapping = mapOf(null to false, false to true, true to null)
                                 controlState.value.value = mapping[controlState.value.value]

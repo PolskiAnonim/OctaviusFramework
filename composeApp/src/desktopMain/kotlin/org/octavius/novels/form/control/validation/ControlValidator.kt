@@ -1,10 +1,10 @@
 package org.octavius.novels.form.control.validation
 
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.*
 import org.octavius.novels.form.component.ErrorManager
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormState
+import org.octavius.novels.form.control.*
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich walidatorów kontrolek formularza.
@@ -37,6 +37,7 @@ abstract class ControlValidator<T : Any> {
         this.formSchema = formSchema
         this.errorManager = errorManager
     }
+
     /**
      * Sprawdza czy kontrolka jest widoczna na podstawie zależności i hierarchii.
      *
@@ -107,7 +108,7 @@ abstract class ControlValidator<T : Any> {
         control: Control<*>,
         controlName: String
     ): Boolean {
-        val controls = formSchema?.getAllControls() ?: emptyMap()
+        formSchema?.getAllControls() ?: emptyMap()
         val states = formState?.getAllStates() ?: emptyMap()
         var isRequired = control.required == true
 

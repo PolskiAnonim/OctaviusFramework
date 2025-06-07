@@ -31,12 +31,12 @@ class TextListValidator(
 
             // Sprawdź walidację pojedynczych elementów
             options.itemValidation?.let { itemValidation ->
-                val textValidator = TextValidator(itemValidation)
+                TextValidator(itemValidation)
                 value.forEachIndexed { index, item ->
                     val tempErrors = mutableListOf<String>()
                     val itemState = ControlState<String>()
                     itemState.value.value = item
-                    
+
                     // Sprawdź walidację elementu bez używania ErrorManagera (tymczasowo)
                     if (item.isNotBlank()) {
                         itemValidation.minLength?.let { minLength ->
