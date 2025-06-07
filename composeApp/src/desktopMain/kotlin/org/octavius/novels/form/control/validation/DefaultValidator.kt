@@ -24,7 +24,7 @@ class DefaultValidator<T : Any> : ControlValidator<T>() {
      *
      * @param state stan kontrolki - nieużywany w tej implementacji
      */
-    override fun validateSpecific(state: ControlState<*>) {
+    override fun validateSpecific(controlName: String, state: ControlState<*>) {
         // Domyślna implementacja nie wykonuje dodatkowej walidacji
     }
 }

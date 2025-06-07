@@ -43,24 +43,39 @@ class RepeatableValidator(
         control: Control<*>
     ) {
         val states = formState?.getAllStates() ?: emptyMap()
+        val controls = formSchema?.getAllControls() ?: emptyMap()
 
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
+        
+        @Suppress("UNCHECKED_CAST")
+        val repeatableControl = control as RepeatableControl
+
+        // Najpierw waliduj kontrolki wewnątrz wierszy
+        for (row in rows) {
+            for ((fieldName, fieldControl) in repeatableControl.rowControls) {
+                val hierarchicalName = "$controlName[${row.id}].$fieldName"
+                val fieldState = states[hierarchicalName]
+                if (fieldState != null) {
+                    fieldControl.validateControl(hierarchicalName, fieldState)
+                }
+            }
+        }
 
         validationOptions?.let { options ->
+            val errors = mutableListOf<String>()
+            
             // Sprawdź minimalną liczbę elementów
             options.minItems?.let { minItems ->
                 if (rows.size < minItems) {
-                    state.error.value = "Wymagane minimum $minItems elementów"
-                    return
+                    errors.add("Wymagane minimum $minItems elementów")
                 }
             }
 
             // Sprawdź maksymalną liczbę elementów
             options.maxItems?.let { maxItems ->
                 if (rows.size > maxItems) {
-                    state.error.value = "Maksymalnie $maxItems elementów"
-                    return
+                    errors.add("Maksymalnie $maxItems elementów")
                 }
             }
 
@@ -75,18 +90,21 @@ class RepeatableValidator(
                     }
 
                     if (!seenValues.add(uniqueKey)) {
-                        state.error.value = "Duplikat wartości w wierszu ${index + 1}"
-                        return
+                        errors.add("Duplikat wartości w wierszu ${index + 1}")
+                        break
                     }
                 }
             }
+            
+            errorManager?.setFieldErrors(controlName, errors)
+            return
         }
 
-        // Wyczyść błąd jeśli walidacja przeszła
-        state.error.value = null
+        // Wyczyść błąd jeśli walidacja przeszła  
+        errorManager?.setFieldErrors(controlName, emptyList())
     }
 
-    override fun validateSpecific(state: ControlState<*>) {
+    override fun validateSpecific(controlName: String, state: ControlState<*>) {
         // Ta metoda nie jest używana - używamy nadpisanej validate() z dodatkowymi parametrami
     }
 }

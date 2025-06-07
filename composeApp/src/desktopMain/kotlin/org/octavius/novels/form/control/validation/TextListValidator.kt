@@ -9,24 +9,23 @@ class TextListValidator(
     private val validationOptions: TextListValidation? = null
 ) : ControlValidator<List<String>>() {
 
-    override fun validateSpecific(state: ControlState<*>) {
+    override fun validateSpecific(controlName: String, state: ControlState<*>) {
         @Suppress("UNCHECKED_CAST")
         val value = state.value.value as? List<String> ?: return
+        val errors = mutableListOf<String>()
 
         validationOptions?.let { options ->
             // Sprawdź minimalną liczbę elementów
             options.minItems?.let { minItems ->
                 if (value.size < minItems) {
-                    state.error.value = "Wymagane minimum $minItems elementów"
-                    return
+                    errors.add("Wymagane minimum $minItems elementów")
                 }
             }
 
             // Sprawdź maksymalną liczbę elementów
             options.maxItems?.let { maxItems ->
                 if (value.size > maxItems) {
-                    state.error.value = "Maksymalnie $maxItems elementów"
-                    return
+                    errors.add("Maksymalnie $maxItems elementów")
                 }
             }
 
@@ -34,18 +33,33 @@ class TextListValidator(
             options.itemValidation?.let { itemValidation ->
                 val textValidator = TextValidator(itemValidation)
                 value.forEachIndexed { index, item ->
+                    val tempErrors = mutableListOf<String>()
                     val itemState = ControlState<String>()
                     itemState.value.value = item
-                    textValidator.validateSpecific(itemState)
                     
-                    if (itemState.error.value != null) {
-                        state.error.value = "Element ${index + 1}: ${itemState.error.value}"
-                        return
+                    // Sprawdź walidację elementu bez używania ErrorManagera (tymczasowo)
+                    if (item.isNotBlank()) {
+                        itemValidation.minLength?.let { minLength ->
+                            if (item.length < minLength) {
+                                tempErrors.add("Element ${index + 1}: Minimalna długość to $minLength znaków")
+                            }
+                        }
+                        itemValidation.maxLength?.let { maxLength ->
+                            if (item.length > maxLength) {
+                                tempErrors.add("Element ${index + 1}: Maksymalna długość to $maxLength znaków")
+                            }
+                        }
+                        itemValidation.pattern?.let { pattern ->
+                            if (!pattern.matches(item)) {
+                                tempErrors.add("Element ${index + 1}: ${itemValidation.patternErrorMessage ?: "Nieprawidłowy format"}")
+                            }
+                        }
                     }
+                    errors.addAll(tempErrors)
                 }
             }
         }
 
-        state.error.value = null
+        errorManager?.setFieldErrors(controlName, errors)
     }
 }

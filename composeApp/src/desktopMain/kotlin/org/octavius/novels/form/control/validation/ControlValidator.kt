@@ -220,12 +220,12 @@ abstract class ControlValidator<T : Any> {
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd
         if (isRequired && isValueEmpty(state.value.value)) {
-            state.error.value = "To pole jest wymagane"
+            errorManager?.setFieldErrors(controlName, listOf("To pole jest wymagane"))
             return
         }
 
         // Wywołujemy dodatkową walidację specyficzną dla kontrolki
-        validateSpecific(state)
+        validateSpecific(controlName, state)
     }
 
     /**
@@ -237,9 +237,11 @@ abstract class ControlValidator<T : Any> {
      *
      * Domyślna implementacja nie wykonuje żadnej dodatkowej walidacji.
      *
+     * @param controlName nazwa kontrolki
      * @param state stan kontrolki do walidacji
      */
-    open fun validateSpecific(state: ControlState<*>) {
-        // Domyślnie nic nie robimy
+    open fun validateSpecific(controlName: String, state: ControlState<*>) {
+        // Domyślnie czyścimy błędy jeśli nie ma problemów
+        errorManager?.clearFieldErrors(controlName)
     }
 }

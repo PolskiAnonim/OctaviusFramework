@@ -65,6 +65,7 @@ abstract class Control<T : Any>(
         this.formSchema = formSchema
         this.errorManager = errorManager
         validator.setupFormReferences(formState, formSchema, errorManager)
+        
     }
 
     /**
@@ -178,7 +179,6 @@ abstract class Control<T : Any>(
                     Display(controlState as ControlState<T>, isRequired)
                     
                     DisplayFieldErrors(controlName)
-                    RenderError(controlState) // Stary system tymczasowo
                 }
             } else {
                 @Suppress("UNCHECKED_CAST")

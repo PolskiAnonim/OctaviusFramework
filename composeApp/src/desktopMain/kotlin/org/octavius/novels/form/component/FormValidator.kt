@@ -25,19 +25,16 @@ open class FormValidator(protected val errorManager: ErrorManager) {
      * @return true jeśli wszystkie pola są poprawne
      */
     fun validateFields(controls: Map<String, Control<*>>, states: Map<String, ControlState<*>>): Boolean {
-        var isValid = true
-
+        // Wyczyść poprzednie błędy pól
+        errorManager.clearFieldErrors()
+        
         for ((controlName, control) in controls) {
             val state = states[controlName]!!
-            state.error.value = null
             control.validateControl(controlName, state)
-
-            if (state.error.value != null) {
-                isValid = false
-            }
         }
 
-        return isValid
+        // Sprawdź czy są jakieś błędy pól
+        return !errorManager.hasFieldErrors()
     }
 
     /**

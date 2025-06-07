@@ -9,11 +9,12 @@ class TextValidator(
     private val validationOptions: TextValidation? = null
 ) : ControlValidator<String>() {
 
-    override fun validateSpecific(state: ControlState<*>) {
+    override fun validateSpecific(controlName: String, state: ControlState<*>) {
         val value = state.value.value as? String ?: return
+        val errors = mutableListOf<String>()
         
         if (value.isBlank()) {
-            state.error.value = null
+            errorManager?.setFieldErrors(controlName, errors)
             return
         }
 
@@ -21,28 +22,25 @@ class TextValidator(
             // Sprawdź minimalną długość
             options.minLength?.let { minLength ->
                 if (value.length < minLength) {
-                    state.error.value = "Minimalna długość to $minLength znaków"
-                    return
+                    errors.add("Minimalna długość to $minLength znaków")
                 }
             }
 
             // Sprawdź maksymalną długość
             options.maxLength?.let { maxLength ->
                 if (value.length > maxLength) {
-                    state.error.value = "Maksymalna długość to $maxLength znaków"
-                    return
+                    errors.add("Maksymalna długość to $maxLength znaków")
                 }
             }
 
             // Sprawdź wzorzec
             options.pattern?.let { pattern ->
                 if (!pattern.matches(value)) {
-                    state.error.value = options.patternErrorMessage ?: "Nieprawidłowy format"
-                    return
+                    errors.add(options.patternErrorMessage ?: "Nieprawidłowy format")
                 }
             }
         }
 
-        state.error.value = null
+        errorManager?.setFieldErrors(controlName, errors)
     }
 }

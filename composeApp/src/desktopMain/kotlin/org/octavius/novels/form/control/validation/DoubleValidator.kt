@@ -11,23 +11,22 @@ class DoubleValidator(
     private val validationOptions: DoubleValidation? = null
 ) : ControlValidator<Double>() {
 
-    override fun validateSpecific(state: ControlState<*>) {
+    override fun validateSpecific(controlName: String, state: ControlState<*>) {
         val value = state.value.value as? Double ?: return
+        val errors = mutableListOf<String>()
 
         validationOptions?.let { options ->
             // Sprawdź wartość minimalną
             options.min?.let { min ->
                 if (value < min) {
-                    state.error.value = "Wartość musi być większa lub równa $min"
-                    return
+                    errors.add("Wartość musi być większa lub równa $min")
                 }
             }
 
             // Sprawdź wartość maksymalną
             options.max?.let { max ->
                 if (value > max) {
-                    state.error.value = "Wartość musi być mniejsza lub równa $max"
-                    return
+                    errors.add("Wartość musi być mniejsza lub równa $max")
                 }
             }
 
@@ -36,8 +35,7 @@ class DoubleValidator(
                 val multiplier = 10.0.pow(decimalPlaces)
                 val rounded = round(value * multiplier) / multiplier
                 if (value != rounded) {
-                    state.error.value = "Maksymalnie $decimalPlaces miejsc po przecinku"
-                    return
+                    errors.add("Maksymalnie $decimalPlaces miejsc po przecinku")
                 }
             }
 
@@ -45,12 +43,11 @@ class DoubleValidator(
             options.step?.let { step ->
                 val remainder = value % step
                 if (remainder != 0.0 && (remainder - step).let { kotlin.math.abs(it) } > 1e-10) {
-                    state.error.value = "Wartość musi być wielokrotnością $step"
-                    return
+                    errors.add("Wartość musi być wielokrotnością $step")
                 }
             }
         }
 
-        state.error.value = null
+        errorManager?.setFieldErrors(controlName, errors)
     }
 }
