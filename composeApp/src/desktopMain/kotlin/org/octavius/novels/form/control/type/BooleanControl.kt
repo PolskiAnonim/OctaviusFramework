@@ -42,12 +42,7 @@ class BooleanControl(
     override val validator: ControlValidator<Boolean> = DefaultValidator()
 
     @Composable
-    override fun Display(
-        controlState: ControlState<Boolean>,
-        isRequired: Boolean
-    ) {
-
-
+    override fun Display(controlName: String, controlState: ControlState<Boolean>, isRequired: Boolean) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,10 +79,8 @@ class BooleanControl(
                     RenderCheckboxLabel(label, isRequired)
                 }
 
-                //DisplayFieldErrors(controlName)
+                DisplayFieldErrors(controlName)
             }
         }
     }
-
-
 }

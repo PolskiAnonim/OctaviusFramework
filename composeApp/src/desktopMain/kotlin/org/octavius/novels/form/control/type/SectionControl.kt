@@ -43,10 +43,7 @@ class SectionControl(
     }
 
     @Composable
-    override fun Display(
-        controlState: ControlState<Unit>,
-        isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<Unit>, isRequired: Boolean) {
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(

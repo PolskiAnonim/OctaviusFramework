@@ -35,10 +35,7 @@ class DoubleControl(
     override val validator: ControlValidator<Double> = DoubleValidator(validationOptions)
 
     @Composable
-    override fun Display(
-        controlState: ControlState<Double>,
-        isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<Double>, isRequired: Boolean) {
         var textValue by remember {
             mutableStateOf(controlState.value.value?.toString() ?: "")
         }

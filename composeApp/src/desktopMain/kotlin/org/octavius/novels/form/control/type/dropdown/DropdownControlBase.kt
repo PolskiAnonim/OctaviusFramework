@@ -59,10 +59,7 @@ abstract class DropdownControlBase<T : Any>(
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    override fun Display(
-        controlState: ControlState<T>,
-        isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<T>, isRequired: Boolean) {
         var expanded by remember { mutableStateOf(false) }
         var searchQuery by remember { mutableStateOf("") }
         var options by remember { mutableStateOf<List<DropdownOption<T>>>(emptyList()) }
@@ -232,7 +229,7 @@ abstract class DropdownControlBase<T : Any>(
                     }
                 }
             }
-            // Błędy są renderowane gdzie indziej dla kontrolek z hasStandardLayout = false
+            DisplayFieldErrors(controlName)
         }
     }
 }

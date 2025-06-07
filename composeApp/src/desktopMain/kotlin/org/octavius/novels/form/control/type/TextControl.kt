@@ -38,10 +38,7 @@ class TextControl(
 
 
     @Composable
-    override fun Display(
-        controlState: ControlState<String>,
-        isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<String>, isRequired: Boolean) {
         OutlinedTextField(
             value = controlState.value.value.orEmpty(),
             onValueChange = {

@@ -45,9 +45,7 @@ class TextListControl(
     }
 
     @Composable
-    override fun Display(
-        controlState: ControlState<List<String>>, isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<List<String>>, isRequired: Boolean) {
 
         var currentList by remember { mutableStateOf(controlState.value.value ?: listOf("")) }
         var newItemText by remember { mutableStateOf("") }

@@ -36,10 +36,7 @@ class IntegerControl(
 
 
     @Composable
-    override fun Display(
-        controlState: ControlState<Int>,
-        isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<Int>, isRequired: Boolean) {
         val textValue = controlState.value.value?.toString().orEmpty()
 
         OutlinedTextField(

@@ -175,13 +175,13 @@ abstract class Control<T : Any>(
                     RenderNormalLabel(label, isRequired)
 
                     @Suppress("UNCHECKED_CAST")
-                    Display(controlState as ControlState<T>, isRequired)
+                    Display(controlName, controlState as ControlState<T>, isRequired)
 
                     DisplayFieldErrors(controlName)
                 }
             } else {
                 @Suppress("UNCHECKED_CAST")
-                Display(controlState as ControlState<T>, isRequired)
+                Display(controlName,controlState as ControlState<T>, isRequired)
             }
         }
     }
@@ -192,6 +192,7 @@ abstract class Control<T : Any>(
      */
     @Composable
     protected abstract fun Display(
+        controlName: String,
         controlState: ControlState<T>,
         isRequired: Boolean
     )

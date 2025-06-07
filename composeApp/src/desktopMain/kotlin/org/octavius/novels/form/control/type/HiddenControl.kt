@@ -25,10 +25,7 @@ class HiddenControl<T : Any>(columnInfo: ColumnInfo?) : Control<T>(
 
 
     @Composable
-    override fun Display(
-        controlState: ControlState<T>,
-        isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<T>, isRequired: Boolean) {
         //Brak widocznej zawartości
     }
 }

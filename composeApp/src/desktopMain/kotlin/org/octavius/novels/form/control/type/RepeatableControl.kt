@@ -121,10 +121,7 @@ class RepeatableControl(
     }
 
     @Composable
-    override fun Display(
-        controlState: ControlState<List<RepeatableRow>>,
-        isRequired: Boolean
-    ) {
+    override fun Display(controlName: String, controlState: ControlState<List<RepeatableRow>>, isRequired: Boolean) {
 
         Column(modifier = Modifier.fillMaxWidth()) {
             // Nagłówek z przyciskiem dodawania
@@ -133,7 +130,7 @@ class RepeatableControl(
                 onAddClick = {
                     val currentRows = controlState.value.value!!.toMutableList()
                     val newIndex = currentRows.size
-                    val newRow = createRow(newIndex, controlName!!, rowControls, formState!!)
+                    val newRow = createRow(newIndex, controlName, rowControls, formState)
                     currentRows.add(newRow)
                     controlState.value.value = currentRows
                     updateState(controlState)
