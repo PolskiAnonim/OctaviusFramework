@@ -58,11 +58,9 @@ class DoubleControl(
                 when {
                     newText.isEmpty() -> {
                         controlState.value.value = null
-                        controlState.error.value = null
                     }
 
                     newText.matches(Regex("^\\d*[.,]?\\d*$")) -> {
-                        controlState.error.value = null
                         val cleanText = newText.replace(",", ".")
                         cleanText.toDoubleOrNull()?.let { doubleValue ->
                             if (doubleValue.isFinite()) {
@@ -72,12 +70,11 @@ class DoubleControl(
                     }
 
                     else -> {
-                        controlState.error.value = "Wartość musi być liczbą"
+                        // Błędy parsowania będą obsłużone przez walidację
                     }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            isError = controlState.error.value != null,
             singleLine = true
         )
     }

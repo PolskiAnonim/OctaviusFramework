@@ -52,14 +52,12 @@ class IntegerControl(
                     } else {
                         controlState.value.value = newValue.toInt()
                     }
-                    controlState.error.value = null
                 } catch (e: NumberFormatException) {
-                    controlState.error.value = "Wartość musi być liczbą całkowitą"
+                    // Błędy parsowania będą obsłużone przez walidację
                 }
                 controlState.dirty.value = true
             },
             modifier = Modifier.fillMaxWidth(),
-            isError = controlState.error.value != null,
             singleLine = true
         )
     }

@@ -15,11 +15,12 @@ import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.RenderError
 import org.octavius.novels.form.control.RenderNormalLabel
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 import org.octavius.novels.form.component.ErrorManager
+import org.octavius.novels.form.component.FormSchema
+import org.octavius.novels.form.component.FormState
 
 /**
  * Bazowa klasa abstrakcyjna dla kontrolek listy rozwijanej (dropdown).
@@ -234,7 +235,7 @@ abstract class DropdownControlBase<T : Any>(
                     }
                 }
             }
-            RenderError(controlState)
+            // Błędy są renderowane gdzie indziej dla kontrolek z hasStandardLayout = false
         }
     }
 }

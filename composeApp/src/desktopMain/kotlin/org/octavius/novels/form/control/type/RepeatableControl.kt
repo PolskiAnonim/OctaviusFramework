@@ -18,7 +18,6 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.component.FormState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.RenderError
 import org.octavius.novels.form.control.type.repeatable.RepeatableResultValue
 import org.octavius.novels.form.control.type.repeatable.RepeatableRow
 import org.octavius.novels.form.control.type.repeatable.createRow
@@ -182,8 +181,7 @@ class RepeatableControl(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Komunikat o błędzie
-            RenderError(controlState)
+            // Komunikaty o błędach są renderowane przez DisplayFieldErrors w Control.Render()
         }
     }
 

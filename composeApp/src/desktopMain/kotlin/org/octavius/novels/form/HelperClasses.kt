@@ -110,12 +110,10 @@ data class ControlResultData(
  * @param T typ danych przechowywanych przez kontrolkę
  * @param value bieżąca wartość kontrolki (edytowana przez użytkownika)
  * @param initValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
- * @param error komunikat błędu walidacji (null jeśli brak błędu)
  * @param dirty czy wartość została zmieniona od załadowania
  */
 data class ControlState<T>(
     val value: MutableState<T?> = mutableStateOf(null),
     val initValue: MutableState<T?> = mutableStateOf(null),
-    val error: MutableState<String?> = mutableStateOf(null),
     val dirty: MutableState<Boolean> = mutableStateOf(false),
 )

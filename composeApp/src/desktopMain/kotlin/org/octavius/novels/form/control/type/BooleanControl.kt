@@ -17,7 +17,6 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.control.Control
 import org.octavius.novels.form.control.ControlDependency
 import org.octavius.novels.form.control.RenderCheckboxLabel
-import org.octavius.novels.form.control.RenderError
 import org.octavius.novels.form.control.validation.ControlValidator
 import org.octavius.novels.form.control.validation.DefaultValidator
 import org.octavius.novels.form.component.ErrorManager
@@ -85,7 +84,7 @@ class BooleanControl(
                     RenderCheckboxLabel(label, isRequired)
                 }
 
-                RenderError(controlState)
+                //DisplayFieldErrors(controlName)
             }
         }
     }
