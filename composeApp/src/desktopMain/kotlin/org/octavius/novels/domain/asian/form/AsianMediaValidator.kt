@@ -2,10 +2,9 @@ package org.octavius.novels.domain.asian.form
 
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.form.ControlResultData
-import org.octavius.novels.form.component.ErrorManager
 import org.octavius.novels.form.component.FormValidator
 
-class AsianMediaValidator(private val entityId: Int? = null, errorManager: ErrorManager) : FormValidator(errorManager) {
+class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
         return validateTitleDuplication(formData) && validateTitlesAgainstDatabase(formData)
     }

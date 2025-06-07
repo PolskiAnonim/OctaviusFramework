@@ -41,6 +41,7 @@ abstract class FormHandler(protected val entityId: Int? = null) {
         formSchema.getAllControls().forEach { (controlName, control) ->
             control.setupFormReferences(formState, formSchema, errorManager, controlName)
         }
+        formValidator.setupFormReferences(formState, formSchema, errorManager)
     }
 
 
@@ -68,7 +69,7 @@ abstract class FormHandler(protected val entityId: Int? = null) {
      * Tworzy validator dla formularza. Można przesłonić dla niestandardowych reguł walidacji.
      */
     protected open fun createFormValidator(): FormValidator {
-        return FormValidator(errorManager)
+        return FormValidator()
     }
 
     /**
@@ -114,7 +115,7 @@ abstract class FormHandler(protected val entityId: Int? = null) {
     private fun saveForm(): Boolean {
         errorManager.clearAll()
 
-        if (!formValidator.validateFields(formSchema.getAllControls(), formState.getAllStates())) return false
+        if (!formValidator.validateFields()) return false
 
         val rawFormData = formState.collectFormData(formSchema)
 
