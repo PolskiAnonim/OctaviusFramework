@@ -62,6 +62,9 @@ class RepeatableControl(
         controlName: String
     ) {
         super.setupFormReferences(formState, formSchema, errorManager, controlName)
+        rowControls.values.forEach { rowControl ->
+            rowControl.setupFormReferences(formState, formSchema, errorManager, "")
+        }
         this.controlName = controlName
     }
 
@@ -73,12 +76,12 @@ class RepeatableControl(
     }
 
     override val validator: ControlValidator<List<RepeatableRow>> = RepeatableValidator(
-        validationOptions as? RepeatableValidation
+        validationOptions
     )
 
-    override fun copyInitToValue(init: List<RepeatableRow>): List<RepeatableRow> {
+    override fun copyInitToValue(value: List<RepeatableRow>): List<RepeatableRow> {
         // Dla globalnego stanu nie trzeba kopiować stanów - są już w FormState
-        return init.map { RepeatableRow(id = it.id, index = it.index) }
+        return value.map { RepeatableRow(id = it.id, index = it.index) }
     }
 
     override fun setInitValue(value: Any?): ControlState<List<RepeatableRow>> {
@@ -93,7 +96,6 @@ class RepeatableControl(
             initialRow.forEach { (fieldName, fieldValue) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val control = rowControls[fieldName]!!
-                control.setupFormReferences(formState, formSchema, errorManager, hierarchicalName)
                 val fieldState = control.setInitValue(fieldValue)
                 formState.setControlState(hierarchicalName, fieldState)
             }
