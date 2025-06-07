@@ -109,8 +109,8 @@ class SectionControl(
                                         ) {
                                             group.forEach { ctrlName ->
                                                 val controls =
-                                                    this@SectionControl.formSchema?.getAllControls() ?: emptyMap()
-                                                val states = this@SectionControl.formState?.getAllStates() ?: emptyMap()
+                                                    this@SectionControl.formSchema.getAllControls()
+                                                val states = this@SectionControl.formState.getAllStates()
                                                 controls[ctrlName]?.let { control ->
                                                     states[ctrlName]?.let { controlState ->
                                                         control.Render(ctrlName, controlState)
@@ -124,8 +124,8 @@ class SectionControl(
                             } else {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     ctrls.forEach { ctrlName ->
-                                        val controls = this@SectionControl.formSchema?.getAllControls() ?: emptyMap()
-                                        val states = this@SectionControl.formState?.getAllStates() ?: emptyMap()
+                                        val controls = this@SectionControl.formSchema.getAllControls()
+                                        val states = this@SectionControl.formState.getAllStates()
                                         controls[ctrlName]?.let { control ->
                                             states[ctrlName]?.let { controlState ->
                                                 control.Render(ctrlName, controlState)

@@ -11,9 +11,9 @@ import org.octavius.novels.form.ControlResultData
  */
 open class FormValidator() {
 
-    protected var formState: FormState? = null
-    protected var formSchema: FormSchema? = null
-    protected var errorManager: ErrorManager? = null
+    protected lateinit var formState: FormState
+    protected lateinit var formSchema: FormSchema
+    protected lateinit var errorManager: ErrorManager
 
     fun setupFormReferences(formState: FormState, formSchema: FormSchema, errorManager: ErrorManager) {
         this.formState = formState
@@ -35,15 +35,15 @@ open class FormValidator() {
      */
     fun validateFields(): Boolean {
         // Wyczyść poprzednie błędy pól
-        errorManager!!.clearFieldErrors()
+        errorManager.clearFieldErrors()
 
-        for ((controlName, control) in formSchema!!.getAllControls()) {
-            val state = formState!!.getControlState(controlName)!!
+        for ((controlName, control) in formSchema.getAllControls()) {
+            val state = formState.getControlState(controlName)!!
             control.validateControl(controlName, state)
         }
 
         // Sprawdź czy są jakieś błędy pól
-        return !errorManager!!.hasFieldErrors()
+        return !errorManager.hasFieldErrors()
     }
 
     /**

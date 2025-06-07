@@ -36,6 +36,6 @@ class IntegerValidator(
             }
         }
 
-        errorManager?.setFieldErrors(controlName, errors)
+        errorManager.setFieldErrors(controlName, errors)
     }
 }

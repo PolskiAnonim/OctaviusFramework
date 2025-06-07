@@ -93,9 +93,9 @@ class RepeatableControl(
             initialRow.forEach { (fieldName, fieldValue) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val control = rowControls[fieldName]!!
-                control.setupFormReferences(formState!!, formSchema!!, errorManager!!, hierarchicalName)
+                control.setupFormReferences(formState, formSchema, errorManager, hierarchicalName)
                 val fieldState = control.setInitValue(fieldValue)
-                formState!!.setControlState(hierarchicalName, fieldState)
+                formState.setControlState(hierarchicalName, fieldState)
             }
 
             row
@@ -323,7 +323,7 @@ class RepeatableControl(
                 rowControls[fieldName]?.let { control ->
                     val hierarchicalName = "$controlName[${row.id}].$fieldName"
                     // Pobierz stan bezpośrednio z FormState zamiast z przekazanej mapy
-                    val state = this@RepeatableControl.formState!!.getControlState(hierarchicalName)
+                    val state = this@RepeatableControl.formState.getControlState(hierarchicalName)
                     if (state != null) {
                         // Używamy globalnego kontekstu - states jest teraz reactive
                         control.Render(
@@ -346,7 +346,7 @@ class RepeatableControl(
     ): Any? {
         @Suppress("UNCHECKED_CAST")
         val controlState = state as ControlState<List<RepeatableRow>>
-        val states = formState!!.getAllStates()
+        val states = formState.getAllStates()
         requireNotNull(controlName) { "controlName nie został ustawiony dla RepeatableControl" }
 
         val (newRows, deletedRows, changedRows) = getRowTypes(
@@ -385,7 +385,7 @@ class RepeatableControl(
 
         // Wyczyść stany usuniętych wierszy które były oryginalne
         deletedRows.forEach { row ->
-            formState!!.removeControlStatesWithPrefix("$controlName[${row.id}]")
+            formState.removeControlStatesWithPrefix("$controlName[${row.id}]")
         }
 
         return RepeatableResultValue(

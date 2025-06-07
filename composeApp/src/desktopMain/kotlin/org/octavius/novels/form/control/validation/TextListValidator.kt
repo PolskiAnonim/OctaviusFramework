@@ -60,6 +60,6 @@ class TextListValidator(
             }
         }
 
-        errorManager?.setFieldErrors(controlName, errors)
+        errorManager.setFieldErrors(controlName, errors)
     }
 }

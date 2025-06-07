@@ -21,9 +21,9 @@ import org.octavius.novels.form.control.*
  * @param T typ danych przechowywanych przez kontrolkę
  */
 abstract class ControlValidator<T : Any> {
-    protected var formState: FormState? = null
-    protected var formSchema: FormSchema? = null
-    protected var errorManager: ErrorManager? = null
+    protected lateinit var formState: FormState
+    protected lateinit var formSchema: FormSchema
+    protected lateinit var errorManager: ErrorManager
 
     /**
      * Ustawia referencje do komponentów formularza dla walidatora.
@@ -55,8 +55,8 @@ abstract class ControlValidator<T : Any> {
         control: Control<*>,
         controlName: String
     ): Boolean {
-        val controls = formSchema?.getAllControls() ?: emptyMap()
-        val states = formState?.getAllStates() ?: emptyMap()
+        val controls = formSchema.getAllControls()
+        val states = formState.getAllStates()
         // Jeśli kontrolka ma rodzica, najpierw sprawdź czy rodzic jest widoczny
         control.parentControl?.let { parentName ->
             val parentControl = controls[parentName] ?: return false
@@ -108,8 +108,8 @@ abstract class ControlValidator<T : Any> {
         control: Control<*>,
         controlName: String
     ): Boolean {
-        formSchema?.getAllControls() ?: emptyMap()
-        val states = formState?.getAllStates() ?: emptyMap()
+        formSchema.getAllControls()
+        val states = formState.getAllStates()
         var isRequired = control.required == true
 
         // Sprawdzamy zależności typu Required
@@ -221,7 +221,7 @@ abstract class ControlValidator<T : Any> {
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd
         if (isRequired && isValueEmpty(state.value.value)) {
-            errorManager?.setFieldErrors(controlName, listOf("To pole jest wymagane"))
+            errorManager.setFieldErrors(controlName, listOf("To pole jest wymagane"))
             return
         }
 
@@ -243,6 +243,6 @@ abstract class ControlValidator<T : Any> {
      */
     open fun validateSpecific(controlName: String, state: ControlState<*>) {
         // Domyślnie czyścimy błędy jeśli nie ma problemów
-        errorManager?.clearFieldErrors(controlName)
+        errorManager.clearFieldErrors(controlName)
     }
 }

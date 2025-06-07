@@ -42,8 +42,8 @@ class RepeatableValidator(
         state: ControlState<*>,
         control: Control<*>
     ) {
-        val states = formState?.getAllStates() ?: emptyMap()
-        formSchema?.getAllControls() ?: emptyMap()
+        val states = formState.getAllStates()
+        formSchema.getAllControls()
 
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
@@ -96,12 +96,12 @@ class RepeatableValidator(
                 }
             }
 
-            errorManager?.setFieldErrors(controlName, errors)
+            errorManager.setFieldErrors(controlName, errors)
             return
         }
 
         // Wyczyść błąd jeśli walidacja przeszła  
-        errorManager?.setFieldErrors(controlName, emptyList())
+        errorManager.setFieldErrors(controlName, emptyList())
     }
 
     override fun validateSpecific(controlName: String, state: ControlState<*>) {

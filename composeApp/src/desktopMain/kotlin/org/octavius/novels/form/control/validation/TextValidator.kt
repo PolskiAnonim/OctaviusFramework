@@ -14,7 +14,7 @@ class TextValidator(
         val errors = mutableListOf<String>()
 
         if (value.isBlank()) {
-            errorManager?.setFieldErrors(controlName, errors)
+            errorManager.setFieldErrors(controlName, errors)
             return
         }
 
@@ -41,6 +41,6 @@ class TextValidator(
             }
         }
 
-        errorManager?.setFieldErrors(controlName, errors)
+        errorManager.setFieldErrors(controlName, errors)
     }
 }

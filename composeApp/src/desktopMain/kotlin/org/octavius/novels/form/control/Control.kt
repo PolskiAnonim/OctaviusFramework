@@ -39,9 +39,9 @@ abstract class Control<T : Any>(
     protected abstract val validator: ControlValidator<T>
 
     // Referencje do komponentów formularza - ustawiane przez setupFormReferences
-    protected var formState: FormState? = null
-    protected var formSchema: FormSchema? = null
-    protected var errorManager: ErrorManager? = null
+    protected lateinit var formState: FormState
+    protected lateinit var formSchema: FormSchema
+    protected lateinit var errorManager: ErrorManager
 
     /**
      * Ustawia relacje hierarchiczne między kontrolkami.
@@ -150,11 +150,10 @@ abstract class Control<T : Any>(
      */
     @Composable
     protected fun DisplayFieldErrors(controlName: String) {
-        errorManager?.let { em ->
-            val fieldErrors = em.getFieldErrors(controlName)
-            fieldErrors.forEach { error ->
-                RenderFieldError(error)
-            }
+        val fieldErrors = errorManager.getFieldErrors(controlName)
+
+        fieldErrors.forEach { error ->
+            RenderFieldError(error)
         }
     }
 

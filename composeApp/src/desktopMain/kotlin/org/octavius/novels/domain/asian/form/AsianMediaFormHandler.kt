@@ -16,6 +16,6 @@ class AsianMediaFormHandler(entityId: Int?) : FormHandler(entityId) {
     }
 
     override fun createFormValidator(): FormValidator {
-        return AsianMediaValidator(entityId, errorManager)
+        return AsianMediaValidator(entityId)
     }
 }
