@@ -39,10 +39,13 @@ class DoubleControl(
         var textValue by remember {
             mutableStateOf(controlState.value.value?.toString() ?: "")
         }
+        var hasInvalidInput by remember { mutableStateOf(false) }
 
-        LaunchedEffect(controlState.value.value) {
-            if (!controlState.dirty.value) {
-                textValue = controlState.value.value?.toString() ?: ""
+        LaunchedEffect(hasInvalidInput) {
+            if (hasInvalidInput) {
+                errorManager.setFieldErrors(controlName, listOf("Nieprawidłowy format liczby"))
+            } else {
+                errorManager.setFieldErrors(controlName, listOf())
             }
         }
 
@@ -52,22 +55,17 @@ class DoubleControl(
                 textValue = newText
                 controlState.dirty.value = true
 
-                when {
-                    newText.isEmpty() -> {
-                        controlState.value.value = null
-                    }
-
-                    newText.matches(Regex("^\\d*[.,]?\\d*$")) -> {
-                        val cleanText = newText.replace(",", ".")
-                        cleanText.toDoubleOrNull()?.let { doubleValue ->
-                            if (doubleValue.isFinite()) {
-                                controlState.value.value = doubleValue
-                            }
-                        }
-                    }
-
-                    else -> {
-                        // Błędy parsowania będą obsłużone przez walidację
+                if (newText.isEmpty()) {
+                    controlState.value.value = null
+                    hasInvalidInput = false
+                } else {
+                    val cleanText = newText.replace(",", ".")
+                    val doubleValue = cleanText.toDoubleOrNull()
+                    if (doubleValue != null && doubleValue.isFinite()) {
+                        controlState.value.value = doubleValue
+                        hasInvalidInput = false
+                    } else {
+                        hasInvalidInput = true
                     }
                 }
             },

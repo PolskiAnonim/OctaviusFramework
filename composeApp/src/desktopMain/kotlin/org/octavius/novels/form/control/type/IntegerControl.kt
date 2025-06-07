@@ -2,7 +2,7 @@ package org.octavius.novels.form.control.type
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import org.octavius.novels.form.ColumnInfo
 import org.octavius.novels.form.ControlState
@@ -37,21 +37,36 @@ class IntegerControl(
 
     @Composable
     override fun Display(controlName: String, controlState: ControlState<Int>, isRequired: Boolean) {
-        val textValue = controlState.value.value?.toString().orEmpty()
+        var textValue by remember {
+            mutableStateOf(controlState.value.value?.toString() ?: "")
+        }
+        var hasInvalidInput by remember { mutableStateOf(false) }
+
+        LaunchedEffect(hasInvalidInput) {
+            if (hasInvalidInput) {
+                errorManager.setFieldErrors(controlName, listOf("Nieprawidłowy format liczby"))
+            } else {
+                errorManager.setFieldErrors(controlName, listOf())
+            }
+        }
 
         OutlinedTextField(
             value = textValue,
-            onValueChange = { newValue ->
-                try {
-                    if (newValue.isEmpty()) {
-                        controlState.value.value = null
-                    } else {
-                        controlState.value.value = newValue.toInt()
-                    }
-                } catch (e: NumberFormatException) {
-                    // Błędy parsowania będą obsłużone przez walidację
-                }
+            onValueChange = { newText ->
+                textValue = newText
                 controlState.dirty.value = true
+
+                if (newText.isEmpty()) {
+                    controlState.value.value = null
+                    hasInvalidInput = false
+                } else {
+                    try {
+                        controlState.value.value = newText.toInt()
+                        hasInvalidInput = false
+                    } catch (e: NumberFormatException) {
+                        hasInvalidInput = true
+                    }
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
