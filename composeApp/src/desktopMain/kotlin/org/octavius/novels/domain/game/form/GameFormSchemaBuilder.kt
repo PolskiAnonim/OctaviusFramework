@@ -7,6 +7,8 @@ import org.octavius.novels.form.component.FormSchemaBuilder
 import org.octavius.novels.form.control.base.ComparisonType
 import org.octavius.novels.form.control.base.ControlDependency
 import org.octavius.novels.form.control.base.DependencyType
+import org.octavius.novels.form.control.base.DoubleValidation
+import org.octavius.novels.form.control.base.IntegerValidation
 import org.octavius.novels.form.control.type.*
 import org.octavius.novels.form.control.type.container.SectionControl
 import org.octavius.novels.form.control.type.primitive.BooleanControl
@@ -65,6 +67,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 "playTimeHours" to DoubleControl(
                     ColumnInfo("play_time", "play_time_hours"),
                     "Czas gry (godziny)",
+                    validationOptions = DoubleValidation(min = 0.0, decimalPlaces = 2)
                 ),
                 "completionCount" to IntegerControl(
                     ColumnInfo("play_time", "completion_count"),
@@ -77,7 +80,8 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                             dependencyType = DependencyType.Visible,
                             comparisonType = ComparisonType.OneOf
                         )
-                    )
+                    ),
+                    validationOptions = IntegerValidation(min = 0)
                 ),
                 "playTimeSection" to SectionControl(
                     ctrls = listOf("playTimeHours", "completionCount"),
@@ -101,16 +105,19 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 // Sekcja ocen
                 "storyRating" to IntegerControl(
                     ColumnInfo("ratings", "story_rating"),
-                    "Ocena fabuły (1-10)"
+                    "Ocena fabuły (1-10)",
+                    validationOptions = IntegerValidation(min = 0, max = 10)
                 ),
                 "gameplayRating" to IntegerControl(
                     ColumnInfo("ratings", "gameplay_rating"),
                     "Ocena rozgrywki (1-10)",
-                    required = true
+                    required = true,
+                    validationOptions = IntegerValidation(min = 0, max = 10)
                 ),
                 "atmosphereRating" to IntegerControl(
                     ColumnInfo("ratings", "atmosphere_rating"),
-                    "Ocena atmosfery (1-10)"
+                    "Ocena atmosfery (1-10)",
+                    validationOptions = IntegerValidation(min = 0, max = 10)
                 ),
                 "ratingsSection" to SectionControl(
                     ctrls = listOf("storyRating", "gameplayRating", "atmosphereRating"),
