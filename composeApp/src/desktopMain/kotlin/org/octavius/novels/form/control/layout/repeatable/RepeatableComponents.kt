@@ -1,4 +1,4 @@
-package org.octavius.novels.form.control.type.repeatable
+package org.octavius.novels.form.control.layout.repeatable
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -14,7 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.component.FormState
-import org.octavius.novels.form.control.Control
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.type.repeatable.RepeatableRow
 
 @Composable
 fun RepeatableHeader(

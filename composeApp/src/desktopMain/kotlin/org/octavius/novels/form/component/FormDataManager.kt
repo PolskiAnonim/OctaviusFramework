@@ -1,7 +1,7 @@
 package org.octavius.novels.form.component
 
 import org.octavius.novels.database.DatabaseManager
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation

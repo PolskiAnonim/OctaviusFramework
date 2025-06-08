@@ -1,9 +1,12 @@
-package org.octavius.novels.form.control.validation
+package org.octavius.novels.form.control.validator.repeatable
 
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.type.RepeatableControl
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.base.RepeatableValidation
+import org.octavius.novels.form.control.type.repeatable.RepeatableControl
 import org.octavius.novels.form.control.type.repeatable.RepeatableRow
+import kotlin.collections.iterator
 
 /**
  * Walidator dla kontrolek typu RepeatableControl.
@@ -100,7 +103,7 @@ class RepeatableValidator(
             return
         }
 
-        // Wyczyść błąd jeśli walidacja przeszła  
+        // Wyczyść błąd jeśli walidacja przeszła
         errorManager.setFieldErrors(controlName, emptyList())
     }
 

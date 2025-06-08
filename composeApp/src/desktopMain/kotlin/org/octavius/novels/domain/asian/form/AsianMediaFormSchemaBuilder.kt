@@ -3,13 +3,24 @@ package org.octavius.novels.domain.asian.form
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
 import org.octavius.novels.domain.PublicationType
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormSchemaBuilder
-import org.octavius.novels.form.control.*
+import org.octavius.novels.form.control.base.ComparisonType
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.base.DependencyScope
+import org.octavius.novels.form.control.base.DependencyType
 import org.octavius.novels.form.control.type.*
-import org.octavius.novels.form.control.validation.RepeatableValidation
-import org.octavius.novels.form.control.validation.TextListValidation
+import org.octavius.novels.form.control.base.RepeatableValidation
+import org.octavius.novels.form.control.base.TextListValidation
+import org.octavius.novels.form.control.type.collection.TextListControl
+import org.octavius.novels.form.control.type.container.SectionControl
+import org.octavius.novels.form.control.type.primitive.BooleanControl
+import org.octavius.novels.form.control.type.primitive.HiddenControl
+import org.octavius.novels.form.control.type.primitive.IntegerControl
+import org.octavius.novels.form.control.type.repeatable.RepeatableControl
+import org.octavius.novels.form.control.type.selection.EnumControl
 
 class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {

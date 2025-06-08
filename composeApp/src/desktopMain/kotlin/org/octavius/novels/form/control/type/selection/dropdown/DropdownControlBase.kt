@@ -1,23 +1,46 @@
-package org.octavius.novels.form.control.type.dropdown
+package org.octavius.novels.form.control.type.selection.dropdown
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.RenderNormalLabel
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.layout.RenderNormalLabel
+import org.octavius.novels.form.control.type.selection.dropdown.DropdownOption
+import org.octavius.novels.form.control.validator.DefaultValidator
 
 /**
  * Bazowa klasa abstrakcyjna dla kontrolek listy rozwijanej (dropdown).
@@ -81,13 +104,13 @@ abstract class DropdownControlBase<T : Any>(
             }
         }
 
-        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Column(modifier = Modifier.Companion.fillMaxWidth().padding(vertical = 8.dp)) {
             RenderNormalLabel(label, isRequired)
 
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = it },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.Companion.fillMaxWidth()
             ) {
                 // Pole z wybraną wartością
                 OutlinedTextField(
@@ -96,9 +119,9 @@ abstract class DropdownControlBase<T : Any>(
                     onValueChange = { },  // Nie pozwalamy na edycję ręczną
                     readOnly = true,      // Pole tylko do odczytu
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .fillMaxWidth()
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        .menuAnchor(MenuAnchorType.Companion.PrimaryNotEditable)
                 )
 
                 // Menu z opcjami
@@ -116,7 +139,7 @@ abstract class DropdownControlBase<T : Any>(
                             },
                             placeholder = { Text("Szukaj...") },
                             singleLine = true,
-                            modifier = Modifier
+                            modifier = Modifier.Companion
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             leadingIcon = {
@@ -143,13 +166,13 @@ abstract class DropdownControlBase<T : Any>(
 
                     if (isLoading) {
                         Box(
-                            modifier = Modifier
+                            modifier = Modifier.Companion
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Companion.Center
                         ) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.Companion.size(24.dp)
                             )
                         }
                     } else {
@@ -193,14 +216,14 @@ abstract class DropdownControlBase<T : Any>(
 
                             // Panel paginacji, tylko jeśli jest więcej niż jedna strona
                             if (supportPagination && totalPages > 1) {
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                HorizontalDivider(modifier = Modifier.Companion.padding(vertical = 8.dp))
 
                                 Row(
-                                    modifier = Modifier
+                                    modifier = Modifier.Companion
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 8.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.Companion.CenterVertically
                                 ) {
                                     IconButton(
                                         onClick = { if (currentPage > 1) currentPage-- },

@@ -1,4 +1,4 @@
-package org.octavius.novels.form.control.type.dropdown
+package org.octavius.novels.form.control.type.selection.dropdown
 
 /**
  * Reprezentuje pojedynczą opcję w liście rozwijanej (dropdown).

@@ -1,6 +1,7 @@
 package org.octavius.novels.domain.game.form
 
 import org.octavius.novels.database.DatabaseManager
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.domain.GameStatus
 import org.octavius.novels.form.*
 import org.octavius.novels.form.component.FormDataManager

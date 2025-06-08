@@ -1,4 +1,4 @@
-package org.octavius.novels.form.control.type
+package org.octavius.novels.form.control.type.collection
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,18 +9,27 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.TextListValidation
-import org.octavius.novels.form.control.validation.TextListValidator
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.base.TextListValidation
+import org.octavius.novels.form.control.validator.collection.TextListValidator
 
 /**
  * Kontrolka do wprowadzania i zarządzania listą tekstów.
@@ -51,12 +60,12 @@ class TextListControl(
         var newItemText by remember { mutableStateOf("") }
 
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)
+            modifier = Modifier.Companion.fillMaxWidth().heightIn(max = 200.dp)
         ) {
             itemsIndexed(currentList) { index, item ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.Companion.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.Companion.CenterVertically
                 ) {
                     OutlinedTextField(
                         value = item, onValueChange = { newValue ->
@@ -65,7 +74,7 @@ class TextListControl(
                             currentList = updatedList
                             controlState.value.value = updatedList
                             controlState.dirty.value = true
-                        }, modifier = Modifier.weight(1f).padding(end = 8.dp), singleLine = true
+                        }, modifier = Modifier.Companion.weight(1f).padding(end = 8.dp), singleLine = true
                     )
 
                     if (currentList.size > 1) {
@@ -90,12 +99,13 @@ class TextListControl(
 
         // Pole do dodawania nowego tytułu
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.Companion.fillMaxWidth().padding(top = 12.dp),
+            verticalAlignment = Alignment.Companion.CenterVertically
         ) {
             OutlinedTextField(
                 value = newItemText,
                 onValueChange = { newItemText = it },
-                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                modifier = Modifier.Companion.weight(1f).padding(end = 8.dp),
                 placeholder = { Text("Dodaj nowy element") },
                 singleLine = true
             )

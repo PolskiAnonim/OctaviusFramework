@@ -7,7 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.GameStatus
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
 import org.octavius.novels.report.Report

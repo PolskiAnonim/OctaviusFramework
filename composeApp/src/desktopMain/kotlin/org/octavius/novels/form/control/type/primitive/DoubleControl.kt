@@ -1,42 +1,46 @@
-package org.octavius.novels.form.control.type
+package org.octavius.novels.form.control.type.primitive
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.IntegerValidation
-import org.octavius.novels.form.control.validation.IntegerValidator
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.base.DoubleValidation
+import org.octavius.novels.form.control.validator.primitive.DoubleValidator
 
 /**
- * Kontrolka do wprowadzania liczb całkowitych.
+ * Kontrolka do wprowadzania liczb rzeczywistych (zmiennoprzecinkowych).
  *
  * Renderuje pole tekstowe z numeryczną klawiaturą i walidacją danych wejściowych.
- * Automatycznie sprawdza czy wprowadzona wartość jest poprawną liczbą całkowitą
+ * Automatycznie sprawdza czy wprowadzona wartość jest poprawną liczbą rzeczywistą
  * i wyświetla komunikat błędu w przypadku nieprawidłowych danych.
  */
-class IntegerControl(
+class DoubleControl(
     columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: IntegerValidation? = null
-) : Control<Int>(
+    validationOptions: DoubleValidation? = null
+) : Control<Double>(
     label,
     columnInfo,
     required,
     dependencies,
     validationOptions = validationOptions
 ) {
-    override val validator: ControlValidator<Int> = IntegerValidator(validationOptions)
-
+    override val validator: ControlValidator<Double> = DoubleValidator(validationOptions)
 
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<Int>, isRequired: Boolean) {
+    override fun Display(controlName: String, controlState: ControlState<Double>, isRequired: Boolean) {
         var textValue by remember {
             mutableStateOf(controlState.value.value?.toString() ?: "")
         }
@@ -60,15 +64,17 @@ class IntegerControl(
                     controlState.value.value = null
                     hasInvalidInput = false
                 } else {
-                    try {
-                        controlState.value.value = newText.toInt()
+                    val cleanText = newText.replace(",", ".")
+                    val doubleValue = cleanText.toDoubleOrNull()
+                    if (doubleValue != null && doubleValue.isFinite()) {
+                        controlState.value.value = doubleValue
                         hasInvalidInput = false
-                    } catch (e: NumberFormatException) {
+                    } else {
                         hasInvalidInput = true
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.Companion.fillMaxWidth(),
             singleLine = true
         )
     }

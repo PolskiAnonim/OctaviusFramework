@@ -1,6 +1,7 @@
-package org.octavius.novels.form.control.validation
+package org.octavius.novels.form.control.validator
 
 import org.octavius.novels.form.ControlState
+import org.octavius.novels.form.control.base.ControlValidator
 
 /**
  * Domyślna implementacja walidatora kontrolek formularza.

@@ -1,6 +1,9 @@
-package org.octavius.novels.form.control.validation
+package org.octavius.novels.form.control.validator.collection
 
 import org.octavius.novels.form.ControlState
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.base.TextListValidation
+import org.octavius.novels.form.control.validator.primitive.TextValidator
 
 /**
  * Walidator dla kontrolek list tekstowych z obsługą opcji walidacji.

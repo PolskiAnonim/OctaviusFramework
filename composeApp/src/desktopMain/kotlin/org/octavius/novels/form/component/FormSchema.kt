@@ -1,6 +1,6 @@
 package org.octavius.novels.form.component
 
-import org.octavius.novels.form.control.Control
+import org.octavius.novels.form.control.base.Control
 
 /**
  * FormSchema

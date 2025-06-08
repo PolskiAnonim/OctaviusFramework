@@ -3,7 +3,7 @@ package org.octavius.novels.form.control.type.repeatable
 import org.octavius.novels.form.ControlResultData
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.component.FormState
-import org.octavius.novels.form.control.Control
+import org.octavius.novels.form.control.base.Control
 
 /**
  * Reprezentuje jeden wiersz w kontrolce powtarzalnej.

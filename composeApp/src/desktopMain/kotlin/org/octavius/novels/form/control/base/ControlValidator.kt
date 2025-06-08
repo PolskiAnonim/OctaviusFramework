@@ -1,10 +1,9 @@
-package org.octavius.novels.form.control.validation
+package org.octavius.novels.form.control.base
 
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.component.ErrorManager
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormState
-import org.octavius.novels.form.control.*
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich walidatorów kontrolek formularza.

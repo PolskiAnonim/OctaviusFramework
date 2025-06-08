@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 
 import androidx.compose.ui.Modifier
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.report.ColumnState
 import org.octavius.novels.report.FilterValue
 import org.octavius.novels.report.SortDirection

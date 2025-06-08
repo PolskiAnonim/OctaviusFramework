@@ -1,4 +1,8 @@
-package org.octavius.novels.form.control
+/**
+ * Zestaw funkcji renderujących wspólne elementy kontrolek.
+ * Zapewnia spójny wygląd etykiet, błędów i innych elementów UI.
+ */
+package org.octavius.novels.form.control.layout
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -9,10 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/**
- * Zestaw funkcji renderujących wspólne elementy kontrolek.
- * Zapewnia spójny wygląd etykiet, błędów i innych elementów UI.
- */
+
 
 /**
  * Renderuje etykietę kontrolki z opcjonalną gwiazdką dla pól wymaganych.

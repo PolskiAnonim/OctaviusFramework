@@ -1,4 +1,4 @@
-package org.octavius.novels.form.control.validation
+package org.octavius.novels.form.control.base
 
 /**
  * Opcje walidacji dla kontrolek formularza.

@@ -1,6 +1,6 @@
 package org.octavius.novels.database
 
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet

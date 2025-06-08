@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
 import org.octavius.novels.domain.PublicationType
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
 import org.octavius.novels.report.Report

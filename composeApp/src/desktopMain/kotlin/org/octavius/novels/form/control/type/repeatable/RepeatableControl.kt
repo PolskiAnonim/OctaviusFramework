@@ -1,7 +1,11 @@
-package org.octavius.novels.form.control.type
+package org.octavius.novels.form.control.type.repeatable
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ControlResultData
@@ -9,12 +13,14 @@ import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.component.ErrorManager
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.type.repeatable.*
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.RepeatableValidation
-import org.octavius.novels.form.control.validation.RepeatableValidator
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.base.RepeatableValidation
+import org.octavius.novels.form.control.layout.repeatable.RepeatableHeader
+import org.octavius.novels.form.control.layout.repeatable.RepeatableRowCard
+import org.octavius.novels.form.control.layout.repeatable.RepeatableRowContent
+import org.octavius.novels.form.control.validator.repeatable.RepeatableValidator
 
 /**
  * Kontrolka do tworzenia dynamicznych list kontrolek (wierszy).
@@ -111,7 +117,7 @@ class RepeatableControl(
 
     @Composable
     override fun Display(controlName: String, controlState: ControlState<List<RepeatableRow>>, isRequired: Boolean) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.Companion.fillMaxWidth()) {
             RepeatableHeader(
                 label = label,
                 onAddClick = {
@@ -121,7 +127,7 @@ class RepeatableControl(
                 canAdd = rowManager.canAddRow(controlState)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.Companion.height(8.dp))
 
             controlState.value.value?.forEachIndexed { index, row ->
                 RepeatableRowCard(
@@ -144,7 +150,7 @@ class RepeatableControl(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.Companion.height(8.dp))
             }
         }
     }

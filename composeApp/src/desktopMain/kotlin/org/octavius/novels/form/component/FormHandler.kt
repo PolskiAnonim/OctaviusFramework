@@ -2,7 +2,7 @@ package org.octavius.novels.form.component
 
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
+import org.octavius.novels.form.control.base.Control
 
 /**
  * Abstrakcyjna klasa obsługująca cykl życia formularza.

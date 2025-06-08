@@ -1,12 +1,22 @@
-package org.octavius.novels.form.control.type
+package org.octavius.novels.form.control.type.container
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.*
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,10 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.validator.DefaultValidator
 
 /**
  * Kontrolka do grupowania i organizacji innych kontrolek w sekcje.
@@ -47,23 +57,23 @@ class SectionControl(
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.Companion.fillMaxWidth()) {
                 // Nagłówek sekcji
                 Surface(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .fillMaxWidth()
                         .clickable(enabled = collapsible) { expanded.value = !expanded.value },
                     color = MaterialTheme.colorScheme.primary
                 ) {
                     Row(
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .fillMaxWidth()
                             .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.Companion.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
@@ -85,11 +95,11 @@ class SectionControl(
                 // Zawartość sekcji
                 AnimatedVisibility(visible = expanded.value) {
                     Surface(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.Companion.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.surface
                     ) {
                         Column(
-                            modifier = Modifier
+                            modifier = Modifier.Companion
                                 .fillMaxWidth()
                                 .padding(16.dp)
                         ) {
@@ -97,10 +107,10 @@ class SectionControl(
                                 val controlGroups =
                                     ctrls.chunked(ctrls.size / columns + if (ctrls.size % columns > 0) 1 else 0)
 
-                                Row(modifier = Modifier.fillMaxWidth()) {
+                                Row(modifier = Modifier.Companion.fillMaxWidth()) {
                                     controlGroups.forEach { group ->
                                         Column(
-                                            modifier = Modifier
+                                            modifier = Modifier.Companion
                                                 .weight(1f)
                                                 .padding(horizontal = 4.dp)
                                         ) {
@@ -112,14 +122,14 @@ class SectionControl(
                                                     states[ctrlName]?.let { controlState ->
                                                         control.Render(ctrlName, controlState)
                                                     }
-                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    Spacer(modifier = Modifier.Companion.height(8.dp))
                                                 }
                                             }
                                         }
                                     }
                                 }
                             } else {
-                                Column(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.Companion.fillMaxWidth()) {
                                     ctrls.forEach { ctrlName ->
                                         val controls = this@SectionControl.formSchema.getAllControls()
                                         val states = this@SectionControl.formState.getAllStates()
@@ -127,7 +137,7 @@ class SectionControl(
                                             states[ctrlName]?.let { controlState ->
                                                 control.Render(ctrlName, controlState)
                                             }
-                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Spacer(modifier = Modifier.Companion.height(12.dp))
                                         }
                                     }
                                 }

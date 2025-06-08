@@ -1,4 +1,4 @@
-package org.octavius.novels.form.control
+package org.octavius.novels.form.control.base
 
 /**
  * Definuje zależność między kontrolkami.

@@ -1,11 +1,11 @@
-package org.octavius.novels.form.control.type
+package org.octavius.novels.form.control.type.primitive
 
 import androidx.compose.runtime.Composable
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.validator.DefaultValidator
 
 /**
  * Kontrolka do przechowywania ukrytych wartości w formularzu.

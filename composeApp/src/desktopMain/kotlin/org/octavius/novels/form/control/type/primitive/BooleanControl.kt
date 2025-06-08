@@ -1,4 +1,4 @@
-package org.octavius.novels.form.control.type
+package org.octavius.novels.form.control.type.primitive
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,13 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.ControlState
-import org.octavius.novels.form.control.Control
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.RenderCheckboxLabel
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.DefaultValidator
+import org.octavius.novels.form.control.base.Control
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.layout.RenderCheckboxLabel
+import org.octavius.novels.form.control.validator.DefaultValidator
 
 /**
  * Kontrolka do wprowadzania wartości logicznych (prawda/fałsz).
@@ -44,16 +44,16 @@ class BooleanControl(
     @Composable
     override fun Display(controlName: String, controlState: ControlState<Boolean>, isRequired: Boolean) {
         Surface(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
         ) {
             Column {
                 Row(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .fillMaxWidth()
                         .padding(vertical = 8.dp, horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Companion.CenterVertically
                 ) {
                     if (isRequired) {
                         val currentValue = controlState.value.value ?: false

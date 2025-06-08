@@ -1,10 +1,10 @@
-package org.octavius.novels.form.control.type
+package org.octavius.novels.form.control.type.selection
 
 import org.octavius.novels.database.DatabaseManager
-import org.octavius.novels.form.ColumnInfo
-import org.octavius.novels.form.control.ControlDependency
-import org.octavius.novels.form.control.type.dropdown.DropdownControlBase
-import org.octavius.novels.form.control.type.dropdown.DropdownOption
+import org.octavius.novels.domain.ColumnInfo
+import org.octavius.novels.form.control.type.selection.dropdown.DropdownOption
+import org.octavius.novels.form.control.base.ControlDependency
+import org.octavius.novels.form.control.type.selection.dropdown.DropdownControlBase
 
 /**
  * Kontrolka do wyboru rekordu z bazy danych z listy rozwijanej.

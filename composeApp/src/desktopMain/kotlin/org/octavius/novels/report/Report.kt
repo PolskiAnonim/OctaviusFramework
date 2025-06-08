@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.novels.database.DatabaseManager
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.navigator.Screen
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.column.type.*

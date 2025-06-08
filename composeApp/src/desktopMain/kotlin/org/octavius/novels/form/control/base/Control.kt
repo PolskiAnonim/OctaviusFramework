@@ -1,15 +1,15 @@
-package org.octavius.novels.form.control
+package org.octavius.novels.form.control.base
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import org.octavius.novels.form.ColumnInfo
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.ControlState
 import org.octavius.novels.form.component.ErrorManager
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormState
-import org.octavius.novels.form.control.validation.ControlValidator
-import org.octavius.novels.form.control.validation.ValidationOptions
+import org.octavius.novels.form.control.layout.RenderFieldError
+import org.octavius.novels.form.control.layout.RenderNormalLabel
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich kontrolek formularza.
@@ -181,7 +181,7 @@ abstract class Control<T : Any>(
                 }
             } else {
                 @Suppress("UNCHECKED_CAST")
-                Display(controlName,controlState as ControlState<T>, isRequired)
+                Display(controlName, controlState as ControlState<T>, isRequired)
             }
         }
     }
@@ -197,4 +197,3 @@ abstract class Control<T : Any>(
         isRequired: Boolean
     )
 }
-

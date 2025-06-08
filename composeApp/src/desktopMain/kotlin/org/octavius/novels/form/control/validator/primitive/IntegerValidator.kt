@@ -1,18 +1,18 @@
-package org.octavius.novels.form.control.validation
+package org.octavius.novels.form.control.validator.primitive
 
 import org.octavius.novels.form.ControlState
-import kotlin.math.pow
-import kotlin.math.round
+import org.octavius.novels.form.control.base.ControlValidator
+import org.octavius.novels.form.control.base.IntegerValidation
 
 /**
- * Walidator dla kontrolek liczb zmiennoprzecinkowych z obsługą opcji walidacji.
+ * Walidator dla kontrolek liczb całkowitych z obsługą opcji walidacji.
  */
-class DoubleValidator(
-    private val validationOptions: DoubleValidation? = null
-) : ControlValidator<Double>() {
+class IntegerValidator(
+    private val validationOptions: IntegerValidation? = null
+) : ControlValidator<Int>() {
 
     override fun validateSpecific(controlName: String, state: ControlState<*>) {
-        val value = state.value.value as? Double ?: return
+        val value = state.value.value as? Int ?: return
         val errors = mutableListOf<String>()
 
         validationOptions?.let { options ->
@@ -30,19 +30,9 @@ class DoubleValidator(
                 }
             }
 
-            // Sprawdź miejsca dziesiętne
-            options.decimalPlaces?.let { decimalPlaces ->
-                val multiplier = 10.0.pow(decimalPlaces)
-                val rounded = round(value * multiplier) / multiplier
-                if (value != rounded) {
-                    errors.add("Maksymalnie $decimalPlaces miejsc po przecinku")
-                }
-            }
-
             // Sprawdź krok
             options.step?.let { step ->
-                val remainder = value % step
-                if (remainder != 0.0 && (remainder - step).let { kotlin.math.abs(it) } > 1e-10) {
+                if (value % step != 0) {
                     errors.add("Wartość musi być wielokrotnością $step")
                 }
             }
