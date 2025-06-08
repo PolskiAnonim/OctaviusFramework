@@ -24,6 +24,13 @@ import org.octavius.novels.navigator.Screen
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.column.type.*
 
+/*
+TODO
+Aktualnie wyszukiwanie wymaga pełnych nazw tabel
+Jak kolumna jest wyliczona to nie ma nazwy tabeli - jest pusty string - to w nowelkach
+WHERE chodzi na oryginalnych nazwach kolumn nie aliasach natomiast chodzi na aliasach nazw tabel
+ColumnInfo chodzi na pełnych nazwach tabel nawet używając aliasów na ich nazwy
+*/
 abstract class Report : Screen {
 
     private val query: Query
@@ -75,12 +82,12 @@ abstract class Report : Screen {
                     when (column) {
                         is StringColumn, is StringListColumn -> {
                             // Dla kolumn tekstowych szukamy ILIKE
-                            searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
+                            searchConditions.add("CAST(${column.columnInfo.tableName}.${column.columnInfo.fieldName} AS TEXT) ILIKE '%$escapedQuery%'")
                         }
 
                         is EnumColumn<*> -> {
                             // Dla enumów szukamy po wartościach wyświetlanych
-                            searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
+                            searchConditions.add("CAST(${column.columnInfo.tableName}.${column.columnInfo.fieldName} AS TEXT) ILIKE '%$escapedQuery%'")
                         }
 
                         is IntegerColumn, is BooleanColumn -> {
@@ -92,7 +99,7 @@ abstract class Report : Screen {
                                     "nie"
                                 )
                             ) {
-                                searchConditions.add("CAST(${column.name} AS TEXT) ILIKE '%$escapedQuery%'")
+                                searchConditions.add("CAST(${column.columnInfo.tableName}.${column.columnInfo.fieldName} AS TEXT) ILIKE '%$escapedQuery%'")
                             }
                         }
                     }

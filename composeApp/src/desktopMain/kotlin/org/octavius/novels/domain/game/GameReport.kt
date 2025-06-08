@@ -20,10 +20,10 @@ import org.octavius.novels.screens.GameSeriesFormScreen
 class GameReport(val navigator: Navigator) : Report() {
     override fun createQuery(): Query {
         val sql = """
-            SELECT g.id, g.name, s.name, g.status
-            FROM games g
-            LEFT JOIN series s ON s.id = g.series
-            ORDER BY g.name
+            SELECT games.id, games.name, series.name, games.status
+            FROM games
+            LEFT JOIN series ON series.id = games.series
+            ORDER BY games.name
         """.trimIndent()
         return Query(sql)
     }
