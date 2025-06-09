@@ -4,14 +4,12 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 
-interface FilterInterface<T> {
-    fun reset()
-    fun isActive(): Boolean
-}
-
-sealed class FilterValue<T> : FilterInterface<T> {
+sealed class FilterData<T> {
     abstract val nullHandling: MutableState<NullHandling>
 
+    abstract fun reset()
+    abstract fun isActive(): Boolean
+    
     val dirtyState: MutableState<Boolean> = mutableStateOf(false)
 
     // Funkcja pomocnicza do oznaczenia filtru jako zmieniony
@@ -19,10 +17,10 @@ sealed class FilterValue<T> : FilterInterface<T> {
         dirtyState.value = !dirtyState.value
     }
 
-    data class BooleanFilter(
+    data class BooleanData(
         val value: MutableState<Boolean?> = mutableStateOf(null),
         override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
-    ) : FilterValue<Boolean>() {
+    ) : FilterData<Boolean>() {
         override fun reset() {
             value.value = null
             nullHandling.value = NullHandling.Ignore
@@ -33,16 +31,16 @@ sealed class FilterValue<T> : FilterInterface<T> {
         }
     }
 
-    data class NumberFilter<T : Comparable<T>>(
-        val filterType: MutableState<NumberFilterType> = mutableStateOf(NumberFilterType.Equals),
+    data class NumberData<T : Number>(
+        val filterType: MutableState<NumberFilterDataType> = mutableStateOf(NumberFilterDataType.Equals),
         val minValue: MutableState<T?> = mutableStateOf(null),
         val maxValue: MutableState<T?> = mutableStateOf(null),
         override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
-    ) : FilterValue<T>() {
+    ) : FilterData<T>() {
         override fun reset() {
             minValue.value = null
             maxValue.value = null
-            filterType.value = NumberFilterType.Equals
+            filterType.value = NumberFilterDataType.Equals
             nullHandling.value = NullHandling.Ignore
             markDirty()
         }
@@ -52,15 +50,15 @@ sealed class FilterValue<T> : FilterInterface<T> {
         }
     }
 
-    data class TextFilter(
-        val filterType: MutableState<TextFilterType> = mutableStateOf(TextFilterType.Contains),
+    data class StringData(
+        val filterType: MutableState<StringFilterDataType> = mutableStateOf(StringFilterDataType.Contains),
         val value: MutableState<String> = mutableStateOf(""),
         val caseSensitive: MutableState<Boolean> = mutableStateOf(false),
         override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
-    ) : FilterValue<String>() {
+    ) : FilterData<String>() {
         override fun reset() {
             value.value = ""
-            filterType.value = TextFilterType.Contains
+            filterType.value = StringFilterDataType.Contains
             caseSensitive.value = false
             nullHandling.value = NullHandling.Ignore
             markDirty()
@@ -71,11 +69,11 @@ sealed class FilterValue<T> : FilterInterface<T> {
         }
     }
 
-    data class EnumFilter<E : Enum<*>>(
+    data class EnumData<E : Enum<*>>(
         private val _values: MutableState<List<E>> = mutableStateOf(emptyList()),
         val include: MutableState<Boolean> = mutableStateOf(true),
         override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
-    ) : FilterValue<E>() {
+    ) : FilterData<E>() {
         // Właściwość tylko do odczytu dla widoku
         val values: State<List<E>> get() = _values
 
@@ -110,7 +108,7 @@ sealed class FilterValue<T> : FilterInterface<T> {
     }
 }
 
-enum class NumberFilterType {
+enum class NumberFilterDataType {
     Equals,      // ==
     NotEquals,   // !=
     LessThan,    //
@@ -120,7 +118,7 @@ enum class NumberFilterType {
     Range        // between min and max
 }
 
-enum class TextFilterType {
+enum class StringFilterDataType {
     Exact,       // dokładne dopasowanie
     StartsWith,  // od początku
     EndsWith,    // od końca

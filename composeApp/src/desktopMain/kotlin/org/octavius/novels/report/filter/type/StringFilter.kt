@@ -9,48 +9,48 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.NullHandling
-import org.octavius.novels.report.TextFilterType
+import org.octavius.novels.report.StringFilterDataType
 import org.octavius.novels.report.filter.Filter
 
 class StringFilter(columnName: String) : Filter(columnName) {
 
-    override fun constructWhereClause(filter: FilterValue<*>): String {
-        val textFilter = filter as FilterValue.TextFilter
+    override fun constructWhereClause(filter: FilterData<*>): String {
+        val filterData = filter as FilterData.StringData
 
         // Gdy nie mamy wartości do filtrowania
-        if (textFilter.value.value.isEmpty() && textFilter.nullHandling.value == NullHandling.Ignore) {
+        if (filterData.value.value.isEmpty() && filterData.nullHandling.value == NullHandling.Ignore) {
             return ""
         }
 
         // Escape wartości tekstu dla SQL
-        val escapedValue = textFilter.value.value.replace("'", "''")
+        val escapedValue = filterData.value.value.replace("'", "''")
 
         // Określenie czy wyszukiwanie powinno być case-sensitive
-        val columnExpr = if (textFilter.caseSensitive.value) columnName else "LOWER($columnName)"
-        val valueExpr = if (textFilter.caseSensitive.value) "'$escapedValue'" else "LOWER('$escapedValue')"
+        val columnExpr = if (filterData.caseSensitive.value) columnName else "LOWER($columnName)"
+        val valueExpr = if (filterData.caseSensitive.value) "'$escapedValue'" else "LOWER('$escapedValue')"
 
         // Budowanie podstawowej klauzuli w zależności od typu filtra
-        val baseClause = when (textFilter.filterType.value) {
-            TextFilterType.Exact ->
+        val baseClause = when (filterData.filterType.value) {
+            StringFilterDataType.Exact ->
                 "$columnExpr = $valueExpr"
 
-            TextFilterType.StartsWith ->
+            StringFilterDataType.StartsWith ->
                 "$columnExpr LIKE '${escapedValue}%'"
 
-            TextFilterType.EndsWith ->
+            StringFilterDataType.EndsWith ->
                 "$columnExpr LIKE '%${escapedValue}'"
 
-            TextFilterType.Contains ->
+            StringFilterDataType.Contains ->
                 "$columnExpr LIKE '%${escapedValue}%'"
 
-            TextFilterType.NotContains ->
+            StringFilterDataType.NotContains ->
                 "$columnExpr NOT LIKE '%${escapedValue}%'"
         }
 
         // Łączenie podstawowej klauzuli z obsługą nulli
-        return when (textFilter.nullHandling.value) {
+        return when (filterData.nullHandling.value) {
             NullHandling.Ignore -> baseClause
             NullHandling.Include -> "($baseClause OR $columnName IS NULL)"
             NullHandling.Exclude -> baseClause  // operatory LIKE/= już wykluczają NULL
@@ -60,20 +60,20 @@ class StringFilter(columnName: String) : Filter(columnName) {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>
+        currentFilter: FilterData<*>
     ) {
 
-        val textFilter = currentFilter as? FilterValue.TextFilter ?: return
-        val filterText = textFilter.value
-        val filterType = textFilter.filterType
-        val caseSensitive = textFilter.caseSensitive
+        val filterData = currentFilter as? FilterData.StringData ?: return
+        val filterText = filterData.value
+        val filterType = filterData.filterType
+        val caseSensitive = filterData.caseSensitive
 
         Column(modifier = Modifier.padding(8.dp)) {
             OutlinedTextField(
                 value = filterText.value,
                 onValueChange = {
                     filterText.value = it
-                    textFilter.markDirty()
+                    filterData.markDirty()
                 },
                 label = { Text("Filtruj") },
                 singleLine = true,
@@ -82,7 +82,7 @@ class StringFilter(columnName: String) : Filter(columnName) {
                     if (filterText.value.isNotEmpty()) {
                         IconButton(onClick = {
                             filterText.value = ""
-                            textFilter.markDirty()
+                            filterData.markDirty()
                         }) {
                             Icon(Icons.Default.Clear, "Wyczyść filtr")
                         }
@@ -100,11 +100,11 @@ class StringFilter(columnName: String) : Filter(columnName) {
             ) {
                 OutlinedTextField(
                     value = when (filterType.value) {
-                        TextFilterType.Exact -> "Dokładnie"
-                        TextFilterType.StartsWith -> "Zaczyna się od"
-                        TextFilterType.EndsWith -> "Kończy się na"
-                        TextFilterType.Contains -> "Zawiera"
-                        TextFilterType.NotContains -> "Nie zawiera"
+                        StringFilterDataType.Exact -> "Dokładnie"
+                        StringFilterDataType.StartsWith -> "Zaczyna się od"
+                        StringFilterDataType.EndsWith -> "Kończy się na"
+                        StringFilterDataType.Contains -> "Zawiera"
+                        StringFilterDataType.NotContains -> "Nie zawiera"
                     },
                     onValueChange = {},
                     readOnly = true,
@@ -119,18 +119,18 @@ class StringFilter(columnName: String) : Filter(columnName) {
                     onDismissRequest = { expanded = false }
                 ) {
                     listOf(
-                        TextFilterType.Contains to "Zawiera",
-                        TextFilterType.StartsWith to "Zaczyna się od",
-                        TextFilterType.EndsWith to "Kończy się na",
-                        TextFilterType.Exact to "Dokładnie",
-                        TextFilterType.NotContains to "Nie zawiera"
+                        StringFilterDataType.Contains to "Zawiera",
+                        StringFilterDataType.StartsWith to "Zaczyna się od",
+                        StringFilterDataType.EndsWith to "Kończy się na",
+                        StringFilterDataType.Exact to "Dokładnie",
+                        StringFilterDataType.NotContains to "Nie zawiera"
                     ).forEach { (type, label) ->
                         DropdownMenuItem(
                             text = { Text(label) },
                             onClick = {
                                 expanded = false
                                 filterType.value = type
-                                textFilter.markDirty()
+                                filterData.markDirty()
                             },
                             trailingIcon = if (filterType.value == type) {
                                 { Icon(Icons.Default.Check, null) }
@@ -153,7 +153,7 @@ class StringFilter(columnName: String) : Filter(columnName) {
                     checked = caseSensitive.value,
                     onCheckedChange = {
                         caseSensitive.value = it
-                        textFilter.markDirty()
+                        filterData.markDirty()
                     }
                 )
                 Text(
@@ -164,7 +164,7 @@ class StringFilter(columnName: String) : Filter(columnName) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            NullHandlingPanel(textFilter)
+            NullHandlingPanel(filterData)
         }
     }
 }

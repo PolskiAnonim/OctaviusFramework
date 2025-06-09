@@ -10,7 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.NullHandling
 import org.octavius.novels.report.filter.Filter
 import org.octavius.novels.util.Converters.camelToSnakeCase
@@ -18,26 +18,26 @@ import kotlin.reflect.KClass
 
 class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Filter(columnName) {
 
-    override fun constructWhereClause(filter: FilterValue<*>): String {
-        val enumFilter = filter as FilterValue.EnumFilter<*>
+    override fun constructWhereClause(filter: FilterData<*>): String {
+        val filterData = filter as FilterData.EnumData<*>
 
         // Jeśli lista wartości jest pusta, nie ma sensu budować klauzuli
-        if (enumFilter.values.value.isEmpty() && enumFilter.nullHandling.value == NullHandling.Ignore) {
+        if (filterData.values.value.isEmpty() && filterData.nullHandling.value == NullHandling.Ignore) {
             return ""
         }
 
         // Przygotowanie listy wartości enum jako stringi do zapytania SQL
-        val enumValues = enumFilter.values.value.joinToString(", ") {
+        val enumValues = filterData.values.value.joinToString(", ") {
             "'${camelToSnakeCase(it.name).uppercase()}'"
         }
 
         return when {
             // Gdy lista jest niepusta i chcemy tylko te wartości (lub ich nie chcemy)
-            enumFilter.values.value.isNotEmpty() -> {
-                val operator = if (enumFilter.include.value) "IN" else "NOT IN"
+            filterData.values.value.isNotEmpty() -> {
+                val operator = if (filterData.include.value) "IN" else "NOT IN"
                 val valuesClause = "$columnName $operator ($enumValues)"
 
-                when (enumFilter.nullHandling.value) {
+                when (filterData.nullHandling.value) {
                     NullHandling.Ignore -> valuesClause
                     NullHandling.Include -> "($valuesClause OR $columnName IS NULL)"
                     NullHandling.Exclude -> "($valuesClause AND $columnName IS NOT NULL)"
@@ -46,7 +46,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
 
             // Gdy lista jest pusta, ale chcemy obsłużyć nulle
             else -> {
-                when (enumFilter.nullHandling.value) {
+                when (filterData.nullHandling.value) {
                     NullHandling.Include -> "$columnName IS NULL"
                     NullHandling.Exclude -> "$columnName IS NOT NULL"
                     // Ten przypadek nie powinien wystąpić (pusta lista i ignorowanie null)
@@ -58,15 +58,15 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
 
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>
+        currentFilter: FilterData<*>
     ) {
 
         val enumValues = remember { enumClass.java.enumConstants.toList() }
 
         @Suppress("UNCHECKED_CAST")
-        val enumFilter = currentFilter as FilterValue.EnumFilter<E>
-        val selectedValues = enumFilter.values
-        val include = enumFilter.include
+        val filterData = currentFilter as FilterData.EnumData<E>
+        val selectedValues = filterData.values
+        val include = filterData.include
 
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
@@ -85,7 +85,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
                     selected = include.value,
                     onClick = {
                         include.value = true
-                        enumFilter.markDirty()
+                        filterData.markDirty()
                     }
                 )
                 Text("Uwzględnij zaznaczone", modifier = Modifier.padding(end = 8.dp))
@@ -94,7 +94,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
                     selected = !include.value,
                     onClick = {
                         include.value = false
-                        enumFilter.markDirty()
+                        filterData.markDirty()
                     }
                 )
                 Text("Wyklucz zaznaczone")
@@ -139,7 +139,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            NullHandlingPanel(enumFilter)
+            NullHandlingPanel(filterData)
         }
     }
 }

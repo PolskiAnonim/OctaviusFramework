@@ -10,20 +10,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.NullHandling
 
 abstract class Filter(val columnName: String) {
 
-    abstract fun constructWhereClause(filter: FilterValue<*>): String
+    abstract fun constructWhereClause(filter: FilterData<*>): String
 
     @Composable
     abstract fun RenderFilter(
-        currentFilter: FilterValue<*>
+        currentFilter: FilterData<*>
     )
 
     @Composable
-    fun NullHandlingPanel(filterValue: FilterValue<*>) {
+    fun NullHandlingPanel(filterData: FilterData<*>) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -35,28 +35,28 @@ abstract class Filter(val columnName: String) {
             )
 
             RadioButton(
-                selected = filterValue.nullHandling.value == NullHandling.Ignore,
+                selected = filterData.nullHandling.value == NullHandling.Ignore,
                 onClick = {
-                    filterValue.nullHandling.value = NullHandling.Ignore
-                    filterValue.markDirty()
+                    filterData.nullHandling.value = NullHandling.Ignore
+                    filterData.markDirty()
                 }
             )
             Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
-                selected = filterValue.nullHandling.value == NullHandling.Include,
+                selected = filterData.nullHandling.value == NullHandling.Include,
                 onClick = {
-                    filterValue.nullHandling.value = NullHandling.Include
-                    filterValue.markDirty()
+                    filterData.nullHandling.value = NullHandling.Include
+                    filterData.markDirty()
                 }
             )
             Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
-                selected = filterValue.nullHandling.value == NullHandling.Exclude,
+                selected = filterData.nullHandling.value == NullHandling.Exclude,
                 onClick = {
-                    filterValue.nullHandling.value = NullHandling.Exclude
-                    filterValue.markDirty()
+                    filterData.nullHandling.value = NullHandling.Exclude
+                    filterData.markDirty()
                 }
             )
             Text("Wyklucz")

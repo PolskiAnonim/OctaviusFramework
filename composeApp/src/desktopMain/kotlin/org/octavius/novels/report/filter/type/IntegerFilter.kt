@@ -7,16 +7,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.NullHandling
-import org.octavius.novels.report.NumberFilterType
+import org.octavius.novels.report.NumberFilterDataType
 import org.octavius.novels.report.filter.Filter
 
 class IntegerFilter(columnName: String) : Filter(columnName) {
 
-    override fun constructWhereClause(filter: FilterValue<*>): String {
+    override fun constructWhereClause(filter: FilterData<*>): String {
         @Suppress("UNCHECKED_CAST")
-        val intFilter = filter as FilterValue.NumberFilter<Int>
+        val intFilter = filter as FilterData.NumberData<Int>
 
         // Jeśli nie mamy wartości do filtrowania i ignorujemy nulle, zwróć pusty string
         if ((intFilter.minValue.value == null && intFilter.maxValue.value == null) &&
@@ -27,25 +27,25 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
 
         // Budowanie podstawowej klauzuli w zależności od typu filtra
         val baseClause = when (intFilter.filterType.value) {
-            NumberFilterType.Equals ->
+            NumberFilterDataType.Equals ->
                 intFilter.minValue.value?.let { "$columnName = $it" } ?: ""
 
-            NumberFilterType.NotEquals ->
+            NumberFilterDataType.NotEquals ->
                 intFilter.minValue.value?.let { "$columnName <> $it" } ?: ""
 
-            NumberFilterType.LessThan ->
+            NumberFilterDataType.LessThan ->
                 intFilter.minValue.value?.let { "$columnName < $it" } ?: ""
 
-            NumberFilterType.LessEquals ->
+            NumberFilterDataType.LessEquals ->
                 intFilter.minValue.value?.let { "$columnName <= $it" } ?: ""
 
-            NumberFilterType.GreaterThan ->
+            NumberFilterDataType.GreaterThan ->
                 intFilter.minValue.value?.let { "$columnName > $it" } ?: ""
 
-            NumberFilterType.GreaterEquals ->
+            NumberFilterDataType.GreaterEquals ->
                 intFilter.minValue.value?.let { "$columnName >= $it" } ?: ""
 
-            NumberFilterType.Range -> {
+            NumberFilterDataType.Range -> {
                 val minCond = intFilter.minValue.value?.let { "$columnName >= $it" }
                 val maxCond = intFilter.maxValue.value?.let { "$columnName <= $it" }
 
@@ -78,13 +78,13 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>
+        currentFilter: FilterData<*>
     ) {
         @Suppress("UNCHECKED_CAST")
-        val numberFilter = currentFilter as FilterValue.NumberFilter<Int>
-        val minValue = numberFilter.minValue
-        val maxValue = numberFilter.maxValue
-        val filterType = numberFilter.filterType
+        val filterData = currentFilter as FilterData.NumberData<Int>
+        val minValue = filterData.minValue
+        val maxValue = filterData.maxValue
+        val filterType = filterData.filterType
 
         var expanded by remember { mutableStateOf(false) }
 
@@ -95,13 +95,13 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
             ) {
                 OutlinedTextField(
                     value = when (filterType.value) {
-                        NumberFilterType.Equals -> "Równe"
-                        NumberFilterType.NotEquals -> "Różne od"
-                        NumberFilterType.LessThan -> "Mniejsze niż"
-                        NumberFilterType.LessEquals -> "Mniejsze lub równe"
-                        NumberFilterType.GreaterThan -> "Większe niż"
-                        NumberFilterType.GreaterEquals -> "Większe lub równe"
-                        NumberFilterType.Range -> "Zakres"
+                        NumberFilterDataType.Equals -> "Równe"
+                        NumberFilterDataType.NotEquals -> "Różne od"
+                        NumberFilterDataType.LessThan -> "Mniejsze niż"
+                        NumberFilterDataType.LessEquals -> "Mniejsze lub równe"
+                        NumberFilterDataType.GreaterThan -> "Większe niż"
+                        NumberFilterDataType.GreaterEquals -> "Większe lub równe"
+                        NumberFilterDataType.Range -> "Zakres"
                     },
                     onValueChange = {},
                     readOnly = true,
@@ -116,20 +116,20 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                     onDismissRequest = { expanded = false }
                 ) {
                     listOf(
-                        NumberFilterType.Equals to "Równe",
-                        NumberFilterType.NotEquals to "Różne od",
-                        NumberFilterType.LessThan to "Mniejsze niż",
-                        NumberFilterType.LessEquals to "Mniejsze lub równe",
-                        NumberFilterType.GreaterThan to "Większe niż",
-                        NumberFilterType.GreaterEquals to "Większe lub równe",
-                        NumberFilterType.Range to "Zakres"
+                        NumberFilterDataType.Equals to "Równe",
+                        NumberFilterDataType.NotEquals to "Różne od",
+                        NumberFilterDataType.LessThan to "Mniejsze niż",
+                        NumberFilterDataType.LessEquals to "Mniejsze lub równe",
+                        NumberFilterDataType.GreaterThan to "Większe niż",
+                        NumberFilterDataType.GreaterEquals to "Większe lub równe",
+                        NumberFilterDataType.Range to "Zakres"
                     ).forEach { (type, label) ->
                         DropdownMenuItem(
                             text = { Text(label) },
                             onClick = {
                                 expanded = false
                                 filterType.value = type
-                                numberFilter.markDirty()
+                                filterData.markDirty()
                             }
                         )
                     }
@@ -138,7 +138,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (filterType.value == NumberFilterType.Range) {
+            if (filterType.value == NumberFilterDataType.Range) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -148,7 +148,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                         onValueChange = {
                             try {
                                 minValue.value = if (it.isEmpty()) null else it.toInt()
-                                numberFilter.markDirty()
+                                filterData.markDirty()
                             } catch (e: NumberFormatException) {
                                 // Ignoruj niepoprawne wartości
                             }
@@ -163,7 +163,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                         onValueChange = {
                             try {
                                 maxValue.value = if (it.isEmpty()) null else it.toInt()
-                                numberFilter.markDirty()
+                                filterData.markDirty()
                             } catch (e: NumberFormatException) {
                                 // Ignoruj niepoprawne wartości
                             }
@@ -179,7 +179,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                     onValueChange = {
                         try {
                             minValue.value = if (it.isEmpty()) null else it.toInt()
-                            numberFilter.markDirty()
+                            filterData.markDirty()
                         } catch (e: NumberFormatException) {
                             // Ignoruj niepoprawne wartości
                         }
@@ -191,7 +191,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                         if (minValue.value.toString().isNotEmpty()) {
                             IconButton(onClick = {
                                 minValue.value = null
-                                numberFilter.markDirty()
+                                filterData.markDirty()
                             }) {
                                 Icon(Icons.Default.Clear, "Wyczyść filtr")
                             }
@@ -202,7 +202,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            NullHandlingPanel(numberFilter)
+            NullHandlingPanel(filterData)
         }
     }
 }

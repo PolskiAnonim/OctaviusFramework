@@ -8,39 +8,39 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.NullHandling
 import org.octavius.novels.report.filter.Filter
 
 class BooleanFilter(columnName: String, val falseText: String, val trueText: String) : Filter(columnName) {
 
-    override fun constructWhereClause(filter: FilterValue<*>): String {
-        val booleanFilter = filter as FilterValue.BooleanFilter
+    override fun constructWhereClause(filter: FilterData<*>): String {
+        val filterData = filter as FilterData.BooleanData
         return when {
             // Ignoruj filtrowanie gdy wartość null i nullHandling == Ignore
-            booleanFilter.value.value == null && booleanFilter.nullHandling.value == NullHandling.Ignore -> ""
+            filterData.value.value == null && filterData.nullHandling.value == NullHandling.Ignore -> ""
             // Gdy wartość określona i ignorujemy null
-            booleanFilter.value.value != null && booleanFilter.nullHandling.value == NullHandling.Ignore ->
-                "$columnName = ${booleanFilter.value.value}"
+            filterData.value.value != null && filterData.nullHandling.value == NullHandling.Ignore ->
+                "$columnName = ${filterData.value.value}"
             // Gdy wartość null i wykluczamy/włączamy null
-            booleanFilter.value.value == null && booleanFilter.nullHandling.value != NullHandling.Ignore -> {
-                if (booleanFilter.nullHandling.value == NullHandling.Exclude) return "$columnName IS NOT NULL"
+            filterData.value.value == null && filterData.nullHandling.value != NullHandling.Ignore -> {
+                if (filterData.nullHandling.value == NullHandling.Exclude) return "$columnName IS NOT NULL"
                 else "$columnName IS NULL"
             }
             // Gdy wartość określona i wykluczamy/włączamy null
             else -> {
-                if (booleanFilter.nullHandling.value == NullHandling.Include) return "($columnName = ${booleanFilter.value.value} OR $columnName IS NULL)"
-                else "$columnName = ${booleanFilter.value.value}"
+                if (filterData.nullHandling.value == NullHandling.Include) return "($columnName = ${filterData.value.value} OR $columnName IS NULL)"
+                else "$columnName = ${filterData.value.value}"
             }
         }
     }
 
     @Composable
     override fun RenderFilter(
-        currentFilter: FilterValue<*>
+        currentFilter: FilterData<*>
     ) {
-        val booleanFilter = currentFilter as FilterValue.BooleanFilter
-        val filterValue = booleanFilter.value
+        val filterData = currentFilter as FilterData.BooleanData
+        val filterValue = filterData.value
 
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
@@ -57,7 +57,7 @@ class BooleanFilter(columnName: String, val falseText: String, val trueText: Str
                     selected = filterValue.value == true,
                     onClick = {
                         filterValue.value = if (filterValue.value == true) null else true
-                        booleanFilter.markDirty()
+                        filterData.markDirty()
                     },
                     label = { Text(trueText) },
                     leadingIcon = if (filterValue.value == true) {
@@ -75,7 +75,7 @@ class BooleanFilter(columnName: String, val falseText: String, val trueText: Str
                     selected = filterValue.value == false,
                     onClick = {
                         filterValue.value = if (filterValue.value == false) null else false
-                        booleanFilter.markDirty()
+                        filterData.markDirty()
                     },
                     label = { Text(falseText) },
                     leadingIcon = if (filterValue.value == false) {
@@ -93,7 +93,7 @@ class BooleanFilter(columnName: String, val falseText: String, val trueText: Str
             Spacer(modifier = Modifier.height(16.dp))
 
             // Opcje dla obsługi null
-            NullHandlingPanel(booleanFilter)
+            NullHandlingPanel(filterData)
         }
     }
 }

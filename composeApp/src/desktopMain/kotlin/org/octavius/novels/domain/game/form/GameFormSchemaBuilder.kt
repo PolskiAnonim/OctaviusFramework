@@ -9,7 +9,6 @@ import org.octavius.novels.form.control.base.ControlDependency
 import org.octavius.novels.form.control.base.DependencyType
 import org.octavius.novels.form.control.base.DoubleValidation
 import org.octavius.novels.form.control.base.IntegerValidation
-import org.octavius.novels.form.control.type.*
 import org.octavius.novels.form.control.type.container.SectionControl
 import org.octavius.novels.form.control.type.primitive.BooleanControl
 import org.octavius.novels.form.control.type.primitive.DoubleControl

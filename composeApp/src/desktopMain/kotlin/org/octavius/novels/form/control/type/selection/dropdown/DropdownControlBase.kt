@@ -39,7 +39,6 @@ import org.octavius.novels.form.control.base.Control
 import org.octavius.novels.form.control.base.ControlDependency
 import org.octavius.novels.form.control.base.ControlValidator
 import org.octavius.novels.form.control.layout.RenderNormalLabel
-import org.octavius.novels.form.control.type.selection.dropdown.DropdownOption
 import org.octavius.novels.form.control.validator.DefaultValidator
 
 /**

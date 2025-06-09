@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.novels.domain.ColumnInfo
-import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.StringFilter
 
@@ -23,9 +23,9 @@ class StringColumn(
     private val formatter: (String?) -> String = { it ?: "" }
 ) : ReportColumn(columnInfo, header, width, filterable, sortable) {
 
-    override fun createFilterValue(): FilterValue<*> {
+    override fun createFilterValue(): FilterData<*> {
         filter = StringFilter(name)
-        return FilterValue.TextFilter()
+        return FilterData.StringData()
     }
 
     @Composable

@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.report.ColumnState
-import org.octavius.novels.report.FilterValue
+import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.SortDirection
 import org.octavius.novels.report.filter.Filter
 
@@ -38,5 +38,5 @@ abstract class ReportColumn(
         }
     }
 
-    protected abstract fun createFilterValue(): FilterValue<*>
+    protected abstract fun createFilterValue(): FilterData<*>
 }

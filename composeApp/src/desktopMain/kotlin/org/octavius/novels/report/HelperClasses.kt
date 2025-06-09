@@ -13,7 +13,7 @@ data class ReportState(
 data class ColumnState(
     val sortDirection: MutableState<SortDirection> = mutableStateOf(SortDirection.ASC),
     val sortOrder: MutableState<Int?> = mutableStateOf(null),
-    val filtering: MutableState<FilterValue<*>?> = mutableStateOf(null),
+    val filtering: MutableState<FilterData<*>?> = mutableStateOf(null),
     val visible: MutableState<Boolean> = mutableStateOf(true)
 )
 
