@@ -17,13 +17,13 @@ import org.octavius.novels.report.filter.type.EnumFilter
 import kotlin.reflect.KClass
 
 class EnumColumn<T>(
-    columnInfo: ColumnInfo,
+    fieldName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val enumClass: KClass<T>,
-) : ReportColumn(columnInfo, header, width, filterable, sortable)
+) : ReportColumn(fieldName, header, width, filterable, sortable)
         where T : Enum<T>, T : EnumWithFormatter<T> {
     override fun createFilterValue(): FilterData<*> {
         filter = EnumFilter(name, enumClass)

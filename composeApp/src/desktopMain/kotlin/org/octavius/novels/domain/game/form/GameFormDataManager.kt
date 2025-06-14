@@ -28,23 +28,22 @@ class GameFormDataManager : FormDataManager() {
                 "charactersExists" to false
             )
         } else {
-            val dataExists = DatabaseManager.executeQuery(
-                """
-            SELECT CASE WHEN pt.game_id IS NULL THEN FALSE ELSE TRUE END AS play_time_exists,
+            val dataExists = DatabaseManager.getFetcher().fetchRow(
+                """games g 
+                    LEFT JOIN characters c ON c.game_id = g.id
+                    LEFT JOIN play_time pt ON pt.game_id = g.id 
+                    LEFT JOIN ratings r ON r.game_id = g.id""",
+                """CASE WHEN pt.game_id IS NULL THEN FALSE ELSE TRUE END AS play_time_exists,
                 CASE WHEN c.game_id IS NULL THEN FALSE ELSE TRUE END AS characters_exists,
                 CASE WHEN r.game_id IS NULL THEN FALSE ELSE TRUE END AS ratings_exists
-            FROM games g LEFT JOIN characters c ON c.game_id = g.id
-                LEFT JOIN play_time pt ON pt.game_id = g.id
-                LEFT JOIN ratings r ON r.game_id = g.id
-            WHERE g.id = ?
-                """.trimIndent(),
-                listOf(loadedId)
-            ).first()
+                """,
+                "g.id = :id", mapOf("id" to loadedId)
+                )
             mapOf(
-                "visibleCharactersSection" to dataExists[ColumnInfo("", "characters_exists")]!!,
-                "charactersExists" to dataExists[ColumnInfo("", "characters_exists")]!!,
-                "playTimeExists" to dataExists[ColumnInfo("", "play_time_exists")]!!,
-                "ratingsExists" to dataExists[ColumnInfo("", "ratings_exists")]!!
+                "visibleCharactersSection" to dataExists["characters_exists"]!!,
+                "charactersExists" to dataExists["characters_exists"]!!,
+                "playTimeExists" to dataExists["play_time_exists"]!!,
+                "ratingsExists" to dataExists["ratings_exists"]!!
             )
         }
     }

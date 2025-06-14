@@ -25,35 +25,22 @@ class AsianMediaFormDataManager : FormDataManager() {
             )
         } else {
             // Dla istniejącego, załaduj publikacje z bazy
-            val publications = DatabaseManager.executeQuery(
-                """
-                SELECT 
-                    p.id,
-                    p.publication_type, 
-                    p.status, 
-                    p.track_progress,
-                    pv.volumes,
-                    pv.translated_volumes,
-                    pv.chapters,
-                    pv.translated_chapters,
-                    pv.original_completed
-                FROM publications p
-                LEFT JOIN publication_volumes pv ON p.id = pv.publication_id
-                WHERE p.title_id = ?
-                """.trimIndent(),
-                listOf(loadedId)
-            ).map { row ->
+            val publications = DatabaseManager.getFetcher().fetchList(
+                "publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id",
+                "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed",
+                "p.title_id = :title", params = mapOf("title" to loadedId),
+                ).map { row ->
                 val data = mutableMapOf<String, Any?>()
-                data["id"] = row[ColumnInfo("publications", "id")]
-                data["publicationType"] = row[ColumnInfo("publications", "publication_type")]
-                data["status"] = row[ColumnInfo("publications", "status")]
-                data["trackProgress"] = row[ColumnInfo("publications", "track_progress")]
+                data["id"] = row["id"]
+                data["publicationType"] = row["publication_type"]
+                data["status"] = row["status"]
+                data["trackProgress"] = row["track_progress"]
 
-                data["volumes"] = row[ColumnInfo("publication_volumes", "volumes")]
-                data["translatedVolumes"] = row[ColumnInfo("publication_volumes", "translated_volumes")]
-                data["chapters"] = row[ColumnInfo("publication_volumes", "chapters")]
-                data["translatedChapters"] = row[ColumnInfo("publication_volumes", "translated_chapters")]
-                data["originalCompleted"] = row[ColumnInfo("publication_volumes", "original_completed")]
+                data["volumes"] = row[ "volumes"]
+                data["translatedVolumes"] = row["translated_volumes"]
+                data["chapters"] = row["chapters"]
+                data["translatedChapters"] = row["translated_chapters"]
+                data["originalCompleted"] = row["original_completed"]
 
                 data
             }

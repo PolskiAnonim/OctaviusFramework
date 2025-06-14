@@ -16,13 +16,13 @@ import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.IntegerFilter
 
 class IntegerColumn(
-    columnInfo: ColumnInfo,
+    fieldName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
-) : ReportColumn(columnInfo, header, width, filterable, sortable) {
+) : ReportColumn(fieldName, header, width, filterable, sortable) {
 
     override fun createFilterValue(): FilterData<*> {
         filter = IntegerFilter(name)

@@ -9,12 +9,10 @@ class GameSeriesValidator : FormValidator() {
         val name = formData["name"]?.value as? String
         if (!name.isNullOrBlank()) {
             // Sprawdź unikalność nazwy serii
-            val existingCount = DatabaseManager.executeQuery(
-                "SELECT COUNT(*) as count FROM series WHERE name = ?",
-                listOf(name)
-            ).firstOrNull()!![ColumnInfo("","count")] as Int
+            val existingCount = DatabaseManager.getFetcher().fetchCount("series", "name = :name", mapOf("name" to name))
+
             println(existingCount)
-            if (existingCount > 0) {
+            if (existingCount > 0L) {
                 errorManager.addFieldError("name", "Seria o tej nazwie już istnieje")
                 return false
             }

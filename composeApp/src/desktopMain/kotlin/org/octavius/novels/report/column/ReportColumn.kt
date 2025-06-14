@@ -4,20 +4,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 
 import androidx.compose.ui.Modifier
-import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.report.ColumnState
 import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.SortDirection
 import org.octavius.novels.report.filter.Filter
 
 abstract class ReportColumn(
-    val columnInfo: ColumnInfo,
+    val fieldName: String,
     val header: String,
     val width: Float = 1f,
     val filterable: Boolean = false,
     val sortable: Boolean = false
 ) {
-    val name: String get() = columnInfo.fieldName // Dla zachowania kompatybilności 
+    val name: String get() = fieldName // Dla zachowania kompatybilności
 
     @Composable
     abstract fun RenderCell(item: Any?, modifier: Modifier)

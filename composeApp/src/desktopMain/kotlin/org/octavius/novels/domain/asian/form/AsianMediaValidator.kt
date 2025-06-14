@@ -26,23 +26,18 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         val titles = formData["titles"]!!.value as List<String>
 
         if (titles.isEmpty()) return true
-        val placeholders = titles.joinToString { "?" }
-        val sql = """
-            SELECT COUNT(*) FROM (
-                SELECT id, UNNEST(titles) AS title
-                FROM titles
-            ) WHERE title = ANY(ARRAY[$placeholders])
-            ${if (entityId != null) "AND id != ?" else ""}
-        """.trimIndent()
-        val count = DatabaseManager.executeQuery(sql, titles + if (entityId != null) listOf(entityId) else listOf())
-            .firstOrNull()
-            ?.values
-            ?.firstOrNull() as Int
 
-        if (count > 0) {
+
+        val params = if (entityId != null) mapOf("titles" to titles, "id" to entityId) else mapOf("titles" to titles.toTypedArray())
+        val count = DatabaseManager.
+        getFetcher().
+        fetchCount("(SELECT id, UNNEST(titles) AS title FROM titles)",
+            "title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}", params)
+
+        if (count > 0L) {
             errorManager.addGlobalError("Tytuły już istnieją w bazie danych")
         }
 
-        return count == 0
+        return count == 0L
     }
 }

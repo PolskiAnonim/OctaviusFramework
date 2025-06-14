@@ -57,7 +57,7 @@ abstract class Report : Screen {
         Box {}
     }
 
-    open var onRowClick: ((Map<ColumnInfo, Any?>) -> Unit)? = null
+    open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
 
     abstract fun createQuery(): Query
 
@@ -65,44 +65,21 @@ abstract class Report : Screen {
 
     private fun fetchData(
         page: Int,
-        onResult: (List<Map<ColumnInfo, Any?>>, Long) -> Unit
+        onResult: (List<Map<String, Any?>>, Long) -> Unit
     ) {
         // Budowanie klauzuli WHERE dla wyszukiwania
         val whereClauseBuilder = StringBuilder()
 
         // Dodaj warunek wyszukiwania dla searchQuery jeśli nie jest pusty
         if (reportState.searchQuery.value.isNotEmpty()) {
-            val escapedQuery = reportState.searchQuery.value.replace("'", "''")
+            val searchQuery = reportState.searchQuery.value
             val searchConditions = mutableListOf<String>()
 
             // Dla każdej widocznej kolumny dodaj warunek wyszukiwania
             columns.forEach { (key, column) ->
                 // Pomijamy kolumny, które są ukryte lub nie są typu tekstowego
                 if (columnStates[key]?.visible?.value == true) {
-                    when (column) {
-                        is StringColumn, is StringListColumn -> {
-                            // Dla kolumn tekstowych szukamy ILIKE
-                            searchConditions.add("CAST(${column.columnInfo.tableName}.${column.columnInfo.fieldName} AS TEXT) ILIKE '%$escapedQuery%'")
-                        }
-
-                        is EnumColumn<*> -> {
-                            // Dla enumów szukamy po wartościach wyświetlanych
-                            searchConditions.add("CAST(${column.columnInfo.tableName}.${column.columnInfo.fieldName} AS TEXT) ILIKE '%$escapedQuery%'")
-                        }
-
-                        is IntegerColumn, is BooleanColumn -> {
-                            // Dla pozostałych typów próbujemy konwersję do tekstu
-                            if (escapedQuery.toIntOrNull() != null || escapedQuery.lowercase() in listOf(
-                                    "true",
-                                    "false",
-                                    "tak",
-                                    "nie"
-                                )
-                            ) {
-                                searchConditions.add("CAST(${column.columnInfo.tableName}.${column.columnInfo.fieldName} AS TEXT) ILIKE '%$escapedQuery%'")
-                            }
-                        }
-                    }
+                    searchConditions.add("CAST(${column.fieldName} AS TEXT) ILIKE '%$searchQuery%'")
                 }
             }
 
@@ -113,7 +90,6 @@ abstract class Report : Screen {
         }
 
         // Dodaj warunki filtrowania z columnStates
-        var filtersAdded = false
         for ((key, state) in columnStates) {
             val filter = state.filtering.value ?: continue
             if (!filter.isActive()) continue
@@ -126,47 +102,19 @@ abstract class Report : Screen {
                     whereClauseBuilder.append(" AND ")
                 }
                 whereClauseBuilder.append(whereClause)
-                filtersAdded = true
             }
         }
 
-        // Dodaj klauzulę WHERE do zapytania SQL
-        val finalSql = if (whereClauseBuilder.isNotEmpty()) {
-            val whereClauseIndex = query.sql.lowercase().indexOf("where")
-            val orderClauseIndex = query.sql.lowercase().indexOf("order")
-
-            when {
-                whereClauseIndex != -1 -> {
-                    "${query.sql.substring(0, whereClauseIndex + 5)} $whereClauseBuilder AND ${
-                        query.sql.substring(
-                            whereClauseIndex + 5
-                        )
-                    }"
-                }
-
-                orderClauseIndex != -1 -> {
-                    "${query.sql.substring(0, orderClauseIndex)} WHERE $whereClauseBuilder ${
-                        query.sql.substring(
-                            orderClauseIndex
-                        )
-                    }"
-                }
-
-                else -> {
-                    "${query.sql} WHERE $whereClauseBuilder"
-                }
-            }
-        } else {
-            query.sql
-        }
-
+        val fetcher = DatabaseManager.getFetcher()
         try {
-            val (results, totalCount) = DatabaseManager.executePagedQuery(
-                sql = finalSql,
-                params = query.params.toList(),
-                page = page,
-                pageSize = reportState.pageSize.value
-            )
+
+            val totalCount = fetcher.fetchCount(query.sql, whereClauseBuilder.toString()) / reportState.pageSize.value
+            val results = fetcher.fetchPagedList(
+                table = query.sql,
+                fields = "*",
+                offset = page * reportState.pageSize.value,
+                limit = reportState.pageSize.value,
+                filter = whereClauseBuilder.toString())
 
             onResult(results, totalCount)
         } catch (e: Exception) {
@@ -187,7 +135,7 @@ abstract class Report : Screen {
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var showFilters by remember { mutableStateOf(false) }
-        var dataList by remember { mutableStateOf<List<Map<ColumnInfo, Any?>>>(emptyList()) }
+        var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
 
         // Dla śledzenia zmian filtrów
         val filteringState = derivedStateOf {
@@ -427,7 +375,7 @@ abstract class Report : Screen {
                                     .weight(column.width)
                                     .padding(horizontal = 4.dp)
                             ) {
-                                column.RenderCell(rowData[column.columnInfo], Modifier)
+                                column.RenderCell(rowData[column.fieldName], Modifier)
                             }
                         }
                     }

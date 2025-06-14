@@ -2,9 +2,9 @@ package org.octavius.novels.form.control.type.selection
 
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.domain.ColumnInfo
-import org.octavius.novels.form.control.type.selection.dropdown.DropdownOption
 import org.octavius.novels.form.control.base.ControlDependency
 import org.octavius.novels.form.control.type.selection.dropdown.DropdownControlBase
+import org.octavius.novels.form.control.type.selection.dropdown.DropdownOption
 
 /**
  * Kontrolka do wyboru rekordu z bazy danych z listy rozwijanej.
@@ -37,13 +37,12 @@ class DatabaseControl(
 
         // Załaduj z bazy danych
         try {
-            val sql = "SELECT $displayColumn FROM $relatedTable WHERE id = ?"
-            val result = DatabaseManager.executeQuery(sql, listOf(value)).firstOrNull()
+            val result = DatabaseManager.getFetcher()
+                .fetchField(relatedTable, displayColumn, "id = :id", mapOf("id" to value)) as String?
 
             if (result != null) {
-                val displayValue = result[ColumnInfo(relatedTable, displayColumn)] as String
-                cachedValue = DropdownOption(value, displayValue)
-                return displayValue
+                cachedValue = DropdownOption(value, result)
+                return result
             }
         } catch (e: Exception) {
             println("Błąd podczas pobierania tekstu wyświetlania: ${e.message}")
@@ -53,22 +52,25 @@ class DatabaseControl(
     }
 
     override fun loadOptions(searchQuery: String, page: Int): Pair<List<DropdownOption<Int>>, Int> {
-        val sql = if (searchQuery.isEmpty()) {
-            "SELECT id, $displayColumn FROM $relatedTable ORDER BY $displayColumn"
+        val filter = if (searchQuery.isEmpty()) {
+            ""
         } else {
-            "SELECT id, $displayColumn FROM $relatedTable WHERE $displayColumn ILIKE ? ORDER BY $displayColumn"
+            "$displayColumn ILIKE %:search%"
         }
 
-        val params = if (searchQuery.isEmpty()) emptyList() else listOf("%$searchQuery%")
-
+        val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to searchQuery)
+        val fetcher = DatabaseManager.getFetcher()
         return try {
-            val (results, totalPages) = DatabaseManager.executePagedQuery(sql, params, page, pageSize)
-            val mappedResults = results.groupBy { it[ColumnInfo(relatedTable, "id")] }
-                .map { (id, items) ->
-                    val displayValue =
-                        items.firstOrNull()?.get(ColumnInfo(relatedTable, displayColumn)) as? String ?: ""
-                    DropdownOption(id as Int, displayValue)
-                }
+            val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize
+            val results = fetcher.fetchPagedList(table = relatedTable,
+                fields = "id, $displayColumn",
+                offset = page * pageSize,
+                limit = pageSize,
+                filter = filter,
+                orderBy = displayColumn,
+                params = params)
+
+            val mappedResults = results.map { DropdownOption(it["id"] as Int,it[displayColumn] as String) }
             Pair(mappedResults, totalPages.toInt())
         } catch (e: Exception) {
             println("Błąd podczas wyszukiwania elementów: ${e.message}")

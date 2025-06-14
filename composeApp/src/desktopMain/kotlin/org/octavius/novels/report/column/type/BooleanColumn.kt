@@ -19,7 +19,7 @@ import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.BooleanFilter
 
 class BooleanColumn(
-    columnInfo: ColumnInfo,
+    fieldName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
@@ -27,7 +27,7 @@ class BooleanColumn(
     private val trueText: String = "Tak",
     private val falseText: String = "Nie",
     private val showIcon: Boolean = true
-) : ReportColumn(columnInfo, header, width, filterable, sortable) {
+) : ReportColumn(fieldName, header, width, filterable, sortable) {
 
     override fun createFilterValue(): FilterData<*> {
         filter = BooleanFilter(name, falseText, trueText)

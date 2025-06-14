@@ -38,24 +38,24 @@ ORDER BY t.id, p.publication_type
     override fun createColumns(): Map<String, ReportColumn> {
         return mapOf(
             "titles" to StringListColumn(
-                columnInfo = ColumnInfo("titles", "titles"),
+                fieldName ="titles",
                 header = "Tytuły",
                 width = 2f
             ),
             "language" to EnumColumn(
-                columnInfo = ColumnInfo("titles", "language"),
+                fieldName = "language",
                 header = "Język",
                 enumClass = PublicationLanguage::class,
                 width = 1f
             ),
             "publicationType" to EnumColumn(
-                columnInfo = ColumnInfo("publications", "publication_type"),
+                fieldName = "publication_type",
                 header = "Typ publikacji",
                 enumClass = PublicationType::class,
                 width = 1.5f
             ),
             "status" to EnumColumn(
-                columnInfo = ColumnInfo("publications", "status"),
+                fieldName = "status",
                 header = "Status",
                 enumClass = PublicationStatus::class,
                 width = 1.5f
@@ -81,9 +81,9 @@ ORDER BY t.id, p.publication_type
     }
 
 
-    override var onRowClick: ((Map<ColumnInfo, Any?>) -> Unit)? = { rowData ->
+    override var onRowClick: ((Map<String, Any?>) -> Unit)? = { rowData ->
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
-        val id = rowData[ColumnInfo("titles", "title_id")] as? Int
+        val id = rowData["title_id"] as? Int
         if (id != null) {
             navigator.addScreen(AsianMediaFormScreen(id))
         }

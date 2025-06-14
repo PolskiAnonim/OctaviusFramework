@@ -17,14 +17,14 @@ import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.StringListFilter
 
 class StringListColumn(
-    columnInfo: ColumnInfo,
+    fieldName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val maxVisibleItems: Int = 3,
     private val separator: String? = null
-) : ReportColumn(columnInfo, header, width, filterable, sortable) {
+) : ReportColumn(fieldName, header, width, filterable, sortable) {
 
     override fun createFilterValue(): FilterData<*> {
         filter = StringListFilter(name)

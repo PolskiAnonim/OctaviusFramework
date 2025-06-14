@@ -25,5 +25,5 @@ enum class SortDirection {
 
 data class Query(
     val sql: String,
-    val params: Array<Any?> = emptyArray()
+    val params: Map<String, Any> = emptyMap()
 )

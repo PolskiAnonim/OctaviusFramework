@@ -6,6 +6,7 @@ import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.form.SaveOperation
 import org.octavius.novels.form.TableRelation
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
 object DatabaseManager {
@@ -16,6 +17,7 @@ object DatabaseManager {
 
     // Instancja JdbcTemplate
     private var jdbcTemplate: JdbcTemplate
+    private var namedParameterJdbcTemplate: NamedParameterJdbcTemplate
 
     // Instancja TransactionManager
     private val transactionManager: DataSourceTransactionManager
@@ -25,9 +27,11 @@ object DatabaseManager {
 
     // Instancja fabryki mapperów
     private var rowMapperFactory: RowMapperFactory
+    private var rowMappers: RowMappers
 
-    // Instancja managera operacji formularzy
+    // Podległe instancje
     private var databaseUpdater: DatabaseUpdater
+    private var databaseFetcher: DatabaseFetcher
 
     init {
         val config = HikariConfig().apply {
@@ -41,6 +45,7 @@ object DatabaseManager {
 
         // Inicjalizacja JdbcTemplate
         jdbcTemplate = JdbcTemplate(dataSource)
+        namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         transactionManager = DataSourceTransactionManager(dataSource)
 
         // Inicjalizacja konwertera typów
@@ -49,48 +54,17 @@ object DatabaseManager {
 
         // Inicjalizacja fabryki mapperów
         rowMapperFactory = RowMapperFactory(typesConverter)
+        rowMappers = RowMappers(typesConverter)
 
         // Inicjalizacja managera operacji formularzy
         databaseUpdater = DatabaseUpdater(dataSource, jdbcTemplate)
+        databaseFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers)
     }
 
-    // Wykonanie zapytania bez paginacji - zwraca wszystkie wyniki
-    fun executeQuery(
-        sql: String,
-        params: List<Any?> = emptyList()
-    ): List<Map<ColumnInfo, Any?>> {
-        return jdbcTemplate.query(sql, rowMapperFactory.createColumnInfoMapper(), *params.toTypedArray())
+    fun getFetcher() : DatabaseFetcher {
+        return databaseFetcher
     }
 
-    // Wykonanie zapytania z paginacją
-    fun executePagedQuery(
-        sql: String,
-        params: List<Any?> = emptyList(),
-        page: Int = 1,
-        pageSize: Int = 10
-    ): Pair<List<Map<ColumnInfo, Any?>>, Long> {
-        // Pobranie całkowitej liczby wyników
-        val totalCount = getTotalCount(sql, params)
-
-        // Pobranie wyników dla bieżącej strony
-        val offset = (page - 1) * pageSize
-        val pagedQuery = "$sql LIMIT $pageSize OFFSET $offset"
-
-        val results = executeQuery(pagedQuery, params)
-        val totalPages = if (totalCount > 0) (totalCount - 1) / pageSize + 1 else 1
-
-        return Pair(results, totalPages)
-    }
-
-    // Pomocnicza metoda do pobrania całkowitej liczby wyników
-    private fun getTotalCount(sql: String, params: List<Any?>): Long {
-        val countQuery = "SELECT COUNT(*) AS counted_query FROM ($sql) AS count_subquery"
-        return jdbcTemplate.queryForObject(
-            countQuery,
-            Long::class.java,
-            *params.toTypedArray()
-        ) ?: 0L
-    }
 
     // Pobranie encji z relacjami
     fun getEntityWithRelations(

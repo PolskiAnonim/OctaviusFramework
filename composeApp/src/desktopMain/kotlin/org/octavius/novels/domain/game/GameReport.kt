@@ -20,7 +20,7 @@ import org.octavius.novels.screens.GameSeriesFormScreen
 class GameReport(val navigator: Navigator) : Report() {
     override fun createQuery(): Query {
         val sql = """
-            SELECT games.id, games.name, series.name, games.status
+            SELECT games.id, games.name AS game_name, series.name AS series_name, games.status
             FROM games
             LEFT JOIN series ON series.id = games.series
             ORDER BY games.name
@@ -28,9 +28,9 @@ class GameReport(val navigator: Navigator) : Report() {
         return Query(sql)
     }
 
-    override var onRowClick: ((Map<ColumnInfo, Any?>) -> Unit)? = { rowData ->
+    override var onRowClick: ((Map<String, Any?>) -> Unit)? = { rowData ->
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
-        val id = rowData[ColumnInfo("games", "id")] as? Int
+        val id = rowData["id"] as? Int
         if (id != null) {
             navigator.addScreen(GameFormScreen(id))
         }
@@ -38,10 +38,10 @@ class GameReport(val navigator: Navigator) : Report() {
 
     override fun createColumns(): Map<String, ReportColumn> {
         return mapOf(
-            "name" to StringColumn(ColumnInfo("games", "name"), "Nazwa", filterable = true),
-            "series" to StringColumn(ColumnInfo("series", "name"), "Seria", filterable = true),
+            "name" to StringColumn("game_name", "Nazwa", filterable = true),
+            "series" to StringColumn("series_name", "Seria", filterable = true),
             "status" to EnumColumn(
-                ColumnInfo("games", "status"),
+                "status",
                 "Status",
                 enumClass = GameStatus::class,
                 filterable = true
