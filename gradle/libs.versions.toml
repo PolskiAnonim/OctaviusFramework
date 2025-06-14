@@ -1,11 +1,11 @@
 [versions]
-androidx-lifecycle = "2.8.4"
-compose-multiplatform = "1.7.0"
-kotlin = "2.1.0"
-kotlinx-coroutines = "1.10.1"
-postgres = "42.7.5"
-hikari = "6.2.1"
-spring-jdbc = "7.0.0-M4"
+androidx-lifecycle = "2.9.0"
+compose-multiplatform = "1.8.1"
+kotlin = "2.1.21"
+kotlinx-coroutines = "1.10.2"
+postgres = "42.7.7"
+hikari = "6.3.0"
+spring-jdbc = "7.0.0-M6"
 [libraries]
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
