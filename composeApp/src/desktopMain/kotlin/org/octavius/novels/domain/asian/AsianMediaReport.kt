@@ -6,10 +6,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
 import org.octavius.novels.domain.PublicationType
-import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
 import org.octavius.novels.report.Report

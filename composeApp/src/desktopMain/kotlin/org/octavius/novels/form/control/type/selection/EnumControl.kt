@@ -2,9 +2,9 @@ package org.octavius.novels.form.control.type.selection
 
 import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.domain.EnumWithFormatter
-import org.octavius.novels.form.control.type.selection.dropdown.DropdownOption
 import org.octavius.novels.form.control.base.ControlDependency
 import org.octavius.novels.form.control.type.selection.dropdown.DropdownControlBase
+import org.octavius.novels.form.control.type.selection.dropdown.DropdownOption
 import kotlin.reflect.KClass
 
 /**

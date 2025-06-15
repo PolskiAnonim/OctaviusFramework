@@ -6,7 +6,6 @@ import org.octavius.novels.form.control.base.ControlValidator
 import org.octavius.novels.form.control.base.RepeatableValidation
 import org.octavius.novels.form.control.type.repeatable.RepeatableControl
 import org.octavius.novels.form.control.type.repeatable.RepeatableRow
-import kotlin.collections.iterator
 
 /**
  * Walidator dla kontrolek typu RepeatableControl.

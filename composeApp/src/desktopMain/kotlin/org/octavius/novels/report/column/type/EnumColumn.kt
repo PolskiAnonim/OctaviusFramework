@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.novels.domain.EnumWithFormatter
 import org.octavius.novels.domain.ColumnInfo
+import org.octavius.novels.domain.EnumWithFormatter
 import org.octavius.novels.report.FilterData
 import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.filter.type.EnumFilter

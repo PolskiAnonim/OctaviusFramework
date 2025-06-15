@@ -1,20 +1,12 @@
 package org.octavius.novels.domain.game.form
 
-import org.octavius.novels.domain.GameStatus
 import org.octavius.novels.domain.ColumnInfo
+import org.octavius.novels.domain.GameStatus
 import org.octavius.novels.form.component.FormSchema
 import org.octavius.novels.form.component.FormSchemaBuilder
-import org.octavius.novels.form.control.base.ComparisonType
-import org.octavius.novels.form.control.base.ControlDependency
-import org.octavius.novels.form.control.base.DependencyType
-import org.octavius.novels.form.control.base.DoubleValidation
-import org.octavius.novels.form.control.base.IntegerValidation
+import org.octavius.novels.form.control.base.*
 import org.octavius.novels.form.control.type.container.SectionControl
-import org.octavius.novels.form.control.type.primitive.BooleanControl
-import org.octavius.novels.form.control.type.primitive.DoubleControl
-import org.octavius.novels.form.control.type.primitive.HiddenControl
-import org.octavius.novels.form.control.type.primitive.IntegerControl
-import org.octavius.novels.form.control.type.primitive.TextControl
+import org.octavius.novels.form.control.type.primitive.*
 import org.octavius.novels.form.control.type.selection.DatabaseControl
 import org.octavius.novels.form.control.type.selection.EnumControl
 

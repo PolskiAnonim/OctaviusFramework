@@ -1,6 +1,8 @@
 package org.octavius.novels.domain.game.form
 
-import org.octavius.novels.form.*
+import org.octavius.novels.form.ControlResultData
+import org.octavius.novels.form.SaveOperation
+import org.octavius.novels.form.TableRelation
 import org.octavius.novels.form.component.FormDataManager
 
 class GameSeriesFormDataManager : FormDataManager() {
