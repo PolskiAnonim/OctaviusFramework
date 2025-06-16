@@ -1,12 +1,5 @@
 package org.octavius.novels.domain.asian
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.domain.PublicationLanguage
 import org.octavius.novels.domain.PublicationStatus
 import org.octavius.novels.domain.PublicationType
@@ -63,22 +56,6 @@ ORDER BY t.id, p.publication_type
         )
     }
 
-    @Composable
-    override fun AddMenu() {
-        DropdownMenuItem(
-            text = { Text("Nowa nowelka") },
-            onClick = {
-                navigator.addScreen(AsianMediaFormScreen())
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null
-                )
-            }
-        )
-        // Tutaj możesz dodać więcej opcji, jeśli potrzebujesz
-    }
 
 
     override var onRowClick: ((Map<String, Any?>) -> Unit)? = { rowData ->

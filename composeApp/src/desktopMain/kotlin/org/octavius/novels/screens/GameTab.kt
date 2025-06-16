@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import novelskotlin.composeapp.generated.resources.Res
 import novelskotlin.composeapp.generated.resources.game_icon
 import org.jetbrains.compose.resources.painterResource
-import org.octavius.novels.domain.game.GameReport
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.navigator.Tab
 import org.octavius.novels.navigator.TabOptions
@@ -17,7 +16,7 @@ class GameTab : Tab {
 
     init {
         navigator.addScreen(
-            GameReport(
+            GameReportScreen(
                 navigator
             )
         )

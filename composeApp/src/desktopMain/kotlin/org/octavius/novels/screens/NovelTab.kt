@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import novelskotlin.composeapp.generated.resources.Res
 import novelskotlin.composeapp.generated.resources.novel_icon
-import org.octavius.novels.domain.asian.AsianMediaReport
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.navigator.Tab
 import org.octavius.novels.navigator.TabOptions
@@ -16,7 +15,7 @@ class NovelTab : Tab {
 
     init {
         navigator.addScreen(
-            AsianMediaReport(
+            AsianMediaReportScreen(
                 navigator
             )
         )

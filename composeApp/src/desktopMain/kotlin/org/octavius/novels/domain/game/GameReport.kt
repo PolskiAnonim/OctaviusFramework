@@ -1,12 +1,5 @@
 package org.octavius.novels.domain.game
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import org.octavius.novels.domain.ColumnInfo
 import org.octavius.novels.domain.GameStatus
 import org.octavius.novels.navigator.Navigator
 import org.octavius.novels.report.Query
@@ -15,7 +8,6 @@ import org.octavius.novels.report.column.ReportColumn
 import org.octavius.novels.report.column.type.EnumColumn
 import org.octavius.novels.report.column.type.StringColumn
 import org.octavius.novels.screens.GameFormScreen
-import org.octavius.novels.screens.GameSeriesFormScreen
 
 class GameReport(val navigator: Navigator) : Report() {
     override fun createQuery(): Query {
@@ -49,31 +41,4 @@ class GameReport(val navigator: Navigator) : Report() {
         )
     }
 
-    @Composable
-    override fun AddMenu() {
-        DropdownMenuItem(
-            text = { Text("Nowa gra") },
-            onClick = {
-                navigator.addScreen(GameFormScreen())
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null
-                )
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("Nowa seria") },
-            onClick = {
-                navigator.addScreen(GameSeriesFormScreen())
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null
-                )
-            }
-        )
-    }
 }
