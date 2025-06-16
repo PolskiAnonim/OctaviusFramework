@@ -16,8 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Input
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterAlt
@@ -109,7 +107,7 @@ abstract class ReportScreen : Screen {
                             value = reportState.searchQuery.value,
                             onValueChange = {
                                 reportState.searchQuery.value = it
-                                reportState.currentPage.value = 1
+                                reportState.currentPage.value = 0
                             },
                             modifier = Modifier.Companion.weight(1f),
                             placeholder = { Text("Szukaj...") },
@@ -124,7 +122,7 @@ abstract class ReportScreen : Screen {
                                     IconButton(
                                         onClick = {
                                             reportState.searchQuery.value = ""
-                                            reportState.currentPage.value = 1
+                                            reportState.currentPage.value = 0
                                         }
                                     ) {
                                         Icon(
@@ -189,7 +187,7 @@ abstract class ReportScreen : Screen {
                             columns = report.getColumns().filter { it.value.filterable },
                             columnStates = report.getColumnStates().filter { it.value.filtering.value != null },
                             onPageReset = {
-                                reportState.currentPage.value = 1
+                                reportState.currentPage.value = 0
                             }
                         )
                     }
@@ -271,58 +269,16 @@ abstract class ReportScreen : Screen {
             }
 
             // Paginacja
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Row(
-                    modifier = Modifier.Companion
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Companion.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = {
-                            if (reportState.currentPage.value > 1) {
-                                reportState.currentPage.value--
-                                coroutineScope.launch {
-                                    lazyListState.scrollToItem(0)
-                                }
-                            }
-                        },
-                        enabled = reportState.currentPage.value > 1
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Poprzednia strona",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-
-                    Text(
-                        text = "Strona ${reportState.currentPage.value} z ${reportState.totalPages.value}",
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    IconButton(
-                        onClick = {
-                            if (reportState.currentPage.value < reportState.totalPages.value) {
-                                reportState.currentPage.value++
-                                coroutineScope.launch {
-                                    lazyListState.scrollToItem(0)
-                                }
-                            }
-                        },
-                        enabled = reportState.currentPage.value < reportState.totalPages.value
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Następna strona",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+            PaginationComponent(
+                currentPage = reportState.currentPage.value,
+                totalPages = reportState.totalPages.value,
+                onPageChange = { newPage ->
+                    reportState.currentPage.value = newPage
+                    coroutineScope.launch {
+                        lazyListState.scrollToItem(0)
                     }
                 }
-            }
+            )
         }
     }
 }

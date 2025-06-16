@@ -4,7 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 
 data class ReportState(
-    val currentPage: MutableState<Int> = mutableStateOf(1),
+    val currentPage: MutableState<Int> = mutableStateOf(0),
     val totalPages: MutableState<Int> = mutableStateOf(1),
     val pageSize: MutableState<Int> = mutableStateOf(10),
     val searchQuery: MutableState<String> = mutableStateOf(""),
