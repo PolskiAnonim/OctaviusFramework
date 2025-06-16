@@ -2,17 +2,16 @@ package org.octavius.novels.report
 
 import org.octavius.novels.database.DatabaseManager
 import org.octavius.novels.report.column.ReportColumn
+import org.octavius.novels.report.components.ReportStructure
 
 abstract class Report {
 
-    private val query: Query
-    private val columns: Map<String, ReportColumn>
+    private val reportStructure: ReportStructure
     private val columnStates = mutableMapOf<String, ColumnState>()
 
     init {
-        columns = this.createColumns()
-        initializeColumnStates(columns)
-        query = this.createQuery()
+        reportStructure = this.createReportStructure()
+        initializeColumnStates(reportStructure.getAllColumns())
     }
 
     private val reportState = ReportState()
@@ -25,9 +24,7 @@ abstract class Report {
 
     open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
 
-    abstract fun createQuery(): Query
-
-    abstract fun createColumns(): Map<String, ReportColumn>
+    abstract fun createReportStructure(): ReportStructure
 
     fun fetchData(
         page: Int,
@@ -43,7 +40,7 @@ abstract class Report {
             val searchConditions = mutableListOf<String>()
 
             // Dla każdej widocznej kolumny dodaj warunek wyszukiwania
-            columns.forEach { (key, column) ->
+            reportStructure.getAllColumns().forEach { (key, column) ->
                 // Pomijamy kolumny, które są ukryte lub nie są typu tekstowego
                 if (columnStates[key]?.visible?.value == true) {
                     searchConditions.add("CAST(${column.fieldName} AS TEXT) ILIKE '%$searchQuery%'")
@@ -61,7 +58,7 @@ abstract class Report {
             val filter = state.filtering.value ?: continue
             if (!filter.isActive()) continue
 
-            val column = columns[key]!!
+            val column = reportStructure.getAllColumns()[key]!!
             val whereClause = column.filter!!.constructWhereClause(filter)
 
             if (whereClause.isNotEmpty()) {
@@ -75,9 +72,9 @@ abstract class Report {
         val fetcher = DatabaseManager.getFetcher()
         try {
 
-            val totalCount = fetcher.fetchCount(query.sql, whereClauseBuilder.toString()) / pageSize
+            val totalCount = fetcher.fetchCount(reportStructure.query.sql, whereClauseBuilder.toString()) / pageSize
             val results = fetcher.fetchPagedList(
-                table = query.sql,
+                table = reportStructure.query.sql,
                 fields = "*",
                 offset = page * pageSize,
                 limit = pageSize,
@@ -96,7 +93,7 @@ abstract class Report {
         }
     }
 
-    fun getColumns(): Map<String, ReportColumn> = columns
+    fun getColumns(): Map<String, ReportColumn> = reportStructure.getOrderedColumns()
     
     fun getColumnStates(): Map<String, ColumnState> = columnStates
 
