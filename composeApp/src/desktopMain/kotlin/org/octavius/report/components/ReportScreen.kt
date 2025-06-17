@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -165,10 +168,11 @@ abstract class ReportScreen : Screen {
                     Row(
                         modifier = Modifier.Companion
                             .fillMaxWidth()
+                            .height(IntrinsicSize.Max)
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .padding(vertical = 8.dp)
                     ) {
-                        report.getColumns().forEach { (key, column) ->
+                        report.getColumns().entries.forEachIndexed { index, (key, column) ->
                             Box(
                                 modifier = Modifier.Companion
                                     .weight(column.width)
@@ -253,6 +257,16 @@ abstract class ReportScreen : Screen {
                                     }
                                 }
                             }
+
+                            // Separator między kolumnami w nagłówku (oprócz ostatniej)
+                            if (index < report.getColumns().size - 1) {
+                                Box(
+                                    modifier = Modifier.Companion
+                                        .width(1.dp)
+                                        .fillMaxHeight()
+                                        .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
+                                )
+                            }
                         }
                     }
                 }
@@ -261,6 +275,7 @@ abstract class ReportScreen : Screen {
                     Row(
                         modifier = Modifier.Companion
                             .fillMaxWidth()
+                            .height(IntrinsicSize.Max)
                             .padding(vertical = 4.dp)
                             .run {
                                 if (report.onRowClick != null) {
@@ -270,13 +285,23 @@ abstract class ReportScreen : Screen {
                                 }
                             }
                     ) {
-                        report.getColumns().forEach { (_, column) ->
+                        report.getColumns().values.forEachIndexed { index, column ->
                             Box(
                                 modifier = Modifier.Companion
                                     .weight(column.width)
                                     .padding(horizontal = 4.dp)
                             ) {
                                 column.RenderCell(rowData[column.fieldName], Modifier.Companion)
+                            }
+                            
+                            // Separator między kolumnami (oprócz ostatniej)
+                            if (index < report.getColumns().size - 1) {
+                                Box(
+                                    modifier = Modifier.Companion
+                                        .width(1.dp)
+                                        .fillMaxHeight()
+                                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                )
                             }
                         }
                     }
