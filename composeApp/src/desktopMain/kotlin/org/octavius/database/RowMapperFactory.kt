@@ -30,11 +30,6 @@ class RowMappers(private val typesConverter: UserTypesConverter) {
 
 class RowMapperFactory(private val typesConverter: UserTypesConverter) {
 
-    // Główny mapper używany wszędzie - zwraca Map<ColumnInfo, Any?>
-    fun createColumnInfoMapper(): RowMapper<Map<ColumnInfo, Any?>> = RowMapper { rs, _ ->
-        mapRowToColumnInfo(rs)
-    }
-
     // ResultSetExtractor dla przypadków gdy potrzebujemy tylko jednego wiersza
     fun createSingleRowExtractor(): ResultSetExtractor<Map<ColumnInfo, Any?>> = ResultSetExtractor { rs ->
         if (rs.next()) {

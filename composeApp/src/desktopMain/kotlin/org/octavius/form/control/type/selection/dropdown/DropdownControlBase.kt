@@ -81,7 +81,7 @@ abstract class DropdownControlBase<T : Any>(
             }
         }
 
-        Column(modifier = Modifier.Companion.fillMaxWidth().padding(vertical = 8.dp)) {
+        Column(modifier = Modifier.Companion.fillMaxWidth()) {
             RenderNormalLabel(label, isRequired)
 
             ExposedDropdownMenuBox(
