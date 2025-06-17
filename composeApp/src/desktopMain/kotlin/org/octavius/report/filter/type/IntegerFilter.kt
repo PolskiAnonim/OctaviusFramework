@@ -75,6 +75,10 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
         }
     }
 
+    override fun createFilterData(): FilterData<*> {
+        return FilterData.NumberData<Int>()
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(

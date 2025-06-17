@@ -12,6 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.report.column.ReportColumn
+import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.IntegerFilter
 
 class IntegerColumn(
@@ -23,9 +24,8 @@ class IntegerColumn(
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
 ) : ReportColumn(fieldName, header, width, filterable, sortable) {
 
-    override fun createFilterValue(): FilterData<*> {
-        filter = IntegerFilter(name)
-        return FilterData.NumberData<Int>()
+    override fun createFilter(): Filter? {
+        return if (filterable) IntegerFilter(fieldName) else null
     }
 
     @Composable

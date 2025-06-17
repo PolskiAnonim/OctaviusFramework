@@ -63,6 +63,10 @@ class StringListFilter(columnName: String) : Filter(columnName) {
         }
     }
 
+    override fun createFilterData(): FilterData<*> {
+        return FilterData.StringData()
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun RenderFilter(

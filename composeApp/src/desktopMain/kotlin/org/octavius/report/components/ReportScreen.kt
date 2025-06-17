@@ -23,10 +23,12 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,15 +45,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.navigator.Screen
-import org.octavius.report.FilterPanel
 import org.octavius.report.Report
 import org.octavius.report.ReportState
 
 abstract class ReportScreen : Screen {
 
     abstract val report: Report
-
-    private val reportState = ReportState()
 
     @Composable
     protected open fun AddMenu() {
@@ -64,12 +63,14 @@ abstract class ReportScreen : Screen {
         val coroutineScope = rememberCoroutineScope()
         var showFilters by remember { mutableStateOf(false) }
         var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
+        
+        val reportState = report.getReportState()
 
         // Dla śledzenia zmian filtrów
         val filteringState = derivedStateOf {
-            report.getColumnStates().map { (key, state) ->
-                key to (state.filtering.value?.dirtyState?.value)
-            }.toMap()
+            reportState.filterValues.value.mapValues { (_, filter) ->
+                filter.dirtyState.value
+            }
         }
 
         // Efekt pobierający dane po zmianie parametrów
@@ -180,16 +181,10 @@ abstract class ReportScreen : Screen {
                         }
                     }
 
-                    // Panel filtrów
-                    if (showFilters) {
-                        FilterPanel(
-                            columns = report.getColumns().filter { it.value.filterable },
-                            columnStates = report.getColumnStates().filter { it.value.filtering.value != null },
-                            onPageReset = {
-                                reportState.currentPage.value = 0
-                            }
-                        )
-                    }
+                    // Panel filtrów - tymczasowo wyłączony, będzie zastąpiony menu w nagłówkach
+                    // if (showFilters) {
+                    //     FilterPanel(...)
+                    // }
                 }
 
                 item {
@@ -207,9 +202,16 @@ abstract class ReportScreen : Screen {
                                     .padding(horizontal = 4.dp),
                                 contentAlignment = Alignment.Companion.Center
                             ) {
+                                val activeFilterData = reportState.filterValues.value[key]
+                                val hasFilter = report.getFilters().containsKey(key)
+                                var showColumnMenu by remember { mutableStateOf(false) }
+                                
                                 Row(
                                     verticalAlignment = Alignment.Companion.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = if (hasFilter) {
+                                        Modifier.clickable { showColumnMenu = true }
+                                    } else Modifier
                                 ) {
                                     Text(
                                         text = column.header,
@@ -218,14 +220,65 @@ abstract class ReportScreen : Screen {
                                     )
 
                                     // Wskaźnik aktywnego filtra
-                                    val columnState = report.getColumnStates()[key]
-                                    if (column.filterable && columnState!!.filtering.value?.isActive() == true) {
+                                    if (hasFilter && activeFilterData?.isActive() == true) {
                                         Icon(
                                             imageVector = Icons.Default.FilterAlt,
                                             contentDescription = "Filtr aktywny",
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.Companion.size(16.dp)
                                         )
+                                    }
+                                }
+                                
+                                // Menu filtra dla kolumny
+                                if (hasFilter) {
+                                    DropdownMenu(
+                                        expanded = showColumnMenu,
+                                        onDismissRequest = { showColumnMenu = false }
+                                    ) {
+                                        // Renderuj kontrolki filtra
+                                        activeFilterData?.let { filterData ->
+                                            val filter = report.getFilters()[key]!!
+                                            
+                                            Column(
+                                                modifier = Modifier.padding(16.dp)
+                                            ) {
+                                                Text(
+                                                    text = "Filtr: ${column.header}",
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    modifier = Modifier.padding(bottom = 8.dp)
+                                                )
+                                                
+                                                filter.RenderFilter(filterData)
+                                                
+                                                // Przycisk wyczyść filtr
+                                                if (filterData.isActive()) {
+                                                    Row(
+                                                        modifier = Modifier.padding(top = 8.dp),
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        OutlinedButton(
+                                                            onClick = {
+                                                                val newFilterData = filter.createFilterData()
+                                                                val currentFilters = reportState.filterValues.value.toMutableMap()
+                                                                currentFilters[key] = newFilterData
+                                                                reportState.filterValues.value = currentFilters
+                                                                reportState.currentPage.value = 0
+                                                                showColumnMenu = false
+                                                            }
+                                                        ) {
+                                                            Text("Wyczyść")
+                                                        }
+                                                        
+                                                        Button(
+                                                            onClick = { showColumnMenu = false }
+                                                        ) {
+                                                            Text("Zamknij")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

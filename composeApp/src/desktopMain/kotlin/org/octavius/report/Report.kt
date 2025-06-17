@@ -3,23 +3,45 @@ package org.octavius.report
 import org.octavius.database.DatabaseManager
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.components.ReportStructure
+import org.octavius.report.filter.Filter
 
 abstract class Report {
 
     private val reportStructure: ReportStructure
-    private val columnStates = mutableMapOf<String, ColumnState>()
+    private val reportState = ReportState()
+    private val filters: Map<String, Filter>
 
     init {
         reportStructure = this.createReportStructure()
-        initializeColumnStates(reportStructure.getAllColumns())
+        filters = initializeFilters()
+        initializeReportState()
     }
 
-    private val reportState = ReportState()
-
-    private fun initializeColumnStates(columns: Map<String, ReportColumn>) {
-        for ((key, column) in columns) {
-            columnStates[key] = column.initializeState()
+    private fun initializeFilters(): Map<String, Filter> {
+        val filterMap = mutableMapOf<String, Filter>()
+        val filterValues = mutableMapOf<String, FilterData<*>>()
+        
+        reportStructure.getAllColumns().forEach { (columnName, column) ->
+            if (column.filterable) {
+                val filter = column.createFilter()
+                if (filter != null) {
+                    filterMap[columnName] = filter
+                    // Inicjalizuj domyślną wartość filtra
+                    filterValues[columnName] = filter.createFilterData()
+                }
+            }
         }
+        
+        // Ustaw początkowe wartości filtrów w reportState
+        reportState.filterValues.value = filterValues
+        
+        return filterMap
+    }
+
+    private fun initializeReportState() {
+        // Ustaw domyślne widoczne kolumny
+        val allColumns = reportStructure.getAllColumns().keys
+        reportState.visibleColumns.value = allColumns.toSet()
     }
 
     open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
@@ -41,8 +63,8 @@ abstract class Report {
 
             // Dla każdej widocznej kolumny dodaj warunek wyszukiwania
             reportStructure.getAllColumns().forEach { (key, column) ->
-                // Pomijamy kolumny, które są ukryte lub nie są typu tekstowego
-                if (columnStates[key]?.visible?.value == true) {
+                // Pomijamy kolumny, które są ukryte
+                if (reportState.visibleColumns.value.contains(key)) {
                     searchConditions.add("CAST(${column.fieldName} AS TEXT) ILIKE '%$searchQuery%'")
                 }
             }
@@ -53,13 +75,12 @@ abstract class Report {
             }
         }
 
-        // Dodaj warunki filtrowania z columnStates
-        for ((key, state) in columnStates) {
-            val filter = state.filtering.value ?: continue
-            if (!filter.isActive()) continue
+        // Dodaj warunki filtrowania z reportState
+        for ((columnName, filterData) in reportState.filterValues.value) {
+            if (!filterData.isActive()) continue
 
-            val column = reportStructure.getAllColumns()[key]!!
-            val whereClause = column.filter!!.constructWhereClause(filter)
+            val filter = filters[columnName] ?: continue
+            val whereClause = filter.constructWhereClause(filterData)
 
             if (whereClause.isNotEmpty()) {
                 if (whereClauseBuilder.isNotEmpty()) {
@@ -88,13 +109,15 @@ abstract class Report {
     }
 
     fun areAnyFiltersActive(): Boolean {
-        return columnStates.values.any { state ->
-            state.filtering.value?.isActive() == true
+        return reportState.filterValues.value.values.any { filterData ->
+            filterData.isActive()
         }
     }
 
     fun getColumns(): Map<String, ReportColumn> = reportStructure.getOrderedColumns()
     
-    fun getColumnStates(): Map<String, ColumnState> = columnStates
+    fun getReportState(): ReportState = reportState
+    
+    fun getFilters(): Map<String, Filter> = filters
 
 }

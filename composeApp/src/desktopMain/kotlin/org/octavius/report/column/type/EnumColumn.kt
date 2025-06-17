@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.report.FilterData
 import org.octavius.report.column.ReportColumn
+import org.octavius.report.filter.Filter
+import org.octavius.report.filter.type.BooleanFilter
 import org.octavius.report.filter.type.EnumFilter
 import kotlin.reflect.KClass
 
@@ -24,9 +26,9 @@ class EnumColumn<T>(
     private val enumClass: KClass<T>,
 ) : ReportColumn(fieldName, header, width, filterable, sortable)
         where T : Enum<T>, T : EnumWithFormatter<T> {
-    override fun createFilterValue(): FilterData<*> {
-        filter = EnumFilter(name, enumClass)
-        return FilterData.EnumData<T>()
+
+    override fun createFilter(): Filter? {
+        return if (filterable) EnumFilter(fieldName, enumClass) else null
     }
 
     @Composable

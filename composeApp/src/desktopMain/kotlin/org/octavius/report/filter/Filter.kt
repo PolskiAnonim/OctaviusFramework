@@ -17,6 +17,8 @@ abstract class Filter(val columnName: String) {
 
     abstract fun constructWhereClause(filter: FilterData<*>): String
 
+    abstract fun createFilterData(): FilterData<*>
+
     @Composable
     abstract fun RenderFilter(
         currentFilter: FilterData<*>

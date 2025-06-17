@@ -56,6 +56,10 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
         }
     }
 
+    override fun createFilterData(): FilterData<*> {
+        return FilterData.EnumData()
+    }
+
     @Composable
     override fun RenderFilter(
         currentFilter: FilterData<*>

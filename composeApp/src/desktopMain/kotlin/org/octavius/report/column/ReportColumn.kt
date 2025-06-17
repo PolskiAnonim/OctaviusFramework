@@ -1,12 +1,7 @@
 package org.octavius.report.column
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-
 import androidx.compose.ui.Modifier
-import org.octavius.report.ColumnState
-import org.octavius.report.FilterData
-import org.octavius.report.SortDirection
 import org.octavius.report.filter.Filter
 
 abstract class ReportColumn(
@@ -20,22 +15,9 @@ abstract class ReportColumn(
 
     @Composable
     abstract fun RenderCell(item: Any?, modifier: Modifier)
-
-    var filter: Filter? = null
-
-    open fun initializeState(): ColumnState {
-        return if (filterable) {
-            ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(createFilterValue())
-            )
-        } else {
-            ColumnState(
-                mutableStateOf(SortDirection.UNSPECIFIED),
-                filtering = mutableStateOf(null)
-            )
-        }
-    }
-
-    protected abstract fun createFilterValue(): FilterData<*>
+    
+    /**
+     * Tworzy filtr dla tej kolumny (tylko jeśli filterable = true)
+     */
+    open fun createFilter(): Filter? = null
 }

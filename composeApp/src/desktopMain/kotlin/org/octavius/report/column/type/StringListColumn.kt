@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.report.column.ReportColumn
+import org.octavius.report.filter.Filter
+import org.octavius.report.filter.type.BooleanFilter
 import org.octavius.report.filter.type.StringListFilter
 
 class StringListColumn(
@@ -25,9 +27,8 @@ class StringListColumn(
     private val separator: String? = null
 ) : ReportColumn(fieldName, header, width, filterable, sortable) {
 
-    override fun createFilterValue(): FilterData<*> {
-        filter = StringListFilter(name)
-        return FilterData.StringData()
+    override fun createFilter(): Filter? {
+        return if (filterable) StringListFilter(fieldName) else null
     }
 
     @Composable

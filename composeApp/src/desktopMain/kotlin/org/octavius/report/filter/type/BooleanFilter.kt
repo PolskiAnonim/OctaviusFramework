@@ -35,6 +35,10 @@ class BooleanFilter(columnName: String, val falseText: String, val trueText: Str
         }
     }
 
+    override fun createFilterData(): FilterData<*> {
+        return FilterData.BooleanData()
+    }
+
     @Composable
     override fun RenderFilter(
         currentFilter: FilterData<*>
