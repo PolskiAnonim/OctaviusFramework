@@ -76,6 +76,7 @@ abstract class ReportScreen : Screen {
         LaunchedEffect(
             reportState.currentPage.value,
             reportState.searchQuery.value,
+            reportState.pageSize.value,
             filteringState.value
         ) {
             report.fetchData(
@@ -270,11 +271,16 @@ abstract class ReportScreen : Screen {
             PaginationComponent(
                 currentPage = reportState.currentPage.value,
                 totalPages = reportState.totalPages.value,
+                pageSize = reportState.pageSize.value,
                 onPageChange = { newPage ->
                     reportState.currentPage.value = newPage
                     coroutineScope.launch {
                         lazyListState.scrollToItem(0)
                     }
+                },
+                onPageSizeChange = { newPageSize ->
+                    reportState.pageSize.value = newPageSize
+                    reportState.currentPage.value = 0
                 }
             )
         }

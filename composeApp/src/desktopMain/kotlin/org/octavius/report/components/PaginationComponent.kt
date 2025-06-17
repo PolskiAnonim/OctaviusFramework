@@ -27,6 +27,8 @@ fun PaginationComponent(
     currentPage: Int,
     totalPages: Int,
     onPageChange: (Int) -> Unit,
+    pageSize: Int = 20,
+    onPageSizeChange: ((Int) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var pageInputValue by remember(currentPage) { 
@@ -144,6 +146,53 @@ fun PaginationComponent(
                     text = " z $totalPages",
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+            }
+
+            // Selektor rozmiaru strony (jeśli onPageSizeChange jest dostępne)
+            if (onPageSizeChange != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Rozmiar:",
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    
+                    val pageSizeOptions = listOf(10, 20, 50, 100)
+                    var expanded by remember { mutableStateOf(false) }
+                    
+                    Box {
+                        OutlinedButton(
+                            onClick = { expanded = true },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            modifier = Modifier.width(60.dp).height(32.dp),
+                            contentPadding = PaddingValues(4.dp)
+                        ) {
+                            Text(
+                                text = pageSize.toString(),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            pageSizeOptions.forEach { size ->
+                                DropdownMenuItem(
+                                    text = { Text(size.toString()) },
+                                    onClick = {
+                                        onPageSizeChange(size)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             // Przycisk następnej strony
