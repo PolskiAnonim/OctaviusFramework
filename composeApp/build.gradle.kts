@@ -36,11 +36,11 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "org.octavius.novels.MainKt"
+        mainClass = "org.octavius.app.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.octavius.novels"
+            packageName = "org.octavius"
             packageVersion = "1.0.0"
         }
     }
