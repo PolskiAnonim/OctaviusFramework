@@ -156,35 +156,8 @@ abstract class ReportScreen : Screen {
                                 AddMenu()
                             }
                         }
-
-                        // Przycisk filtrów z aktywnym wskaźnikiem
-                        IconButton(
-                            onClick = { showFilters = !showFilters },
-                            modifier = Modifier.Companion.padding(start = 8.dp)
-                        ) {
-                            if (report.areAnyFiltersActive()) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.FilterListOff,
-                                        contentDescription = "Filtry aktywne",
-                                        tint = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                }
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.FilterList,
-                                    contentDescription = "Filtry"
-                                )
-                            }
-                        }
                     }
 
-                    // Panel filtrów - tymczasowo wyłączony, będzie zastąpiony menu w nagłówkach
-                    // if (showFilters) {
-                    //     FilterPanel(...)
-                    // }
                 }
 
                 item {
@@ -259,10 +232,8 @@ abstract class ReportScreen : Screen {
                                                     ) {
                                                         OutlinedButton(
                                                             onClick = {
-                                                                val newFilterData = filter.createFilterData()
-                                                                val currentFilters = reportState.filterValues.value.toMutableMap()
-                                                                currentFilters[key] = newFilterData
-                                                                reportState.filterValues.value = currentFilters
+                                                                val currentFilterData = reportState.filterValues.value[key]!!
+                                                                currentFilterData.reset()
                                                                 reportState.currentPage.value = 0
                                                                 showColumnMenu = false
                                                             }
