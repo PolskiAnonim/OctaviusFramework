@@ -2,19 +2,7 @@ package org.octavius.report.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -22,26 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Input
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Badge
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -49,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.navigator.Screen
 import org.octavius.report.Report
-import org.octavius.report.ReportState
 
 abstract class ReportScreen : Screen {
 
@@ -66,7 +36,7 @@ abstract class ReportScreen : Screen {
         val coroutineScope = rememberCoroutineScope()
         var showFilters by remember { mutableStateOf(false) }
         var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
-        
+
         val reportState = report.getReportState()
 
         // Dla śledzenia zmian filtrów
@@ -81,6 +51,7 @@ abstract class ReportScreen : Screen {
             reportState.currentPage.value,
             reportState.searchQuery.value,
             reportState.pageSize.value,
+            reportState.sortOrder.value,
             filteringState.value
         ) {
             report.fetchData(
@@ -98,6 +69,15 @@ abstract class ReportScreen : Screen {
                 state = lazyListState,
                 modifier = Modifier.Companion.weight(1f)
             ) {
+                item {
+                    // Panel zarządzania kolumnami
+                    ColumnManagementPanel(
+                        columnNames = report.getColumns().map { it.key to it.value.header }.toMap(),
+                        reportState = reportState,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+
                 item {
                     // Pasek wyszukiwania i filtrowania
                     Row(
@@ -172,83 +152,90 @@ abstract class ReportScreen : Screen {
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .padding(vertical = 8.dp)
                     ) {
-                        report.getColumns().entries.forEachIndexed { index, (key, column) ->
-                            Box(
-                                modifier = Modifier.Companion
-                                    .weight(column.width)
-                                    .padding(horizontal = 4.dp),
-                                contentAlignment = Alignment.Companion.Center
-                            ) {
-                                val activeFilterData = reportState.filterValues.value[key]
-                                val hasFilter = report.getFilters().containsKey(key)
-                                var showColumnMenu by remember { mutableStateOf(false) }
-                                
-                                Row(
-                                    verticalAlignment = Alignment.Companion.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier = if (hasFilter) {
-                                        Modifier.clickable { showColumnMenu = true }
-                                    } else Modifier
+                        val sortedAndFilteredColumnKeys =
+                            reportState.columnKeys.filter { reportState.visibleColumns.value.contains(it) }
+                        val allColumns = report.getColumns()
+                        sortedAndFilteredColumnKeys.forEachIndexed { index, key ->
+                            val column = allColumns[key]
+                            if (column != null) {
+                                Box(
+                                    modifier = Modifier.Companion
+                                        .weight(column.width)
+                                        .padding(horizontal = 4.dp),
+                                    contentAlignment = Alignment.Companion.Center
                                 ) {
-                                    Text(
-                                        text = column.header,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        textAlign = TextAlign.Companion.Center
-                                    )
+                                    val activeFilterData = reportState.filterValues.value[key]
+                                    val hasFilter = report.getFilters().containsKey(key)
+                                    var showColumnMenu by remember { mutableStateOf(false) }
 
-                                    // Wskaźnik aktywnego filtra
-                                    if (hasFilter && activeFilterData?.isActive() == true) {
-                                        Icon(
-                                            imageVector = Icons.Default.FilterAlt,
-                                            contentDescription = "Filtr aktywny",
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.Companion.size(16.dp)
-                                        )
-                                    }
-                                }
-                                
-                                // Menu filtra dla kolumny
-                                if (hasFilter) {
-                                    DropdownMenu(
-                                        expanded = showColumnMenu,
-                                        onDismissRequest = { showColumnMenu = false }
+                                    Row(
+                                        verticalAlignment = Alignment.Companion.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = if (hasFilter) {
+                                            Modifier.clickable { showColumnMenu = true }
+                                        } else Modifier
                                     ) {
-                                        // Renderuj kontrolki filtra
-                                        activeFilterData?.let { filterData ->
-                                            val filter = report.getFilters()[key]!!
-                                            
-                                            Column(
-                                                modifier = Modifier.padding(16.dp)
-                                            ) {
-                                                Text(
-                                                    text = "Filtr: ${column.header}",
-                                                    style = MaterialTheme.typography.titleSmall,
-                                                    modifier = Modifier.padding(bottom = 8.dp)
-                                                )
-                                                
-                                                filter.RenderFilter(filterData)
-                                                
-                                                // Przycisk wyczyść filtr
-                                                if (filterData.isActive()) {
-                                                    Row(
-                                                        modifier = Modifier.padding(top = 8.dp),
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                                    ) {
-                                                        OutlinedButton(
-                                                            onClick = {
-                                                                val currentFilterData = reportState.filterValues.value[key]!!
-                                                                currentFilterData.reset()
-                                                                reportState.currentPage.value = 0
-                                                                showColumnMenu = false
+                                        Text(
+                                            text = column.header,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            textAlign = TextAlign.Companion.Center
+                                        )
+
+                                        // Wskaźnik aktywnego filtra
+                                        if (hasFilter && activeFilterData?.isActive() == true) {
+                                            Icon(
+                                                imageVector = Icons.Default.FilterAlt,
+                                                contentDescription = "Filtr aktywny",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.Companion.size(16.dp)
+                                            )
+                                        }
+                                    }
+
+                                    // Menu filtra dla kolumny
+                                    if (hasFilter) {
+                                        DropdownMenu(
+                                            expanded = showColumnMenu,
+                                            onDismissRequest = { showColumnMenu = false }
+                                        ) {
+                                            // Renderuj kontrolki filtra
+                                            activeFilterData?.let { filterData ->
+                                                val filter = report.getFilters()[key]!!
+
+                                                Column(
+                                                    modifier = Modifier.padding(16.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "Filtr: ${column.header}",
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        modifier = Modifier.padding(bottom = 8.dp)
+                                                    )
+
+                                                    filter.RenderFilter(filterData)
+
+                                                    // Przycisk wyczyść filtr
+                                                    if (filterData.isActive()) {
+                                                        Row(
+                                                            modifier = Modifier.padding(top = 8.dp),
+                                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                        ) {
+                                                            OutlinedButton(
+                                                                onClick = {
+                                                                    val currentFilterData =
+                                                                        reportState.filterValues.value[key]!!
+                                                                    currentFilterData.reset()
+                                                                    reportState.currentPage.value = 0
+                                                                    showColumnMenu = false
+                                                                }
+                                                            ) {
+                                                                Text("Wyczyść")
                                                             }
-                                                        ) {
-                                                            Text("Wyczyść")
-                                                        }
-                                                        
-                                                        Button(
-                                                            onClick = { showColumnMenu = false }
-                                                        ) {
-                                                            Text("Zamknij")
+
+                                                            Button(
+                                                                onClick = { showColumnMenu = false }
+                                                            ) {
+                                                                Text("Zamknij")
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -256,16 +243,16 @@ abstract class ReportScreen : Screen {
                                         }
                                     }
                                 }
-                            }
 
-                            // Separator między kolumnami w nagłówku (oprócz ostatniej)
-                            if (index < report.getColumns().size - 1) {
-                                Box(
-                                    modifier = Modifier.Companion
-                                        .width(1.dp)
-                                        .fillMaxHeight()
-                                        .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
-                                )
+                                // Separator między kolumnami w nagłówku (oprócz ostatniej)
+                                if (index < allColumns.size - 1) {
+                                    Box(
+                                        modifier = Modifier.Companion
+                                            .width(1.dp)
+                                            .fillMaxHeight()
+                                            .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
+                                    )
+                                }
                             }
                         }
                     }
@@ -285,23 +272,29 @@ abstract class ReportScreen : Screen {
                                 }
                             }
                     ) {
-                        report.getColumns().values.forEachIndexed { index, column ->
-                            Box(
-                                modifier = Modifier.Companion
-                                    .weight(column.width)
-                                    .padding(horizontal = 4.dp)
-                            ) {
-                                column.RenderCell(rowData[column.fieldName], Modifier.Companion)
-                            }
-                            
-                            // Separator między kolumnami (oprócz ostatniej)
-                            if (index < report.getColumns().size - 1) {
+                        val sortedAndFilteredColumnKeys =
+                            reportState.columnKeys.filter { reportState.visibleColumns.value.contains(it) }
+                        val allColumns = report.getColumns()
+                        sortedAndFilteredColumnKeys.forEachIndexed { index, key ->
+                            val column = allColumns[key]
+                            if (column != null) {
                                 Box(
                                     modifier = Modifier.Companion
-                                        .width(1.dp)
-                                        .fillMaxHeight()
-                                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                                )
+                                        .weight(column.width)
+                                        .padding(horizontal = 4.dp)
+                                ) {
+                                    column.RenderCell(rowData[column.fieldName], Modifier.Companion)
+                                }
+
+                                // Separator między kolumnami (oprócz ostatniej)
+                                if (index < sortedAndFilteredColumnKeys.size - 1) {
+                                    Box(
+                                        modifier = Modifier.Companion
+                                            .width(1.dp)
+                                            .fillMaxHeight()
+                                            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                    )
+                                }
                             }
                         }
                     }

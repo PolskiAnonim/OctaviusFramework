@@ -40,9 +40,7 @@ class GameReport(val navigator: Navigator) : Report() {
             ),
         )
         
-        val columnOrder = listOf("name", "series", "status")
-        
-        return ReportStructure(query, columns, columnOrder)
+        return ReportStructure(query, columns, "")
     }
 
 }

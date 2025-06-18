@@ -14,7 +14,7 @@ abstract class Report {
     init {
         reportStructure = this.createReportStructure()
         filters = initializeFilters()
-        initializeReportState()
+        reportState.initialize(reportStructure.getAllColumns().keys, reportStructure.reportConfig)
     }
 
     private fun initializeFilters(): Map<String, Filter> {
@@ -36,12 +36,6 @@ abstract class Report {
         reportState.filterValues.value = filterValues
         
         return filterMap
-    }
-
-    private fun initializeReportState() {
-        // Ustaw domyślne widoczne kolumny
-        val allColumns = reportStructure.getAllColumns().keys
-        reportState.visibleColumns.value = allColumns.toSet()
     }
 
     open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
@@ -90,16 +84,35 @@ abstract class Report {
             }
         }
 
+        // Budowanie klauzuli ORDER BY dla sortowania
+        val orderByClause = StringBuilder()
+        if (reportState.sortOrder.value.isNotEmpty()) {
+            val sortConditions = reportState.sortOrder.value.mapNotNull { (columnName, direction) ->
+                val column = reportStructure.getAllColumns()[columnName]
+                if (column != null) {
+                    val directionStr = when (direction) {
+                        SortDirection.ASC -> "ASC"
+                        SortDirection.DESC -> "DESC"
+                    }
+                    "${column.fieldName} $directionStr"
+                } else null
+            }
+
+            if (sortConditions.isNotEmpty()) {
+                orderByClause.append(sortConditions.joinToString(", "))
+            }
+        }
+
         val fetcher = DatabaseManager.getFetcher()
         try {
-
             val totalCount = fetcher.fetchCount(reportStructure.query.sql, whereClauseBuilder.toString()) / pageSize
             val results = fetcher.fetchPagedList(
                 table = reportStructure.query.sql,
                 fields = "*",
                 offset = page * pageSize,
                 limit = pageSize,
-                filter = whereClauseBuilder.toString())
+                filter = whereClauseBuilder.toString(),
+                orderBy = orderByClause.toString())
 
             onResult(results, totalCount)
         } catch (e: Exception) {
@@ -114,7 +127,7 @@ abstract class Report {
         }
     }
 
-    fun getColumns(): Map<String, ReportColumn> = reportStructure.getOrderedColumns()
+    fun getColumns(): Map<String, ReportColumn> = reportStructure.getAllColumns()
     
     fun getReportState(): ReportState = reportState
     

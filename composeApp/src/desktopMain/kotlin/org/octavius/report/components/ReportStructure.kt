@@ -13,17 +13,8 @@ import org.octavius.report.column.ReportColumn
 class ReportStructure(
     val query: Query,
     private val columns: Map<String, ReportColumn>,
-    val columnOrder: List<String>
+    val reportConfig: String // W przyszłości obiekt
 ) {
-    
-    init {
-        // Sprawdź czy wszystkie kolumny z columnOrder istnieją w mapie columns
-        columnOrder.forEach { columnName ->
-            if (!columns.containsKey(columnName)) {
-                throw IllegalArgumentException("Column '$columnName' not found in columns map")
-            }
-        }
-    }
 
     /**
      * Zwraca kolumnę o danej nazwie
@@ -34,13 +25,6 @@ class ReportStructure(
      * Zwraca wszystkie kolumny zdefiniowane w tej strukturze
      */
     fun getAllColumns(): Map<String, ReportColumn> = columns
-    
-    /**
-     * Zwraca kolumny w kolejności wyświetlania
-     */
-    fun getOrderedColumns(): Map<String, ReportColumn> {
-        return columnOrder.associateWith { columns[it]!! }
-    }
 }
 
 /**

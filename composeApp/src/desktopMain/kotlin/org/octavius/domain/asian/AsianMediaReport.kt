@@ -28,7 +28,7 @@ class AsianMediaReport(val navigator: Navigator) : Report() {
             ORDER BY t.id, p.publication_type
             """.trimIndent()
         )
-        
+
         val columns = mapOf(
             "titles" to StringListColumn(
                 fieldName ="titles",
@@ -54,10 +54,8 @@ class AsianMediaReport(val navigator: Navigator) : Report() {
                 width = 1.5f
             )
         )
-        
-        val columnOrder = listOf("titles", "language", "publicationType", "status")
-        
-        return ReportStructure(query, columns, columnOrder)
+
+        return ReportStructure(query, columns, "")
     }
 
 
