@@ -55,10 +55,10 @@ class DatabaseControl(
         val filter = if (searchQuery.isEmpty()) {
             ""
         } else {
-            "$displayColumn ILIKE %:search%"
+            "$displayColumn ILIKE :search"
         }
 
-        val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to searchQuery)
+        val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to "%$searchQuery%")
         val fetcher = DatabaseManager.getFetcher()
         return try {
             val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize

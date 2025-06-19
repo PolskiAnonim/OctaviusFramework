@@ -64,7 +64,7 @@ abstract class DropdownControlBase<T : Any>(
         var searchQuery by remember { mutableStateOf("") }
         var options by remember { mutableStateOf<List<DropdownOption<T>>>(emptyList()) }
         var isLoading by remember { mutableStateOf(false) }
-        var currentPage by remember { mutableStateOf(1) }
+        var currentPage by remember { mutableStateOf(0) }
         var totalPages by remember { mutableStateOf(1) }
 
         // Efekt pobierający opcje gdy menu jest otwarte
@@ -112,7 +112,7 @@ abstract class DropdownControlBase<T : Any>(
                             value = searchQuery,
                             onValueChange = {
                                 searchQuery = it
-                                currentPage = 1  // Reset page on search
+                                currentPage = 0  // Reset page on search
                             },
                             placeholder = { Text("Szukaj...") },
                             singleLine = true,
@@ -129,7 +129,7 @@ abstract class DropdownControlBase<T : Any>(
                                 if (searchQuery.isNotEmpty()) {
                                     IconButton(onClick = {
                                         searchQuery = ""
-                                        currentPage = 1
+                                        currentPage = 0
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
@@ -203,8 +203,8 @@ abstract class DropdownControlBase<T : Any>(
                                     verticalAlignment = Alignment.Companion.CenterVertically
                                 ) {
                                     IconButton(
-                                        onClick = { if (currentPage > 1) currentPage-- },
-                                        enabled = currentPage > 1
+                                        onClick = { if (currentPage > 0) currentPage-- },
+                                        enabled = currentPage > 0
                                     ) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -212,11 +212,11 @@ abstract class DropdownControlBase<T : Any>(
                                         )
                                     }
 
-                                    Text("Strona $currentPage z $totalPages")
+                                    Text("Strona ${currentPage + 1} z $totalPages")
 
                                     IconButton(
-                                        onClick = { if (currentPage < totalPages) currentPage++ },
-                                        enabled = currentPage < totalPages
+                                        onClick = { if (currentPage < totalPages - 1) currentPage++ },
+                                        enabled = currentPage < totalPages - 1
                                     ) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
