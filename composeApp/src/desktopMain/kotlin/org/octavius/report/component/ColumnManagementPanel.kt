@@ -1,4 +1,4 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.draganddrop.dragAndDropSource
@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.octavius.report.ReportState
 import org.octavius.report.SortDirection
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
@@ -220,19 +219,19 @@ private fun SortingSection(
                         leadingIcon = {
                             Icon(
                                 imageVector = when (direction) {
-                                    SortDirection.ASC -> Icons.Default.ArrowUpward
-                                    SortDirection.DESC -> Icons.Default.ArrowDownward
+                                    SortDirection.Ascending -> Icons.Default.ArrowUpward
+                                    SortDirection.Descending -> Icons.Default.ArrowDownward
                                 },
                                 contentDescription = when (direction) {
-                                    SortDirection.ASC -> "Rosnąco"
-                                    SortDirection.DESC -> "Malejąco"
+                                    SortDirection.Ascending -> "Rosnąco"
+                                    SortDirection.Descending -> "Malejąco"
                                 },
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.clickable {
                                     updateSortDirection(
                                         reportState,
                                         columnKey,
-                                        if (direction == SortDirection.ASC) SortDirection.DESC else SortDirection.ASC
+                                        if (direction == SortDirection.Ascending) SortDirection.Descending else SortDirection.Ascending
                                     )
                                 }
                             )
@@ -391,7 +390,7 @@ private fun createSortDropTarget(
             val currentSortValue = reportState.sortOrder.value
             if (allColumns.contains(columnKey) && !currentSortValue.any { it.first == columnKey }) {
                 val newSort = currentSortValue.toMutableList()
-                newSort.add(columnKey to SortDirection.ASC)
+                newSort.add(columnKey to SortDirection.Ascending)
                 reportState.sortOrder.value = newSort
                 reportState.currentPage.value = 0
                 return true

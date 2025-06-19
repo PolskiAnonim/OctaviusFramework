@@ -6,15 +6,15 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import org.octavius.domain.game.GameReport
+import org.octavius.domain.game.GameReportHandler
 import org.octavius.navigator.Navigator
-import org.octavius.report.components.ReportScreen
+import org.octavius.report.component.ReportScreen
 import org.octavius.ui.screen.form.GameFormScreen
 import org.octavius.ui.screen.form.GameSeriesFormScreen
 
 class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
     
-    override val report = GameReport(navigator)
+    override val reportHandler = GameReportHandler(navigator)
 
     @Composable
     override fun AddMenu() {

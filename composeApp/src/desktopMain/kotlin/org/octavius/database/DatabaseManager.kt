@@ -2,7 +2,7 @@ package org.octavius.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.octavius.domain.ColumnInfo
+import org.octavius.form.ColumnInfo
 import org.octavius.form.SaveOperation
 import org.octavius.form.TableRelation
 import org.springframework.jdbc.core.JdbcTemplate

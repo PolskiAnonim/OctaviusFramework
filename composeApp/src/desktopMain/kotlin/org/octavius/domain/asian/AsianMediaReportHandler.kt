@@ -5,13 +5,13 @@ import org.octavius.domain.PublicationStatus
 import org.octavius.domain.PublicationType
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
-import org.octavius.report.Report
-import org.octavius.report.components.ReportStructure
+import org.octavius.report.component.ReportHandler
+import org.octavius.report.component.ReportStructure
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringListColumn
 import org.octavius.ui.screen.form.AsianMediaFormScreen
 
-class AsianMediaReport(val navigator: Navigator) : Report() {
+class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
 
 
     override fun createReportStructure(): ReportStructure {

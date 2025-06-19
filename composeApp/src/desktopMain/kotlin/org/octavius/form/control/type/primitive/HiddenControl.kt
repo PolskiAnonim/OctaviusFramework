@@ -1,7 +1,7 @@
 package org.octavius.form.control.type.primitive
 
 import androidx.compose.runtime.Composable
-import org.octavius.domain.ColumnInfo
+import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlValidator

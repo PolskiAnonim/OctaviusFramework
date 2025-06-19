@@ -1,4 +1,4 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -125,7 +125,7 @@ fun PaginationComponent(
                             }
                         )
                     )
-                    
+
                     LaunchedEffect(Unit) {
                         focusRequester.requestFocus()
                     }

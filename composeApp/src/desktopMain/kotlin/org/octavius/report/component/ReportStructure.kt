@@ -1,4 +1,4 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
 import org.octavius.report.Query
 import org.octavius.report.column.ReportColumn

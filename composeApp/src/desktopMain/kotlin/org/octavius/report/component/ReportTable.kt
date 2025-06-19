@@ -1,4 +1,4 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -6,11 +6,9 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.report.Report
-import org.octavius.report.ReportState
 
 fun LazyListScope.reportTable(
-    report: Report,
+    reportHandler: ReportHandler,
     reportState: ReportState,
     dataList: List<Map<String, Any?>>
 ) {
@@ -26,8 +24,8 @@ fun LazyListScope.reportTable(
             val visibleColumns = reportState.columnKeys.filter { 
                 reportState.visibleColumns.value.contains(it) 
             }
-            val allColumns = report.getColumns()
-            val filters = report.getFilters()
+            val allColumns = reportHandler.getColumns()
+            val filters = reportHandler.getFilters()
             
             visibleColumns.forEachIndexed { index, key ->
                 val column = allColumns[key]
@@ -65,8 +63,8 @@ fun LazyListScope.reportTable(
         ReportRow(
             rowData = rowData,
             visibleColumns = visibleColumns,
-            allColumns = report.getColumns(),
-            onRowClick = report.onRowClick
+            allColumns = reportHandler.getColumns(),
+            onRowClick = reportHandler.onRowClick
         )
 
         // Separator

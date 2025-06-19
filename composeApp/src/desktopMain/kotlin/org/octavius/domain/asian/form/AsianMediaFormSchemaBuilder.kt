@@ -1,6 +1,6 @@
 package org.octavius.domain.asian.form
 
-import org.octavius.domain.ColumnInfo
+import org.octavius.form.ColumnInfo
 import org.octavius.domain.PublicationLanguage
 import org.octavius.domain.PublicationStatus
 import org.octavius.domain.PublicationType

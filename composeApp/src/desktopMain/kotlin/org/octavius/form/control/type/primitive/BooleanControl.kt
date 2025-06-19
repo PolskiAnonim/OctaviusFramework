@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
-import org.octavius.domain.ColumnInfo
+import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency

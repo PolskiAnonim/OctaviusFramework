@@ -1,4 +1,4 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

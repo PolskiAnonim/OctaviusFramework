@@ -1,7 +1,7 @@
 package org.octavius.form.component
 
 import org.octavius.database.DatabaseManager
-import org.octavius.domain.ColumnInfo
+import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlResultData
 import org.octavius.form.SaveOperation
 import org.octavius.form.TableRelation

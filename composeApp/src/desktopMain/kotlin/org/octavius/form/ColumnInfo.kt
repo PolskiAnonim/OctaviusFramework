@@ -1,4 +1,4 @@
-package org.octavius.domain
+package org.octavius.form
 
 /**
  * Identyfikuje kolumnę w bazie danych przez tabelę i nazwę pola.

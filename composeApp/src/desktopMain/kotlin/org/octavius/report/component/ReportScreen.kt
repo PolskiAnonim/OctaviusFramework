@@ -1,19 +1,17 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.navigator.Screen
-import org.octavius.report.Report
 
 abstract class ReportScreen : Screen {
 
-    abstract val report: Report
+    abstract val reportHandler: ReportHandler
 
     @Composable
     protected open fun AddMenu() {
@@ -27,7 +25,7 @@ abstract class ReportScreen : Screen {
         var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
         var addMenuExpanded by remember { mutableStateOf(false) }
 
-        val reportState = report.getReportState()
+        val reportState = reportHandler.getReportState()
 
         // Dla śledzenia zmian filtrów
         val filteringState = derivedStateOf {
@@ -44,7 +42,7 @@ abstract class ReportScreen : Screen {
             reportState.sortOrder.value,
             filteringState.value
         ) {
-            report.fetchData(
+            reportHandler.fetchData(
                 page = reportState.currentPage.value,
                 searchQuery = reportState.searchQuery.value,
                 pageSize = reportState.pageSize.value
@@ -62,7 +60,7 @@ abstract class ReportScreen : Screen {
                 item {
                     // Panel zarządzania kolumnami
                     ColumnManagementPanel(
-                        columnNames = report.getColumns().map { it.key to it.value.header }.toMap(),
+                        columnNames = reportHandler.getColumns().map { it.key to it.value.header }.toMap(),
                         reportState = reportState,
                         modifier = Modifier.padding(8.dp)
                     )
@@ -84,7 +82,7 @@ abstract class ReportScreen : Screen {
                 }
 
                 // Tabela z danymi
-                reportTable(report, reportState, dataList)
+                reportTable(reportHandler, reportState, dataList)
             }
 
             // Paginacja

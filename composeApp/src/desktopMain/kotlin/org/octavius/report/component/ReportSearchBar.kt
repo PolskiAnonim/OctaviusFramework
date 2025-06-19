@@ -1,4 +1,4 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons

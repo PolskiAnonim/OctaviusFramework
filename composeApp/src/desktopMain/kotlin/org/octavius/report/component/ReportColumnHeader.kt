@@ -1,6 +1,5 @@
-package org.octavius.report.components
+package org.octavius.report.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -12,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
-import org.octavius.report.ReportState
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 

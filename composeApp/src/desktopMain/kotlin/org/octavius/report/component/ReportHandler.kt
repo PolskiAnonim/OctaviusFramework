@@ -1,11 +1,13 @@
-package org.octavius.report
+package org.octavius.report.component
 
 import org.octavius.database.DatabaseManager
+import org.octavius.report.FilterData
+import org.octavius.report.SortDirection
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.components.ReportStructure
 import org.octavius.report.filter.Filter
+import kotlin.collections.iterator
 
-abstract class Report {
+abstract class ReportHandler {
 
     private val reportStructure: ReportStructure
     private val reportState = ReportState()
@@ -20,7 +22,7 @@ abstract class Report {
     private fun initializeFilters(): Map<String, Filter> {
         val filterMap = mutableMapOf<String, Filter>()
         val filterValues = mutableMapOf<String, FilterData<*>>()
-        
+
         reportStructure.getAllColumns().forEach { (columnName, column) ->
             if (column.filterable) {
                 val filter = column.createFilter()
@@ -31,10 +33,10 @@ abstract class Report {
                 }
             }
         }
-        
+
         // Ustaw początkowe wartości filtrów w reportState
         reportState.filterValues.value = filterValues
-        
+
         return filterMap
     }
 
@@ -91,8 +93,8 @@ abstract class Report {
                 val column = reportStructure.getAllColumns()[columnName]
                 if (column != null) {
                     val directionStr = when (direction) {
-                        SortDirection.ASC -> "ASC"
-                        SortDirection.DESC -> "DESC"
+                        SortDirection.Ascending -> "ASC"
+                        SortDirection.Descending -> "DESC"
                     }
                     "${column.fieldName} $directionStr"
                 } else null
@@ -128,9 +130,9 @@ abstract class Report {
     }
 
     fun getColumns(): Map<String, ReportColumn> = reportStructure.getAllColumns()
-    
+
     fun getReportState(): ReportState = reportState
-    
+
     fun getFilters(): Map<String, Filter> = filters
 
 }

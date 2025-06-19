@@ -3,7 +3,7 @@ package org.octavius.form.control.base
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import org.octavius.domain.ColumnInfo
+import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
