@@ -12,6 +12,7 @@ import org.octavius.navigator.Screen
 abstract class ReportScreen : Screen {
 
     abstract val reportHandler: ReportHandler
+    abstract val reportName: String
 
     @Composable
     protected open fun AddMenu() {
@@ -24,6 +25,7 @@ abstract class ReportScreen : Screen {
         val coroutineScope = rememberCoroutineScope()
         var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
         var addMenuExpanded by remember { mutableStateOf(false) }
+        var configurationDialogVisible by remember { mutableStateOf(false) }
 
         val reportState = reportHandler.getReportState()
 
@@ -77,7 +79,8 @@ abstract class ReportScreen : Screen {
                         onAddMenuClick = { addMenuExpanded = !addMenuExpanded },
                         addMenuExpanded = addMenuExpanded,
                         onAddMenuDismiss = { addMenuExpanded = false },
-                        addMenuContent = { AddMenu() }
+                        addMenuContent = { AddMenu() },
+                        onConfigurationClick = { configurationDialogVisible = true }
                     )
                 }
 
@@ -99,6 +102,28 @@ abstract class ReportScreen : Screen {
                 onPageSizeChange = { newPageSize ->
                     reportState.pageSize.value = newPageSize
                     reportState.currentPage.value = 0
+                }
+            )
+        }
+        
+        // Dialog konfiguracji
+        if (configurationDialogVisible) {
+            ReportConfigurationDialog(
+                reportName = reportName,
+                reportState = reportState,
+                onDismiss = { configurationDialogVisible = false },
+                onConfigurationApplied = {
+                    // Po zastosowaniu konfiguracji, odśwież dane
+                    coroutineScope.launch {
+                        reportHandler.fetchData(
+                            page = reportState.currentPage.value,
+                            searchQuery = reportState.searchQuery.value,
+                            pageSize = reportState.pageSize.value
+                        ) { result, pages ->
+                            dataList = result
+                            reportState.totalPages.value = pages.toInt()
+                        }
+                    }
                 }
             )
         }

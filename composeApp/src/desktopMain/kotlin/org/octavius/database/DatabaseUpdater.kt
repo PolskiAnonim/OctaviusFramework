@@ -5,6 +5,7 @@ import org.octavius.form.SaveOperation
 import org.octavius.util.Converters.camelToSnakeCase
 import org.postgresql.util.PGobject
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.transaction.support.TransactionTemplate
@@ -16,6 +17,7 @@ class DatabaseUpdater(
     private val jdbcTemplate: JdbcTemplate
 ) {
     private val transactionManager = DataSourceTransactionManager(dataSource)
+    private val namedParameterJdbcTemplate = NamedParameterJdbcTemplate(jdbcTemplate)
 
     // Główna metoda do zapisywania encji
     fun updateDatabase(databaseOperations: List<SaveOperation>) {
@@ -190,5 +192,10 @@ class DatabaseUpdater(
 
             else -> ps.setObject(index, value)
         }
+    }
+    
+    // Prosta metoda do wykonywania SQL z nazwanymi parametrami
+    fun executeUpdate(sql: String, params: Map<String, Any?> = emptyMap()): Int {
+        return namedParameterJdbcTemplate.update(sql, params)
     }
 }

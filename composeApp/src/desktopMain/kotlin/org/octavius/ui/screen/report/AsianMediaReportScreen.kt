@@ -14,6 +14,7 @@ import org.octavius.ui.screen.form.AsianMediaFormScreen
 class AsianMediaReportScreen(private val navigator: Navigator) : ReportScreen() {
     
     override val reportHandler = AsianMediaReportHandler(navigator)
+    override val reportName = "asianMedia"
 
     @Composable
     override fun AddMenu() {

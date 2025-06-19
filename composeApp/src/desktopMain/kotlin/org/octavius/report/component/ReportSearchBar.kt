@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Input
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ fun ReportSearchBar(
     addMenuExpanded: Boolean,
     onAddMenuDismiss: () -> Unit,
     addMenuContent: @Composable () -> Unit,
+    onConfigurationClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -52,6 +54,19 @@ fun ReportSearchBar(
             },
             singleLine = true
         )
+
+        // Przycisk konfiguracji
+        if (onConfigurationClick != null) {
+            IconButton(
+                onClick = onConfigurationClick,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Konfiguracja raportu"
+                )
+            }
+        }
 
         // Menu dodawania
         Box(

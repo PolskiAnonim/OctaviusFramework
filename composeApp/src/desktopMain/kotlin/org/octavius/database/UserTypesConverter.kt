@@ -2,6 +2,7 @@ package org.octavius.database
 
 import org.octavius.util.Converters
 import org.postgresql.jdbc.PgArray
+import org.postgresql.util.PGobject
 import org.springframework.jdbc.core.JdbcTemplate
 
 class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
@@ -163,6 +164,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
             "int4", "int8", "int2" -> if (value is Number) value.toInt() else value
             "float4", "float8" -> if (value is Number) value.toDouble() else value
             "numeric" -> if (value is Number) value.toDouble() else value
+            "jsonb" -> (value as PGobject).value.toString()
             // Można dodać więcej typów w miarę potrzeby
             else -> value
         }

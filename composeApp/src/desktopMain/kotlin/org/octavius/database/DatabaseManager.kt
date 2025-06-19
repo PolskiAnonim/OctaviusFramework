@@ -65,6 +65,10 @@ object DatabaseManager {
         return databaseFetcher
     }
 
+    fun getUpdater() : DatabaseUpdater {
+        return databaseUpdater
+    }
+
 
     // Pobranie encji z relacjami
     fun getEntityWithRelations(
