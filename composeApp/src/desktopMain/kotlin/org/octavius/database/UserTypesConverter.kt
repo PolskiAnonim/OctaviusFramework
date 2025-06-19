@@ -40,7 +40,9 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
             "timestamptz",
             "json",
             "jsonb",
-            "uuid"
+            "uuid",
+            // Interval
+            "interval"
         )
 
         typeNames.forEach { typeName ->
