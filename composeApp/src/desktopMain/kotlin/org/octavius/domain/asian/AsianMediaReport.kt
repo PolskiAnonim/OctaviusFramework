@@ -24,8 +24,7 @@ class AsianMediaReport(val navigator: Navigator) : Report() {
                 p.publication_type,
                 p.status
             FROM titles t
-            JOIN publications p ON p.title_id = t.id 
-            ORDER BY t.id, p.publication_type
+            JOIN publications p ON p.title_id = t.id
             """.trimIndent()
         )
 

@@ -126,14 +126,15 @@ fun PaginationComponent(
                         )
                     )
                     
-                    LaunchedEffect(isEditingPage) {
-                        if (isEditingPage) {
-                            focusRequester.requestFocus()
-                        }
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
                     }
+                    
                 } else {
                     TextButton(
-                        onClick = { isEditingPage = true },
+                        onClick = { 
+                            isEditingPage = true
+                        },
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
