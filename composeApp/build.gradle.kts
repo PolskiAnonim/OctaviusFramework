@@ -41,9 +41,13 @@ compose.desktop {
         mainClass = "org.octavius.app.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
+            includeAllModules = true
             packageName = "org.octavius"
             packageVersion = "1.0.0"
+//            windows {
+//                iconFile.set(project.file("icon.ico"))
+//            }
         }
     }
 }
