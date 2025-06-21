@@ -6,8 +6,8 @@ enum class SortDirection {
 }
 
 data class SortConfiguration(
-    val sortDirection: SortDirection,
-    val columnName: String
+    val columnName: String,
+    val sortDirection: SortDirection
 )
 
 enum class NumberFilterDataType {

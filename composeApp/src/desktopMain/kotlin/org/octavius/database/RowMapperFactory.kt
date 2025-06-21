@@ -13,7 +13,7 @@ class RowMappers(private val typesConverter: UserTypesConverter) {
         for (i in 1..metaData.columnCount) {
             val columnName = metaData.getColumnName(i)
             val columnType = metaData.getColumnTypeName(i)
-            val rawValue = rs.getObject(i)
+            val rawValue = rs.getString(i)
             // rawValue jest już określonego typu bądź jest nullem
             data[columnName] = typesConverter.convertToDomainType(rawValue, columnType)
         }
@@ -22,7 +22,7 @@ class RowMappers(private val typesConverter: UserTypesConverter) {
     
     fun SingleValueMapper(): RowMapper<Any> = RowMapper { rs, _ ->
         val columnType = (rs.metaData as PgResultSetMetaData).getColumnTypeName(1)
-        val rawValue = rs.getObject(1)
+        val rawValue = rs.getString(1)
         typesConverter.convertToDomainType(rawValue, columnType)
     }
 }
@@ -49,13 +49,10 @@ class RowMapperFactory(private val typesConverter: UserTypesConverter) {
             val tableName = metaData.getTableName(i)
             val columnType = metaData.getColumnTypeName(i)
 
-            val rawValue = rs.getObject(i)
-            if (rs.wasNull()) {
-                data[ColumnInfo(tableName, columnName)] = null
-            } else {
-                val convertedValue = typesConverter.convertToDomainType(rawValue, columnType)
-                data[ColumnInfo(tableName, columnName)] = convertedValue
-            }
+            val rawValue = rs.getString(i)
+
+            val convertedValue = typesConverter.convertToDomainType(rawValue, columnType)
+            data[ColumnInfo(tableName, columnName)] = convertedValue
         }
 
         return data
