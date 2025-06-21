@@ -1,3 +1,5 @@
+-- ASIAN MEDIA
+
 CREATE TABLE IF NOT EXISTS asian_media.publication_volumes
 (
     publication_id integer NOT NULL,
@@ -19,11 +21,11 @@ CREATE OR REPLACE TRIGGER update_publication_volumes_modtime
     BEFORE UPDATE
     ON asian_media.publication_volumes
     FOR EACH ROW
-EXECUTE FUNCTION asian_media.update_modified_column();
+EXECUTE FUNCTION public.update_modified_column();
 
 CREATE TABLE IF NOT EXISTS asian_media.publications
 (
-    id integer NOT NULL DEFAULT nextval('asian_media.publications_id_seq'::regclass),
+    id SERIAL,
     title_id integer NOT NULL,
     publication_type asian_media.publication_type NOT NULL,
     status asian_media.publication_status NOT NULL,
@@ -68,11 +70,11 @@ CREATE OR REPLACE TRIGGER update_publications_modtime
     BEFORE UPDATE
     ON asian_media.publications
     FOR EACH ROW
-EXECUTE FUNCTION asian_media.update_modified_column();
+EXECUTE FUNCTION public.update_modified_column();
 
 CREATE TABLE IF NOT EXISTS asian_media.titles
 (
-    id integer NOT NULL DEFAULT nextval('asian_media.titles_id_seq'::regclass),
+    id SERIAL,
     titles text[] COLLATE pg_catalog."default" NOT NULL,
     language asian_media.publication_language NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
@@ -84,7 +86,7 @@ CREATE OR REPLACE TRIGGER update_titles_modtime
     BEFORE UPDATE
     ON asian_media.titles
     FOR EACH ROW
-EXECUTE FUNCTION asian_media.update_modified_column();
+EXECUTE FUNCTION public.update_modified_column();
 
 CREATE OR REPLACE FUNCTION asian_media.manage_publication_volumes()
     RETURNS trigger
@@ -110,18 +112,6 @@ BEGIN
 END;
 $BODY$;
 
-CREATE OR REPLACE FUNCTION asian_media.update_modified_column()
-    RETURNS trigger
-    LANGUAGE 'plpgsql'
-    COST 100
-    VOLATILE NOT LEAKPROOF
-AS $BODY$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$BODY$;
-
 CREATE TYPE asian_media.publication_language AS ENUM
     ('KOREAN', 'CHINESE', 'JAPANESE');
 
@@ -130,6 +120,8 @@ CREATE TYPE asian_media.publication_status AS ENUM
 
 CREATE TYPE asian_media.publication_type AS ENUM
     ('MANGA', 'LIGHT_NOVEL', 'WEB_NOVEL', 'PUBLISHED_NOVEL', 'MANHWA', 'MANHUA', 'WEBTOON');
+
+-- GAMES
 
 CREATE TABLE IF NOT EXISTS games.characters
 (
@@ -147,7 +139,7 @@ CREATE TABLE IF NOT EXISTS games.characters
 
 CREATE TABLE IF NOT EXISTS games.games
 (
-    id integer NOT NULL DEFAULT nextval('games.games_id_seq'::regclass),
+    id SERIAL,
     name text COLLATE pg_catalog."default" NOT NULL,
     series integer,
     status games.game_status NOT NULL,
@@ -165,7 +157,7 @@ CREATE TABLE IF NOT EXISTS games.play_time
     game_id integer NOT NULL,
     completion_count integer,
     play_time_hours numeric(10,2) NOT NULL,
-    play_time_interval interval(2),
+    play_time_interval interval(2), -- aktualnie nieużywane
     CONSTRAINT game_play_time_pkey PRIMARY KEY (game_id),
     CONSTRAINT game_play_time_game_id_fkey FOREIGN KEY (game_id)
         REFERENCES games.games (id) MATCH SIMPLE
@@ -188,7 +180,7 @@ CREATE TABLE IF NOT EXISTS games.ratings
 
 CREATE TABLE IF NOT EXISTS games.series
 (
-    id integer NOT NULL DEFAULT nextval('games.series_id_seq'::regclass),
+    id SERIAL,
     name text COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT game_series_pkey PRIMARY KEY (id),
     CONSTRAINT game_series_name_uindex UNIQUE (name)
@@ -207,13 +199,31 @@ AS
 SELECT sum(play_time_hours) AS time_played
 FROM games.play_time;
 
+-- PUBLIC
+
+CREATE OR REPLACE FUNCTION public.update_modified_column()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
+AS $BODY$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$BODY$;
+
+-- CONFIGURATIONS
+
 CREATE TABLE IF NOT EXISTS public.report_configurations
 (
-    id integer NOT NULL DEFAULT nextval('report_configurations_id_seq'::regclass),
+    id SERIAL,
     name text COLLATE pg_catalog."default" NOT NULL,
     report_name text COLLATE pg_catalog."default" NOT NULL,
     description text COLLATE pg_catalog."default",
-    configuration jsonb NOT NULL,
+    sort_order sort_configuration[],
+    visible_columns text[] COLLATE pg_catalog."default",
+    column_order text[] COLLATE pg_catalog."default",
     is_default boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
@@ -226,3 +236,89 @@ CREATE OR REPLACE TRIGGER update_report_configurations_modtime
     ON public.report_configurations
     FOR EACH ROW
 EXECUTE FUNCTION public.update_modified_column();
+
+CREATE TYPE public.sort_direction AS ENUM
+    ('ASCENDING', 'DESCENDING');
+
+CREATE TYPE public.sort_configuration AS
+(
+    column_name text,
+    sort_direction sort_direction
+);
+
+-- FILTRY
+CREATE TYPE public.null_handling AS ENUM('INCLUDE', 'EXCLUDE', 'ONLY_NULL');
+
+CREATE TYPE public.string_filter_data_type AS ENUM('EXACT', 'STARTS_WITH', 'ENDS_WITH', 'CONTAINS', 'NOT_CONTAINS');
+
+CREATE TYPE public.number_filter_data_type AS ENUM('EQUALS', 'NOT_EQUALS', 'LESS_THAN', 'LESS_EQUALS', 'GREATER_THAN',
+'GREATER_EQUALS', 'RANGE');
+
+CREATE TYPE public.filter_data_type AS ENUM
+    ('BOOLEAN', 'STRING', 'NUMBER', 'ENUM');
+
+CREATE TABLE IF NOT EXISTS public.report_filter_configs
+(
+    -- Wspólne kolumny
+    id SERIAL,
+    report_config_id integer NOT NULL REFERENCES public.report_configurations(id) ON DELETE CASCADE,
+    column_name text NOT NULL,
+    null_handling null_handling NOT NULL DEFAULT 'INCLUDE',
+    filter_type filter_data_type NOT NULL, -- To jest klucz, po którym dzielimy dane
+
+    -- Kolumny specyficzne dla filtra BOOLEAN
+    boolean_value boolean,
+
+    -- Kolumny specyficzne dla filtra STRING
+    string_filter_type string_filter_data_type,
+    string_value text,
+    case_sensitive boolean,
+
+    -- Kolumny specyficzne dla filtra NUMBER
+    number_filter_type number_filter_data_type,
+    min_value numeric,
+    max_value numeric,
+
+    -- Kolumny specyficzne dla filtra ENUM
+    enum_type_name text,
+    enum_values text[],
+    include_enum boolean,
+
+    PRIMARY KEY(id),
+    UNIQUE (report_config_id, column_name),
+
+    -- BOOLEAN
+    CONSTRAINT BOOLEAN_FILTER_CHECK CHECK (
+        NOT filter_type = 'BOOLEAN' OR
+        string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
+        number_filter_type IS NULL AND min_value IS NULL AND max_value IS NULL AND
+        enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
+    ),
+    -- STRING
+    CONSTRAINT STRING_FILTER_CHECK CHECK (
+        NOT filter_type = 'STRING' OR
+        boolean_value IS NULL AND
+        string_filter_type IS NOT NULL AND case_sensitive IS NOT NULL AND
+        number_filter_type IS NULL AND min_value IS NULL AND max_value IS NULL AND
+        enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
+    ),
+    -- NUMBER
+    CONSTRAINT NUMBER_FILTER_CHECK CHECK (
+        NOT filter_type = 'NUMBER' OR
+        boolean_value IS NULL AND
+        string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
+        number_filter_type IS NOT NULL AND
+        (max_value IS NULL OR min_value IS NULL OR min_value <= max_value) AND -- min_value musi być mniejsze lub równe max_value, jeśli oba istnieją
+        enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
+    ),
+    -- ENUM
+    CONSTRAINT ENUM_FILTER_CHECK CHECK (
+        NOT filter_type = 'ENUM' OR
+        boolean_value IS NULL AND
+        string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
+        number_filter_type IS NULL AND min_value IS NULL AND max_value IS NULL AND
+        enum_type_name IS NOT NULL AND enum_values IS NOT NULL AND include_enum IS NOT NULL
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_report_filter_configs_report_config_id ON public.report_filter_configs (report_config_id);
