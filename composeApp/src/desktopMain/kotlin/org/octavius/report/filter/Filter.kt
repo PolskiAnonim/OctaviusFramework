@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
-import org.octavius.report.NullHandling
+import org.octavius.domain.NullHandling
 
 abstract class Filter(val columnName: String) {
 

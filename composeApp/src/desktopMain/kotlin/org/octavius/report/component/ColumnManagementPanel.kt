@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.octavius.report.SortDirection
+import org.octavius.domain.SortDirection
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 

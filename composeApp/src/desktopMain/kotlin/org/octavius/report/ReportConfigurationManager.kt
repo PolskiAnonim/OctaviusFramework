@@ -2,6 +2,9 @@ package org.octavius.report
 
 import kotlinx.serialization.json.Json
 import org.octavius.database.DatabaseManager
+import org.octavius.domain.NullHandling
+import org.octavius.domain.NumberFilterDataType
+import org.octavius.domain.StringFilterDataType
 import org.octavius.report.component.ReportState
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.EnumFilter

@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
-import org.octavius.report.NullHandling
+import org.octavius.domain.NullHandling
 import org.octavius.report.filter.Filter
 
 class BooleanFilter(columnName: String, val falseText: String, val trueText: String) : Filter(columnName) {

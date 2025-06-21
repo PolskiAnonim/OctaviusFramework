@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import org.octavius.report.FilterData
-import org.octavius.report.SortDirection
+import org.octavius.domain.SortDirection
 
 class ReportState {
     //-----------------------------------------------------Stronicowanie------------------------------------------------

@@ -3,6 +3,9 @@ package org.octavius.report
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import org.octavius.domain.NullHandling
+import org.octavius.domain.NumberFilterDataType
+import org.octavius.domain.StringFilterDataType
 
 sealed class FilterData<T> {
     abstract val nullHandling: MutableState<NullHandling>
@@ -108,26 +111,3 @@ sealed class FilterData<T> {
     }
 }
 
-enum class NumberFilterDataType {
-    Equals,      // ==
-    NotEquals,   // !=
-    LessThan,    //
-    LessEquals,  // <=
-    GreaterThan, // >
-    GreaterEquals, // >=
-    Range        // between min and max
-}
-
-enum class StringFilterDataType {
-    Exact,       // dokładne dopasowanie
-    StartsWith,  // od początku
-    EndsWith,    // od końca
-    Contains,    // dowolny fragment
-    NotContains  // nie zawiera
-}
-
-enum class NullHandling {
-    Ignore,      // Ignoruj wartości null
-    Include,     // Dołącz wartości null - dla pustej wartości - tylko nulle
-    Exclude,     // Wyklucz wartości null
-}

@@ -1,6 +1,7 @@
 package org.octavius.report
 
 import kotlinx.serialization.Serializable
+import org.octavius.domain.SortDirection
 
 @Serializable
 data class ReportConfiguration(

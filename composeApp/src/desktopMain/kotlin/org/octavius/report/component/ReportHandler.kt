@@ -2,7 +2,7 @@ package org.octavius.report.component
 
 import org.octavius.database.DatabaseManager
 import org.octavius.report.FilterData
-import org.octavius.report.SortDirection
+import org.octavius.domain.SortDirection
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 

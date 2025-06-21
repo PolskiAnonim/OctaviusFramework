@@ -8,8 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
-import org.octavius.report.NullHandling
-import org.octavius.report.StringFilterDataType
+import org.octavius.domain.NullHandling
+import org.octavius.domain.StringFilterDataType
 import org.octavius.report.filter.Filter
 
 class StringListFilter(columnName: String) : Filter(columnName) {
