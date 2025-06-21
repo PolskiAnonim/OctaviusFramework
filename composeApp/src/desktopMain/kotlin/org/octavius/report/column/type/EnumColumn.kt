@@ -10,10 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.EnumWithFormatter
-import org.octavius.report.FilterData
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
-import org.octavius.report.filter.type.BooleanFilter
 import org.octavius.report.filter.type.EnumFilter
 import kotlin.reflect.KClass
 

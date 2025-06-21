@@ -1,12 +1,10 @@
 package org.octavius.report
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.octavius.database.DatabaseManager
 import org.octavius.report.component.ReportState
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.EnumFilter
-import androidx.compose.runtime.mutableStateOf
 
 class ReportConfigurationManager {
     

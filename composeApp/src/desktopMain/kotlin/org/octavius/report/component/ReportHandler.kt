@@ -5,7 +5,6 @@ import org.octavius.report.FilterData
 import org.octavius.report.SortDirection
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
-import kotlin.collections.iterator
 
 abstract class ReportHandler {
 

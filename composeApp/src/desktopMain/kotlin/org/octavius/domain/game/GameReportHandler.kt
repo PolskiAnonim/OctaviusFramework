@@ -3,10 +3,10 @@ package org.octavius.domain.game
 import org.octavius.domain.GameStatus
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
-import org.octavius.report.component.ReportHandler
-import org.octavius.report.component.ReportStructure
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringColumn
+import org.octavius.report.component.ReportHandler
+import org.octavius.report.component.ReportStructure
 import org.octavius.ui.screen.form.GameFormScreen
 
 class GameReportHandler(val navigator: Navigator) : ReportHandler() {
