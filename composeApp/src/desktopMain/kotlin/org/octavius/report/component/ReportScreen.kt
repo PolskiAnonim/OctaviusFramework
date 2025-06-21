@@ -111,6 +111,7 @@ abstract class ReportScreen : Screen {
             ReportConfigurationDialog(
                 reportName = reportName,
                 reportState = reportState,
+                filters = reportHandler.getFilters(),
                 onDismiss = { configurationDialogVisible = false },
                 onConfigurationApplied = {
                     // Po zastosowaniu konfiguracji, odśwież dane

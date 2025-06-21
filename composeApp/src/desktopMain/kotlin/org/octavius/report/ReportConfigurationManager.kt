@@ -4,6 +4,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.octavius.database.DatabaseManager
 import org.octavius.report.component.ReportState
+import org.octavius.report.filter.Filter
+import org.octavius.report.filter.type.EnumFilter
+import androidx.compose.runtime.mutableStateOf
 
 class ReportConfigurationManager {
     
@@ -141,8 +144,9 @@ class ReportConfigurationManager {
         }
     }
     
-    fun applyConfiguration(configuration: ReportConfiguration, reportState: ReportState) {
+    fun applyConfiguration(configuration: ReportConfiguration, reportState: ReportState, filters: Map<String, Filter>? = null) {
         val configData = configuration.configuration
+        
         
         // Zastosuj konfigurację do ReportState
         reportState.visibleColumns.value = configData.visibleColumns.toSet()
@@ -156,8 +160,11 @@ class ReportConfigurationManager {
             sortConfig.columnName to sortConfig.direction
         }
         
-        // Zastosuj filtry - na razie pomijamy serialization filtrów, to jest skomplikowane
-        // reportState.filterValues.value = deserializeFilterValues(configData.filterValues, reportState.filterValues.value)
+        // Zastosuj filtry
+        if (filters != null) {
+            val deserializedFilters = deserializeFilterValues(configData.filterValues, reportState.filterValues.value, filters)
+            reportState.filterValues.value = deserializedFilters
+        }
         
         // Zastosuj rozmiar strony
         reportState.pageSize.value = configData.pageSize
@@ -180,8 +187,90 @@ class ReportConfigurationManager {
         )
     }
     
-    private fun serializeFilterValues(filterValues: Map<String, FilterData<*>>): Map<String, String> {
-        // Na razie zwracamy puste mapy, serialization filtrów to osobny temat
-        return emptyMap()
+    private fun serializeFilterValues(filterValues: Map<String, FilterData<*>>): Map<String, SerializableFilterData> {
+        return filterValues.map { (key, filterData) ->
+            val serializable = when (filterData) {
+                is FilterData.BooleanData -> SerializableFilterData.BooleanFilter(
+                    value = filterData.value.value,
+                    nullHandling = filterData.nullHandling.value.name
+                )
+                is FilterData.NumberData<*> -> SerializableFilterData.NumberFilter(
+                    filterType = filterData.filterType.value.name,
+                    minValue = filterData.minValue.value?.toDouble(),
+                    maxValue = filterData.maxValue.value?.toDouble(),
+                    nullHandling = filterData.nullHandling.value.name
+                )
+                is FilterData.StringData -> SerializableFilterData.StringFilter(
+                    filterType = filterData.filterType.value.name,
+                    value = filterData.value.value,
+                    caseSensitive = filterData.caseSensitive.value,
+                    nullHandling = filterData.nullHandling.value.name
+                )
+                is FilterData.EnumData<*> -> SerializableFilterData.EnumFilter(
+                    values = filterData.values.value.map { it.toString() },
+                    include = filterData.include.value,
+                    nullHandling = filterData.nullHandling.value.name
+                )
+            }
+            key to serializable
+        }.toMap()
+    }
+    
+    private fun deserializeFilterValues(
+        serializedFilters: Map<String, SerializableFilterData>,
+        currentFilters: Map<String, FilterData<*>>,
+        filters: Map<String, Filter>
+    ): Map<String, FilterData<*>> {
+        val result = currentFilters.toMutableMap()
+        
+        serializedFilters.forEach { (key, serializedFilter) ->
+            val currentFilter = currentFilters[key]
+            if (currentFilter != null) {
+                when {
+                    serializedFilter is SerializableFilterData.BooleanFilter && currentFilter is FilterData.BooleanData -> {
+                        currentFilter.value.value = serializedFilter.value
+                        currentFilter.nullHandling.value = NullHandling.valueOf(serializedFilter.nullHandling)
+                    }
+                    serializedFilter is SerializableFilterData.NumberFilter && currentFilter is FilterData.NumberData<*> -> {
+                        currentFilter.filterType.value = NumberFilterDataType.valueOf(serializedFilter.filterType)
+                        @Suppress("UNCHECKED_CAST")
+                        val numberFilter = currentFilter as FilterData.NumberData<Number>
+                        numberFilter.minValue.value = serializedFilter.minValue
+                        numberFilter.maxValue.value = serializedFilter.maxValue
+                        currentFilter.nullHandling.value = NullHandling.valueOf(serializedFilter.nullHandling)
+                    }
+                    serializedFilter is SerializableFilterData.StringFilter && currentFilter is FilterData.StringData -> {
+                        currentFilter.filterType.value = StringFilterDataType.valueOf(serializedFilter.filterType)
+                        currentFilter.value.value = serializedFilter.value
+                        currentFilter.caseSensitive.value = serializedFilter.caseSensitive
+                        currentFilter.nullHandling.value = NullHandling.valueOf(serializedFilter.nullHandling)
+                    }
+                    serializedFilter is SerializableFilterData.EnumFilter && currentFilter is FilterData.EnumData<*> -> {
+                        // Reset current values first
+                        currentFilter.reset()
+                        
+                        // To deserialize enum values, we need to get them from the filter itself
+                        val enumFilter = filters[key] as? EnumFilter<*>
+                        if (enumFilter != null) {
+                            val enumClass = enumFilter.enumClass
+                            val enumConstants = enumClass.java.enumConstants
+                            
+                            // Restore enum values by matching string representations
+                            serializedFilter.values.forEach { enumString ->
+                                val matchingEnum = enumConstants.find { it.toString() == enumString }
+                                if (matchingEnum != null) {
+                                    currentFilter.addValue(matchingEnum)
+                                }
+                            }
+                        }
+                        
+                        currentFilter.include.value = serializedFilter.include
+                        currentFilter.nullHandling.value = NullHandling.valueOf(serializedFilter.nullHandling)
+                    }
+                }
+            }
+        }
+        
+        return result
     }
 }
