@@ -1,5 +1,6 @@
 package org.octavius.database
 
+import org.octavius.config.EnvConfig
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
@@ -60,7 +61,7 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
 
     // Skanuje wszystkie klasy w pakiecie domain i mapuje je na ścieżki
     private fun scanDomainClasses() {
-        val baseDomainPackage = "org.octavius.domain"
+        val baseDomainPackage = EnvConfig.baseDomainPackage
         try {
             // Używamy ClassLoader do znalezienia wszystkich klas w pakiecie domain
             val classLoader = Thread.currentThread().contextClassLoader
@@ -105,12 +106,13 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
                 JOIN pg_enum e ON t.oid = e.enumtypid
                 JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE 
-                n.nspname = ANY(ARRAY['public','asian_media', 'games'])
+                n.nspname = ANY(:schemas)
             ORDER BY 
                 t.typname, e.enumsortorder
         """
 
-        val enumValues = namedParameterJdbcTemplate.query(query, emptyMap<String, Any>()) { rs, _ ->
+        val params = mapOf("schemas" to EnvConfig.dbSchemas.toTypedArray())
+        val enumValues = namedParameterJdbcTemplate.query(query, params) { rs, _ ->
             EnumTypeInfo(rs.getString("enum_type"), rs.getString("enum_value"))
         }
 
@@ -141,12 +143,13 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
                 t.typtype = 'c'
                 AND a.attnum > 0
                 AND NOT a.attisdropped
-                AND n.nspname = ANY(ARRAY['public','asian_media', 'games'])
+                AND n.nspname = ANY(:schemas)
             ORDER BY 
                 t.typname, a.attnum
         """
 
-        val attributes = namedParameterJdbcTemplate.query(query, emptyMap<String, Any>()) { rs, _ ->
+        val params = mapOf("schemas" to EnvConfig.dbSchemas.toTypedArray())
+        val attributes = namedParameterJdbcTemplate.query(query, params) { rs, _ ->
             CompositeAttributeInfo(
                 rs.getString("type_name"),
                 rs.getString("attr_name"),
@@ -178,7 +181,7 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
     }
 
     fun findClassPath(className: String): String? {
-        return classPathMap[className] ?: "org.octavius.domain.$className"
+        return classPathMap[className] ?: "${EnvConfig.baseDomainPackage}.$className"
     }
 
     fun getAllRegisteredTypes(): Map<String, PostgresTypeInfo> {
