@@ -106,7 +106,7 @@ abstract class ReportHandler {
 
         val fetcher = DatabaseManager.getFetcher()
         try {
-            val totalCount = fetcher.fetchCount(reportStructure.query.sql, whereClauseBuilder.toString()) / pageSize
+            val totalCount = (fetcher.fetchCount(reportStructure.query.sql, whereClauseBuilder.toString()) + pageSize - 1) / pageSize
             val results = fetcher.fetchPagedList(
                 table = reportStructure.query.sql,
                 fields = "*",
