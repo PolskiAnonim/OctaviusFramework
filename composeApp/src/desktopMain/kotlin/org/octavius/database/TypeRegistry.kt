@@ -3,6 +3,16 @@ package org.octavius.database
 import org.octavius.config.EnvConfig
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
+/**
+ * Centralny rejestr typów PostgreSQL używanych w aplikacji.
+ * 
+ * Automatycznie skanuje bazę danych i klasy domenowe, tworząc mapowanie między typami PostgreSQL
+ * a klasami Kotlin. Obsługuje typy standardowe, wyliczeniowe (enum), kompozytowe i tablicowe.
+ * 
+ * @param namedParameterJdbcTemplate Template JDBC do wykonywania zapytań do bazy danych
+ * 
+ * @constructor Inicjalizuje rejestr typów, automatycznie skanując dostępne typy
+ */
 class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
     // Przechowuje mapowanie nazw typów PostgreSQL na informacje o typach
     private val postgresTypeMap = mutableMapOf<String, PostgresTypeInfo>()
@@ -10,8 +20,21 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
     // Mapa mapująca nazwy klas na ich pełne ścieżki
     private val classPathMap = mutableMapOf<String, String>()
 
-    // Pomocnicze klasy do mapowania wyników zapytań
+    /**
+     * Klasa pomocnicza do mapowania informacji o typach enum z bazy danych.
+     * 
+     * @param typeName Nazwa typu enum w PostgreSQL
+     * @param value Pojedyncza wartość enum
+     */
     private data class EnumTypeInfo(val typeName: String, val value: String)
+    
+    /**
+     * Klasa pomocnicza do mapowania atrybutów typów kompozytowych z bazy danych.
+     * 
+     * @param typeName Nazwa typu kompozytowego
+     * @param attributeName Nazwa atrybutu
+     * @param attributeType Typ atrybutu
+     */
     private data class CompositeAttributeInfo(
         val typeName: String,
         val attributeName: String,
@@ -26,7 +49,14 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         loadArrayTypes()
     }
 
-    // Ładowanie definicji standardowych typów
+    /**
+     * Ładuje definicje standardowych typów PostgreSQL.
+     * 
+     * Rejestruje mapowanie dla podstawowych typów takich jak:
+     * - Typy numeryczne (serial, int4, int8, int2, float4, float8, numeric)
+     * - Typy tekstowe (text, varchar, char)
+     * - Inne (bool, date, timestamp, json, jsonb, uuid, interval)
+     */
     private fun loadStandardTypes() {
         // Mapowanie standardowych typów PostgreSQL
         val typeNames = listOf(
@@ -59,7 +89,14 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         }
     }
 
-    // Skanuje wszystkie klasy w pakiecie domain i mapuje je na ścieżki
+    /**
+     * Skanuje wszystkie klasy w pakiecie domenowym i mapuje je na pełne ścieżki.
+     * 
+     * Przeszukuje pakiet zdefiniowany w [EnvConfig.baseDomainPackage] używając ClassLoader
+     * i tworzy mapowanie nazw klas na ich pełne ścieżki pakietowe.
+     * 
+     * @throws Exception Jeśli wystąpi błąd podczas skanowania (błąd jest logowany, ale nie przerywa działania)
+     */
     private fun scanDomainClasses() {
         val baseDomainPackage = EnvConfig.baseDomainPackage
         try {
@@ -81,6 +118,12 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         }
     }
 
+    /**
+     * Rekurencyjnie skanuje katalog w poszukiwaniu plików .class.
+     * 
+     * @param directory Katalog do przeskanowania
+     * @param packageName Nazwa pakietu odpowiadająca katalogowi
+     */
     private fun scanDirectory(directory: java.io.File, packageName: String) {
         directory.listFiles()?.forEach { file ->
             when {
@@ -95,7 +138,14 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         }
     }
 
-    // Ładowanie definicji typów wyliczeniowych (enum)
+    /**
+     * Ładuje definicje typów wyliczeniowych (enum) z bazy danych.
+     * 
+     * Wykonuje zapytanie do katalogu systemowego PostgreSQL (pg_type, pg_enum)
+     * aby pobrać wszystkie typy enum z określonych schematów wraz z ich wartościami.
+     * 
+     * Typy są przechowywane w [postgresTypeMap] z kategorią [TypeCategory.ENUM].
+     */
     private fun loadEnumTypes() {
         val query = """
             SELECT 
@@ -126,7 +176,14 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         }
     }
 
-    // Ładowanie typów złożonych (composite)
+    /**
+     * Ładuje typy złożone (composite) z bazy danych.
+     * 
+     * Wykonuje zapytanie do katalogu systemowego PostgreSQL aby pobrać
+     * definicje typów kompozytowych wraz z ich atrybutami i typami atrybutów.
+     * 
+     * Typy są przechowywane w [postgresTypeMap] z kategorią [TypeCategory.COMPOSITE].
+     */
     private fun loadCompositeTypes() {
         val query = """
             SELECT 
@@ -167,7 +224,14 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         }
     }
 
-    // Ładowanie definicji typów tablicowych
+    /**
+     * Ładuje definicje typów tablicowych.
+     * 
+     * Automatycznie generuje typy tablicowe dla wszystkich już zarejestrowanych typów
+     * poprzez dodanie prefiksu "_" do nazwy typu (konwencja PostgreSQL).
+     * 
+     * Typy tablicowe są przechowywane z kategorią [TypeCategory.ARRAY].
+     */
     private fun loadArrayTypes() {
         val keys = postgresTypeMap.keys.toList()
         keys.forEach {
@@ -175,33 +239,68 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         }
     }
 
-    // Publiczne metody dostępu do informacji o typach
+    /**
+     * Zwraca informacje o typie PostgreSQL.
+     * 
+     * @param pgTypeName Nazwa typu w PostgreSQL
+     * @return Informacje o typie lub null jeśli typ nie został znaleziony
+     */
     fun getTypeInfo(pgTypeName: String): PostgresTypeInfo? {
         return postgresTypeMap[pgTypeName]
     }
 
+    /**
+     * Znajduje pełną ścieżkę klasy na podstawie nazwy.
+     * 
+     * @param className Nazwa klasy
+     * @return Pełna ścieżka klasy lub domyślna ścieżka w pakiecie domenowym
+     */
     fun findClassPath(className: String): String? {
         return classPathMap[className] ?: "${EnvConfig.baseDomainPackage}.$className"
     }
 
+    /**
+     * Zwraca wszystkie zarejestrowane typy PostgreSQL.
+     * 
+     * @return Niemodyfikowalna mapa nazw typów na informacje o typach
+     */
     fun getAllRegisteredTypes(): Map<String, PostgresTypeInfo> {
         return postgresTypeMap.toMap()
     }
 
+    /**
+     * Zwraca mapowanie nazw klas na ich pełne ścieżki.
+     * 
+     * @return Niemodyfikowalna mapa nazw klas na ścieżki pakietowe
+     */
     fun getClassMappings(): Map<String, String> {
         return classPathMap.toMap()
     }
 }
 
-// Kategorie typów PostgreSQL
+/**
+ * Kategorie typów PostgreSQL obsługiwane przez system.
+ */
 enum class TypeCategory {
+    /** Typ wyliczeniowy (CREATE TYPE ... AS ENUM) */
     ENUM,
+    /** Typ tablicowy (prefikś "_" w nazwie typu) */
     ARRAY,
+    /** Typ kompozytowy (CREATE TYPE ... AS) */
     COMPOSITE,
+    /** Standardowy typ PostgreSQL (int4, text, bool, itp.) */
     STANDARD
 }
 
-// Klasa przechowująca informacje o typie PostgreSQL
+/**
+ * Klasa przechowująca informacje o typie PostgreSQL.
+ * 
+ * @param typeName Nazwa typu w PostgreSQL
+ * @param typeCategory Kategoria typu
+ * @param enumValues Lista wartości dla typów enum (pusta dla innych typów)
+ * @param elementType Typ elementu dla typów tablicowych (null dla innych typów)
+ * @param attributes Mapa atrybutów dla typów kompozytowych (pusta dla innych typów)
+ */
 data class PostgresTypeInfo(
     val typeName: String,
     val typeCategory: TypeCategory,
