@@ -22,6 +22,9 @@ object DatabaseManager {
     // Instancja TransactionManager
     private val transactionManager: DataSourceTransactionManager
 
+    // Instancja rejestru typów
+    private var typeRegistry: TypeRegistry
+    
     // Instancja konwertera typów użytkownika
     private var typesConverter: UserTypesConverter
 
@@ -48,9 +51,11 @@ object DatabaseManager {
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         transactionManager = DataSourceTransactionManager(dataSource)
 
+        // Inicjalizacja rejestru typów
+        typeRegistry = TypeRegistry(namedParameterJdbcTemplate)
+        
         // Inicjalizacja konwertera typów
-        typesConverter = UserTypesConverter(jdbcTemplate)
-        typesConverter.initialize()
+        typesConverter = UserTypesConverter(typeRegistry)
 
         // Inicjalizacja fabryki mapperów
         rowMapperFactory = RowMapperFactory(typesConverter)

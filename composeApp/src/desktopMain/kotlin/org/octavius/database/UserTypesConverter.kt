@@ -1,142 +1,9 @@
 package org.octavius.database
 
 import org.octavius.util.Converters
-import org.postgresql.jdbc.PgArray
-import org.postgresql.util.PGobject
-import org.springframework.jdbc.core.JdbcTemplate
 import java.text.ParseException
 
-class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
-    // Przechowuje mapowanie nazw typów PostgreSQL na informacje o typach
-    private val postgresTypeMap = mutableMapOf<String, PostgresTypeInfo>()
-
-    // Pomocnicze klasy do mapowania wyników zapytań
-    private data class EnumTypeInfo(val typeName: String, val value: String)
-    private data class CompositeAttributeInfo(
-        val typeName: String,
-        val attributeName: String,
-        val attributeType: String
-    )
-
-    // Inicjalizacja konwertera typów
-    fun initialize() {
-        loadStandardTypes()
-        loadEnumTypes()
-        loadCompositeTypes()
-        loadArrayTypes()
-    }
-
-    // Ładowanie definicji standardowych typów
-    private fun loadStandardTypes() {
-        // Mapowanie standardowych typów PostgreSQL
-        val typeNames = listOf(
-            // Typy numeryczne
-            "serial",
-            "int4",
-            "int8",
-            "int2",
-            "float4",
-            "float8",
-            "numeric",
-            // Typy tekstowe
-            "text",
-            "varchar",
-            "char",
-            // Inne
-            "bool",
-            "date",
-            "timestamp",
-            "timestamptz",
-            "json",
-            "jsonb",
-            "uuid",
-            // Interval
-            "interval"
-        )
-
-        typeNames.forEach { typeName ->
-            postgresTypeMap[typeName] = PostgresTypeInfo(typeName, TypeCategory.STANDARD)
-        }
-    }
-
-    // Ładowanie definicji typów wyliczeniowych (enum)
-    private fun loadEnumTypes() {
-        val query = """
-            SELECT 
-                t.typname AS enum_type,
-                e.enumlabel AS enum_value
-            FROM 
-                pg_type t
-                JOIN pg_enum e ON t.oid = e.enumtypid
-                JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-            WHERE 
-                n.nspname = ANY(ARRAY['public','asian_media', 'games'])
-            ORDER BY 
-                t.typname, e.enumsortorder
-        """
-
-        val enumValues = jdbcTemplate.query(query) { rs, _ ->
-            EnumTypeInfo(rs.getString("enum_type"), rs.getString("enum_value"))
-        }
-
-        // Grupowanie wartości enum według nazwy typu
-        enumValues.groupBy { it.typeName }.forEach { (typeName, values) ->
-            postgresTypeMap[typeName] = PostgresTypeInfo(
-                typeName = typeName,
-                typeCategory = TypeCategory.ENUM,
-                enumValues = values.map { it.value }
-            )
-        }
-    }
-
-    // Ładowanie typów złożonych (composite)
-    private fun loadCompositeTypes() {
-        val query = """
-            SELECT 
-                t.typname AS type_name,
-                a.attname AS attr_name,
-                at.typname AS attr_type
-            FROM 
-                pg_type t
-                JOIN pg_class c ON t.typrelid = c.oid
-                JOIN pg_attribute a ON a.attrelid = c.oid
-                JOIN pg_type at ON a.atttypid = at.oid
-                JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-            WHERE 
-                t.typtype = 'c'
-                AND a.attnum > 0
-                AND NOT a.attisdropped
-                AND n.nspname = ANY(ARRAY['public','asian_media', 'games'])
-            ORDER BY 
-                t.typname, a.attnum
-        """
-
-        val attributes = jdbcTemplate.query(query) { rs, _ ->
-            CompositeAttributeInfo(
-                rs.getString("type_name"),
-                rs.getString("attr_name"),
-                rs.getString("attr_type")
-            )
-        }
-
-        // Grupowanie atrybutów według nazwy typu
-        attributes.groupBy { it.typeName }.forEach { (typeName, attrs) ->
-            postgresTypeMap[typeName] = PostgresTypeInfo(
-                typeName = typeName,
-                typeCategory = TypeCategory.COMPOSITE,
-                attributes = attrs.associate { it.attributeName to it.attributeType }
-            )
-        }
-    }
-
-    // Ładowanie definicji typów tablicowych
-    private fun loadArrayTypes() {
-        val keys = postgresTypeMap.keys.toList()
-        keys.forEach {
-            postgresTypeMap["_$it"] = PostgresTypeInfo("_$it", TypeCategory.ARRAY, elementType = it)
-        }
-    }
-
+class UserTypesConverter(private val typeRegistry: TypeRegistry) {
 
     /**
      * Główna funkcja konwertująca wartości PostgreSQL na Kotlina. Przyjmuje wartość jako String.
@@ -144,7 +11,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
     fun convertToDomainType(value: String?, pgTypeName: String): Any? {
         if (value == null) return null
 
-        val typeInfo = postgresTypeMap[pgTypeName]
+        val typeInfo = typeRegistry.getTypeInfo(pgTypeName)
             ?: throw IllegalArgumentException("Nieznany typ PostgreSQL: $pgTypeName")
 
         return when (typeInfo.typeCategory) {
@@ -175,8 +42,8 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
      * Konwersja typu enum
      */
     private fun convertEnum(value: String, typeInfo: PostgresTypeInfo): Any? {
-        // Znajdź odpowiednią klasę enum w Kotlinie
-        val enumClassName = "org.octavius.domain.${Converters.snakeToCamelCase(typeInfo.typeName, true)}"
+        val className = Converters.snakeToCamelCase(typeInfo.typeName, true)
+        val enumClassName = typeRegistry.findClassPath(className)
 
         return try {
             val enumClass = Class.forName(enumClassName)
@@ -184,7 +51,7 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
             val method = enumClass.getMethod("valueOf", String::class.java)
             method.invoke(null, enumValueName)
         } catch (e: Exception) {
-            println("Nie można przekonwertować wartości enum: $value dla typu ${typeInfo.typeName}")
+            println("Nie można przekonwertować wartości enum: $value dla typu ${typeInfo.typeName} (próbowano: $enumClassName)")
             e.printStackTrace()
             null
         }
@@ -234,12 +101,13 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
         }.toTypedArray()
 
         return try {
-            val className = "org.octavius.domain.${Converters.snakeToCamelCase(typeInfo.typeName, true)}"
-            val clazz = Class.forName(className)
+            val className = Converters.snakeToCamelCase(typeInfo.typeName, true)
+            val fullClassName = typeRegistry.findClassPath(className)
+            val clazz = Class.forName(fullClassName)
             val constructor = clazz.constructors.first() // Zakładamy, że jest jeden konstruktor
             constructor.newInstance(*constructorArgs)
         } catch (e: Exception) {
-            println("Nie można utworzyć instancji obiektu dla typu kompozytowego: ${typeInfo.typeName} z wartością $value")
+            println("Nie można utworzyć instancji obiektu dla typu kompozytowego: ${typeInfo.typeName} z wartością $value (próbowano: ${typeRegistry.findClassPath(Converters.snakeToCamelCase(typeInfo.typeName, true))})")
             e.printStackTrace()
             null
         }
@@ -307,20 +175,3 @@ class UserTypesConverter(private val jdbcTemplate: JdbcTemplate) {
         return raw
     }
 }
-
-// Kategorie typów PostgreSQL
-enum class TypeCategory {
-    ENUM,
-    ARRAY,
-    COMPOSITE,
-    STANDARD
-}
-
-// Klasa przechowująca informacje o typie PostgreSQL
-data class PostgresTypeInfo(
-    val typeName: String,
-    val typeCategory: TypeCategory,
-    val enumValues: List<String> = emptyList(),
-    val elementType: String? = null,
-    val attributes: Map<String, String> = emptyMap()
-)
