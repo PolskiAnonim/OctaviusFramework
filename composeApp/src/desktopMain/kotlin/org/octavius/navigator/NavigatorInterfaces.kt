@@ -4,8 +4,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.painter.Painter
+import org.octavius.localization.Translations
 
-val LocalNavigator = compositionLocalOf<Navigator> { error("No Navigator found!") }
+val LocalNavigator = compositionLocalOf<Navigator> { error(Translations.get("navigation.noNavigator")) }
 
 //Screen for Navigator
 interface Screen {

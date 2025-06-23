@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.domain.NullHandling
+import org.octavius.localization.Translations
 import org.octavius.report.filter.Filter
 import org.octavius.util.Converters.camelToSnakeCase
 import kotlin.reflect.KClass
@@ -74,7 +75,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
 
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = "Wybierz wartości",
+                text = Translations.get("filter.enum.selectValues"),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -84,7 +85,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Tryb wyboru:")
+                Text(Translations.get("filter.enum.selectionMode"))
                 RadioButton(
                     selected = include.value,
                     onClick = {
@@ -92,7 +93,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
                         filterData.markDirty()
                     }
                 )
-                Text("Uwzględnij zaznaczone", modifier = Modifier.padding(end = 8.dp))
+                Text(Translations.get("filter.enum.includeSelected"), modifier = Modifier.padding(end = 8.dp))
 
                 RadioButton(
                     selected = !include.value,
@@ -101,7 +102,7 @@ class EnumFilter<E : Enum<*>>(columnName: String, val enumClass: KClass<E>) : Fi
                         filterData.markDirty()
                     }
                 )
-                Text("Wyklucz zaznaczone")
+                Text(Translations.get("filter.enum.excludeSelected"))
             }
 
             Spacer(modifier = Modifier.height(8.dp))

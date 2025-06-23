@@ -1,6 +1,7 @@
 package org.octavius.domain.game
 
 import org.octavius.domain.GameStatus
+import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
 import org.octavius.report.column.type.EnumColumn
@@ -30,11 +31,11 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
         )
         
         val columns = mapOf(
-            "name" to StringColumn("game_name", "Nazwa", filterable = true),
-            "series" to StringColumn("series_name", "Seria", filterable = true),
+            "name" to StringColumn("game_name", Translations.get("games.general.gameName"), filterable = true),
+            "series" to StringColumn("series_name", Translations.get("games.general.series"), filterable = true),
             "status" to EnumColumn(
                 "status",
-                "Status",
+                Translations.get("games.general.status"),
                 enumClass = GameStatus::class,
                 filterable = true
             ),

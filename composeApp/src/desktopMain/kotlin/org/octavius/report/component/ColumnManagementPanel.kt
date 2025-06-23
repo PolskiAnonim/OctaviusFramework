@@ -20,6 +20,7 @@ import androidx.compose.ui.draganddrop.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.SortDirection
+import org.octavius.localization.Translations
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 
@@ -56,13 +57,13 @@ fun ColumnManagementPanel(
             ) {
                 Button(onClick = { isExpanded = !isExpanded }, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Zarządzanie kolumnami",
+                        text = Translations.get("report.management.columnManagement"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                        contentDescription = if (isExpanded) "Zwiń" else "Rozwiń"
+                        contentDescription = if (isExpanded) Translations.get("expandable.collapse") else Translations.get("expandable.expand")
                     )
                 }
 
@@ -99,7 +100,7 @@ private fun ColumnsSection(
     }
     Column {
         Text(
-            text = "Kolumny",
+            text = Translations.get("report.columns.columns"),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
@@ -152,7 +153,7 @@ private fun ColumnsSection(
                         }) {
                             Icon(
                                 imageVector = if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (isVisible) "Ukryj kolumnę" else "Pokaż kolumnę",
+                                contentDescription = if (isVisible) Translations.get("report.columns.hideColumn") else Translations.get("report.columns.showColumn"),
                                 tint = if (isVisible) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -173,7 +174,7 @@ private fun SortingSection(
     val allColumns = reportState.columnKeys
     Column {
         Text(
-            text = "Sortowanie",
+            text = Translations.get("report.columns.sorting"),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
@@ -184,7 +185,7 @@ private fun SortingSection(
         val currentSort = reportState.sortOrder.value
         if (currentSort.isNotEmpty()) {
             Text(
-                text = "Aktywne sortowania:",
+                text = Translations.get("report.columns.activeSorting"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -223,8 +224,8 @@ private fun SortingSection(
                                     SortDirection.Descending -> Icons.Default.ArrowDownward
                                 },
                                 contentDescription = when (direction) {
-                                    SortDirection.Ascending -> "Rosnąco"
-                                    SortDirection.Descending -> "Malejąco"
+                                    SortDirection.Ascending -> Translations.get("report.columns.ascending")
+                                    SortDirection.Descending -> Translations.get("report.columns.descending")
                                 },
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.clickable {
@@ -253,7 +254,7 @@ private fun SortingSection(
 
         // Strefa docelowa dla przeciągania kolumn do sortowania
         Text(
-            text = "Strefa sortowania (przeciągnij kolumny tutaj):",
+            text = Translations.get("report.columns.sortZone"),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -281,14 +282,14 @@ private fun SortingSection(
         ) {
             if (currentSort.isEmpty()) {
                 Text(
-                    text = "Przeciągnij kolumny tutaj aby dodać sortowanie",
+                    text = Translations.get("report.columns.dragColumnsHere"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
                 Text(
-                    text = "Przeciągnij więcej kolumn aby dodać dodatkowe sortowanie",
+                    text = Translations.get("report.columns.dragMoreColumns"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.Center)
@@ -337,7 +338,7 @@ private fun DraggableChip(
         ) {
             Icon(
                 imageVector = Icons.Default.DragHandle,
-                contentDescription = "Przeciągnij aby zmienić kolejność",
+                contentDescription = Translations.get("report.columns.dragToReorder"),
                 tint = if (isDragHandleHovered) MaterialTheme.colorScheme.primary else textColor,
                 modifier = Modifier
                     .hoverable(dragHandleInteractionSource)

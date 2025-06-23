@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.localization.Translations
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.StringListFilter
@@ -67,7 +68,7 @@ class StringListColumn(
                     .padding(vertical = 4.dp, horizontal = 8.dp)
             ) {
                 val displayItems = if (value.size > maxVisibleItems) {
-                    value.take(maxVisibleItems) + "... (${value.size - maxVisibleItems} więcej)"
+                    value.take(maxVisibleItems) + Translations.get("report.columns.more", value.size - maxVisibleItems)
                 } else {
                     value
                 }

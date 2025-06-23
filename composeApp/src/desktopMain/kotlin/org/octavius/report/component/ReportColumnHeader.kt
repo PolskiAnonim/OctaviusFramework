@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
+import org.octavius.localization.Translations
 
 @Composable
 fun ReportColumnHeader(
@@ -48,7 +49,7 @@ fun ReportColumnHeader(
             if (hasFilter && filterData?.isActive() == true) {
                 Icon(
                     imageVector = Icons.Default.FilterAlt,
-                    contentDescription = "Filtr aktywny",
+                    contentDescription = Translations.get("filter.general.active"),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
@@ -66,7 +67,7 @@ fun ReportColumnHeader(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Filtr: ${column.header}",
+                            text = Translations.get("filter.general.label") + " ${column.header}",
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -87,13 +88,13 @@ fun ReportColumnHeader(
                                         showColumnMenu = false
                                     }
                                 ) {
-                                    Text("Wyczyść")
+                                    Text(Translations.get("filter.general.clear"))
                                 }
 
                                 Button(
                                     onClick = { showColumnMenu = false }
                                 ) {
-                                    Text("Zamknij")
+                                    Text(Translations.get("action.close"))
                                 }
                             }
                         }

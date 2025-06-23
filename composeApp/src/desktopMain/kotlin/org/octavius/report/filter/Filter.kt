@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.domain.NullHandling
+import org.octavius.localization.Translations
 
 abstract class Filter(val columnName: String) {
 
@@ -31,7 +32,7 @@ abstract class Filter(val columnName: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Wartości puste:",
+                text = Translations.get("filter.null.values"),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 8.dp)
             )
@@ -43,7 +44,7 @@ abstract class Filter(val columnName: String) {
                     filterData.markDirty()
                 }
             )
-            Text("Ignoruj", modifier = Modifier.padding(end = 12.dp))
+            Text(Translations.get("filter.null.ignore"), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
                 selected = filterData.nullHandling.value == NullHandling.Include,
@@ -52,7 +53,7 @@ abstract class Filter(val columnName: String) {
                     filterData.markDirty()
                 }
             )
-            Text("Dołącz", modifier = Modifier.padding(end = 12.dp))
+            Text(Translations.get("filter.null.include"), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
                 selected = filterData.nullHandling.value == NullHandling.Exclude,
@@ -61,7 +62,7 @@ abstract class Filter(val columnName: String) {
                     filterData.markDirty()
                 }
             )
-            Text("Wyklucz")
+            Text(Translations.get("filter.null.exclude"))
         }
     }
 }

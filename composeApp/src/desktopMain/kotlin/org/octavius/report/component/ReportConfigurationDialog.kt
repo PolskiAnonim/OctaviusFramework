@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import org.octavius.localization.Translations
 import org.octavius.report.ReportConfiguration
 import org.octavius.report.ReportConfigurationManager
 import org.octavius.report.filter.Filter
@@ -47,7 +48,7 @@ fun ReportConfigurationDialog(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Konfiguracje raportu",
+                    text = Translations.getPlural("report.configuration.configuration", 10),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -61,7 +62,7 @@ fun ReportConfigurationDialog(
                     Button(
                         onClick = { showSaveDialog = true }
                     ) {
-                        Text("Zapisz obecną konfigurację")
+                        Text(Translations.get("report.configuration.saveCurrent"))
                     }
                     
                     Button(
@@ -69,14 +70,14 @@ fun ReportConfigurationDialog(
                             configurations = configManager.listConfigurations(reportName)
                         }
                     ) {
-                        Text("Odśwież")
+                        Text(Translations.get("action.refresh"))
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Zapisane konfiguracje:",
+                    text = Translations.get("report.configuration.savedConfigurations"),
                     style = MaterialTheme.typography.titleMedium
                 )
                 
@@ -108,7 +109,7 @@ fun ReportConfigurationDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Zamknij")
+                        Text(Translations.get("action.close"))
                     }
                 }
             }
@@ -163,7 +164,7 @@ fun ConfigurationItem(
                     }
                     if (configuration.isDefault) {
                         Text(
-                            text = "Domyślna",
+                            text = Translations.get("report.configuration.defaultConfig"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -172,7 +173,7 @@ fun ConfigurationItem(
                 
                 Row {
                     TextButton(onClick = onLoad) {
-                        Text("Wczytaj")
+                        Text(Translations.get("action.load"))
                     }
                     TextButton(
                         onClick = onDelete,
@@ -180,7 +181,7 @@ fun ConfigurationItem(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text("Usuń")
+                        Text(Translations.get("action.remove"))
                     }
                 }
             }
@@ -212,7 +213,7 @@ fun SaveConfigurationDialog(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Zapisz konfigurację",
+                    text = Translations.get("report.configuration.saveConfiguration"),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -225,7 +226,7 @@ fun SaveConfigurationDialog(
                         name = it
                         errorMessage = ""
                     },
-                    label = { Text("Nazwa konfiguracji") },
+                    label = { Text(Translations.get("report.configuration.name")) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = errorMessage.isNotEmpty()
                 )
@@ -235,7 +236,7 @@ fun SaveConfigurationDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Opis (opcjonalny)") },
+                    label = { Text(Translations.get("report.configuration.description")) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -248,7 +249,7 @@ fun SaveConfigurationDialog(
                         checked = isDefault,
                         onCheckedChange = { isDefault = it }
                     )
-                    Text("Ustaw jako domyślną")
+                    Text(Translations.get("report.configuration.setAsDefault"))
                 }
                 
                 if (errorMessage.isNotEmpty()) {
@@ -266,7 +267,7 @@ fun SaveConfigurationDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Anuluj")
+                        Text(Translations.get("action.cancel"))
                     }
                     
                     Spacer(modifier = Modifier.width(8.dp))
@@ -274,7 +275,7 @@ fun SaveConfigurationDialog(
                     Button(
                         onClick = {
                             if (name.isBlank()) {
-                                errorMessage = "Nazwa jest wymagana"
+                                errorMessage = Translations.get("report.configuration.nameRequired")
                                 return@Button
                             }
                             
@@ -289,11 +290,11 @@ fun SaveConfigurationDialog(
                             if (success) {
                                 onSaved()
                             } else {
-                                errorMessage = "Błąd podczas zapisywania konfiguracji"
+                                errorMessage = Translations.get("report.configuration.errorSaving")
                             }
                         }
                     ) {
-                        Text("Zapisz")
+                        Text(Translations.get("action.save"))
                     }
                 }
             }

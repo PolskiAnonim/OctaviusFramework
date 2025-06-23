@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.type.repeatable.RepeatableRow
+import org.octavius.localization.Translations
 
 @Composable
 fun RepeatableHeader(
@@ -45,10 +46,10 @@ fun RepeatableHeader(
                 FilledTonalButton(onClick = onAddClick) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Dodaj"
+                        contentDescription = Translations.get("action.add")
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Dodaj")
+                    Text(Translations.get("action.add"))
                 }
             }
         }
@@ -113,7 +114,7 @@ private fun RepeatableRowHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Element ${index + 1}",
+                text = Translations.get("form.actions.itemLabel", index + 1),
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -127,7 +128,7 @@ private fun RepeatableRowHeader(
                         Icons.Default.KeyboardArrowUp
                     else
                         Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Zwiń" else "Rozwiń",
+                    contentDescription = if (isExpanded) Translations.get("expandable.collapse") else Translations.get("expandable.expand"),
                     modifier = Modifier.padding(end = 8.dp)
                 )
 
@@ -139,7 +140,7 @@ private fun RepeatableRowHeader(
                         IconButton(onClick = onDelete) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Usuń",
+                                contentDescription = Translations.get("action.remove"),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }

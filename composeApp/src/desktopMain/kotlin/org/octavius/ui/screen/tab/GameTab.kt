@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import novelskotlin.composeapp.generated.resources.Res
 import novelskotlin.composeapp.generated.resources.game_icon
 import org.jetbrains.compose.resources.painterResource
+import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.navigator.Tab
 import org.octavius.navigator.TabOptions
@@ -26,7 +27,7 @@ class GameTab : Tab {
     override val options: TabOptions
         @Composable
         get() = TabOptions(
-            title = "Gry",
+            title = Translations.get("tabs.games"),
             icon = painterResource(Res.drawable.game_icon)
         )
 

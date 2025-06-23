@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.domain.NullHandling
 import org.octavius.domain.StringFilterDataType
+import org.octavius.localization.Translations
 import org.octavius.report.filter.Filter
 
 class StringListFilter(columnName: String) : Filter(columnName) {
@@ -79,7 +80,7 @@ class StringListFilter(columnName: String) : Filter(columnName) {
 
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = "Filtruj zawartość listy",
+                text = Translations.get("filter.stringList.filter"),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -90,7 +91,7 @@ class StringListFilter(columnName: String) : Filter(columnName) {
                     filterText.value = it
                     filterData.markDirty()
                 },
-                label = { Text("Szukaj w liście") },
+                label = { Text(Translations.get("filter.stringList.search")) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
@@ -99,7 +100,7 @@ class StringListFilter(columnName: String) : Filter(columnName) {
                             filterText.value = ""
                             filterData.markDirty()
                         }) {
-                            Icon(Icons.Default.Clear, "Wyczyść filtr")
+                            Icon(Icons.Default.Clear, Translations.get("filter.general.clear"))
                         }
                     }
                 }
@@ -115,11 +116,11 @@ class StringListFilter(columnName: String) : Filter(columnName) {
             ) {
                 OutlinedTextField(
                     value = when (filterType.value) {
-                        StringFilterDataType.Exact -> "Element dokładnie równy"
-                        StringFilterDataType.StartsWith -> "Element zaczyna się od"
-                        StringFilterDataType.EndsWith -> "Element kończy się na"
-                        StringFilterDataType.Contains -> "Element zawiera"
-                        StringFilterDataType.NotContains -> "Element nie zawiera"
+                        StringFilterDataType.Exact -> Translations.get("filter.stringList.elementExact")
+                        StringFilterDataType.StartsWith -> Translations.get("filter.stringList.elementStartsWith")
+                        StringFilterDataType.EndsWith -> Translations.get("filter.stringList.elementEndsWith")
+                        StringFilterDataType.Contains -> Translations.get("filter.stringList.elementContains")
+                        StringFilterDataType.NotContains -> Translations.get("filter.stringList.elementNotContains")
                     },
                     onValueChange = {},
                     readOnly = true,
@@ -134,11 +135,11 @@ class StringListFilter(columnName: String) : Filter(columnName) {
                     onDismissRequest = { expanded = false }
                 ) {
                     listOf(
-                        StringFilterDataType.Contains to "Element zawiera",
-                        StringFilterDataType.StartsWith to "Element zaczyna się od",
-                        StringFilterDataType.EndsWith to "Element kończy się na",
-                        StringFilterDataType.Exact to "Element dokładnie równy",
-                        StringFilterDataType.NotContains to "Element nie zawiera"
+                        StringFilterDataType.Contains to Translations.get("filter.stringList.elementContains"),
+                        StringFilterDataType.StartsWith to Translations.get("filter.stringList.elementStartsWith"),
+                        StringFilterDataType.EndsWith to Translations.get("filter.stringList.elementEndsWith"),
+                        StringFilterDataType.Exact to Translations.get("filter.stringList.elementExact"),
+                        StringFilterDataType.NotContains to Translations.get("filter.stringList.elementNotContains")
                     ).forEach { (type, label) ->
                         DropdownMenuItem(
                             text = { Text(label) },
@@ -157,7 +158,7 @@ class StringListFilter(columnName: String) : Filter(columnName) {
             NullHandlingPanel(filterData)
 
             Text(
-                text = "Wskazówka: Ten filtr wyszukuje tekst w każdym elemencie listy.",
+                text = Translations.get("filter.stringList.tip"),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 8.dp)
             )

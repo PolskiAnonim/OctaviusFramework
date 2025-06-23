@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.navigator.LocalNavigator
 import org.octavius.navigator.Screen
+import org.octavius.localization.Translations
 
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę
@@ -56,10 +57,10 @@ abstract class FormScreen : Screen {
             ActionButtons(
                 onSave = {
                     if (formHandler.onSaveClicked()) {
-                        navigator.showSnackbar("Formularz został zapisany pomyślnie")
+                        navigator.showSnackbar(Translations.get("form.actions.savedSuccessfully"))
                         navigator.removeScreen()
                     } else {
-                        navigator.showSnackbar("Formularz zawiera błędy")
+                        navigator.showSnackbar(Translations.get("form.actions.containsErrors"))
                     }
                 },
                 onCancel = {
@@ -82,16 +83,16 @@ abstract class FormScreen : Screen {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             OutlinedButton(onClick = onCancel) {
-                Text("Anuluj")
+                Text(Translations.get("action.cancel"))
             }
 
             Button(onClick = onSave) {
                 Icon(
                     imageVector = Icons.Default.Save,
-                    contentDescription = "Zapisz",
+                    contentDescription = Translations.get("action.save"),
                     modifier = Modifier.padding(end = 8.dp)
                 )
-                Text("Zapisz")
+                Text(Translations.get("action.save"))
             }
         }
     }
@@ -113,7 +114,7 @@ abstract class FormScreen : Screen {
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Błędy:",
+                    text = Translations.get("form.actions.errorsLabel"),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )

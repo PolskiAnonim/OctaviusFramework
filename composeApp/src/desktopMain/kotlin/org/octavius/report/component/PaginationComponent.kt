@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.octavius.localization.Translations
 
 @Composable
 fun PaginationComponent(
@@ -62,7 +63,7 @@ fun PaginationComponent(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Poprzednia strona",
+                    contentDescription = Translations.get("pagination.previousPage"),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
@@ -73,7 +74,7 @@ fun PaginationComponent(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Strona ",
+                    text = Translations.get("pagination.page") + " ",
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
 
@@ -144,7 +145,7 @@ fun PaginationComponent(
                 }
 
                 Text(
-                    text = " z $totalPages",
+                    text = " " + Translations.get("pagination.of") + " $totalPages",
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
@@ -156,7 +157,7 @@ fun PaginationComponent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Rozmiar:",
+                        text = Translations.get("pagination.size"),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     
@@ -207,7 +208,7 @@ fun PaginationComponent(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Następna strona",
+                    contentDescription = Translations.get("pagination.nextPage"),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }

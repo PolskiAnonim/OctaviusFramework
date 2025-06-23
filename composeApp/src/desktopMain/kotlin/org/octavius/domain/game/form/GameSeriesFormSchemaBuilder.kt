@@ -5,6 +5,7 @@ import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.TextControl
+import org.octavius.localization.Translations
 
 class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {
@@ -12,7 +13,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
             mapOf(
                 "name" to TextControl(
                     ColumnInfo("series", "name"),
-                    "Nazwa serii",
+                    Translations.get("games.series.name"),
                     required = true
                 ),
                 "basicInfo" to SectionControl(
@@ -20,7 +21,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                     collapsible = false,
                     initiallyExpanded = true,
                     columns = 1,
-                    label = "Informacje o serii"
+                    label = Translations.get("games.series.basicInfo")
                 )
             ),
             listOf("basicInfo")

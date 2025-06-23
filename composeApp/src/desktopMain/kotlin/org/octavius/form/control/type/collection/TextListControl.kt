@@ -21,6 +21,7 @@ import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.TextListValidation
 import org.octavius.form.control.validator.collection.TextListValidator
+import org.octavius.localization.Translations
 
 /**
  * Kontrolka do wprowadzania i zarządzania listą tekstów.
@@ -79,7 +80,7 @@ class TextListControl(
                             }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Usuń",
+                                contentDescription = Translations.get("action.remove"),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -97,7 +98,7 @@ class TextListControl(
                 value = newItemText,
                 onValueChange = { newItemText = it },
                 modifier = Modifier.Companion.weight(1f).padding(end = 8.dp),
-                placeholder = { Text("Dodaj nowy element") },
+                placeholder = { Text(Translations.get("form.actions.addNewItem")) },
                 singleLine = true
             )
 
@@ -113,7 +114,7 @@ class TextListControl(
                     }
                 }) {
                 Icon(
-                    imageVector = Icons.Default.Add, contentDescription = "Dodaj"
+                    imageVector = Icons.Default.Add, contentDescription = Translations.get("action.add")
                 )
             }
         }

@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.domain.NullHandling
 import org.octavius.domain.NumberFilterDataType
+import org.octavius.localization.Translations
 import org.octavius.report.filter.Filter
 
 class IntegerFilter(columnName: String) : Filter(columnName) {
@@ -99,13 +100,13 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
             ) {
                 OutlinedTextField(
                     value = when (filterType.value) {
-                        NumberFilterDataType.Equals -> "Równe"
-                        NumberFilterDataType.NotEquals -> "Różne od"
-                        NumberFilterDataType.LessThan -> "Mniejsze niż"
-                        NumberFilterDataType.LessEquals -> "Mniejsze lub równe"
-                        NumberFilterDataType.GreaterThan -> "Większe niż"
-                        NumberFilterDataType.GreaterEquals -> "Większe lub równe"
-                        NumberFilterDataType.Range -> "Zakres"
+                        NumberFilterDataType.Equals -> Translations.get("filter.integer.equals")
+                        NumberFilterDataType.NotEquals -> Translations.get("filter.integer.notEquals")
+                        NumberFilterDataType.LessThan -> Translations.get("filter.integer.lessThan")
+                        NumberFilterDataType.LessEquals -> Translations.get("filter.integer.lessEqual")
+                        NumberFilterDataType.GreaterThan -> Translations.get("filter.integer.greaterThan")
+                        NumberFilterDataType.GreaterEquals -> Translations.get("filter.integer.greaterEqual")
+                        NumberFilterDataType.Range -> Translations.get("filter.integer.range")
                     },
                     onValueChange = {},
                     readOnly = true,
@@ -120,13 +121,13 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                     onDismissRequest = { expanded = false }
                 ) {
                     listOf(
-                        NumberFilterDataType.Equals to "Równe",
-                        NumberFilterDataType.NotEquals to "Różne od",
-                        NumberFilterDataType.LessThan to "Mniejsze niż",
-                        NumberFilterDataType.LessEquals to "Mniejsze lub równe",
-                        NumberFilterDataType.GreaterThan to "Większe niż",
-                        NumberFilterDataType.GreaterEquals to "Większe lub równe",
-                        NumberFilterDataType.Range to "Zakres"
+                        NumberFilterDataType.Equals to Translations.get("filter.integer.equals"),
+                        NumberFilterDataType.NotEquals to Translations.get("filter.integer.notEquals"),
+                        NumberFilterDataType.LessThan to Translations.get("filter.integer.lessThan"),
+                        NumberFilterDataType.LessEquals to Translations.get("filter.integer.lessEqual"),
+                        NumberFilterDataType.GreaterThan to Translations.get("filter.integer.greaterThan"),
+                        NumberFilterDataType.GreaterEquals to Translations.get("filter.integer.greaterEqual"),
+                        NumberFilterDataType.Range to Translations.get("filter.integer.range")
                     ).forEach { (type, label) ->
                         DropdownMenuItem(
                             text = { Text(label) },
@@ -157,7 +158,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                                 // Ignoruj niepoprawne wartości
                             }
                         },
-                        label = { Text("Od") },
+                        label = { Text(Translations.get("filter.integer.from")) },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
@@ -172,7 +173,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                                 // Ignoruj niepoprawne wartości
                             }
                         },
-                        label = { Text("Do") },
+                        label = { Text(Translations.get("filter.integer.to")) },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
@@ -188,7 +189,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                             // Ignoruj niepoprawne wartości
                         }
                     },
-                    label = { Text("Wartość") },
+                    label = { Text(Translations.get("filter.integer.value")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
@@ -197,7 +198,7 @@ class IntegerFilter(columnName: String) : Filter(columnName) {
                                 minValue.value = null
                                 filterData.markDirty()
                             }) {
-                                Icon(Icons.Default.Clear, "Wyczyść filtr")
+                                Icon(Icons.Default.Clear, Translations.get("filter.general.clear"))
                             }
                         }
                     }

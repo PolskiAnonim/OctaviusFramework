@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.localization.Translations
 
 @Composable
 fun ReportSearchBar(
@@ -36,11 +37,11 @@ fun ReportSearchBar(
             value = searchQuery,
             onValueChange = onSearchChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Szukaj...") },
+            placeholder = { Text(Translations.get("search.placeholder")) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Szukaj"
+                    contentDescription = Translations.get("search.search")
                 )
             },
             trailingIcon = {
@@ -50,7 +51,7 @@ fun ReportSearchBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = "Wyczyść"
+                            contentDescription = Translations.get("search.clear")
                         )
                     }
                 }
@@ -66,7 +67,7 @@ fun ReportSearchBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Konfiguracja raportu"
+                    contentDescription = Translations.getPlural("report.configuration.configuration", 1)
                 )
             }
         }
@@ -80,7 +81,7 @@ fun ReportSearchBar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Input,
-                    contentDescription = "Dodaj"
+                    contentDescription = Translations.get("action.add")
                 )
             }
 

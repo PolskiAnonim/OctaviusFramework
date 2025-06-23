@@ -7,6 +7,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.octavius.domain.game.GameReportHandler
+import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.report.component.ReportScreen
 import org.octavius.ui.screen.form.GameFormScreen
@@ -20,7 +21,7 @@ class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
     @Composable
     override fun AddMenu() {
         DropdownMenuItem(
-            text = { Text("Nowa gra") },
+            text = { Text(Translations.get("games.report.newGame")) },
             onClick = {
                 navigator.addScreen(GameFormScreen())
             },
@@ -32,7 +33,7 @@ class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
             }
         )
         DropdownMenuItem(
-            text = { Text("Nowa seria") },
+            text = { Text(Translations.get("games.report.newSeries")) },
             onClick = {
                 navigator.addScreen(GameSeriesFormScreen())
             },

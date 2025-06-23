@@ -132,7 +132,7 @@ class ReportConfigurationManager {
     fun deleteConfiguration(name: String, reportName: String): Boolean {
         return try {
             val updater = DatabaseManager.getUpdater()
-            val sql = "DELETE FROM public.report_configurations WHERE name = :name AND report_type = :report_type"
+            val sql = "DELETE FROM public.report_configurations WHERE name = :name AND report_name = :report_name"
             val params = mapOf(
                 "name" to name,
                 "report_name" to reportName

@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.domain.NullHandling
 import org.octavius.domain.StringFilterDataType
+import org.octavius.localization.Translations
 import org.octavius.report.filter.Filter
 
 class StringFilter(columnName: String) : Filter(columnName) {
@@ -104,11 +105,11 @@ class StringFilter(columnName: String) : Filter(columnName) {
             ) {
                 OutlinedTextField(
                     value = when (filterType.value) {
-                        StringFilterDataType.Exact -> "Dokładnie"
-                        StringFilterDataType.StartsWith -> "Zaczyna się od"
-                        StringFilterDataType.EndsWith -> "Kończy się na"
-                        StringFilterDataType.Contains -> "Zawiera"
-                        StringFilterDataType.NotContains -> "Nie zawiera"
+                        StringFilterDataType.Exact -> Translations.get("filter.string.exact")
+                        StringFilterDataType.StartsWith -> Translations.get("filter.string.startsWith")
+                        StringFilterDataType.EndsWith -> Translations.get("filter.string.endsWith")
+                        StringFilterDataType.Contains -> Translations.get("filter.string.contains")
+                        StringFilterDataType.NotContains -> Translations.get("filter.string.notContains")
                     },
                     onValueChange = {},
                     readOnly = true,
@@ -123,11 +124,11 @@ class StringFilter(columnName: String) : Filter(columnName) {
                     onDismissRequest = { expanded = false }
                 ) {
                     listOf(
-                        StringFilterDataType.Contains to "Zawiera",
-                        StringFilterDataType.StartsWith to "Zaczyna się od",
-                        StringFilterDataType.EndsWith to "Kończy się na",
-                        StringFilterDataType.Exact to "Dokładnie",
-                        StringFilterDataType.NotContains to "Nie zawiera"
+                        StringFilterDataType.Contains to Translations.get("filter.string.contains"),
+                        StringFilterDataType.StartsWith to Translations.get("filter.string.startsWith"),
+                        StringFilterDataType.EndsWith to Translations.get("filter.string.endsWith"),
+                        StringFilterDataType.Exact to Translations.get("filter.string.exact"),
+                        StringFilterDataType.NotContains to Translations.get("filter.string.notContains")
                     ).forEach { (type, label) ->
                         DropdownMenuItem(
                             text = { Text(label) },
@@ -161,7 +162,7 @@ class StringFilter(columnName: String) : Filter(columnName) {
                     }
                 )
                 Text(
-                    text = "Uwzględnij wielkość liter",
+                    text = Translations.get("filter.string.caseSensitive"),
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }

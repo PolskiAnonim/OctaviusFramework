@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.FilterData
 import org.octavius.domain.NullHandling
+import org.octavius.localization.Translations
 import org.octavius.report.filter.Filter
 
 class BooleanFilter(columnName: String, val falseText: String, val trueText: String) : Filter(columnName) {
@@ -48,7 +49,7 @@ class BooleanFilter(columnName: String, val falseText: String, val trueText: Str
 
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = "Filtruj według wartości",
+                text = Translations.get("filter.boolean.byValue"),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )

@@ -52,7 +52,9 @@ object EnvConfig {
     // Schematy bazy danych
     val dbSchemas: List<String> get() = getProperty("DB_SCHEMAS", "public,asian_media,games")
         .split(",").map { it.trim() }
-    
+
+    val language: String get() = getProperty("LANGUAGE", "pl")
+
     // Funkcja do wyświetlenia aktualnej konfiguracji
     fun printConfig() {
         println("=== Konfiguracja aplikacji ===")
@@ -61,6 +63,7 @@ object EnvConfig {
         println("DB Max Pool Size: $dbMaxPoolSize")
         println("Base Domain Package: $baseDomainPackage")
         println("DB Schemas: ${dbSchemas.joinToString(", ")}")
+        println("Language : $language")
         println("===============================")
     }
 }

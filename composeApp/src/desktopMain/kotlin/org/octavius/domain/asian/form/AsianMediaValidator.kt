@@ -3,6 +3,7 @@ package org.octavius.domain.asian.form
 import org.octavius.database.DatabaseManager
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormValidator
+import org.octavius.localization.Translations
 
 class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
@@ -15,7 +16,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         val hasDuplicates = titles.size != titles.toSet().size
 
         if (hasDuplicates) {
-            errorManager.addFieldError("titles", "Wykryto duplikaty w tytułach")
+            errorManager.addFieldError("titles", Translations.get("validation.duplicateTitles"))
         }
 
         return !hasDuplicates
@@ -35,7 +36,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
             "title = ANY(ARRAY[:titles]) ${if (entityId != null) "AND id != :id" else ""}", params)
 
         if (count > 0L) {
-            errorManager.addGlobalError("Tytuły już istnieją w bazie danych")
+            errorManager.addGlobalError(Translations.get("validation.titlesAlreadyExist"))
         }
 
         return count == 0L

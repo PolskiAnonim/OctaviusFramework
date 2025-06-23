@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.octavius.localization.Translations
 
 class Navigator {
     private val stack = mutableStateListOf<Screen>()
@@ -82,7 +83,7 @@ class Navigator {
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Wstecz",
+                            contentDescription = Translations.get("navigation.back"),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }

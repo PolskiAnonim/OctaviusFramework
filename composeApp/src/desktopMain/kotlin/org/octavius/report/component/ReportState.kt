@@ -21,7 +21,7 @@ class ReportState {
     //------------------------------------------------Widoczne kolumny--------------------------------------------------
     // Aktualna kolejność widocznych kolumn
     val visibleColumns: MutableState<Set<String>> = mutableStateOf(setOf())
-    // Oryginalna kolejność widocznych kolumn - TODO z widoków zapisywanych do bazy, a jeżeli nie ma to z kolejności zdefiniowania
+    // Oryginalna kolejność widocznych kolumn
     lateinit var originalVisibleColumns: Set<String>
     //----------------------------------------------Zmiany domyślnego SQLa----------------------------------------------
     // Kolejność sortowania

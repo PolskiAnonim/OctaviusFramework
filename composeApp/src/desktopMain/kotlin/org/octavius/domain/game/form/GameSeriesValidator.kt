@@ -3,6 +3,7 @@ package org.octavius.domain.game.form
 import org.octavius.database.DatabaseManager
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormValidator
+import org.octavius.localization.Translations
 
 class GameSeriesValidator : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
@@ -13,7 +14,7 @@ class GameSeriesValidator : FormValidator() {
 
             println(existingCount)
             if (existingCount > 0L) {
-                errorManager.addFieldError("name", "Seria o tej nazwie już istnieje")
+                errorManager.addFieldError("name", Translations.get("games.validation.duplicatedSeries"))
                 return false
             }
         }

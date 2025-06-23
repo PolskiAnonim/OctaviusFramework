@@ -1,5 +1,7 @@
 package org.octavius.domain
 
+import org.octavius.localization.Translations
+
 enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
     NotReading,
     Reading,
@@ -8,10 +10,10 @@ enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
 
     override fun toDisplayString(): String {
         return when (this) {
-            NotReading -> "Nie czytam"
-            Reading -> "Czytam"
-            Completed -> "Ukończone"
-            PlanToRead -> "Do przeczytania"
+            NotReading -> Translations.get("asianMedia.readingStatus.notReading")
+            Reading -> Translations.get("asianMedia.readingStatus.reading")
+            Completed -> Translations.get("asianMedia.readingStatus.completed")
+            PlanToRead -> Translations.get("asianMedia.readingStatus.toRead")
         }
     }
 }
@@ -23,9 +25,9 @@ enum class PublicationLanguage : EnumWithFormatter<PublicationLanguage> {
 
     override fun toDisplayString(): String {
         return when (this) {
-            Korean -> "Koreański"
-            Chinese -> "Chiński"
-            Japanese -> "Japoński"
+            Korean -> Translations.get("asianMedia.publicationLanguage.korean")
+            Chinese -> Translations.get("asianMedia.publicationLanguage.chinese")
+            Japanese -> Translations.get("asianMedia.publicationLanguage.japanese")
         }
     }
 }
@@ -41,13 +43,13 @@ enum class PublicationType : EnumWithFormatter<PublicationType> {
 
     override fun toDisplayString(): String {
         return when (this) {
-            Manga -> "Manga"
-            LightNovel -> "Light Novel"
-            WebNovel -> "Web Novel"
-            PublishedNovel -> "Published Novel"
-            Webtoon -> "Webtoon"
-            Manhwa -> "Manhwa"
-            Manhua -> "Manhua"
+            Manga -> Translations.get("asianMedia.publicationType.manga")
+            LightNovel -> Translations.get("asianMedia.publicationType.lightNovel")
+            WebNovel -> Translations.get("asianMedia.publicationType.webNovel")
+            PublishedNovel -> Translations.get("asianMedia.publicationType.publishedNovel")
+            Webtoon -> Translations.get("asianMedia.publicationType.webtoon")
+            Manhwa -> Translations.get("asianMedia.publicationType.manhwa")
+            Manhua -> Translations.get("asianMedia.publicationType.manhua")
         }
     }
 
@@ -63,11 +65,6 @@ enum class PublicationType : EnumWithFormatter<PublicationType> {
     // Dynamiczne etykiety dla rozdziałów
     fun getChaptersLabel(): String {
         return "Rozdziały"
-    }
-
-    // Czy publikacja używa tomów
-    fun hasVolumes(): Boolean {
-        return this != WebNovel // Web Novel może nie mieć koncepcji tomów
     }
 
     // Czy publikacja używa rozdziałów

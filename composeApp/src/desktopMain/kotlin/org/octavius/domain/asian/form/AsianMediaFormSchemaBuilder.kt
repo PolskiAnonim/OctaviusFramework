@@ -14,6 +14,7 @@ import org.octavius.form.control.type.primitive.HiddenControl
 import org.octavius.form.control.type.primitive.IntegerControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.EnumControl
+import org.octavius.localization.Translations
 
 class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {
@@ -24,17 +25,17 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     collapsible = false,
                     initiallyExpanded = true,
                     columns = 2,
-                    label = "Informacje o tytule"
+                    label = Translations.get("asianMedia.form.titleInfo")
                 ),
                 "titles" to TextListControl(
                     ColumnInfo("titles", "titles"),
-                    "Tytuły",
+                    Translations.get("asianMedia.form.titles"),
                     required = true,
                     validationOptions = TextListValidation(minItems = 1)
                 ),
                 "language" to EnumControl(
                     ColumnInfo("titles", "language"),
-                    "Język oryginału",
+                    Translations.get("asianMedia.form.originalLanguage"),
                     PublicationLanguage::class,
                     required = true
                 ),
@@ -57,7 +58,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                         minItems = 1,
                         maxItems = 7
                     ),
-                    label = "Publikacje"
+                    label = Translations.get("asianMedia.form.publications")
                 )
             ),
             listOf("titleInfo", "publications")
@@ -69,24 +70,24 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             "id" to HiddenControl<Int>(null),
             "publicationType" to EnumControl(
                 null,
-                "Typ publikacji",
+                Translations.get("asianMedia.form.publicationType"),
                 PublicationType::class,
                 required = true
             ),
             "status" to EnumControl(
                 null,
-                "Status czytania",
+                Translations.get("asianMedia.form.readingStatus"),
                 PublicationStatus::class,
                 required = true
             ),
             "trackProgress" to BooleanControl(
                 null,
-                "Śledzić postęp?",
+                Translations.get("asianMedia.form.trackProgress"),
                 required = true
             ),
             "volumes" to IntegerControl(
                 null,
-                "Liczba tomów",
+                Translations.get("asianMedia.form.volumeCount"),
                 dependencies = mapOf(
                     "visible" to ControlDependency(
                         controlName = "trackProgress",
@@ -99,7 +100,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             ),
             "translatedVolumes" to IntegerControl(
                 null,
-                "Przetłumaczone tomy",
+                Translations.get("asianMedia.form.translatedVolumes"),
                 dependencies = mapOf(
                     "visible" to ControlDependency(
                         controlName = "trackProgress",
@@ -112,7 +113,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             ),
             "chapters" to IntegerControl(
                 null,
-                "Liczba rozdziałów",
+                Translations.get("asianMedia.form.chapterCount"),
                 dependencies = mapOf(
                     "visible" to ControlDependency(
                         controlName = "trackProgress",
@@ -125,7 +126,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             ),
             "translatedChapters" to IntegerControl(
                 null,
-                "Przetłumaczone rozdziały",
+                Translations.get("asianMedia.form.translatedChapters"),
                 dependencies = mapOf(
                     "visible" to ControlDependency(
                         controlName = "trackProgress",
@@ -138,7 +139,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             ),
             "originalCompleted" to BooleanControl(
                 null,
-                "Oryginał ukończony",
+                Translations.get("asianMedia.form.originalCompleted"),
                 required = true,
                 dependencies = mapOf(
                     "visible" to ControlDependency(

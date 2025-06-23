@@ -3,6 +3,7 @@ package org.octavius.form.control.validator.primitive
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.DoubleValidation
+import org.octavius.localization.Translations
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.round
@@ -22,14 +23,14 @@ class DoubleValidator(
             // Sprawdź wartość minimalną
             options.min?.let { min ->
                 if (value < min) {
-                    errors.add("Wartość musi być większa lub równa $min")
+                    errors.add(Translations.get("validation.minValue", min))
                 }
             }
 
             // Sprawdź wartość maksymalną
             options.max?.let { max ->
                 if (value > max) {
-                    errors.add("Wartość musi być mniejsza lub równa $max")
+                    errors.add(Translations.get("validation.maxValue", max))
                 }
             }
 
@@ -38,7 +39,7 @@ class DoubleValidator(
                 val multiplier = 10.0.pow(decimalPlaces)
                 val rounded = round(value * multiplier) / multiplier
                 if (value != rounded) {
-                    errors.add("Maksymalnie $decimalPlaces miejsc po przecinku")
+                    errors.add(Translations.get("validation.maxDecimalPlaces", decimalPlaces))
                 }
             }
 
@@ -46,7 +47,7 @@ class DoubleValidator(
             options.step?.let { step ->
                 val remainder = value % step
                 if (remainder != 0.0 && (remainder - step).let { abs(it) } > 1e-10) {
-                    errors.add("Wartość musi być wielokrotnością $step")
+                    errors.add(Translations.get("validation.multipleOf", step))
                 }
             }
         }

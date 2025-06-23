@@ -18,6 +18,7 @@ import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.validator.DefaultValidator
+import org.octavius.localization.Translations
 
 /**
  * Kontrolka do grupowania i organizacji innych kontrolek w sekcje.
@@ -75,7 +76,7 @@ class SectionControl(
                         if (collapsible) {
                             Icon(
                                 imageVector = if (expanded.value) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (expanded.value) "Zwiń" else "Rozwiń",
+                                contentDescription = if (expanded.value) Translations.get("expandable.collapse") else Translations.get("expandable.expand"),
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }

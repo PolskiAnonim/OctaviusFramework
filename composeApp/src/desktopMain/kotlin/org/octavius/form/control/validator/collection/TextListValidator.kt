@@ -4,6 +4,7 @@ import org.octavius.form.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.TextListValidation
 import org.octavius.form.control.validator.primitive.TextValidator
+import org.octavius.localization.Translations
 
 /**
  * Walidator dla kontrolek list tekstowych z obsługą opcji walidacji.
@@ -34,7 +35,6 @@ class TextListValidator(
 
             // Sprawdź walidację pojedynczych elementów
             options.itemValidation?.let { itemValidation ->
-                TextValidator(itemValidation)
                 value.forEachIndexed { index, item ->
                     val tempErrors = mutableListOf<String>()
                     val itemState = ControlState<String>()
@@ -44,17 +44,21 @@ class TextListValidator(
                     if (item.isNotBlank()) {
                         itemValidation.minLength?.let { minLength ->
                             if (item.length < minLength) {
-                                tempErrors.add("Element ${index + 1}: Minimalna długość to $minLength znaków")
+                                tempErrors.add(Translations.get("validation.itemMinLength", index + 1, minLength))
                             }
                         }
                         itemValidation.maxLength?.let { maxLength ->
                             if (item.length > maxLength) {
-                                tempErrors.add("Element ${index + 1}: Maksymalna długość to $maxLength znaków")
+                                tempErrors.add(Translations.get("validation.itemMaxLength", index + 1, maxLength))
                             }
                         }
                         itemValidation.pattern?.let { pattern ->
                             if (!pattern.matches(item)) {
-                                tempErrors.add("Element ${index + 1}: ${itemValidation.patternErrorMessage ?: "Nieprawidłowy format"}")
+                                tempErrors.add(Translations.get(
+                                    "validation.itemPatternError",
+                                    index + 1,
+                                    itemValidation.patternErrorMessage ?: Translations.get("validation.invalidFormat")
+                                ))
                             }
                         }
                     }

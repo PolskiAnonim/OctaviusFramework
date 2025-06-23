@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.localization.Translations
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.BooleanFilter
@@ -23,8 +24,8 @@ class BooleanColumn(
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
-    private val trueText: String = "Tak",
-    private val falseText: String = "Nie",
+    private val trueText: String = Translations.get("report.column.boolean.true"),
+    private val falseText: String = Translations.get("report.column.boolean.false"),
     private val showIcon: Boolean = true
 ) : ReportColumn(fieldName, header, width, filterable, sortable) {
 
