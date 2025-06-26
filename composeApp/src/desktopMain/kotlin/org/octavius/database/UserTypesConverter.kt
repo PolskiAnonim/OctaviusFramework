@@ -1,7 +1,18 @@
 package org.octavius.database
 
+import kotlinx.serialization.json.Json.Default.parseToJsonElement
 import org.octavius.util.Converters
 import java.text.ParseException
+import kotlin.time.Instant
+import java.time.OffsetDateTime
+import java.util.UUID
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 /**
  * Konwerter wartości z PostgreSQL na typy Kotlin/domenowe.
@@ -56,17 +67,32 @@ class UserTypesConverter(private val typeRegistry: TypeRegistry) {
      * @param pgTypeName Nazwa typu PostgreSQL
      * @return Przekonwertowana wartość lub null jeśli konwersja się nie powiedzie
      */
+    @OptIn(ExperimentalTime::class)
     private fun convertStandardType(value: String, pgTypeName: String): Any? {
         // Zawsze operujemy na stringu
         return when (pgTypeName) {
+            // Typy numeryczne
             "int4", "serial", "int2" -> value.toIntOrNull()
             "int8" -> value.toLongOrNull()
             "float4" -> value.toFloatOrNull()
             "float8", "numeric" -> value.toDoubleOrNull()
-            "bool" -> value.toBooleanStrictOrNull()
-            "json", "jsonb", "uuid", "interval", "date", "timestamp", "timestamptz" -> value // do aktualizacji
+            // Inne
+            "bool" -> value == "t"
+            "json", "jsonb" -> parseToJsonElement(value)
+            "uuid" -> UUID.fromString(value)
+            "interval" -> {
+                val parts = value.split(":")
+                parts[0].toLong().hours + 
+                parts[1].toLong().minutes + 
+                parts[2].toLong().seconds
+            }
+            "date" ->  LocalDate.parse(value)
+            "timestamp" ->  LocalDateTime.parse(value)
+            "timestamptz" -> Instant.parse(value.replace(' ','T'))
+            //"text", "varchar", "char",
             else -> value // Domyślnie zwracamy string
         }
+
     }
 
     /**
