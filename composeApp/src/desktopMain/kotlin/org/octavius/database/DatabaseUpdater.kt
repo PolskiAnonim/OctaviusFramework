@@ -173,4 +173,12 @@ class DatabaseUpdater(
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
         return namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
     }
+    
+    // Metoda do wykonywania SQL z zwróceniem wartości
+    fun executeReturning(sql: String, params: Map<String, Any?> = emptyMap(), columnName: String): Any? {
+        val keyHolder = GeneratedKeyHolder()
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        namedParameterJdbcTemplate.update(expanded.expandedSql, MapSqlParameterSource(expanded.expandedParams), keyHolder, arrayOf(columnName))
+        return keyHolder.keys?.get(columnName)
+    }
 }
