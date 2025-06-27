@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 
-class RowMappers(private val typesConverter: UserTypesConverter) {
+class RowMappers(private val typesConverter: DatabaseToKotlinTypesConverter) {
     fun ColumnNameMapper(): RowMapper<Map<String, Any?>> = RowMapper { rs, _ ->
         val data = mutableMapOf<String, Any?>()
         val metaData = rs.metaData as PgResultSetMetaData
@@ -28,7 +28,7 @@ class RowMappers(private val typesConverter: UserTypesConverter) {
 }
 
 
-class RowMapperFactory(private val typesConverter: UserTypesConverter) {
+class RowMapperFactory(private val typesConverter: DatabaseToKotlinTypesConverter) {
 
     // ResultSetExtractor dla przypadków gdy potrzebujemy tylko jednego wiersza
     fun createSingleRowExtractor(): ResultSetExtractor<Map<ColumnInfo, Any?>> = ResultSetExtractor { rs ->

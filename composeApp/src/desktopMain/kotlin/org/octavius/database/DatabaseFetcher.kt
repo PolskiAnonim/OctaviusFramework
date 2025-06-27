@@ -2,7 +2,12 @@ package org.octavius.database
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
-class DatabaseFetcher(val jdbcTemplate: NamedParameterJdbcTemplate, val rowMappers: RowMappers) {
+class DatabaseFetcher(
+    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val rowMappers: RowMappers,
+    val typesConverter: DatabaseToKotlinTypesConverter
+) {
+    private val parameterExpandHelper = ParameterExpandHelper()
     
     private fun formatTableExpression(table: String): String {
         return if (table.trim().uppercase().contains(" ")) "($table)" else table
@@ -11,16 +16,18 @@ class DatabaseFetcher(val jdbcTemplate: NamedParameterJdbcTemplate, val rowMappe
     fun fetchCount(table: String, filter: String? = null, params: Map<String, Any?> = emptyMap()): Long {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(table)}$whereClause"
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.queryForObject(sql, params, Long::class.java) ?: 0L
+        return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, Long::class.java) ?: 0L
     }
 
 
     fun fetchField(table: String, field: String, filter: String? = null, params: Map<String, Any?> = emptyMap()): Any? {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT $field FROM ${formatTableExpression(table)}$whereClause"
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.queryForObject(sql, params, rowMappers.SingleValueMapper())
+        return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
     }
 
     fun fetchRow(
@@ -41,7 +48,8 @@ class DatabaseFetcher(val jdbcTemplate: NamedParameterJdbcTemplate, val rowMappe
     ): Map<String, Any?>? {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT $fields FROM ${formatTableExpression(table)}$whereClause"
-        val results = jdbcTemplate.queryForObject(sql, params, rowMappers.ColumnNameMapper())
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val results = jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
 
         return results
     }
@@ -56,8 +64,9 @@ class DatabaseFetcher(val jdbcTemplate: NamedParameterJdbcTemplate, val rowMappe
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql = "SELECT $column FROM ${formatTableExpression(table)}$whereClause$orderClause"
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.query(sql, params, rowMappers.SingleValueMapper())
+        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
     }
 
     fun fetchPagedColumn(
@@ -72,8 +81,9 @@ class DatabaseFetcher(val jdbcTemplate: NamedParameterJdbcTemplate, val rowMappe
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql = "SELECT $column FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.query(sql, params, rowMappers.SingleValueMapper())
+        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
     }
 
     fun fetchList(
@@ -86,8 +96,9 @@ class DatabaseFetcher(val jdbcTemplate: NamedParameterJdbcTemplate, val rowMappe
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql = "SELECT $fields FROM ${formatTableExpression(table)}$whereClause$orderClause"
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.query(sql, params, rowMappers.ColumnNameMapper())
+        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
     }
 
     fun fetchPagedList(
@@ -102,7 +113,8 @@ class DatabaseFetcher(val jdbcTemplate: NamedParameterJdbcTemplate, val rowMappe
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql = "SELECT $fields FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.query(sql, params, rowMappers.ColumnNameMapper())
+        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
     }
 }

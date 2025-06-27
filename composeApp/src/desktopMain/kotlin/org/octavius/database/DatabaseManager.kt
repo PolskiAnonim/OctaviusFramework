@@ -26,7 +26,7 @@ object DatabaseManager {
     private var typeRegistry: TypeRegistry
     
     // Instancja konwertera typów użytkownika
-    private var typesConverter: UserTypesConverter
+    private var typesConverter: DatabaseToKotlinTypesConverter
 
     // Instancja fabryki mapperów
     private var rowMapperFactory: RowMapperFactory
@@ -55,15 +55,15 @@ object DatabaseManager {
         typeRegistry = TypeRegistry(namedParameterJdbcTemplate)
         
         // Inicjalizacja konwertera typów
-        typesConverter = UserTypesConverter(typeRegistry)
+        typesConverter = DatabaseToKotlinTypesConverter(typeRegistry)
 
         // Inicjalizacja fabryki mapperów
         rowMapperFactory = RowMapperFactory(typesConverter)
         rowMappers = RowMappers(typesConverter)
 
         // Inicjalizacja managera operacji formularzy
-        databaseUpdater = DatabaseUpdater(dataSource, jdbcTemplate)
-        databaseFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers)
+        databaseUpdater = DatabaseUpdater(dataSource, namedParameterJdbcTemplate, typesConverter)
+        databaseFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers, typesConverter)
     }
 
     fun getFetcher() : DatabaseFetcher {

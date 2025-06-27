@@ -29,11 +29,11 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         if (titles.isEmpty()) return true
 
 
-        val params = if (entityId != null) mapOf("titles" to titles.toTypedArray(), "id" to entityId) else mapOf("titles" to titles.toTypedArray())
+        val params = if (entityId != null) mapOf("titles" to titles, "id" to entityId) else mapOf("titles" to titles)
         val count = DatabaseManager.
         getFetcher().
         fetchCount("SELECT id, UNNEST(titles) AS title FROM titles",
-            "title = ANY(ARRAY[:titles]) ${if (entityId != null) "AND id != :id" else ""}", params)
+            "title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}", params)
 
         if (count > 0L) {
             errorManager.addGlobalError(Translations.get("validation.titlesAlreadyExist"))

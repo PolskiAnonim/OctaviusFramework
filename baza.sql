@@ -224,6 +224,7 @@ CREATE TABLE IF NOT EXISTS public.report_configurations
     sort_order sort_configuration[],
     visible_columns text[] COLLATE pg_catalog."default",
     column_order text[] COLLATE pg_catalog."default",
+    page_size integer NOT NULL DEFAULT 10,
     is_default boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,

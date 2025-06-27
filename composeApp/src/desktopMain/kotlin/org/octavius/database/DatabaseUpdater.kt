@@ -2,22 +2,19 @@ package org.octavius.database
 
 import com.zaxxer.hikari.HikariDataSource
 import org.octavius.form.SaveOperation
-import org.octavius.util.Converters.camelToSnakeCase
-import org.postgresql.util.PGobject
-import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.transaction.support.TransactionTemplate
-import java.sql.PreparedStatement
-import java.sql.Types
 
 class DatabaseUpdater(
     dataSource: HikariDataSource,
-    private val jdbcTemplate: JdbcTemplate
+    val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
+    val typesConverter: DatabaseToKotlinTypesConverter
 ) {
     private val transactionManager = DataSourceTransactionManager(dataSource)
-    private val namedParameterJdbcTemplate = NamedParameterJdbcTemplate(jdbcTemplate)
+    private val parameterExpandHelper = ParameterExpandHelper()
 
     // Główna metoda do zapisywania encji
     fun updateDatabase(databaseOperations: List<SaveOperation>) {
@@ -77,125 +74,103 @@ class DatabaseUpdater(
 
         val allColumns = dataColumns + foreignKeyColumns
         val columnsString = allColumns.joinToString()
-        val placeholders = allColumns.joinToString { "?" }
+        val placeholders = allColumns.joinToString { ":$it" }
 
         val insertQuery = "INSERT INTO ${operation.tableName} ($columnsString) VALUES ($placeholders)"
 
         val keyHolder = GeneratedKeyHolder()
 
-        jdbcTemplate.update({ connection ->
-            val ps = connection.prepareStatement(insertQuery, if (operation.returningId) arrayOf("id") else arrayOf())
+        // Przygotuj mapę parametrów
+        val params = mutableMapOf<String, Any?>()
 
-            // Ustaw parametry dla zwykłych danych
-            operation.data.values.forEachIndexed { index, value ->
-                setStatementParameter(ps, index + 1, value.value)
+        // Dodaj parametry dla zwykłych danych
+        operation.data.forEach { (key, value) ->
+            params[key] = value.value
+        }
+
+        // Dodaj parametry dla kluczy obcych
+        operation.foreignKeys
+            .filter { it.value != null }
+            .forEach { fk ->
+                params[fk.columnName] = fk.value
             }
 
-            // Ustaw parametry dla kluczy obcych
-            val fkValues = operation.foreignKeys
-                .filter { it.value != null }
-                .map { it.value }
-
-            fkValues.forEachIndexed { index, value ->
-                setStatementParameter(ps, operation.data.size + index + 1, value)
-            }
-
-            ps
-        }, keyHolder)
+        val expanded = parameterExpandHelper.expandParametersInQuery(insertQuery, params)
+        namedParameterJdbcTemplate.update(expanded.expandedSql, MapSqlParameterSource(expanded.expandedParams), keyHolder, if (operation.returningId) arrayOf("id") else arrayOf())
 
         return keyHolder.keys?.get("id") as? Int
     }
 
     private fun updateTable(operation: SaveOperation.Update) {
-        val updatePairs = operation.data.entries.joinToString { "${it.key} = ?" }
+        val updatePairs = operation.data.entries.joinToString { "${it.key} = :${it.key}" }
 
         val updateQuery = if (operation.id != null) {
-            "UPDATE ${operation.tableName} SET $updatePairs WHERE id = ?"
+            "UPDATE ${operation.tableName} SET $updatePairs WHERE id = :id"
         } else {
             // Użyj foreign keys do identyfikacji wiersza
             val whereClause = operation.foreignKeys
                 .filter { it.value != null }
-                .joinToString(" AND ") { "${it.columnName} = ?" }
+                .joinToString(" AND ") { "${it.columnName} = :${it.columnName}" }
             "UPDATE ${operation.tableName} SET $updatePairs WHERE $whereClause"
         }
 
-        jdbcTemplate.update(updateQuery) { ps ->
-            // Ustaw parametry dla danych
-            operation.data.values.forEachIndexed { index, value ->
-                setStatementParameter(ps, index + 1, value.value)
-            }
+        // Przygotuj mapę parametrów
+        val params = mutableMapOf<String, Any?>()
 
-            // Ustaw parametr dla WHERE clause
-            if (operation.id != null) {
-                ps.setInt(operation.data.size + 1, operation.id)
-            } else {
-                // Ustaw parametry foreign keys
-                val fkValues = operation.foreignKeys
-                    .filter { it.value != null }
-                    .map { it.value }
-
-                fkValues.forEachIndexed { index, value ->
-                    setStatementParameter(ps, operation.data.size + index + 1, value)
-                }
-            }
+        // Dodaj parametry dla danych do zaktualizowania
+        operation.data.forEach { (key, value) ->
+            params[key] = value.value
         }
+
+        // Dodaj parametr dla WHERE clause
+        if (operation.id != null) {
+            params["id"] = operation.id
+        } else {
+            // Dodaj parametry foreign keys
+            operation.foreignKeys
+                .filter { it.value != null }
+                .forEach { fk ->
+                    params[fk.columnName] = fk.value
+                }
+        }
+
+        val expanded = parameterExpandHelper.expandParametersInQuery(updateQuery, params)
+        namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
     }
 
     private fun deleteFromTable(operation: SaveOperation.Delete) {
         val deleteQuery = if (operation.id != null) {
-            "DELETE FROM ${operation.tableName} WHERE id = ?"
+            "DELETE FROM ${operation.tableName} WHERE id = :id"
         } else {
             // Użyj foreign keys do identyfikacji wiersza
             val whereClause = operation.foreignKeys
                 .filter { it.value != null }
-                .joinToString(" AND ") { "${it.columnName} = ?" }
+                .joinToString(" AND ") { "${it.columnName} = :${it.columnName}" }
             "DELETE FROM ${operation.tableName} WHERE $whereClause"
         }
-        jdbcTemplate.update(deleteQuery, { ps ->
-            // Ustaw parametr dla WHERE clause
-            if (operation.id != null) {
-                ps.setInt(1, operation.id)
-            } else {
-                // Ustaw parametry foreign keys
-                val fkValues = operation.foreignKeys
-                    .filter { it.value != null }
-                    .map { it.value }
 
-                fkValues.forEachIndexed { index, value ->
-                    setStatementParameter(ps, index + 1, value)
+        // Przygotuj mapę parametrów
+        val params = mutableMapOf<String, Any?>()
+
+        // Dodaj parametr dla WHERE clause
+        if (operation.id != null) {
+            params["id"] = operation.id
+        } else {
+            // Dodaj parametry foreign keys
+            operation.foreignKeys
+                .filter { it.value != null }
+                .forEach { fk ->
+                    params[fk.columnName] = fk.value
                 }
-            }
-        })
-    }
-
-    // Pomocnicza metoda do ustawiania parametrów w PreparedStatement
-    private fun setStatementParameter(ps: PreparedStatement, index: Int, value: Any?) {
-        when (value) {
-            null -> ps.setNull(index, Types.NULL)
-            is Int -> ps.setInt(index, value)
-            is Long -> ps.setLong(index, value)
-            is String -> ps.setString(index, value)
-            is Boolean -> ps.setBoolean(index, value)
-            is Double -> ps.setDouble(index, value)
-            is List<*> -> {
-                // Dla list, konwertujemy na tablicę
-                val array = ps.connection.createArrayOf("text", value.toTypedArray())
-                ps.setArray(index, array)
-            }
-            // Enums
-            is Enum<*> -> {
-                val pgObject = PGobject()
-                pgObject.type = camelToSnakeCase(value.javaClass.simpleName)
-                pgObject.value = camelToSnakeCase(value.name).uppercase()
-                ps.setObject(index, pgObject)
-            }
-
-            else -> ps.setObject(index, value)
         }
+
+        val expanded = parameterExpandHelper.expandParametersInQuery(deleteQuery, params)
+        namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
     }
-    
+
     // Prosta metoda do wykonywania SQL z nazwanymi parametrami
     fun executeUpdate(sql: String, params: Map<String, Any?> = emptyMap()): Int {
-        return namedParameterJdbcTemplate.update(sql, params)
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        return namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
     }
 }
