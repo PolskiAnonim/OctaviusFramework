@@ -1,4 +1,4 @@
-package org.octavius.domain.asian.form
+package org.octavius.asianMedia.form
 
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.component.FormHandler

@@ -6,7 +6,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import org.octavius.domain.asian.AsianMediaReportHandler
+import org.octavius.asianMedia.AsianMediaReportHandler
 import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.report.component.ReportScreen

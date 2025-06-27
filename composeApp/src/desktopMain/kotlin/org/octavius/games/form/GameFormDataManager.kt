@@ -1,7 +1,7 @@
-package org.octavius.domain.game.form
+package org.octavius.games.form
 
 import org.octavius.database.DatabaseManager
-import org.octavius.domain.GameStatus
+import org.octavius.domain.game.GameStatus
 import org.octavius.form.ControlResultData
 import org.octavius.form.ForeignKey
 import org.octavius.form.SaveOperation

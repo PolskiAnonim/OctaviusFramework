@@ -103,38 +103,77 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
             // Używamy ClassLoader do znalezienia wszystkich klas w pakiecie domain
             val classLoader = Thread.currentThread().contextClassLoader
             val packagePath = baseDomainPackage.replace('.', '/')
+            
             val resources = classLoader.getResources(packagePath)
             
             while (resources.hasMoreElements()) {
                 val resource = resources.nextElement()
-                if (resource.protocol == "file") {
-                    val file = java.io.File(resource.toURI())
-                    scanDirectory(file, baseDomainPackage)
+                
+                if (resource.protocol == "jar") {
+                    scanJarResources(resource, packagePath, baseDomainPackage)
                 }
             }
+            
         } catch (e: Exception) {
             println("Błąd podczas skanowania klas domain: ${e.message}")
             e.printStackTrace()
         }
     }
 
+
     /**
-     * Rekurencyjnie skanuje katalog w poszukiwaniu plików .class.
+     * Skanuje zasobów w archiwum JAR w poszukiwaniu plików .class.
      * 
-     * @param directory Katalog do przeskanowania
-     * @param packageName Nazwa pakietu odpowiadająca katalogowi
+     * @param resource Zasób JAR do przeskanowania
+     * @param packagePath Ścieżka pakietu (z ukośnikami)
+     * @param baseDomainPackage Nazwa bazowego pakietu domenowego
      */
-    private fun scanDirectory(directory: java.io.File, packageName: String) {
-        directory.listFiles()?.forEach { file ->
-            when {
-                file.isDirectory -> {
-                    scanDirectory(file, "$packageName.${file.name}")
-                }
-                file.name.endsWith(".class") -> {
-                    val className = file.name.removeSuffix(".class")
-                    classPathMap[className] = "$packageName.$className"
+    private fun scanJarResources(resource: java.net.URL, packagePath: String, baseDomainPackage: String) {
+        try {
+            val jarUrlConnection = resource.openConnection() as java.net.JarURLConnection
+            val jarFile = jarUrlConnection.jarFile
+            
+            val entries = jarFile.entries()
+            
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                val entryName = entry.name
+                
+                // Sprawdzamy, czy entry jest w naszym pakiecie lub podpakiecie
+                if (entryName.startsWith(packagePath) && entryName.endsWith(".class")) {
+                    // Usuwamy ścieżkę pakietu na początku i .class na końcu
+                    val relativePath = entryName.substring(packagePath.length)
+                    if (relativePath.startsWith("/")) {
+                        val classPath = relativePath.substring(1) // Usuwamy początkowy /
+                        
+                        // Sprawdzamy czy to jest klasa bezpośrednio w pakiecie lub podpakiecie
+                        val className = classPath.removeSuffix(".class")
+                        val packageName = if (classPath.contains("/")) {
+                            // Klasa w podpakiecie
+                            val subPackagePath = classPath.substring(0, classPath.lastIndexOf("/"))
+                            baseDomainPackage + "." + subPackagePath.replace("/", ".")
+                        } else {
+                            // Klasa bezpośrednio w pakiecie głównym
+                            baseDomainPackage
+                        }
+                        
+                        val simpleClassName = if (className.contains("/")) {
+                            className.substring(className.lastIndexOf("/") + 1)
+                        } else {
+                            className
+                        }
+                        
+                        val fullClassName = "$packageName.$simpleClassName"
+                        classPathMap[simpleClassName] = fullClassName
+                    }
                 }
             }
+            
+            jarFile.close()
+            
+        } catch (e: Exception) {
+            println("Błąd podczas skanowania zasobów JAR: ${e.message}")
+            e.printStackTrace()
         }
     }
 

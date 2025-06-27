@@ -1,8 +1,8 @@
-package org.octavius.domain.asian
+package org.octavius.asianMedia
 
-import org.octavius.domain.PublicationLanguage
-import org.octavius.domain.PublicationStatus
-import org.octavius.domain.PublicationType
+import org.octavius.domain.asian.PublicationLanguage
+import org.octavius.domain.asian.PublicationStatus
+import org.octavius.domain.asian.PublicationType
 import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query

@@ -1,6 +1,6 @@
-package org.octavius.domain.game
+package org.octavius.games
 
-import org.octavius.domain.GameStatus
+import org.octavius.domain.game.GameStatus
 import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query

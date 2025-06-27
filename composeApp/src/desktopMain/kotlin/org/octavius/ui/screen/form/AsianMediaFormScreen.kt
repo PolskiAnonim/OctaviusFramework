@@ -1,6 +1,6 @@
 package org.octavius.ui.screen.form
 
-import org.octavius.domain.asian.form.AsianMediaFormHandler
+import org.octavius.asianMedia.form.AsianMediaFormHandler
 import org.octavius.form.component.FormScreen
 
 class AsianMediaFormScreen(

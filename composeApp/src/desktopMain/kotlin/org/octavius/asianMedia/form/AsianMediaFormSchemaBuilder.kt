@@ -1,8 +1,8 @@
-package org.octavius.domain.asian.form
+package org.octavius.asianMedia.form
 
-import org.octavius.domain.PublicationLanguage
-import org.octavius.domain.PublicationStatus
-import org.octavius.domain.PublicationType
+import org.octavius.domain.asian.PublicationLanguage
+import org.octavius.domain.asian.PublicationStatus
+import org.octavius.domain.asian.PublicationType
 import org.octavius.form.ColumnInfo
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder

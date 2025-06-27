@@ -1,6 +1,6 @@
-package org.octavius.domain.game.form
+package org.octavius.games.form
 
-import org.octavius.domain.GameStatus
+import org.octavius.domain.game.GameStatus
 import org.octavius.form.ColumnInfo
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder

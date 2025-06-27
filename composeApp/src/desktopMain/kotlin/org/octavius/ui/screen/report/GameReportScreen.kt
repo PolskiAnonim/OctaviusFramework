@@ -6,7 +6,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import org.octavius.domain.game.GameReportHandler
+import org.octavius.games.GameReportHandler
 import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.report.component.ReportScreen

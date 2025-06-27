@@ -1,4 +1,4 @@
-package org.octavius.domain.game.form
+package org.octavius.games.form
 
 import org.octavius.form.ControlResultData
 import org.octavius.form.SaveOperation

@@ -1,5 +1,6 @@
-package org.octavius.domain
+package org.octavius.domain.asian
 
+import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Translations
 
 enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
