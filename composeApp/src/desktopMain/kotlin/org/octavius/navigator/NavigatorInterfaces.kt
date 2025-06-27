@@ -11,7 +11,7 @@ val LocalNavigator = compositionLocalOf<Navigator> { error(Translations.get("nav
 //Screen for Navigator
 interface Screen {
     @Composable
-    fun Content(paddingValues: PaddingValues)
+    fun Content()
 }
 
 //Tabs for TabNavigator

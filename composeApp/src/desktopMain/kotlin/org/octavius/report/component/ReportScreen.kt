@@ -23,7 +23,7 @@ abstract class ReportScreen : Screen {
     }
 
     @Composable
-    override fun Content(paddingValues: PaddingValues) {
+    override fun Content() {
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
@@ -57,7 +57,7 @@ abstract class ReportScreen : Screen {
             }
         }
 
-        Column(modifier = Modifier.padding(paddingValues)) {
+        Column(modifier = Modifier) {
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.weight(1f)

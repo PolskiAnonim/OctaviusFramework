@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.navigator.LocalNavigator
 import org.octavius.navigator.Screen
 import org.octavius.localization.Translations
+import org.octavius.ui.component.LocalSnackbarManager
 
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę
@@ -24,14 +25,14 @@ abstract class FormScreen : Screen {
      * Tworzenie wyglądu formularza
      */
     @Composable
-    override fun Content(paddingValues: PaddingValues) {
+    override fun Content() {
         val navigator = LocalNavigator.current
+        val snackbarManager = LocalSnackbarManager.current
         val scrollState = rememberScrollState()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .verticalScroll(scrollState) // Dodajemy przewijanie pionowe
         ) {
@@ -57,10 +58,10 @@ abstract class FormScreen : Screen {
             ActionButtons(
                 onSave = {
                     if (formHandler.onSaveClicked()) {
-                        navigator.showSnackbar(Translations.get("form.actions.savedSuccessfully"))
+                        snackbarManager.showSnackbar(Translations.get("form.actions.savedSuccessfully"))
                         navigator.removeScreen()
                     } else {
-                        navigator.showSnackbar(Translations.get("form.actions.containsErrors"))
+                        snackbarManager.showSnackbar(Translations.get("form.actions.containsErrors"))
                     }
                 },
                 onCancel = {
