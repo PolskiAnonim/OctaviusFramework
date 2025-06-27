@@ -22,7 +22,10 @@ class AsianMediaReportScreen(private val navigator: Navigator) : ReportScreen() 
         DropdownMenuItem(
             text = { Text(Translations.get("asianMedia.report.newTitle")) },
             onClick = {
-                navigator.addScreen(AsianMediaFormScreen())
+                navigator.addScreen(AsianMediaFormScreen(
+                    onSaveSuccess = { navigator.removeScreen() },
+                    onCancel = { navigator.removeScreen() }
+                ))
             },
             leadingIcon = {
                 Icon(

@@ -64,7 +64,11 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
         val id = rowData["title_id"] as? Int
         if (id != null) {
-            navigator.addScreen(AsianMediaFormScreen(id))
+            navigator.addScreen(AsianMediaFormScreen(
+            entityId = id,
+            onSaveSuccess = { navigator.removeScreen() },
+            onCancel = { navigator.removeScreen() }
+        ))
         }
     }
 }

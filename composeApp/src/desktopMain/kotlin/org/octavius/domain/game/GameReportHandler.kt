@@ -16,7 +16,11 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
         val id = rowData["id"] as? Int
         if (id != null) {
-            navigator.addScreen(GameFormScreen(id))
+            navigator.addScreen(GameFormScreen(
+            entityId = id,
+            onSaveSuccess = { navigator.removeScreen() },
+            onCancel = { navigator.removeScreen() }
+        ))
         }
     }
 

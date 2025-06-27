@@ -23,7 +23,10 @@ class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
         DropdownMenuItem(
             text = { Text(Translations.get("games.report.newGame")) },
             onClick = {
-                navigator.addScreen(GameFormScreen())
+                navigator.addScreen(GameFormScreen(
+                    onSaveSuccess = { navigator.removeScreen() },
+                    onCancel = { navigator.removeScreen() }
+                ))
             },
             leadingIcon = {
                 Icon(
@@ -35,7 +38,10 @@ class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
         DropdownMenuItem(
             text = { Text(Translations.get("games.report.newSeries")) },
             onClick = {
-                navigator.addScreen(GameSeriesFormScreen())
+                navigator.addScreen(GameSeriesFormScreen(
+                    onSaveSuccess = { navigator.removeScreen() },
+                    onCancel = { navigator.removeScreen() }
+                ))
             },
             leadingIcon = {
                 Icon(
