@@ -1,4 +1,4 @@
-package org.octavius.games.form
+package org.octavius.modules.games.form.series
 
 import org.octavius.form.ColumnInfo
 import org.octavius.form.component.FormSchema

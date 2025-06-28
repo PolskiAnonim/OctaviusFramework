@@ -1,4 +1,4 @@
-package org.octavius.games.form
+package org.octavius.modules.games.form.game
 
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.component.FormHandler

@@ -1,4 +1,4 @@
-package org.octavius.asianMedia
+package org.octavius.modules.asian
 
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
@@ -10,7 +10,7 @@ import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringListColumn
 import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
-import org.octavius.ui.screen.form.AsianMediaFormScreen
+import org.octavius.modules.asian.ui.AsianMediaFormScreen
 
 class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
 
@@ -31,7 +31,7 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
 
         val columns = mapOf(
             "titles" to StringListColumn(
-                fieldName ="titles",
+                fieldName = "titles",
                 header = Translations.get("games.general.titles"),
                 width = 2f
             ),
@@ -64,11 +64,12 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
         // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
         val id = rowData["title_id"] as? Int
         if (id != null) {
-            navigator.addScreen(AsianMediaFormScreen(
-            entityId = id,
-            onSaveSuccess = { navigator.removeScreen() },
-            onCancel = { navigator.removeScreen() }
-        ))
+            navigator.addScreen(
+                AsianMediaFormScreen(
+                entityId = id,
+                onSaveSuccess = { navigator.removeScreen() },
+                onCancel = { navigator.removeScreen() }
+            ))
         }
     }
 }

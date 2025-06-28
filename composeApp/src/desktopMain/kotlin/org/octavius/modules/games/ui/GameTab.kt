@@ -1,4 +1,4 @@
-package org.octavius.ui.screen.tab
+package org.octavius.modules.games.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +11,7 @@ import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.navigator.Tab
 import org.octavius.navigator.TabOptions
-import org.octavius.ui.screen.report.GameReportScreen
+import org.octavius.modules.games.ui.GameReportScreen
 
 class GameTab : Tab {
     private val navigator = Navigator()
@@ -35,7 +35,7 @@ class GameTab : Tab {
 
     @Composable
     override fun Content() {
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.Companion.fillMaxSize()) {
             navigator.Display()
         }
     }

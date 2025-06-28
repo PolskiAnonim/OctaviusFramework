@@ -1,4 +1,4 @@
-package org.octavius.games.form
+package org.octavius.modules.games.form.game
 
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.ColumnInfo

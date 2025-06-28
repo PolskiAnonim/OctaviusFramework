@@ -1,8 +1,8 @@
-package org.octavius.ui.screen.form
+package org.octavius.modules.asian.ui
 
-import org.octavius.asianMedia.form.AsianMediaFormHandler
 import org.octavius.form.component.FormScreen
 import org.octavius.localization.Translations
+import org.octavius.modules.asian.form.AsianMediaFormHandler
 
 class AsianMediaFormScreen(
     entityId: Int? = null,

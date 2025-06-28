@@ -1,11 +1,11 @@
-package org.octavius.games.form
+package org.octavius.modules.games.form.series
 
 import org.octavius.database.DatabaseManager
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormValidator
 import org.octavius.localization.Translations
 
-class GameSeriesValidator : FormValidator() {
+class GameSeriesFormValidator : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
         val name = formData["name"]?.value as? String
         if (!name.isNullOrBlank()) {

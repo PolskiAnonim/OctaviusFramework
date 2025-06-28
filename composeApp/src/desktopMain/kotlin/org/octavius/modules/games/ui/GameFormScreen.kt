@@ -1,8 +1,8 @@
-package org.octavius.ui.screen.form
+package org.octavius.modules.games.ui
 
-import org.octavius.games.form.GameFormHandler
 import org.octavius.form.component.FormScreen
 import org.octavius.localization.Translations
+import org.octavius.modules.games.form.game.GameFormHandler
 
 class GameFormScreen(
     entityId: Int? = null,

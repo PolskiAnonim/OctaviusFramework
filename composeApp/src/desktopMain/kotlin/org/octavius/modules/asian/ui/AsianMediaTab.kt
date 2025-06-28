@@ -1,4 +1,4 @@
-package org.octavius.ui.screen.tab
+package org.octavius.modules.asian.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +11,8 @@ import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.navigator.Tab
 import org.octavius.navigator.TabOptions
-import org.octavius.ui.screen.report.AsianMediaReportScreen
 
-class NovelTab : Tab {
+class AsianMediaTab : Tab {
     private val navigator = Navigator()
 
     init {
