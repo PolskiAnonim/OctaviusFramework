@@ -24,6 +24,7 @@ tasks.register("validateTranslations") {
         
         sourceDir.walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
+            .filter { !it.name.equals("Translations.kt") } // Skip Translations.kt to avoid false positives from comments
             .forEach { file ->
                 val content = file.readText()
                 

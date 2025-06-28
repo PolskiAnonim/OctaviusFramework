@@ -25,7 +25,6 @@
       "savedSuccessfully": "Formularz został zapisany pomyślnie",
       "containsErrors": "Formularz zawiera błędy",
       "errorsLabel": "Błędy:",
-      "addNewItem": "Dodaj nowy element",
       "itemLabel": "Element {0}"
     },
     "dropdown": {
@@ -34,11 +33,6 @@
       "noResults": "Brak wyników"
     },
     "stringList": {
-      "items": {
-        "one": "{0} element",
-        "few": "{0} elementy",
-        "many": "{0} elementów"
-      },
       "itemPlaceholder": "Wprowadź tekst..."
     }
   },
