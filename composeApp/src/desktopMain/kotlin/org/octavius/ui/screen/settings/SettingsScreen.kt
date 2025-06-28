@@ -18,6 +18,7 @@ import org.octavius.navigator.Screen
 import org.octavius.ui.theme.FormSpacing
 
 class SettingsScreen() : Screen {
+    override val title = Translations.get("settings.title")
 
     data class SettingOption(
         val title: String,

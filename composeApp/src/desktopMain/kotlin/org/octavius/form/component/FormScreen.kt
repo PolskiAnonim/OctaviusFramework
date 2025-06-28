@@ -21,6 +21,7 @@ abstract class FormScreen(
     private val onSaveSuccess: () -> Unit = {},
     private val onCancel: () -> Unit = {}
 ) : Screen {
+    abstract override val title: String
     protected abstract val formHandler: FormHandler
 
     /**

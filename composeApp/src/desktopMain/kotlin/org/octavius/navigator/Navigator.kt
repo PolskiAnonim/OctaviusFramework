@@ -50,13 +50,13 @@ class Navigator {
             modifier = Modifier.height(56.dp),
             color = MaterialTheme.colorScheme.primary
         ) {
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
                 IconButton(
                     onClick = { this@Navigator.removeScreen() },
                     enabled = stack.size > 1,
+                    modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     AnimatedVisibility(
                         visible = stack.size > 1
@@ -67,6 +67,15 @@ class Navigator {
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
+                }
+                
+                if (stack.isNotEmpty()) {
+                    Text(
+                        text = stack.last().title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
             }
         }

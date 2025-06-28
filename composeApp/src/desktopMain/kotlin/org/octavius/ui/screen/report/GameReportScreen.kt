@@ -14,7 +14,7 @@ import org.octavius.ui.screen.form.GameFormScreen
 import org.octavius.ui.screen.form.GameSeriesFormScreen
 
 class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
-    
+    override val title = Translations.get("games.report.title")
     override val reportHandler = GameReportHandler(navigator)
 
     @Composable

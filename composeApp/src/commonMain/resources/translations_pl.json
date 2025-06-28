@@ -161,9 +161,14 @@
       "distinctiveCharacters": "Charakterystyczne postacie",
       "distinctiveProtagonist": "Charakterystyczny protagonista",
       "distinctiveAntagonist": "Charakterystyczny antagonista",
-      "characters": "Postacie"
+      "characters": "Postacie",
+      "newGame": "Nowa gra",
+      "editGame": "Edytuj grę",
+      "newSeries": "Nowa seria",
+      "editSeries": "Edytuj serię"
     },
     "report": {
+      "title": "Gry",
       "newGame": "Nowa gra",
       "newSeries": "Nowa seria"
     }
@@ -201,9 +206,12 @@
       "translatedVolumes": "Przetłumaczone tomy",
       "chapterCount": "Liczba rozdziałów",
       "translatedChapters": "Przetłumaczone rozdziały",
-      "originalCompleted": "Oryginał ukończony"
+      "originalCompleted": "Oryginał ukończony",
+      "newTitle": "Nowy tytuł",
+      "editTitle": "Edytuj tytuł"
     },
     "report": {
+      "title": "Azjatyckie media",
       "newTitle": "Nowy tytuł"
     }
   },

@@ -13,7 +13,7 @@ import org.octavius.report.component.ReportScreen
 import org.octavius.ui.screen.form.AsianMediaFormScreen
 
 class AsianMediaReportScreen(private val navigator: Navigator) : ReportScreen() {
-    
+    override val title = Translations.get("asianMedia.report.title")
     override val reportHandler = AsianMediaReportHandler(navigator)
 
     @Composable

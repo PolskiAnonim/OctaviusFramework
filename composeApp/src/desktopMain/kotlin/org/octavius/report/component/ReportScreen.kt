@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import org.octavius.navigator.Screen
 
 abstract class ReportScreen : Screen {
-
+    abstract override val title: String
     abstract val reportHandler: ReportHandler
 
     @Composable

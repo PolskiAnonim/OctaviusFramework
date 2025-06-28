@@ -10,6 +10,8 @@ val LocalNavigator = compositionLocalOf<Navigator> { error(Translations.get("nav
 
 //Screen for Navigator
 interface Screen {
+    val title: String
+    
     @Composable
     fun Content()
 }
