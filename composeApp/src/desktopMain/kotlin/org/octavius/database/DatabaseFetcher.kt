@@ -49,9 +49,13 @@ class DatabaseFetcher(
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT $fields FROM ${formatTableExpression(table)}$whereClause"
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
-        val results = jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
+        val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
 
-        return results
+        return when (results.size) {
+            0 -> null
+            1 -> results[0]
+            else -> throw IllegalStateException("Query returned ${results.size} rows, expected 0 or 1")
+        }
     }
 
     fun fetchColumn(
