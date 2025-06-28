@@ -1,19 +1,31 @@
-package org.octavius.ui.screen.settings
+package org.octavius.modules.settings.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Api
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
+import org.octavius.navigator.LocalNavigator
 import org.octavius.navigator.Screen
 import org.octavius.ui.theme.FormSpacing
 
@@ -29,6 +41,8 @@ class SettingsScreen() : Screen {
 
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.current
+
         val settingOptions = listOf(
             SettingOption(
                 title = Translations.get("settings.language.title"),
@@ -46,12 +60,14 @@ class SettingsScreen() : Screen {
                 title = Translations.get("settings.api.title"),
                 description = Translations.get("settings.api.description"),
                 icon = Icons.Default.Api,
-                onClick = { /* TODO: Navigate to API integrations */ }
+                onClick = {
+                    navigator.addScreen(ApiIntegrationsReportScreen(navigator))
+                }
             )
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(FormSpacing.cardPadding),
+            modifier = Modifier.Companion.fillMaxSize().padding(FormSpacing.cardPadding),
             verticalArrangement = Arrangement.spacedBy(FormSpacing.controlSpacing)
         ) {
             items(settingOptions) { option ->
@@ -63,24 +79,24 @@ class SettingsScreen() : Screen {
     @Composable
     private fun SettingOptionCard(option: SettingOption) {
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.Companion.fillMaxWidth(),
             onClick = option.onClick
         ) {
             Row(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .padding(FormSpacing.cardPadding),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Companion.CenterVertically
             ) {
                 Icon(
                     imageVector = option.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.Companion.size(24.dp)
                 )
-                
-                Spacer(modifier = Modifier.width(FormSpacing.cardPadding))
-                
-                Column(modifier = Modifier.weight(1f)) {
+
+                Spacer(modifier = Modifier.Companion.width(FormSpacing.cardPadding))
+
+                Column(modifier = Modifier.Companion.weight(1f)) {
                     Text(
                         text = option.title,
                         style = MaterialTheme.typography.titleMedium

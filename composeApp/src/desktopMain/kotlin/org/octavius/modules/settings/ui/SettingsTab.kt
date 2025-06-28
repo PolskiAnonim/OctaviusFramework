@@ -1,4 +1,4 @@
-package org.octavius.ui.screen.tab
+package org.octavius.modules.settings.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +11,6 @@ import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.navigator.Tab
 import org.octavius.navigator.TabOptions
-import org.octavius.ui.screen.settings.SettingsScreen
 
 class SettingsTab : Tab {
     private val navigator = Navigator()

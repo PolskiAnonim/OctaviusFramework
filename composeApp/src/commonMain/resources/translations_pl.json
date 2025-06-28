@@ -271,7 +271,15 @@
     },
     "api": {
       "title": "Integracje API",
-      "description": "Zarządzaj integracjami z zewnętrznymi API"
+      "description": "Zarządzaj integracjami z zewnętrznymi API",
+      "columns": {
+        "name": "Nazwa",
+        "enabled": "Włączona",
+        "apiKey": "Klucz API",
+        "endpointUrl": "URL Endpoint",
+        "port": "Port",
+        "lastSync": "Ostatnia synchronizacja"
+      }
     }
   }
 }
