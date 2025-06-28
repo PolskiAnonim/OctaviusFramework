@@ -19,6 +19,7 @@ import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringListValidation
 import org.octavius.form.control.validator.collection.TextListValidator
 import org.octavius.localization.Translations
+import org.octavius.ui.theme.FormSpacing
 
 /**
  * Kontrolka do wprowadzania i zarządzania listą tekstów.
@@ -34,7 +35,7 @@ class StringListControl(
     dependencies: Map<String, ControlDependency<*>>? = null,
     validationOptions: StringListValidation? = null
 ) : Control<List<String>>(
-    label, columnInfo, required, dependencies, validationOptions = validationOptions
+    label, columnInfo, required, dependencies, validationOptions = validationOptions, hasStandardLayout = false
 ) {
     override val validator: ControlValidator<List<String>> = TextListValidator(validationOptions)
 
@@ -62,21 +63,39 @@ class StringListControl(
         }
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Header with add button - consistent with RepeatableHeader height (48dp)
+            // Header with label and add button
             Row(
-                modifier = Modifier.fillMaxWidth().height(40.dp),
+                modifier = Modifier.fillMaxWidth().padding(
+                    start = FormSpacing.labelPaddingStart,
+                    bottom = FormSpacing.labelPaddingBottom
+                ),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    text = Translations.getPlural("form.stringList.items", currentList.size),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Label with item count
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = label ?: "",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    if (isRequired) {
+                        Text(
+                            text = "*",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Text(
+                        text = " (${currentList.size})",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
+                // Add button
                 val canAdd = maxItems == null || currentList.size < maxItems
                 if (canAdd) {
-                    OutlinedButton(
+                    IconButton(
                         onClick = {
                             val updatedList = currentList.toMutableList()
                             updatedList.add("")
@@ -84,23 +103,19 @@ class StringListControl(
                             controlState.value.value = updatedList
                             controlState.dirty.value = true
                         },
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = Translations.get("action.add"),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = Translations.get("action.add"),
-                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(FormSpacing.itemSpacing))
 
             // Items list - consistent spacing with RepeatableControl (8.dp between items)
             Column(
@@ -108,7 +123,7 @@ class StringListControl(
                     .fillMaxWidth()
                     .heightIn(max = 240.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(FormSpacing.itemSpacing)
             ) {
                 currentList.forEachIndexed { index, item ->
                     Row(
@@ -120,7 +135,7 @@ class StringListControl(
                             text = "${index + 1}.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.width(24.dp).padding(start = 4.dp)
+                            modifier = Modifier.width(24.dp).padding(start = FormSpacing.fieldPaddingHorizontal)
                         )
 
                         OutlinedTextField(
@@ -132,7 +147,7 @@ class StringListControl(
                                 controlState.value.value = updatedList
                                 controlState.dirty.value = true
                             },
-                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                            modifier = Modifier.weight(1f).padding(horizontal = FormSpacing.fieldPaddingHorizontal),
                             singleLine = true,
                             placeholder = { 
                                 Text(
@@ -142,32 +157,37 @@ class StringListControl(
                             }
                         )
 
-                        val canDelete = currentList.size > minItems
-                        if (canDelete) {
-                            IconButton(
-                                onClick = {
-                                    val updatedList = currentList.toMutableList()
-                                    updatedList.removeAt(index)
-                                    currentList = updatedList
-                                    controlState.value.value = updatedList
-                                    controlState.dirty.value = true
-                                },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = Translations.get("action.remove"),
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                        // Delete button with fixed width to maintain alignment
+                        Box(
+                            modifier = Modifier.width(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val canDelete = currentList.size > minItems
+                            if (canDelete) {
+                                IconButton(
+                                    onClick = {
+                                        val updatedList = currentList.toMutableList()
+                                        updatedList.removeAt(index)
+                                        currentList = updatedList
+                                        controlState.value.value = updatedList
+                                        controlState.dirty.value = true
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = Translations.get("action.remove"),
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             }
-                        } else {
-                            // Keep space for alignment when delete button isn't shown
-                            Spacer(modifier = Modifier.size(40.dp))
                         }
                     }
                 }
             }
+            
+            DisplayFieldErrors(controlName)
         }
     }
 }

@@ -17,6 +17,7 @@ import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.type.repeatable.RepeatableRow
 import org.octavius.localization.Translations
+import org.octavius.ui.theme.FormSpacing
 
 @Composable
 fun RepeatableHeader(
@@ -25,7 +26,7 @@ fun RepeatableHeader(
     canAdd: Boolean
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(48.dp),
+        modifier = Modifier.fillMaxWidth().height(FormSpacing.headerHeight),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -48,7 +49,7 @@ fun RepeatableHeader(
                         imageVector = Icons.Default.Add,
                         contentDescription = Translations.get("action.add")
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(FormSpacing.fieldPaddingHorizontal))
                     Text(Translations.get("action.add"))
                 }
             }
@@ -66,7 +67,7 @@ fun RepeatableRowCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = FormSpacing.itemSpacing)
     ) {
         var isExpanded by remember { mutableStateOf(true) }
 
@@ -84,7 +85,7 @@ fun RepeatableRowCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
-                        .padding(16.dp)
+                        .padding(FormSpacing.cardPadding)
                 ) {
                     content()
                 }
@@ -102,14 +103,17 @@ private fun RepeatableRowHeader(
     onDelete: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth().height(48.dp),
+        modifier = Modifier.fillMaxWidth().height(FormSpacing.headerHeight),
         color = MaterialTheme.colorScheme.surfaceVariant,
         onClick = onExpandToggle
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(
+                    horizontal = FormSpacing.repeatableRowPadding,
+                    vertical = FormSpacing.repeatableHeaderPadding
+                ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -129,7 +133,7 @@ private fun RepeatableRowHeader(
                     else
                         Icons.Default.KeyboardArrowDown,
                     contentDescription = if (isExpanded) Translations.get("expandable.collapse") else Translations.get("expandable.expand"),
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = FormSpacing.itemSpacing)
                 )
 
                 if (canDelete) {
@@ -171,7 +175,7 @@ fun RepeatableRowContent(
                     )
 
                     if (fieldName != rowOrder.last()) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(FormSpacing.controlSpacing))
                     }
                 }
             }

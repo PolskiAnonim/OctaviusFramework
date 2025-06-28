@@ -19,6 +19,10 @@ object AppTheme {
     val typography: Typography
         @ReadOnlyComposable @Composable
         get() = LocalTypography.current
+
+    val spacing: Spacing
+        @ReadOnlyComposable @Composable
+        get() = LocalSpacing.current
 }
 
 @Composable
@@ -34,6 +38,7 @@ fun AppTheme(
     CompositionLocalProvider(
         LocalColors provides colors,
         LocalTypography provides typography,
+        LocalSpacing provides Spacing(),
         LocalIndication provides rippleIndication,
         LocalTextSelectionColors provides selectionColors,
         LocalContentColor provides colors.contentColorFor(colors.background),

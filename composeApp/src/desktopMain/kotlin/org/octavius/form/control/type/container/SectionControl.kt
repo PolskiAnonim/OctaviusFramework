@@ -12,13 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.validator.DefaultValidator
 import org.octavius.localization.Translations
+import org.octavius.ui.theme.FormSpacing
 
 /**
  * Kontrolka do grupowania i organizacji innych kontrolek w sekcje.
@@ -48,23 +48,23 @@ class SectionControl(
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = FormSpacing.containerPaddingVertical),
         ) {
-            Column(modifier = Modifier.Companion.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 // Nagłówek sekcji
                 Surface(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxWidth()
                         .clickable(enabled = collapsible) { expanded.value = !expanded.value },
                     color = MaterialTheme.colorScheme.primary
                 ) {
                     Row(
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.Companion.CenterVertically,
+                            .padding(FormSpacing.sectionPadding),
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
@@ -86,24 +86,24 @@ class SectionControl(
                 // Zawartość sekcji
                 AnimatedVisibility(visible = expanded.value) {
                     Surface(
-                        modifier = Modifier.Companion.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.surface
                     ) {
                         Column(
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(FormSpacing.sectionPadding)
                         ) {
                             if (columns > 1) {
                                 val controlGroups =
                                     ctrls.chunked(ctrls.size / columns + if (ctrls.size % columns > 0) 1 else 0)
 
-                                Row(modifier = Modifier.Companion.fillMaxWidth()) {
+                                Row(modifier = Modifier.fillMaxWidth()) {
                                     controlGroups.forEach { group ->
                                         Column(
-                                            modifier = Modifier.Companion
+                                            modifier = Modifier
                                                 .weight(1f)
-                                                .padding(horizontal = 4.dp)
+                                                .padding(horizontal = FormSpacing.fieldPaddingHorizontal)
                                         ) {
                                             group.forEach { ctrlName ->
                                                 val controls =
@@ -113,14 +113,14 @@ class SectionControl(
                                                     states[ctrlName]?.let { controlState ->
                                                         control.Render(ctrlName, controlState)
                                                     }
-                                                    Spacer(modifier = Modifier.Companion.height(8.dp))
+                                                    Spacer(modifier = Modifier.height(FormSpacing.sectionContentSpacing))
                                                 }
                                             }
                                         }
                                     }
                                 }
                             } else {
-                                Column(modifier = Modifier.Companion.fillMaxWidth()) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
                                     ctrls.forEach { ctrlName ->
                                         val controls = this@SectionControl.formSchema.getAllControls()
                                         val states = this@SectionControl.formState.getAllStates()
@@ -128,7 +128,7 @@ class SectionControl(
                                             states[ctrlName]?.let { controlState ->
                                                 control.Render(ctrlName, controlState)
                                             }
-                                            Spacer(modifier = Modifier.Companion.height(12.dp))
+                                            Spacer(modifier = Modifier.height(FormSpacing.sectionHeaderPaddingBottom))
                                         }
                                     }
                                 }

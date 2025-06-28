@@ -19,6 +19,7 @@ import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.layout.RenderNormalLabel
 import org.octavius.form.control.validator.DefaultValidator
 import org.octavius.localization.Translations
+import org.octavius.ui.theme.FormSpacing
 
 /**
  * Bazowa klasa abstrakcyjna dla kontrolek listy rozwijanej (dropdown).
@@ -82,13 +83,13 @@ abstract class DropdownControlBase<T : Any>(
             }
         }
 
-        Column(modifier = Modifier.Companion.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             RenderNormalLabel(label, isRequired)
 
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = it },
-                modifier = Modifier.Companion.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 // Pole z wybraną wartością
                 OutlinedTextField(
@@ -97,9 +98,9 @@ abstract class DropdownControlBase<T : Any>(
                     onValueChange = { },  // Nie pozwalamy na edycję ręczną
                     readOnly = true,      // Pole tylko do odczytu
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(MenuAnchorType.Companion.PrimaryNotEditable)
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 )
 
                 // Menu z opcjami
@@ -117,9 +118,12 @@ abstract class DropdownControlBase<T : Any>(
                             },
                             placeholder = { Text(Translations.get("search.placeholder")) },
                             singleLine = true,
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .padding(
+                                    horizontal = FormSpacing.dropdownPaddingHorizontal,
+                                    vertical = FormSpacing.dropdownPaddingVertical
+                                ),
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Search,
@@ -144,13 +148,13 @@ abstract class DropdownControlBase<T : Any>(
 
                     if (isLoading) {
                         Box(
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Companion.Center
+                                .padding(FormSpacing.sectionPadding),
+                            contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
-                                modifier = Modifier.Companion.size(24.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     } else {
@@ -194,14 +198,17 @@ abstract class DropdownControlBase<T : Any>(
 
                             // Panel paginacji, tylko jeśli jest więcej niż jedna strona
                             if (supportPagination && totalPages > 1) {
-                                HorizontalDivider(modifier = Modifier.Companion.padding(vertical = 8.dp))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = FormSpacing.itemSpacing))
 
                                 Row(
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                        .padding(
+                                            horizontal = FormSpacing.dropdownPaddingHorizontal,
+                                            vertical = FormSpacing.dropdownPaddingVertical
+                                        ),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Companion.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     IconButton(
                                         onClick = { if (currentPage > 0) currentPage-- },

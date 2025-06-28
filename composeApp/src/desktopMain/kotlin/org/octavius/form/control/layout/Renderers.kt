@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import org.octavius.ui.theme.FormSpacing
 
 
 
@@ -44,7 +44,10 @@ fun RenderNormalLabel(label: String?, isRequired: Boolean) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+        modifier = Modifier.padding(
+            start = FormSpacing.labelPaddingStart,
+            bottom = FormSpacing.labelPaddingBottom
+        )
     ) {
         RenderLabel(label, isRequired)
     }
@@ -73,6 +76,9 @@ fun RenderFieldError(error: String) {
         text = error,
         color = MaterialTheme.colorScheme.error,
         style = MaterialTheme.typography.bodySmall,
-        modifier = Modifier.padding(start = 24.dp, bottom = 8.dp)
+        modifier = Modifier.padding(
+            start = FormSpacing.errorPaddingStart,
+            bottom = FormSpacing.errorPaddingBottom
+        )
     )
 }

@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.unit.dp
 import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
@@ -19,6 +18,7 @@ import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.layout.RenderCheckboxLabel
 import org.octavius.form.control.validator.DefaultValidator
+import org.octavius.ui.theme.FormSpacing
 
 /**
  * Kontrolka do wprowadzania wartości logicznych (prawda/fałsz).
@@ -44,16 +44,19 @@ class BooleanControl(
     @Composable
     override fun Display(controlName: String, controlState: ControlState<Boolean>, isRequired: Boolean) {
         Surface(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .padding(vertical = FormSpacing.booleanControlPadding),
         ) {
             Column {
                 Row(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                    verticalAlignment = Alignment.Companion.CenterVertically
+                        .padding(
+                            vertical = FormSpacing.booleanRowPaddingVertical,
+                            horizontal = FormSpacing.booleanRowPaddingHorizontal
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isRequired) {
                         val currentValue = controlState.value.value ?: false

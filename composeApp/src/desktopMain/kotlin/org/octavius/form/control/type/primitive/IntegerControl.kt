@@ -1,6 +1,7 @@
 package org.octavius.form.control.type.primitive
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,6 +12,7 @@ import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntegerValidation
 import org.octavius.form.control.validator.primitive.IntegerValidator
+import org.octavius.ui.theme.FormSpacing
 
 /**
  * Kontrolka do wprowadzania liczb całkowitych.
@@ -68,7 +70,10 @@ class IntegerControl(
                     }
                 }
             },
-            modifier = Modifier.Companion.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(
+                vertical = FormSpacing.fieldPaddingVertical,
+                horizontal = FormSpacing.fieldPaddingHorizontal
+            ),
             singleLine = true
         )
     }

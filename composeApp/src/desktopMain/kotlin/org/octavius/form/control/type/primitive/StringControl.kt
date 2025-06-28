@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
@@ -13,6 +12,7 @@ import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringValidation
 import org.octavius.form.control.validator.primitive.StringValidator
+import org.octavius.ui.theme.FormSpacing
 
 /**
  * Kontrolka do wprowadzania tekstu jednoliniowego.
@@ -45,7 +45,10 @@ class StringControl(
                 controlState.value.value = it
                 controlState.dirty.value = true
             },
-            modifier = Modifier.Companion.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(
+                vertical = FormSpacing.fieldPaddingVertical,
+                horizontal = FormSpacing.fieldPaddingHorizontal
+            ),
             singleLine = true
         )
     }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.octavius.form.ControlResultData
 import org.octavius.form.ControlState
 import org.octavius.form.component.ErrorManager
@@ -21,6 +20,7 @@ import org.octavius.form.control.layout.repeatable.RepeatableHeader
 import org.octavius.form.control.layout.repeatable.RepeatableRowCard
 import org.octavius.form.control.layout.repeatable.RepeatableRowContent
 import org.octavius.form.control.validator.repeatable.RepeatableValidator
+import org.octavius.ui.theme.FormSpacing
 
 /**
  * Kontrolka do tworzenia dynamicznych list kontrolek (wierszy).
@@ -117,7 +117,7 @@ class RepeatableControl(
 
     @Composable
     override fun Display(controlName: String, controlState: ControlState<List<RepeatableRow>>, isRequired: Boolean) {
-        Column(modifier = Modifier.Companion.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             RepeatableHeader(
                 label = label,
                 onAddClick = {
@@ -127,7 +127,7 @@ class RepeatableControl(
                 canAdd = rowManager.canAddRow(controlState)
             )
 
-            Spacer(modifier = Modifier.Companion.height(8.dp))
+            Spacer(modifier = Modifier.height(FormSpacing.itemSpacing))
 
             controlState.value.value?.forEachIndexed { index, row ->
                 RepeatableRowCard(
@@ -150,7 +150,7 @@ class RepeatableControl(
                     }
                 )
 
-                Spacer(modifier = Modifier.Companion.height(8.dp))
+                Spacer(modifier = Modifier.height(FormSpacing.itemSpacing))
             }
         }
     }
