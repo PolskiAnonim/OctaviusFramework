@@ -2,15 +2,14 @@ package org.octavius.form.control.validator.collection
 
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.TextListValidation
-import org.octavius.form.control.validator.primitive.TextValidator
+import org.octavius.form.control.base.StringListValidation
 import org.octavius.localization.Translations
 
 /**
  * Walidator dla kontrolek list tekstowych z obsługą opcji walidacji.
  */
 class TextListValidator(
-    private val validationOptions: TextListValidation? = null
+    private val validationOptions: StringListValidation? = null
 ) : ControlValidator<List<String>>() {
 
     override fun validateSpecific(controlName: String, state: ControlState<*>) {

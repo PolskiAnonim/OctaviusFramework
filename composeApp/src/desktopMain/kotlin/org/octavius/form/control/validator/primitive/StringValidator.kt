@@ -2,14 +2,14 @@ package org.octavius.form.control.validator.primitive
 
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.TextValidation
+import org.octavius.form.control.base.StringValidation
 import org.octavius.localization.Translations
 
 /**
  * Walidator dla kontrolek tekstowych z obsługą opcji walidacji.
  */
-class TextValidator(
-    private val validationOptions: TextValidation? = null
+class StringValidator(
+    private val validationOptions: StringValidation? = null
 ) : ControlValidator<String>() {
 
     override fun validateSpecific(controlName: String, state: ControlState<*>) {

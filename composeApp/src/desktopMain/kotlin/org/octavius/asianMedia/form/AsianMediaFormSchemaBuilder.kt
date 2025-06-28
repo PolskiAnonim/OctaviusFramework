@@ -7,7 +7,7 @@ import org.octavius.form.ColumnInfo
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
-import org.octavius.form.control.type.collection.TextListControl
+import org.octavius.form.control.type.collection.StringListControl
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.primitive.HiddenControl
@@ -27,11 +27,11 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     columns = 2,
                     label = Translations.get("asianMedia.form.titleInfo")
                 ),
-                "titles" to TextListControl(
+                "titles" to StringListControl(
                     ColumnInfo("titles", "titles"),
                     Translations.get("asianMedia.form.titles"),
                     required = true,
-                    validationOptions = TextListValidation(minItems = 1)
+                    validationOptions = StringListValidation(minItems = 1)
                 ),
                 "language" to EnumControl(
                     ColumnInfo("titles", "language"),

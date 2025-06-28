@@ -31,7 +31,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     null
                 ),
                 // Sekcja podstawowych informacji
-                "name" to TextControl(
+                "name" to StringControl(
                     ColumnInfo("games", "name"),
                     Translations.get("games.general.gameName"),
                     required = true

@@ -31,6 +31,14 @@
       "noSelection": "Brak wyboru",
       "selectOption": "Wybierz opcję",
       "noResults": "Brak wyników"
+    },
+    "stringList": {
+      "items": {
+        "one": "{0} element",
+        "few": "{0} elementy",
+        "many": "{0} elementów"
+      },
+      "itemPlaceholder": "Wprowadź tekst..."
     }
   },
   "pagination": {

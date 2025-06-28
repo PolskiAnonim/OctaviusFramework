@@ -9,7 +9,7 @@ sealed class ValidationOptions
 /**
  * Opcje walidacji dla pól tekstowych.
  */
-data class TextValidation(
+data class StringValidation(
     val minLength: Int? = null,
     val maxLength: Int? = null,
     val pattern: Regex? = null,
@@ -38,10 +38,10 @@ data class DoubleValidation(
 /**
  * Opcje walidacji dla list tekstowych.
  */
-data class TextListValidation(
+data class StringListValidation(
     val minItems: Int? = null,
     val maxItems: Int? = null,
-    val itemValidation: TextValidation? = null
+    val itemValidation: StringValidation? = null
 ) : ValidationOptions()
 
 /**
