@@ -4,7 +4,8 @@
   },
   "tabs": {
     "games": "Gry",
-    "asianMedia": "Azjatyckie"
+    "asianMedia": "Azjatyckie",
+    "settings": "Ustawienia"
   },
   "action": {
     "add": "Dodaj",
@@ -249,5 +250,20 @@
   "expandable": {
     "expand": "Rozwiń",
     "collapse": "Zwiń"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "language": {
+      "title": "Język aplikacji",
+      "description": "Zmień język interfejsu aplikacji"
+    },
+    "database": {
+      "title": "Ustawienia bazy danych",
+      "description": "Konfiguracja połączenia z bazą danych"
+    },
+    "api": {
+      "title": "Integracje API",
+      "description": "Zarządzaj integracjami z zewnętrznymi API"
+    }
   }
 }

@@ -323,3 +323,27 @@ CREATE TABLE IF NOT EXISTS public.report_filter_configs
 );
 
 CREATE INDEX IF NOT EXISTS idx_report_filter_configs_report_config_id ON public.report_filter_configs (report_config_id);
+
+--------------------------SETTINGS
+
+CREATE TABLE public.application_settings
+(
+    id         SERIAL PRIMARY KEY,
+    language   TEXT   DEFAULT 'pl'
+    -- inne ustawienia UI/aplikacji w przyszłości
+);
+
+-------------------------- API
+
+CREATE TABLE public.api_integrations
+(
+    id           SERIAL PRIMARY KEY,
+    name         TEXT NOT NULL UNIQUE, -- 'server', 'igdb', 'steam'
+    enabled      BOOLEAN   DEFAULT false,
+    api_key      TEXT,
+    endpoint_url TEXT,
+    port         INTEGER,
+    last_sync    TIMESTAMP,
+    created_at   TIMESTAMP DEFAULT NOW(),
+    updated_at   TIMESTAMP DEFAULT NOW()
+);
