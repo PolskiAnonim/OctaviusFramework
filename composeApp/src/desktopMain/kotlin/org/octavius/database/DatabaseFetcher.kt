@@ -1,11 +1,11 @@
 package org.octavius.database
 
+import org.octavius.form.ColumnInfo
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 class DatabaseFetcher(
     val jdbcTemplate: NamedParameterJdbcTemplate,
-    val rowMappers: RowMappers,
-    val typesConverter: DatabaseToKotlinTypesConverter
+    val rowMappers: RowMappers
 ) {
     private val parameterExpandHelper = ParameterExpandHelper()
     
@@ -116,5 +116,17 @@ class DatabaseFetcher(
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
+    }
+
+    fun fetchEntity(
+        tables: String,
+        filter: String? = null,
+        params: Map<String, Any?> = emptyMap()
+    ) : Map<ColumnInfo, Any?> {
+        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
+        val sql = "SELECT * FROM ${formatTableExpression(tables)}$whereClause"
+        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+
+        return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnInfoMapper()) ?: emptyMap()
     }
 }

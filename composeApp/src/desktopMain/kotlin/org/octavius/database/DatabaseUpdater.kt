@@ -1,6 +1,5 @@
 package org.octavius.database
 
-import com.zaxxer.hikari.HikariDataSource
 import org.octavius.form.SaveOperation
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -9,11 +8,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.transaction.support.TransactionTemplate
 
 class DatabaseUpdater(
-    dataSource: HikariDataSource,
-    val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
-    val typesConverter: DatabaseToKotlinTypesConverter
+    val transactionManager: DataSourceTransactionManager,
+    val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
 ) {
-    private val transactionManager = DataSourceTransactionManager(dataSource)
     private val parameterExpandHelper = ParameterExpandHelper()
 
     // Główna metoda do zapisywania encji
