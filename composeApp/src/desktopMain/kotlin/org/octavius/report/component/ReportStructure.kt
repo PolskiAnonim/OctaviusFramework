@@ -13,7 +13,8 @@ import org.octavius.report.column.ReportColumn
 class ReportStructure(
     val query: Query,
     private val columns: Map<String, ReportColumn>,
-    val reportConfig: String // W przyszłości obiekt
+    val reportConfig: String, // W przyszłości obiekt
+    val reportName: String
 ) {
 
     /**

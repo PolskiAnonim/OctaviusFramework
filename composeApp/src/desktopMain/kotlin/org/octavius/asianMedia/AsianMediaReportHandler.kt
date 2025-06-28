@@ -55,7 +55,7 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
             )
         )
 
-        return ReportStructure(query, columns, "")
+        return ReportStructure(query, columns, "", "asianMedia")
     }
 
 

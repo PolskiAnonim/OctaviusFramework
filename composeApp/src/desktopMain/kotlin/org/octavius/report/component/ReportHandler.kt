@@ -5,6 +5,7 @@ import org.octavius.report.FilterData
 import org.octavius.domain.SortDirection
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
+import org.octavius.report.ReportConfigurationManager
 
 abstract class ReportHandler {
 
@@ -16,6 +17,7 @@ abstract class ReportHandler {
         reportStructure = this.createReportStructure()
         filters = initializeFilters()
         reportState.initialize(reportStructure.getAllColumns().keys, reportStructure.reportConfig)
+        loadDefaultConfiguration()
     }
 
     private fun initializeFilters(): Map<String, Filter> {
@@ -133,5 +135,23 @@ abstract class ReportHandler {
     fun getReportState(): ReportState = reportState
 
     fun getFilters(): Map<String, Filter> = filters
+
+    private fun loadDefaultConfiguration() {
+        try {
+            val configManager = ReportConfigurationManager()
+            val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
+            
+            if (defaultConfig != null) {
+                configManager.applyConfiguration(defaultConfig, reportState, filters)
+            }
+        } catch (e: Exception) {
+            // Jeśli nie ma domyślnej konfiguracji lub wystąpił błąd, ignorujemy to
+            println("Nie udało się załadować domyślnej konfiguracji: ${e.message}")
+        }
+    }
+
+    fun getReportName(): String {
+        return reportStructure.reportName
+    }
 
 }

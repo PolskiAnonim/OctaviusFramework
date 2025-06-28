@@ -15,7 +15,6 @@ import org.octavius.navigator.Screen
 abstract class ReportScreen : Screen {
 
     abstract val reportHandler: ReportHandler
-    abstract val reportName: String
 
     @Composable
     protected open fun AddMenu() {
@@ -112,7 +111,7 @@ abstract class ReportScreen : Screen {
         // Dialog konfiguracji
         if (configurationDialogVisible) {
             ReportConfigurationDialog(
-                reportName = reportName,
+                reportName = reportHandler.getReportName(),
                 reportState = reportState,
                 filters = reportHandler.getFilters(),
                 onDismiss = { configurationDialogVisible = false },

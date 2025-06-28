@@ -1,7 +1,6 @@
 package org.octavius.report
 
 import org.octavius.database.DatabaseManager
-import org.octavius.domain.NullHandling
 import org.octavius.domain.NumberFilterDataType
 import org.octavius.domain.SortConfiguration
 import org.octavius.domain.StringFilterDataType
@@ -67,31 +66,7 @@ class ReportConfigurationManager {
             false
         }
     }
-    
-    fun loadConfiguration(name: String, reportName: String): ReportConfiguration? {
-        return try {
-            val fetcher = DatabaseManager.getFetcher()
-            val params = mapOf(
-                "name" to name,
-                "report_name" to reportName
-            )
-            
-            val result = fetcher.fetchRowOrNull(
-                table = "public.report_configurations",
-                fields = "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default",
-                filter = "name = :name AND report_name = :report_name",
-                params = params
-            )
-            
-            result?.let { row ->
-                parseConfigurationFromNewRow(row)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-    
+
     fun loadDefaultConfiguration(reportName: String): ReportConfiguration? {
         return try {
             val fetcher = DatabaseManager.getFetcher()

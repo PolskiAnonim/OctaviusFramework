@@ -16,7 +16,6 @@ import org.octavius.ui.screen.form.GameSeriesFormScreen
 class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
     
     override val reportHandler = GameReportHandler(navigator)
-    override val reportName = "games"
 
     @Composable
     override fun AddMenu() {

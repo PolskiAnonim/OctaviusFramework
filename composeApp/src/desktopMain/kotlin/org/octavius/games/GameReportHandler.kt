@@ -45,7 +45,7 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
             ),
         )
         
-        return ReportStructure(query, columns, "")
+        return ReportStructure(query, columns, "", "games")
     }
 
 }
