@@ -6,6 +6,17 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/**
+ * System odstępów i wymiarów używanych w aplikacji.
+ * 
+ * Zawiera standardowe odstępy ogólne oraz wyspecjalizowane wymiary dla formularzy.
+ */
+
+/**
+ * Podstawowe odstępy używane w całej aplikacji.
+ * 
+ * Dostępne przez AppTheme.spacing w komponentach Composable.
+ */
 data class Spacing(
     val none: Dp = 0.dp,
     val extraSmall: Dp = 4.dp,
@@ -16,6 +27,15 @@ data class Spacing(
     val huge: Dp = 32.dp,
 )
 
+/**
+ * Wyspecjalizowane odstępy i wymiary dla komponentów formularzy.
+ * 
+ * Zawiera ponad 40 predefiniowanych stałych dla:
+ * - Padding pól formularza
+ * - Wymiary nagłówków i sekcji
+ * - Odstępy kontrolek (dropdown, boolean, repeatable)
+ * - Wymiary kart i kontenerów
+ */
 object FormSpacing {
     val fieldPaddingHorizontal = 4.dp
     val fieldPaddingVertical = 8.dp
@@ -41,9 +61,5 @@ object FormSpacing {
     val repeatableHeaderPadding = 12.dp
 }
 
+/** CompositionLocal zapewniający dostęp do systemu odstępów */
 val LocalSpacing = staticCompositionLocalOf { Spacing() }
-
-val AppTheme.spacing: Spacing
-    @Composable
-    @ReadOnlyComposable
-    get() = LocalSpacing.current

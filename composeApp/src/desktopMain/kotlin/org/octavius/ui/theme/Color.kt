@@ -5,6 +5,14 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
+/**
+ * System kolorów aplikacji.
+ * 
+ * Zawiera predefiniowane palety kolorów i klasy do zarządzania schematami kolorystycznymi
+ * dla jasnych i ciemnych motywów.
+ */
+
+/** Podstawowe kolory neutralne */
 val Black: Color = Color(0xFF000000)
 val Gray900: Color = Color(0xFF282828)
 val Gray800: Color = Color(0xFF4b4b4b)
@@ -18,6 +26,7 @@ val Gray100: Color = Color(0xFFF7F7F7)
 val Gray50: Color = Color(0xFFFFFFFF)
 val White: Color = Color(0xFFFFFFFF)
 
+/** Paleta kolorów czerwonych - używana dla błędów i akcji destrukcyjnych */
 val Red900: Color = Color(0xFF520810)
 val Red800: Color = Color(0xFF950f22)
 val Red700: Color = Color(0xFFbb032a)
@@ -29,6 +38,7 @@ val Red200: Color = Color(0xFFffd2cd)
 val Red100: Color = Color(0xFFffe1de)
 val Red50: Color = Color(0xFFfff0ee)
 
+/** Paleta kolorów niebieskich - używana dla akcji podstawowych */
 val Blue900: Color = Color(0xFF276EF1)
 val Blue800: Color = Color(0xFF3F7EF2)
 val Blue700: Color = Color(0xFF578EF4)
@@ -40,6 +50,7 @@ val Blue200: Color = Color(0xFFCFDEFB)
 val Blue100: Color = Color(0xFFE7EEFD)
 val Blue50: Color = Color(0xFFFFFFFF)
 
+/** Paleta kolorów zielonych - używana dla sukcesów i potwierdzeń */
 val Green950: Color = Color(0xFF0B4627)
 val Green900: Color = Color(0xFF16643B)
 val Green800: Color = Color(0xFF1A7544)
@@ -52,6 +63,16 @@ val Green200: Color = Color(0xFFC2F5DA)
 val Green100: Color = Color(0xFFD0FBE9)
 val Green50: Color = Color(0xFFE0FAEC)
 
+/**
+ * Stała klasa reprezentująca pełny schemat kolorów aplikacji.
+ * 
+ * Zawiera wszystkie kolory używane w interfejsie z podziałem na:
+ * - Kolory podstawowe (primary, secondary, tertiary)
+ * - Kolory funkcjonalne (error, success, disabled)
+ * - Kolory powierzchni (surface, background)
+ * - Kolory tekstu (text, textSecondary, textDisabled)
+ * - Kolory pomocnicze (outline, scrim, elevation)
+ */
 @Immutable
 data class Colors(
     val primary: Color,
@@ -81,6 +102,7 @@ data class Colors(
     val elevation: Color,
 )
 
+/** Predefiniowany schemat kolorów dla jasnego motywu */
 internal val LightColors =
     Colors(
         primary = Black,
@@ -110,6 +132,7 @@ internal val LightColors =
         elevation = Gray700,
     )
 
+/** Predefiniowany schemat kolorów dla ciemnego motywu */
 internal val DarkColors =
     Colors(
         primary = White,
@@ -139,10 +162,19 @@ internal val DarkColors =
         elevation = Gray200,
     )
 
+/** CompositionLocal zapewniający dostęp do aktualnego schematu kolorów */
 val LocalColors = staticCompositionLocalOf { LightColors }
+/** CompositionLocal dla koloru zawartości */
 val LocalContentColor = compositionLocalOf { Color.Black }
+/** CompositionLocal dla przezroczystości zawartości */
 val LocalContentAlpha = compositionLocalOf { 1f }
 
+/**
+ * Automatycznie dobiera odpowiedni kolor tekstu dla podanego koloru tła.
+ * 
+ * @param backgroundColor Kolor tła
+ * @return Odpowiedni kolor tekstu lub Color.Unspecified jeśli nie znaleziono dopasowania
+ */
 fun Colors.contentColorFor(backgroundColor: Color): Color {
     return when (backgroundColor) {
         primary -> onPrimary

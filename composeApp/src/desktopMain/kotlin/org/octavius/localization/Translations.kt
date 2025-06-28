@@ -7,12 +7,64 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import org.octavius.config.EnvConfig
 
+/**
+ * System lokalizacji aplikacji oparty na plikach JSON.
+ * 
+ * Zapewnia zaawansowane funkcje tłumaczeń w tym:
+ * - Ładowanie tłumaczeń z plików JSON na podstawie konfiguracji języka
+ * - Obsługa zagnieżdżonych kluczy (dot notation)
+ * - Formatowanie szablonów z parametrami
+ * - System pluralizacji (one/few/many)
+ * - Fallback przy braku klucza
+ */
+
+/**
+ * Singleton object zarządzający tłumaczeniami aplikacji.
+ * 
+ * Ładuje tłumaczenia przy starcie aplikacji na podstawie ustawienia języka
+ * i udostępnia metody do pobierania przetłumaczonych tekstów.
+ * 
+ * Struktura pliku JSON:
+ * ```json
+ * {
+ *   "navigation": {
+ *     "back": "Powrót",
+ *     "home": "Strona główna"
+ *   },
+ *   "messages": {
+ *     "count": {
+ *       "one": "Znaleziono {0} element",
+ *       "few": "Znaleziono {0} elementy", 
+ *       "many": "Znaleziono {0} elementów"
+ *     }
+ *   }
+ * }
+ * ```
+ * 
+ * Użycie:
+ * ```kotlin
+ * val text = Translations.get("navigation.back")
+ * val formatted = Translations.get("welcome.user", userName)
+ * val plural = Translations.getPlural("messages.count", itemCount)
+ * ```
+ */
 object Translations {
 
+    /** Konfiguracja JSON do parsowania plików tłumaczeń */
     private val json = Json { ignoreUnknownKeys = true }
+    
+    /** Załadowane tłumaczenia jako drzewo JSON */
     private var translations: JsonElement
 
-
+    /**
+     * Inicjalizacja systemu tłumaczeń.
+     * 
+     * Ładuje plik tłumaczeń na podstawie kodu języka z EnvConfig.
+     * Nazwa pliku: "translations_{languageCode}.json"
+     * 
+     * W przypadku błędu (brak pliku, błąd parsowania) ustawia pusty
+     * obiekt JSON aby zapobiec crashom aplikacji.
+     */
     init {
         val languageCode = EnvConfig.language
 
@@ -28,7 +80,21 @@ object Translations {
     }
 
     /**
-     * Zwraca przetłumaczony tekst.
+     * Pobiera tłumaczenie dla podanego klucza z opcjonalnymi parametrami.
+     * 
+     * Obsługuje zagnieżdżone klucze using dot notation (np. "navigation.back").
+     * Parametry w szablonie są oznaczone jako {0}, {1}, {2} itp.
+     * 
+     * @param key Klucz tłumaczenia w formacie dot notation
+     * @param args Parametry do wstawienia w szablon
+     * @return Przetłumaczony i sformatowany tekst, lub oryginalny klucz jeśli nie znaleziono tłumaczenia
+     * 
+     * Przykłady:
+     * ```kotlin
+     * Translations.get("navigation.back") // "Powrót"
+     * Translations.get("welcome.user", "Jan") // "Witaj, Jan!"
+     * Translations.get("missing.key") // "missing.key"
+     * ```
      */
     fun get(key: String, vararg args: Any): String {
         val template = findValue(key)?.let {
@@ -39,7 +105,37 @@ object Translations {
     }
 
     /**
-     * Zwraca poprawną formę mnogą.
+     * Pobiera tłumaczenie z polską pluralizacją.
+     * 
+     * Automatycznie wybiera odpowiednią formę na podstawie liczby:
+     * - "one": dla count == 1
+     * - "few": dla count % 10 in 2..4 && count % 100 !in 12..14
+     * - "many": dla pozostałych przypadków
+     * 
+     * Liczba jest automatycznie wstawiana jako pierwszy parametr {0}.
+     * 
+     * @param key Klucz tłumaczenia wskazujący na obiekt z formami plural
+     * @param count Liczba determinująca formę plural
+     * @param args Dodatkowe parametry do wstawienia w szablon (począwszy od {1})
+     * @return Przetłumaczony tekst z odpowiednią formą plural
+     * 
+     * Struktura JSON:
+     * ```json
+     * {
+     *   "items": {
+     *     "one": "Znaleziono {0} element",
+     *     "few": "Znaleziono {0} elementy",
+     *     "many": "Znaleziono {0} elementów"
+     *   }
+     * }
+     * ```
+     * 
+     * Przykłady:
+     * ```kotlin
+     * Translations.getPlural("items", 1) // "Znaleziono 1 element"
+     * Translations.getPlural("items", 3) // "Znaleziono 3 elementy"
+     * Translations.getPlural("items", 15) // "Znaleziono 15 elementów"
+     * ```
      */
     fun getPlural(key: String, count: Int, vararg args: Any): String {
         val pluralForms = findValue(key) as? JsonObject ?: return key
@@ -57,6 +153,15 @@ object Translations {
         return formatString(template, count, *args)
     }
 
+    /**
+     * Znajduje wartość w drzewie JSON using dot notation.
+     * 
+     * Przechodzi przez ścieżkę zagnieżdżonych obiektów aby znaleźć
+     * odpowiedni element JSON.
+     * 
+     * @param key Klucz w formacie dot notation (np. "navigation.back")
+     * @return Element JSON lub null jeśli nie znaleziono
+     */
     private fun findValue(key: String): JsonElement? {
         val path = key.split('.')
         var currentElement: JsonElement? = translations
@@ -68,6 +173,22 @@ object Translations {
         return currentElement
     }
 
+    /**
+     * Formatuje szablon tekstu zamieniając placeholder na wartości parametrów.
+     * 
+     * Placeholders są w formacie {0}, {1}, {2} itp. i są zamieniane
+     * na odpowiednie parametry w kolejności.
+     * 
+     * @param template Szablon tekstu z placeholders
+     * @param args Parametry do wstawienia
+     * @return Sformatowany tekst
+     * 
+     * Przykład:
+     * ```kotlin
+     * formatString("Witaj, {0}! Masz {1} wiadomości.", "Jan", 5)
+     * // "Witaj, Jan! Masz 5 wiadomości."
+     * ```
+     */
     private fun formatString(template: String, vararg args: Any): String {
         var result = template
         args.forEachIndexed { index, arg ->

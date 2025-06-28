@@ -7,13 +7,66 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.transaction.support.TransactionTemplate
 
+/**
+ * Klasa odpowiedzialna za wykonywanie operacji modyfikujących bazę danych.
+ * 
+ * Zapewnia zaawansowane funkcje do operacji INSERT/UPDATE/DELETE z obsługą:
+ * - Transakcyjności (wszystkie operacje lub żadna)
+ * - Zarządzania kluczami obcymi między operacjami
+ * - Automatycznego generowania kluczy głównych
+ * - Ekspansji złożonych parametrów PostgreSQL
+ * - Rollback przy błędach z pełnym komunikatem
+ */
+
+/**
+ * Komponent do wykonywania transakcyjnych operacji modyfikujących.
+ * 
+ * @param transactionManager Menedżer transakcji Spring do obsługi ACID
+ * @param namedParameterJdbcTemplate Template JDBC z obsługą named parameters
+ * 
+ * Obsługuje:
+ * - INSERT z automatycznym generowaniem ID i obsługą foreign keys
+ * - UPDATE z identyfikacją przez ID lub foreign keys
+ * - DELETE z identyfikacją przez ID lub foreign keys
+ * - Zarządzanie zależnościami między operacjami w ramach transakcji
+ * 
+ * Przykład użycia:
+ * ```kotlin
+ * val operations = listOf(
+ *     SaveOperation.Insert("users", userData, returningId = true),
+ *     SaveOperation.Update("profiles", profileData, id = profileId)
+ * )
+ * updater.updateDatabase(operations)
+ * ```
+ */
 class DatabaseUpdater(
     val transactionManager: DataSourceTransactionManager,
     val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
 ) {
+    /** Helper do ekspansji złożonych parametrów PostgreSQL */
     private val parameterExpandHelper = ParameterExpandHelper()
 
-    // Główna metoda do zapisywania encji
+    /**
+     * Główna metoda wykonująca listę operacji w pojedynczej transakcji.
+     * 
+     * Operacje są wykonywane sekwencyjnie w podanej kolejności.
+     * Klucze główne wygenerowane przez operacje INSERT są automatycznie
+     * przekazywane do kolejnych operacji jako foreign keys.
+     * 
+     * @param databaseOperations Lista operacji SaveOperation do wykonania
+     * 
+     * @throws Exception gdy którakolwiek operacja się nie powiedzie (z rollback)
+     * 
+     * Przykład z zależnościami:
+     * ```kotlin
+     * updateDatabase(listOf(
+     *     SaveOperation.Insert("users", userData, returningId = true),
+     *     SaveOperation.Insert("profiles", profileData, foreignKeys = listOf(
+     *         ForeignKeyReference("user_id", "users", null) // zostanie wypełnione automatycznie
+     *     ))
+     * ))
+     * ```
+     */
     fun updateDatabase(databaseOperations: List<SaveOperation>) {
         val transactionTemplate = TransactionTemplate(transactionManager)
 
@@ -61,6 +114,18 @@ class DatabaseUpdater(
         }
     }
 
+    /**
+     * Wykonuje operację INSERT z obsługą foreign keys i generowania ID.
+     * 
+     * @param operation Operacja INSERT do wykonania
+     * @return Wygenerowane ID (jeśli returningId = true) lub null
+     * 
+     * Funkcjonalności:
+     * - Automatyczne generowanie placeholders dla wszystkich kolumn
+     * - Obsługa foreign keys (tylko te z wartością != null)
+     * - Generowanie klucza głównego gdy returningId = true
+     * - Ekspansja złożonych parametrów (arrays, enums, composite types)
+     */
     private fun insertIntoTable(operation: SaveOperation.Insert): Int? {
         val dataColumns = operation.data.keys.toList()
 
@@ -98,6 +163,26 @@ class DatabaseUpdater(
         return keyHolder.keys?.get("id") as? Int
     }
 
+    /**
+     * Wykonuje operację UPDATE z elastyczną identyfikacją wiersza.
+     * 
+     * @param operation Operacja UPDATE do wykonania
+     * 
+     * Identyfikacja wiersza:
+     * - Jeśli podano ID: WHERE id = :id
+     * - Jeśli nie ma ID: WHERE na podstawie foreign keys
+     * 
+     * Przykład UPDATE przez foreign keys:
+     * ```kotlin
+     * SaveOperation.Update(
+     *     "user_preferences",
+     *     data = mapOf("theme" to FormValue("dark")),
+     *     foreignKeys = listOf(
+     *         ForeignKeyReference("user_id", "users", 123)
+     *     )
+     * )
+     * ```
+     */
     private fun updateTable(operation: SaveOperation.Update) {
         val updatePairs = operation.data.entries.joinToString { "${it.key} = :${it.key}" }
 
@@ -135,6 +220,17 @@ class DatabaseUpdater(
         namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
     }
 
+    /**
+     * Wykonuje operację DELETE z elastyczną identyfikacją wiersza.
+     * 
+     * @param operation Operacja DELETE do wykonania
+     * 
+     * Identyfikacja wiersza:
+     * - Jeśli podano ID: WHERE id = :id
+     * - Jeśli nie ma ID: WHERE na podstawie foreign keys
+     * 
+     * UWAGA: Upewnij się, że warunki WHERE są wystarczająco specyficzne!
+     */
     private fun deleteFromTable(operation: SaveOperation.Delete) {
         val deleteQuery = if (operation.id != null) {
             "DELETE FROM ${operation.tableName} WHERE id = :id"
@@ -165,13 +261,49 @@ class DatabaseUpdater(
         namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
     }
 
-    // Prosta metoda do wykonywania SQL z nazwanymi parametrami
+    /**
+     * Wykonuje dowolne zapytanie SQL modyfikujące z named parameters.
+     * 
+     * Metoda pomocnicza do prostych operacji UPDATE/INSERT/DELETE
+     * które nie wymagają zaawansowanej logiki SaveOperation.
+     * 
+     * @param sql Zapytanie SQL z named parameters (np. ":param")
+     * @param params Mapa parametrów do podstawienia
+     * @return Liczba zmodyfikowanych wierszy
+     * 
+     * Przykład:
+     * ```kotlin
+     * val affected = executeUpdate(
+     *     "UPDATE users SET last_login = :time WHERE id = :id",
+     *     mapOf("time" to Instant.now(), "id" to 123)
+     * )
+     * ```
+     */
     fun executeUpdate(sql: String, params: Map<String, Any?> = emptyMap()): Int {
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
         return namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
     }
     
-    // Metoda do wykonywania SQL z zwróceniem wartości
+    /**
+     * Wykonuje zapytanie SQL z klauzulą RETURNING.
+     * 
+     * Użyteczne dla operacji INSERT/UPDATE które potrzebują zwrócić
+     * wartość wygenerowanej kolumny.
+     * 
+     * @param sql Zapytanie SQL z RETURNING lub bez (zostanie użyty GeneratedKeyHolder)
+     * @param params Mapa parametrów do podstawienia
+     * @param columnName Nazwa kolumny do zwrócenia
+     * @return Wartość zwracanej kolumny lub null
+     * 
+     * Przykład:
+     * ```kotlin
+     * val newId = executeReturning(
+     *     "INSERT INTO logs (message, created_at) VALUES (:msg, NOW())",
+     *     mapOf("msg" to "User logged in"),
+     *     "id"
+     * ) as Int
+     * ```
+     */
     fun executeReturning(sql: String, params: Map<String, Any?> = emptyMap(), columnName: String): Any? {
         val keyHolder = GeneratedKeyHolder()
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)

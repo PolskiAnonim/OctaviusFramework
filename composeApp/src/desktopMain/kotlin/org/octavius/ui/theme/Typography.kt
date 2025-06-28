@@ -9,9 +9,29 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+/**
+ * System typografii aplikacji.
+ * 
+ * Zawiera kompletny zestaw stylów tekstu i funkcje do zarządzania czcionkami.
+ */
+
+/**
+ * Zwraca domyślną rodzinę czcionek używaną w aplikacji.
+ * 
+ * @return FontFamily.Default
+ */
 @Composable
 fun fontFamily() = FontFamily.Default
 
+/**
+ * Kompletny zestaw stylów tekstu używanych w aplikacji.
+ * 
+ * Zawiera style podzielone na kategorie:
+ * - Nagłówki: h1 (24sp) do h4 (16sp)
+ * - Treść: body1 (16sp) do body3 (12sp)
+ * - Etykiety: label1 (14sp) do label3 (10sp)
+ * - Specjalne: button, input z odpowiednimi wagami fontów
+ */
 data class Typography(
     val h1: TextStyle,
     val h2: TextStyle,
@@ -27,6 +47,7 @@ data class Typography(
     val input: TextStyle,
 )
 
+/** Domyślny zestaw stylów typograficznych z predefiniowanymi wartościami */
 private val defaultTypography =
     Typography(
         h1 =
@@ -115,6 +136,14 @@ private val defaultTypography =
             ),
     )
 
+/**
+ * Tworzy konfigurowalne style typograficzne z dynamiczną czcionką.
+ * 
+ * Bierze domyślną typografię i aplikuje aktualną rodzinę czcionek
+ * do wszystkich stylów tekstu.
+ * 
+ * @return Typography z zastosowanymi czcionkami
+ */
 @Composable
 fun provideTypography(): Typography {
     val fontFamily = fontFamily()
@@ -135,5 +164,7 @@ fun provideTypography(): Typography {
     )
 }
 
+/** CompositionLocal zapewniający dostęp do systemu typografii */
 val LocalTypography = staticCompositionLocalOf { defaultTypography }
+/** CompositionLocal dla aktualnego stylu tekstu */
 val LocalTextStyle = compositionLocalOf(structuralEqualityPolicy()) { TextStyle.Default }
