@@ -72,28 +72,21 @@ class DatabaseUpdater(
 
         transactionTemplate.execute { status ->
             try {
-                for (operation in databaseOperations) {
+                for ((index, operation) in databaseOperations.withIndex()) {
                     when (operation) {
                         is SaveOperation.Insert -> {
                             val id = insertIntoTable(operation)
-                            // Aktualizuj foreign keys w kolejnych operacjach
-                            databaseOperations.forEach { op ->
-                                when (op) {
-                                    is SaveOperation.Insert -> {
-                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
-                                            .forEach { it.value = id }
-                                    }
-
-                                    is SaveOperation.Update -> {
-                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
-                                            .forEach { it.value = id }
-                                    }
-
-                                    is SaveOperation.Delete -> {
-                                        op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
-                                            .forEach { it.value = id }
-                                    }
+                            // Aktualizuj foreign keys w kolejnych operacjach, ale przerwij gdy napotkasz kolejny INSERT do tej samej tabeli
+                            for (i in (index + 1) until databaseOperations.size) {
+                                val op = databaseOperations[i]
+                                
+                                // Przerwij jeśli napotkasz kolejny INSERT do tej samej tabeli
+                                if (op is SaveOperation.Insert && op.tableName == operation.tableName) {
+                                    break
                                 }
+
+                                op.foreignKeys.filter { it.referencedTable == operation.tableName && it.value == null }
+                                    .forEach { it.value = id }
                             }
                         }
 

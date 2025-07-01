@@ -24,7 +24,7 @@ data class TableRelation(
  */
 sealed class SaveOperation {
     abstract val tableName: String
-
+    abstract val foreignKeys: List<ForeignKey>
     /**
      * Operacja wstawienia nowego rekordu.
      *
@@ -36,7 +36,7 @@ sealed class SaveOperation {
     data class Insert(
         override val tableName: String,
         val data: Map<String, ControlResultData>,
-        val foreignKeys: List<ForeignKey> = emptyList(),
+        override val foreignKeys: List<ForeignKey> = emptyList(),
         val returningId: Boolean = true
     ) : SaveOperation()
 
@@ -52,7 +52,7 @@ sealed class SaveOperation {
         override val tableName: String,
         val data: Map<String, ControlResultData>,
         val id: Int? = null,
-        val foreignKeys: List<ForeignKey> = emptyList()
+        override val foreignKeys: List<ForeignKey> = emptyList()
     ) : SaveOperation()
 
     /**
@@ -65,7 +65,7 @@ sealed class SaveOperation {
     data class Delete(
         override val tableName: String,
         val id: Int? = null,
-        val foreignKeys: List<ForeignKey> = emptyList()
+        override val foreignKeys: List<ForeignKey> = emptyList()
     ) : SaveOperation()
 }
 
