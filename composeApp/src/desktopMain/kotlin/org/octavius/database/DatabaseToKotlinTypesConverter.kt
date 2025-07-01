@@ -142,7 +142,6 @@ class DatabaseToKotlinTypesConverter(private val typeRegistry: TypeRegistry) {
         val elementType = typeInfo.elementType
             ?: throw IllegalStateException("Typ tablicowy ${typeInfo.typeName} nie ma zdefiniowanego typu elementu.")
 
-        // Używamy naszego nowego, niezawodnego parsera
         val elements = parsePostgresArray(value)
 
         // Rekurencyjnie konwertujemy każdy element tablicy
@@ -262,11 +261,14 @@ class DatabaseToKotlinTypesConverter(private val typeRegistry: TypeRegistry) {
         var braceLevel = 0
         var parenLevel = 0
 
-        for (i in content.indices) {
+        var i = 0
+        while (i < content.length) {
             val char = content[i]
             if (inQuotes) {
-                if (char == '\\') continue
-                if (char == '"') inQuotes = false
+                when (char) {
+                    '\\' -> i++ // Skip the next character as it's escaped
+                    '"' -> inQuotes = false
+                }
             } else {
                 when (char) {
                     '"' -> inQuotes = true
@@ -282,6 +284,7 @@ class DatabaseToKotlinTypesConverter(private val typeRegistry: TypeRegistry) {
                     }
                 }
             }
+            i++
         }
         elements.add(content.substring(currentElementStart))
         return elements.map { unescapeValue(it.trim()) }
