@@ -47,7 +47,7 @@ class ReportConfigurationManager {
                 "sort_order" to sortOrderList,
                 "visible_columns" to reportState.visibleColumns.value.toList(),
                 "column_order" to reportState.columnKeys.toList(),
-                "page_size" to reportState.pageSize.value,
+                "page_size" to reportState.pagination.pageSize.value,
                 "is_default" to isDefault
             )
             
@@ -140,10 +140,10 @@ class ReportConfigurationManager {
         }
         
         // Zastosuj rozmiar strony
-        reportState.pageSize.value = configData.pageSize
+        reportState.pagination.pageSize.value = configData.pageSize
         
         // Reset strony na pierwszą
-        reportState.currentPage.value = 0
+        reportState.pagination.resetPage()
         
         // Load and apply filters from database
         if (filters != null && configuration.id != null) {

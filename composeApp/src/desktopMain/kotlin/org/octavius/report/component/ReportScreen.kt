@@ -2,7 +2,6 @@ package org.octavius.report.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -11,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.octavius.navigator.Screen
+import org.octavius.report.ui.PaginationComponent
 
 abstract class ReportScreen : Screen {
     abstract override val title: String
@@ -40,19 +40,19 @@ abstract class ReportScreen : Screen {
 
         // Efekt pobierający dane po zmianie parametrów
         LaunchedEffect(
-            reportState.currentPage.value,
+            reportState.pagination.currentPage.value,
             reportState.searchQuery.value,
-            reportState.pageSize.value,
+            reportState.pagination.pageSize.value,
             reportState.sortOrder.value,
             filteringState.value
         ) {
             reportHandler.fetchData(
-                page = reportState.currentPage.value,
+                page = reportState.pagination.currentPage.value.toInt(),
                 searchQuery = reportState.searchQuery.value,
-                pageSize = reportState.pageSize.value
+                pageSize = reportState.pagination.pageSize.value
             ) { result, pages ->
                 dataList = result
-                reportState.totalPages.value = pages.toInt()
+                reportState.pagination.totalPages.value = pages
             }
         }
 
@@ -76,7 +76,7 @@ abstract class ReportScreen : Screen {
                         searchQuery = reportState.searchQuery.value,
                         onSearchChange = { query ->
                             reportState.searchQuery.value = query
-                            reportState.currentPage.value = 0
+                            reportState.pagination.resetPage()
                         },
                         onAddMenuClick = { addMenuExpanded = !addMenuExpanded },
                         addMenuExpanded = addMenuExpanded,
@@ -92,19 +92,7 @@ abstract class ReportScreen : Screen {
 
             // Paginacja
             PaginationComponent(
-                currentPage = reportState.currentPage.value,
-                totalPages = reportState.totalPages.value,
-                pageSize = reportState.pageSize.value,
-                onPageChange = { newPage ->
-                    reportState.currentPage.value = newPage
-                    coroutineScope.launch {
-                        lazyListState.scrollToItem(0)
-                    }
-                },
-                onPageSizeChange = { newPageSize ->
-                    reportState.pageSize.value = newPageSize
-                    reportState.currentPage.value = 0
-                }
+                reportState.pagination
             )
         }
         
@@ -119,12 +107,12 @@ abstract class ReportScreen : Screen {
                     // Po zastosowaniu konfiguracji, odśwież dane
                     coroutineScope.launch {
                         reportHandler.fetchData(
-                            page = reportState.currentPage.value,
+                            page = reportState.pagination.currentPage.value.toInt(),
                             searchQuery = reportState.searchQuery.value,
-                            pageSize = reportState.pageSize.value
+                            pageSize = reportState.pagination.pageSize.value
                         ) { result, pages ->
                             dataList = result
-                            reportState.totalPages.value = pages.toInt()
+                            reportState.pagination.totalPages.value = pages
                         }
                     }
                 }

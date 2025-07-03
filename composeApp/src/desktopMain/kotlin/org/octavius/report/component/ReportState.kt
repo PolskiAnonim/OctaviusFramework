@@ -6,15 +6,12 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import org.octavius.report.FilterData
 import org.octavius.domain.SortDirection
+import org.octavius.report.ReportPagination
 
 class ReportState {
     //-----------------------------------------------------Stronicowanie------------------------------------------------
     // Rozmiar strony
-    val pageSize: MutableState<Int> = mutableStateOf(10)
-    // Razem stron
-    val totalPages: MutableState<Int> = mutableStateOf(1)
-    // Obecna strona
-    val currentPage: MutableState<Int> = mutableStateOf(0)
+    val pagination = ReportPagination()
     //-----------------------------------------------------Kolumny------------------------------------------------------
     // Klucze wszystkich kolumn w kolejności - tak żeby nie przejmować się czy są widoczne czy nie
     lateinit var columnKeys: SnapshotStateList<String>

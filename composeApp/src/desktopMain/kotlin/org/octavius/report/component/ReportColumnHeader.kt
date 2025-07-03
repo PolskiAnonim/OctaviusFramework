@@ -84,7 +84,7 @@ fun ReportColumnHeader(
                                     onClick = {
                                         val currentFilterData = reportState.filterValues.value[columnKey]!!
                                         currentFilterData.reset()
-                                        reportState.currentPage.value = 0
+                                        reportState.pagination.resetPage()
                                         showColumnMenu = false
                                     }
                                 ) {
