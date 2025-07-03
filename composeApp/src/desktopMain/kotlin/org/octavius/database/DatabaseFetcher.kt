@@ -93,7 +93,7 @@ class DatabaseFetcher(
      * Pobiera pojedynczy wiersz z bazy danych.
      *
      * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param fields Lista pól do pobrania (np. "id, name, email")
+     * @param columns Lista pól do pobrania (np. "id, name, email")
      * @param filter Opcjonalne wyrażenie WHERE
      * @param params Parametry do podstawienia
      * @return Mapa kolumn do wartości
@@ -103,11 +103,11 @@ class DatabaseFetcher(
      */
     fun fetchRow(
         table: String,
-        fields: String,
+        columns: String,
         filter: String? = null,
         params: Map<String, Any?> = emptyMap()
     ): Map<String, Any?> {
-        val results = fetchRowOrNull(table, fields, filter, params)
+        val results = fetchRowOrNull(table, columns, filter, params)
         return results!!
     }
 
@@ -117,7 +117,7 @@ class DatabaseFetcher(
      * Wersja fetchRow która zwraca null w przypadku braku dopasowania.
      *
      * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param fields Lista pól do pobrania
+     * @param columns Lista pól do pobrania
      * @param filter Opcjonalne wyrażenie WHERE
      * @param params Parametry do podstawienia
      * @return Mapa kolumn do wartości lub null jeśli nie znaleziono
@@ -125,10 +125,10 @@ class DatabaseFetcher(
      * @throws IllegalStateException gdy zapytanie zwróci więcej niż 1 wiersz
      */
     fun fetchRowOrNull(
-        table: String, fields: String, filter: String? = null, params: Map<String, Any?> = emptyMap()
+        table: String, columns: String, filter: String? = null, params: Map<String, Any?> = emptyMap()
     ): Map<String, Any?>? {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val sql = "SELECT $fields FROM ${formatTableExpression(table)}$whereClause"
+        val sql = "SELECT $columns FROM ${formatTableExpression(table)}$whereClause"
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
         val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
 
@@ -197,7 +197,7 @@ class DatabaseFetcher(
      * Pobiera listę wierszy z bazy danych.
      *
      * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param fields Lista pól do pobrania (np. "id, name, email")
+     * @param columns Lista pól do pobrania (np. "id, name, email")
      * @param filter Opcjonalne wyrażenie WHERE
      * @param orderBy Opcjonalne wyrażenie ORDER BY
      * @param params Parametry do podstawienia
@@ -205,14 +205,14 @@ class DatabaseFetcher(
      */
     fun fetchList(
         table: String,
-        fields: String,
+        columns: String,
         filter: String? = null,
         orderBy: String? = null,
         params: Map<String, Any?> = emptyMap()
     ): List<Map<String, Any?>> {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
-        val sql = "SELECT $fields FROM ${formatTableExpression(table)}$whereClause$orderClause"
+        val sql = "SELECT $columns FROM ${formatTableExpression(table)}$whereClause$orderClause"
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
@@ -224,7 +224,7 @@ class DatabaseFetcher(
      * Główna metoda do pobierania danych dla tabel z raportami.
      *
      * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param fields Lista pól do pobrania
+     * @param columns Lista pól do pobrania
      * @param offset Liczba wierszy do pominięcia (dla paginacji)
      * @param limit Maksymalna liczba wierszy do pobrania
      * @param filter Opcjonalne wyrażenie WHERE
@@ -234,7 +234,7 @@ class DatabaseFetcher(
      */
     fun fetchPagedList(
         table: String,
-        fields: String,
+        columns: String,
         offset: Int,
         limit: Int,
         filter: String? = null,
@@ -243,7 +243,7 @@ class DatabaseFetcher(
     ): List<Map<String, Any?>> {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
-        val sql = "SELECT $fields FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
+        val sql = "SELECT $columns FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
         val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())

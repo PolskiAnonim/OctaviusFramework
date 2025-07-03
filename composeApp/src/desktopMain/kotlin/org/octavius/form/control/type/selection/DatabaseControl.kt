@@ -63,7 +63,7 @@ class DatabaseControl(
         return try {
             val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize
             val results = fetcher.fetchPagedList(table = relatedTable,
-                fields = "id, $displayColumn",
+                columns = "id, $displayColumn",
                 offset = page * pageSize,
                 limit = pageSize,
                 filter = filter,

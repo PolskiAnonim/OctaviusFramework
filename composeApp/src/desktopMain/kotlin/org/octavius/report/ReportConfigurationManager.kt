@@ -74,7 +74,7 @@ class ReportConfigurationManager {
             
             val result = fetcher.fetchRowOrNull(
                 table = "public.report_configurations",
-                fields = "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default",
+                columns = "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default",
                 filter = "report_name = :report_name AND is_default = true",
                 params = params
             )
@@ -95,7 +95,7 @@ class ReportConfigurationManager {
             
             val results = fetcher.fetchList(
                 table = "public.report_configurations",
-                fields = "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default",
+                columns = "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default",
                 filter = "report_name = :report_name",
                 orderBy = "is_default DESC, name ASC",
                 params = params
@@ -156,7 +156,7 @@ class ReportConfigurationManager {
             val fetcher = DatabaseManager.getFetcher()
             val filterConfigs = fetcher.fetchList(
                 table = "public.report_filter_configs",
-                fields = "column_name, filter_type, null_handling, boolean_value, string_filter_type, string_value, case_sensitive, number_filter_type, min_value, max_value, enum_type_name, enum_values, include_enum",
+                columns = "column_name, filter_type, null_handling, boolean_value, string_filter_type, string_value, case_sensitive, number_filter_type, min_value, max_value, enum_type_name, enum_values, include_enum",
                 filter = "report_config_id = :config_id",
                 params = mapOf("config_id" to configId)
             )
