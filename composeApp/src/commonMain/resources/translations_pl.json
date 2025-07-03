@@ -62,6 +62,10 @@
       "notContains": "Nie zawiera",
       "caseSensitive": "Uwzględnij wielkość liter"
     },
+    "list": {
+      "any": "Dowolny element",
+      "all": "Wszystkie elementy"
+    },
     "stringList": {
       "filter": "Filtruj zawartość listy",
       "search": "Szukaj w liście",

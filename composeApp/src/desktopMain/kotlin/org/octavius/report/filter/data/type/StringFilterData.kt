@@ -1,0 +1,112 @@
+package org.octavius.report.filter.data.type
+
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import org.octavius.domain.FilterMode
+import org.octavius.domain.NullHandling
+import org.octavius.domain.StringFilterDataType
+import org.octavius.report.Query
+import org.octavius.report.filter.data.FilterData
+
+data class StringFilterData(
+    val filterType: MutableState<StringFilterDataType> = mutableStateOf(StringFilterDataType.Contains),
+    val value: MutableState<String> = mutableStateOf(""),
+    val caseSensitive: MutableState<Boolean> = mutableStateOf(false),
+    override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore),
+    override val mode: MutableState<FilterMode> = mutableStateOf(FilterMode.Single)
+) : FilterData() {
+
+    override fun resetValue() {
+        filterType.value = StringFilterDataType.Contains
+        value.value = ""
+        caseSensitive.value = false
+    }
+
+    override fun getFilterFragment(columnName: String): Query? {
+        val searchValue = value.value.trim()
+        if (searchValue.isEmpty() && nullHandling.value == NullHandling.Ignore) return null
+        
+        val baseQuery = buildStringQuery(columnName, searchValue, mode.value, filterType.value, caseSensitive.value)
+        return applyNullHandling(baseQuery, columnName)
+    }
+    
+    private fun buildStringQuery(
+        columnName: String,
+        searchValue: String,
+        mode: FilterMode,
+        filterType: StringFilterDataType,
+        caseSensitive: Boolean
+    ): Query? {
+        if (searchValue.isEmpty()) return null
+        
+        return when (mode) {
+            FilterMode.Single -> buildSingleStringQuery(columnName, searchValue, filterType, caseSensitive)
+            FilterMode.ListAny -> buildListStringQuery(columnName, searchValue, filterType, caseSensitive, "&&")
+            FilterMode.ListAll -> buildListStringQuery(columnName, searchValue, filterType, caseSensitive, "@>")
+        }
+    }
+    
+    private fun buildSingleStringQuery(
+        columnName: String,
+        searchValue: String,
+        filterType: StringFilterDataType,
+        caseSensitive: Boolean
+    ): Query {
+        val columnRef = if (caseSensitive) columnName else "LOWER($columnName)"
+        val valueRef = if (caseSensitive) searchValue else searchValue.lowercase()
+        
+        return when (filterType) {
+            StringFilterDataType.Exact -> {
+                Query("$columnRef = :$columnName", mapOf(columnName to valueRef))
+            }
+            StringFilterDataType.StartsWith -> {
+                Query("$columnRef LIKE :$columnName", mapOf(columnName to "$valueRef%"))
+            }
+            StringFilterDataType.EndsWith -> {
+                Query("$columnRef LIKE :$columnName", mapOf(columnName to "%$valueRef"))
+            }
+            StringFilterDataType.Contains -> {
+                Query("$columnRef LIKE :$columnName", mapOf(columnName to "%$valueRef%"))
+            }
+            StringFilterDataType.NotContains -> {
+                Query("$columnRef NOT LIKE :$columnName", mapOf(columnName to "%$valueRef%"))
+            }
+        }
+    }
+    
+    private fun buildListStringQuery(
+        columnName: String,
+        searchValue: String,
+        filterType: StringFilterDataType,
+        caseSensitive: Boolean,
+        operator: String
+    ): Query {
+        val valueParam = if (caseSensitive) searchValue else searchValue.lowercase()
+        
+        return when (filterType) {
+            StringFilterDataType.Exact -> {
+                Query("$columnName $operator :$columnName", mapOf(columnName to listOf(valueParam)))
+            }
+            StringFilterDataType.StartsWith -> {
+                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
+                Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
+                      mapOf(columnName to "$valueParam%"))
+            }
+            StringFilterDataType.EndsWith -> {
+                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
+                Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
+                      mapOf(columnName to "%$valueParam"))
+            }
+            StringFilterDataType.Contains -> {
+                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
+                Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
+                      mapOf(columnName to "%$valueParam%"))
+            }
+            StringFilterDataType.NotContains -> {
+                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
+                Query("NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
+                      mapOf(columnName to "%$valueParam%"))
+            }
+        }
+    }
+}
