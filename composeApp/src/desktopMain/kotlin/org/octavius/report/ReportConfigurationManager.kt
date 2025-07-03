@@ -5,9 +5,11 @@ import org.octavius.domain.NumberFilterDataType
 import org.octavius.domain.SortConfiguration
 import org.octavius.domain.StringFilterDataType
 import org.octavius.report.component.ReportState
-import org.octavius.report.filter.Filter
-import org.octavius.report.filter.type.EnumFilter
-
+import org.octavius.report.filter.data.FilterData
+import org.octavius.report.filter.data.type.BooleanFilterData
+import org.octavius.report.filter.data.type.EnumFilterData
+import org.octavius.report.filter.data.type.NumberFilterData
+import org.octavius.report.filter.data.type.StringFilterData
 class ReportConfigurationManager {
     
     fun saveConfiguration(
@@ -124,7 +126,7 @@ class ReportConfigurationManager {
         }
     }
     
-    fun applyConfiguration(configuration: ReportConfiguration, reportState: ReportState, filters: Map<String, Filter>? = null) {
+    fun applyConfiguration(configuration: ReportConfiguration, reportState: ReportState) {
         val configData = configuration.configuration
         
         // Zastosuj konfigurację do ReportState
@@ -146,12 +148,12 @@ class ReportConfigurationManager {
         reportState.pagination.resetPage()
         
         // Load and apply filters from database
-        if (filters != null && configuration.id != null) {
-            loadAndApplyFilters(configuration.id, reportState, filters)
+        if (configuration.id != null) {
+            loadAndApplyFilters(configuration.id, reportState)
         }
     }
     
-    private fun loadAndApplyFilters(configId: Int, reportState: ReportState, filters: Map<String, Filter>) {
+    private fun loadAndApplyFilters(configId: Int, reportState: ReportState) {
         try {
             val fetcher = DatabaseManager.getFetcher()
             val filterConfigs = fetcher.fetchList(
@@ -168,13 +170,13 @@ class ReportConfigurationManager {
                 if (currentFilter != null) {
                     when (filterConfig["filter_type"] as String) {
                         "BOOLEAN" -> {
-                            if (currentFilter is FilterData.BooleanData) {
+                            if (currentFilter is BooleanFilterData) {
                                 currentFilter.value.value = filterConfig["boolean_value"] as? Boolean
                                 currentFilter.nullHandling.value = org.octavius.domain.NullHandling.valueOf(filterConfig["null_handling"] as String)
                             }
                         }
                         "STRING" -> {
-                            if (currentFilter is FilterData.StringData) {
+                            if (currentFilter is StringFilterData) {
                                 currentFilter.filterType.value = StringFilterDataType.valueOf(filterConfig["string_filter_type"] as String)
                                 currentFilter.value.value = filterConfig["string_value"] as? String ?: ""
                                 currentFilter.caseSensitive.value = filterConfig["case_sensitive"] as? Boolean ?: false
@@ -182,30 +184,35 @@ class ReportConfigurationManager {
                             }
                         }
                         "NUMBER" -> {
-                            if (currentFilter is FilterData.NumberData<*>) {
+                            if (currentFilter is NumberFilterData<*>) {
                                 currentFilter.filterType.value = NumberFilterDataType.valueOf(filterConfig["number_filter_type"] as String)
                                 @Suppress("UNCHECKED_CAST")
-                                val numberFilter = currentFilter as FilterData.NumberData<Number>
+                                val numberFilter = currentFilter as NumberFilterData<Number>
                                 numberFilter.minValue.value = (filterConfig["min_value"] as? Number)
                                 numberFilter.maxValue.value = (filterConfig["max_value"] as? Number)
                                 currentFilter.nullHandling.value = org.octavius.domain.NullHandling.valueOf(filterConfig["null_handling"] as String)
                             }
                         }
                         "ENUM" -> {
-                            if (currentFilter is FilterData.EnumData<*>) {
-                                currentFilter.reset()
+                            if (currentFilter is EnumFilterData<*>) {
+                                currentFilter.resetFilter()
                                 
-                                val enumFilter = filters[columnName] as? EnumFilter<*>
-                                if (enumFilter != null) {
-                                    val enumClass = enumFilter.enumClass
-                                    val enumConstants = enumClass.java.enumConstants
-                                    val savedValues = (filterConfig["enum_values"] as? Array<*>)?.mapNotNull { it as? String } ?: emptyList()
-                                    
-                                    savedValues.forEach { enumString ->
-                                        val matchingEnum = enumConstants.find { it.toString() == enumString }
-                                        if (matchingEnum != null) {
-                                            currentFilter.addValue(matchingEnum)
+                                val enumTypeName = filterConfig["enum_type_name"] as? String
+                                if (enumTypeName != null) {
+                                    try {
+                                        val enumClass = Class.forName("org.octavius.domain.$enumTypeName")
+                                        val enumConstants = enumClass.enumConstants
+                                        val savedValues = (filterConfig["enum_values"] as? Array<*>)?.mapNotNull { it as? String } ?: emptyList()
+                                        
+                                        savedValues.forEach { enumString ->
+                                            val matchingEnum = enumConstants.find { it.toString() == enumString }
+                                            if (matchingEnum != null) {
+                                                @Suppress("UNCHECKED_CAST")
+                                                (currentFilter as EnumFilterData<Any>).values.add(matchingEnum)
+                                            }
                                         }
+                                    } catch (e: ClassNotFoundException) {
+                                        // Enum class not found, skip
                                     }
                                 }
                                 
@@ -224,12 +231,12 @@ class ReportConfigurationManager {
         }
     }
     
-    private fun saveFilterConfigurations(configId: Int, filterValues: Map<String, FilterData<*>>) {
+    private fun saveFilterConfigurations(configId: Int, filterValues: Map<String, FilterData>) {
         val updater = DatabaseManager.getUpdater()
         
         filterValues.forEach { (columnName, filterData) ->
             when (filterData) {
-                is FilterData.BooleanData -> {
+                is BooleanFilterData -> {
                     if (!filterData.isActive()) return@forEach
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
@@ -247,7 +254,7 @@ class ReportConfigurationManager {
                     updater.executeUpdate(filterSql, params)
                 }
                 
-                is FilterData.StringData -> {
+                is StringFilterData -> {
                     if (!filterData.isActive()) return@forEach
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
@@ -267,7 +274,7 @@ class ReportConfigurationManager {
                     updater.executeUpdate(filterSql, params)
                 }
                 
-                is FilterData.NumberData<*> -> {
+                is NumberFilterData<*> -> {
                     if (!filterData.isActive()) return@forEach
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
@@ -287,9 +294,9 @@ class ReportConfigurationManager {
                     updater.executeUpdate(filterSql, params)
                 }
                 
-                is FilterData.EnumData<*> -> {
+                is EnumFilterData<*> -> {
                     if (!filterData.isActive()) return@forEach
-                    val enumValues = filterData.values.value
+                    val enumValues = filterData.values
                     
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
@@ -301,7 +308,7 @@ class ReportConfigurationManager {
                         "config_id" to configId,
                         "column_name" to columnName,
                         "null_handling" to filterData.nullHandling.value,
-                        "enum_type_name" to filterData.values.value.firstOrNull()?.javaClass?.simpleName,
+                        "enum_type_name" to filterData.values.firstOrNull()?.javaClass?.simpleName,
                         "enum_values" to enumValues.toList(),
                         "include_enum" to filterData.include.value
                     )

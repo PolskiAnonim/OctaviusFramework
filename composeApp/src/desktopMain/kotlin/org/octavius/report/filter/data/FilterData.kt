@@ -20,6 +20,8 @@ abstract class FilterData {
 
     protected abstract fun resetValue()
 
+    abstract fun isActive(): Boolean
+
     protected fun applyNullHandling(baseQuery: Query?, columnName: String): Query? {
         return when (nullHandling.value) {
             NullHandling.Ignore -> baseQuery

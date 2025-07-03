@@ -22,9 +22,13 @@ data class StringFilterData(
         caseSensitive.value = false
     }
 
+    override fun isActive(): Boolean {
+        return value.value.trim().isNotEmpty() || nullHandling.value != NullHandling.Ignore
+    }
+
     override fun getFilterFragment(columnName: String): Query? {
+        if (!isActive()) return null
         val searchValue = value.value.trim()
-        if (searchValue.isEmpty() && nullHandling.value == NullHandling.Ignore) return null
         
         val baseQuery = buildStringQuery(columnName, searchValue, mode.value, filterType.value, caseSensitive.value)
         return applyNullHandling(baseQuery, columnName)

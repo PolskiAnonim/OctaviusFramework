@@ -10,20 +10,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.Filter
-import org.octavius.report.filter.type.StringFilter
+import org.octavius.report.filter.data.FilterData
+import org.octavius.report.filter.data.type.StringFilterData
+import org.octavius.report.filter.ui.type.StringFilterRenderer
 
 class StringColumn(
-    fieldName: String,
+    databaseColumnName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
-    filterable: Boolean = true,
-    private val formatter: (String?) -> String = { it ?: "" }
-) : ReportColumn(fieldName, header, width, filterable, sortable) {
+    filterable: Boolean = true
+) : ReportColumn(databaseColumnName, header, width, filterable, sortable) {
 
-    override fun createFilter(): Filter? {
-        return if (filterable) StringFilter(fieldName) else null
+    override fun createFilterData(): FilterData {
+        return StringFilterData()
+    }
+
+    @Composable
+    override fun FilterRenderer(data: FilterData) {
+        StringFilterRenderer(data as StringFilterData)
     }
 
     @Composable
@@ -37,7 +42,7 @@ class StringColumn(
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                text = formatter(value),
+                text = value ?: "",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

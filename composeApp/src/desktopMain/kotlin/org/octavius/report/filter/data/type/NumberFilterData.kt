@@ -22,11 +22,15 @@ data class NumberFilterData<T : Number>(
         maxValue.value = null
     }
 
+    override fun isActive(): Boolean {
+        return minValue.value != null || maxValue.value != null || nullHandling.value != NullHandling.Ignore
+    }
+
     override fun getFilterFragment(columnName: String): Query? {
+        if (!isActive()) return null
+
         val min = minValue.value
         val max = maxValue.value
-        val hasValues = min != null || max != null
-        if (!hasValues && nullHandling.value == NullHandling.Ignore) return null
         
         val baseQuery = buildNumberQuery(columnName, min, max, mode.value, filterType.value)
         return applyNullHandling(baseQuery, columnName)

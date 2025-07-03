@@ -15,7 +15,7 @@ data class BooleanFilterData(
 
     override fun getFilterFragment(columnName: String): Query? {
         val boolValue = value.value
-        if (boolValue == null && nullHandling.value == NullHandling.Ignore) return null
+        if (!isActive()) return null
         
         val baseQuery = buildBooleanQuery(columnName, boolValue, mode.value)
         return applyNullHandling(baseQuery, columnName)
@@ -23,6 +23,10 @@ data class BooleanFilterData(
 
     override fun resetValue() {
         value.value = null
+    }
+
+    override fun isActive(): Boolean {
+        return value.value != null || nullHandling.value != NullHandling.Ignore
     }
 
     private fun buildBooleanQuery(

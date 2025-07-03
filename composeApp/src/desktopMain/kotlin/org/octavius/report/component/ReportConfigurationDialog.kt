@@ -14,13 +14,11 @@ import androidx.compose.ui.window.DialogProperties
 import org.octavius.localization.Translations
 import org.octavius.report.ReportConfiguration
 import org.octavius.report.ReportConfigurationManager
-import org.octavius.report.filter.Filter
 
 @Composable
 fun ReportConfigurationDialog(
     reportName: String,
     reportState: ReportState,
-    filters: Map<String, Filter>,
     onDismiss: () -> Unit,
     onConfigurationApplied: () -> Unit
 ) {
@@ -90,7 +88,7 @@ fun ReportConfigurationDialog(
                         ConfigurationItem(
                             configuration = config,
                             onLoad = {
-                                configManager.applyConfiguration(config, reportState, filters)
+                                configManager.applyConfiguration(config, reportState)
                                 onConfigurationApplied()
                                 onDismiss()
                             },

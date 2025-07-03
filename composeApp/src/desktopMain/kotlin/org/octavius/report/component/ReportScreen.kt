@@ -34,7 +34,7 @@ abstract class ReportScreen : Screen {
         // Dla śledzenia zmian filtrów
         val filteringState = derivedStateOf {
             reportState.filterValues.value.mapValues { (_, filter) ->
-                filter.dirtyState.value
+                filter.isActive()
             }
         }
 
@@ -101,7 +101,6 @@ abstract class ReportScreen : Screen {
             ReportConfigurationDialog(
                 reportName = reportHandler.getReportName(),
                 reportState = reportState,
-                filters = reportHandler.getFilters(),
                 onDismiss = { configurationDialogVisible = false },
                 onConfigurationApplied = {
                     // Po zastosowaniu konfiguracji, odśwież dane

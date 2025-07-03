@@ -20,9 +20,14 @@ data class EnumFilterData<E : Enum<E>>(
         values.clear()
     }
 
+    override fun isActive(): Boolean {
+        return values.isNotEmpty() || nullHandling.value != NullHandling.Ignore
+    }
+
     override fun getFilterFragment(columnName: String): Query? {
+        if (!isActive()) return null
+        
         val selectedValues = values
-        if (selectedValues.isEmpty() && nullHandling.value == NullHandling.Ignore) return null
         
         val baseQuery = buildEnumQuery(columnName, selectedValues, mode.value, include.value)
         return applyNullHandling(baseQuery, columnName)

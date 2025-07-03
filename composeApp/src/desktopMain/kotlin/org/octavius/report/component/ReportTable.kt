@@ -25,19 +25,11 @@ fun LazyListScope.reportTable(
                 reportState.visibleColumns.value.contains(it) 
             }
             val allColumns = reportHandler.getColumns()
-            val filters = reportHandler.getFilters()
-            
+
             visibleColumns.forEachIndexed { index, key ->
                 val column = allColumns[key]
                 if (column != null) {
-                    ReportColumnHeader(
-                        columnKey = key,
-                        column = column,
-                        filter = filters[key],
-                        filterData = reportState.filterValues.value[key],
-                        reportState = reportState,
-                        modifier = Modifier.weight(column.width)
-                    )
+                    column.RenderHeader(reportState.filterValues.value[key], Modifier.weight(column.width))
 
                     // Separator między kolumnami w nagłówku (oprócz ostatniej)
                     if (index < visibleColumns.size - 1) {

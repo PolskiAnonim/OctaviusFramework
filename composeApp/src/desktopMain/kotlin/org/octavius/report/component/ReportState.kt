@@ -4,9 +4,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
-import org.octavius.report.FilterData
 import org.octavius.domain.SortDirection
 import org.octavius.report.ReportPagination
+import org.octavius.report.filter.data.FilterData
 
 class ReportState {
     //-----------------------------------------------------Stronicowanie------------------------------------------------
@@ -24,7 +24,7 @@ class ReportState {
     // Kolejność sortowania
     val sortOrder: MutableState<List<Pair<String, SortDirection>>> = mutableStateOf(listOf())
     // Wartości filtrów (tylko FilterData, nie Filter)
-    val filterValues: MutableState<Map<String, FilterData<*>>> = mutableStateOf(mapOf())
+    val filterValues: MutableState<Map<String, FilterData>> = mutableStateOf(mapOf())
     // Wyszukiwanie ogólne - w pasku na górze
     val searchQuery: MutableState<String> = mutableStateOf("")
 

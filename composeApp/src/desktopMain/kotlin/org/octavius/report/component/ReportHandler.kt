@@ -1,44 +1,22 @@
 package org.octavius.report.component
 
 import org.octavius.database.DatabaseManager
-import org.octavius.report.FilterData
+import org.octavius.report.filter.data.FilterData
 import org.octavius.domain.SortDirection
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.Filter
 import org.octavius.report.ReportConfigurationManager
 
 abstract class ReportHandler {
 
     private val reportStructure: ReportStructure
     private val reportState = ReportState()
-    private val filters: Map<String, Filter>
 
     init {
         reportStructure = this.createReportStructure()
-        filters = initializeFilters()
+        val filterValues = reportStructure.getAllColumns().filterValues { v -> v.filterable }.mapValues { it.value.getFilterData()!! }
+        reportState.filterValues.value = filterValues
         reportState.initialize(reportStructure.getAllColumns().keys, reportStructure.reportConfig)
         loadDefaultConfiguration()
-    }
-
-    private fun initializeFilters(): Map<String, Filter> {
-        val filterMap = mutableMapOf<String, Filter>()
-        val filterValues = mutableMapOf<String, FilterData<*>>()
-
-        reportStructure.getAllColumns().forEach { (columnName, column) ->
-            if (column.filterable) {
-                val filter = column.createFilter()
-                if (filter != null) {
-                    filterMap[columnName] = filter
-                    // Inicjalizuj domyślną wartość filtra
-                    filterValues[columnName] = filter.createFilterData()
-                }
-            }
-        }
-
-        // Ustaw początkowe wartości filtrów w reportState
-        reportState.filterValues.value = filterValues
-
-        return filterMap
     }
 
     open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
@@ -62,7 +40,7 @@ abstract class ReportHandler {
             reportStructure.getAllColumns().forEach { (key, column) ->
                 // Pomijamy kolumny, które są ukryte
                 if (reportState.visibleColumns.value.contains(key)) {
-                    searchConditions.add("CAST(${column.fieldName} AS TEXT) ILIKE '%$searchQuery%'")
+                    searchConditions.add("CAST(${column.databaseColumnName} AS TEXT) ILIKE '%$searchQuery%'")
                 }
             }
 
@@ -76,14 +54,13 @@ abstract class ReportHandler {
         for ((columnName, filterData) in reportState.filterValues.value) {
             if (!filterData.isActive()) continue
 
-            val filter = filters[columnName] ?: continue
-            val whereClause = filter.constructWhereClause(filterData)
-
-            if (whereClause.isNotEmpty()) {
+            val filterFragment = filterData.getFilterFragment(columnName)
+            
+            if (filterFragment != null) {
                 if (whereClauseBuilder.isNotEmpty()) {
                     whereClauseBuilder.append(" AND ")
                 }
-                whereClauseBuilder.append(whereClause)
+                whereClauseBuilder.append(filterFragment.sql)
             }
         }
 
@@ -97,7 +74,7 @@ abstract class ReportHandler {
                         SortDirection.Ascending -> "ASC"
                         SortDirection.Descending -> "DESC"
                     }
-                    "${column.fieldName} $directionStr"
+                    "${column.databaseColumnName} $directionStr"
                 } else null
             }
 
@@ -134,15 +111,13 @@ abstract class ReportHandler {
 
     fun getReportState(): ReportState = reportState
 
-    fun getFilters(): Map<String, Filter> = filters
-
     private fun loadDefaultConfiguration() {
         try {
             val configManager = ReportConfigurationManager()
             val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
             
             if (defaultConfig != null) {
-                configManager.applyConfiguration(defaultConfig, reportState, filters)
+                configManager.applyConfiguration(defaultConfig, reportState)
             }
         } catch (e: Exception) {
             // Jeśli nie ma domyślnej konfiguracji lub wystąpił błąd, ignorujemy to
