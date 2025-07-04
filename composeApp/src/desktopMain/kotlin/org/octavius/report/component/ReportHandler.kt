@@ -51,16 +51,11 @@ abstract class ReportHandler {
     fun getReportState(): ReportState = reportState
 
     private fun loadDefaultConfiguration() {
-        try {
-            val configManager = ReportConfigurationManager()
-            val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
-            
-            if (defaultConfig != null) {
-                configManager.applyConfiguration(defaultConfig, reportState)
-            }
-        } catch (e: Exception) {
-            // Jeśli nie ma domyślnej konfiguracji lub wystąpił błąd, ignorujemy to
-            println("Nie udało się załadować domyślnej konfiguracji: ${e.message}")
+        val configManager = ReportConfigurationManager()
+        val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
+        
+        if (defaultConfig != null) {
+            configManager.applyConfiguration(defaultConfig, reportState)
         }
     }
 

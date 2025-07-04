@@ -96,38 +96,32 @@ class ReportDataManager {
         reportState.setLoading(true)
         reportState.setError(null)
 
-        try {
-            val query = reportStructure.query
-            val params = query.params.toMutableMap()
-            val filterClause = buildFilterClause(params)
-            val orderClause = buildOrderClause()
+        val query = reportStructure.query
+        val params = query.params.toMutableMap()
+        val filterClause = buildFilterClause(params)
+        val orderClause = buildOrderClause()
 
-            val fetcher = DatabaseManager.getFetcher()
+        val fetcher = DatabaseManager.getFetcher()
 
-            // Najpierw zaktualizuj paginację
-            updatePagination(fetcher, query.sql, filterClause, params)
+        // Najpierw zaktualizuj paginację
+        updatePagination(fetcher, query.sql, filterClause, params)
 
-            // Następnie pobierz dane dla aktualnej strony
-            val offset = reportState.pagination.currentPage.value * reportState.pagination.pageSize.value
-            val limit = reportState.pagination.pageSize.value
+        // Następnie pobierz dane dla aktualnej strony
+        val offset = reportState.pagination.currentPage.value * reportState.pagination.pageSize.value
+        val limit = reportState.pagination.pageSize.value
 
-            val data = fetcher.fetchPagedList(
-                table = query.sql,
-                columns = "*",
-                offset = offset.toInt(),
-                limit = limit,
-                filter = filterClause,
-                orderBy = orderClause,
-                params = params
-            )
+        val data = fetcher.fetchPagedList(
+            table = query.sql,
+            columns = "*",
+            offset = offset.toInt(),
+            limit = limit,
+            filter = filterClause,
+            orderBy = orderClause,
+            params = params
+        )
 
-            reportState.data = data
-        } catch (e: Exception) {
-            reportState.setError(e.message ?: "Unknown error occurred")
-            reportState.data = emptyList()
-        } finally {
-            reportState.setLoading(false)
-        }
+        reportState.data = data
+        reportState.setLoading(false)
     }
 
     fun refreshData() {
