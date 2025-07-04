@@ -1,132 +1,48 @@
 package org.octavius.report.component
 
-import org.octavius.database.DatabaseManager
-import org.octavius.report.FilterData
-import org.octavius.domain.SortDirection
-import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.Filter
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import org.octavius.report.ReportConfigurationManager
+import org.octavius.report.column.ReportColumn
 
 abstract class ReportHandler {
 
     private val reportStructure: ReportStructure
     private val reportState = ReportState()
-    private val filters: Map<String, Filter>
+    private val reportDataManager = ReportDataManager()
 
     init {
         reportStructure = this.createReportStructure()
-        filters = initializeFilters()
+        val filterValues = reportStructure.getAllColumns().filterValues { v -> v.filterable }.mapValues { it.value.getFilterData()!! }
+        reportState.filterData.value = filterValues
         reportState.initialize(reportStructure.getAllColumns().keys, reportStructure.reportConfig)
         loadDefaultConfiguration()
-    }
-
-    private fun initializeFilters(): Map<String, Filter> {
-        val filterMap = mutableMapOf<String, Filter>()
-        val filterValues = mutableMapOf<String, FilterData<*>>()
-
-        reportStructure.getAllColumns().forEach { (columnName, column) ->
-            if (column.filterable) {
-                val filter = column.createFilter()
-                if (filter != null) {
-                    filterMap[columnName] = filter
-                    // Inicjalizuj domyślną wartość filtra
-                    filterValues[columnName] = filter.createFilterData()
-                }
-            }
-        }
-
-        // Ustaw początkowe wartości filtrów w reportState
-        reportState.filterValues.value = filterValues
-
-        return filterMap
+        reportDataManager.setReferences(reportStructure, reportState)
     }
 
     open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
 
     abstract fun createReportStructure(): ReportStructure
 
-    fun fetchData(
-        page: Int,
-        searchQuery: String,
-        pageSize: Int,
-        onResult: (List<Map<String, Any?>>, Long) -> Unit
-    ) {
-        // Budowanie klauzuli WHERE dla wyszukiwania
-        val whereClauseBuilder = StringBuilder()
-
-        // Dodaj warunek wyszukiwania dla searchQuery jeśli nie jest pusty
-        if (searchQuery.isNotEmpty()) {
-            val searchConditions = mutableListOf<String>()
-
-            // Dla każdej widocznej kolumny dodaj warunek wyszukiwania
-            reportStructure.getAllColumns().forEach { (key, column) ->
-                // Pomijamy kolumny, które są ukryte
-                if (reportState.visibleColumns.value.contains(key)) {
-                    searchConditions.add("CAST(${column.fieldName} AS TEXT) ILIKE '%$searchQuery%'")
-                }
-            }
-
-            // Łączymy wszystkie warunki operatorem OR
-            if (searchConditions.isNotEmpty()) {
-                whereClauseBuilder.append("(${searchConditions.joinToString(" OR ")})")
+    @Composable
+    fun DataFetcher() {
+        // Snapshot wszystkich wartości filtrów
+        val filterSnapshot = derivedStateOf {
+            reportState.filterData.value.flatMap { (_, filter) ->
+                filter.getTrackableStates()
             }
         }
 
-        // Dodaj warunki filtrowania z reportState
-        for ((columnName, filterData) in reportState.filterValues.value) {
-            if (!filterData.isActive()) continue
-
-            val filter = filters[columnName] ?: continue
-            val whereClause = filter.constructWhereClause(filterData)
-
-            if (whereClause.isNotEmpty()) {
-                if (whereClauseBuilder.isNotEmpty()) {
-                    whereClauseBuilder.append(" AND ")
-                }
-                whereClauseBuilder.append(whereClause)
-            }
-        }
-
-        // Budowanie klauzuli ORDER BY dla sortowania
-        val orderByClause = StringBuilder()
-        if (reportState.sortOrder.value.isNotEmpty()) {
-            val sortConditions = reportState.sortOrder.value.mapNotNull { (columnName, direction) ->
-                val column = reportStructure.getAllColumns()[columnName]
-                if (column != null) {
-                    val directionStr = when (direction) {
-                        SortDirection.Ascending -> "ASC"
-                        SortDirection.Descending -> "DESC"
-                    }
-                    "${column.fieldName} $directionStr"
-                } else null
-            }
-
-            if (sortConditions.isNotEmpty()) {
-                orderByClause.append(sortConditions.joinToString(", "))
-            }
-        }
-
-        val fetcher = DatabaseManager.getFetcher()
-        try {
-            val totalCount = (fetcher.fetchCount(reportStructure.query.sql, whereClauseBuilder.toString()) + pageSize - 1) / pageSize
-            val results = fetcher.fetchPagedList(
-                table = reportStructure.query.sql,
-                columns = "*",
-                offset = page * pageSize,
-                limit = pageSize,
-                filter = whereClauseBuilder.toString(),
-                orderBy = orderByClause.toString())
-
-            onResult(results, totalCount)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            onResult(emptyList(), 0)
-        }
-    }
-
-    fun areAnyFiltersActive(): Boolean {
-        return reportState.filterValues.value.values.any { filterData ->
-            filterData.isActive()
+        // Efekt pobierający dane po zmianie parametrów
+        LaunchedEffect(
+            reportState.pagination.currentPage.value,
+            reportState.searchQuery.value,
+            reportState.pagination.pageSize.value,
+            reportState.sortOrder.value,
+            filterSnapshot.value
+        ) {
+            reportDataManager.fetchData()
         }
     }
 
@@ -134,19 +50,12 @@ abstract class ReportHandler {
 
     fun getReportState(): ReportState = reportState
 
-    fun getFilters(): Map<String, Filter> = filters
-
     private fun loadDefaultConfiguration() {
-        try {
-            val configManager = ReportConfigurationManager()
-            val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
-            
-            if (defaultConfig != null) {
-                configManager.applyConfiguration(defaultConfig, reportState, filters)
-            }
-        } catch (e: Exception) {
-            // Jeśli nie ma domyślnej konfiguracji lub wystąpił błąd, ignorujemy to
-            println("Nie udało się załadować domyślnej konfiguracji: ${e.message}")
+        val configManager = ReportConfigurationManager()
+        val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
+        
+        if (defaultConfig != null) {
+            configManager.applyConfiguration(defaultConfig, reportState)
         }
     }
 

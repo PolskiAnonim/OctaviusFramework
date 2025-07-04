@@ -38,7 +38,7 @@ fun ReportRow(
                         .weight(column.width)
                         .padding(horizontal = 4.dp)
                 ) {
-                    column.RenderCell(rowData[column.fieldName], Modifier)
+                    column.RenderCell(rowData[column.databaseColumnName], Modifier)
                 }
 
                 // Separator między kolumnami (oprócz ostatniej)

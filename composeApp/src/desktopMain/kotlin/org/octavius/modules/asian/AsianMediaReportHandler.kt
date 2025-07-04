@@ -4,13 +4,13 @@ import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
 import org.octavius.localization.Translations
+import org.octavius.modules.asian.ui.AsianMediaFormScreen
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringListColumn
 import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
-import org.octavius.modules.asian.ui.AsianMediaFormScreen
 
 class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
 
@@ -31,24 +31,24 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
 
         val columns = mapOf(
             "titles" to StringListColumn(
-                fieldName = "titles",
+                databaseColumnName = "titles",
                 header = Translations.get("games.general.titles"),
                 width = 2f
             ),
             "language" to EnumColumn(
-                fieldName = "language",
+                databaseColumnName = "language",
                 header = Translations.get("games.general.language"),
                 enumClass = PublicationLanguage::class,
                 width = 1f
             ),
             "publicationType" to EnumColumn(
-                fieldName = "publication_type",
+                databaseColumnName = "publication_type",
                 header = Translations.get("games.general.publicationType"),
                 enumClass = PublicationType::class,
                 width = 1.5f
             ),
             "status" to EnumColumn(
-                fieldName = "status",
+                databaseColumnName = "status",
                 header = Translations.get("games.general.status"),
                 enumClass = PublicationStatus::class,
                 width = 1.5f

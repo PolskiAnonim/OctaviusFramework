@@ -1,15 +1,31 @@
 package org.octavius.report
 
 import org.octavius.database.DatabaseManager
+import org.octavius.domain.NullHandling
 import org.octavius.domain.NumberFilterDataType
 import org.octavius.domain.SortConfiguration
 import org.octavius.domain.StringFilterDataType
 import org.octavius.report.component.ReportState
-import org.octavius.report.filter.Filter
-import org.octavius.report.filter.type.EnumFilter
+import org.octavius.report.filter.data.FilterData
+import org.octavius.report.filter.data.type.BooleanFilterData
+import org.octavius.report.filter.data.type.EnumFilterData
+import org.octavius.report.filter.data.type.NumberFilterData
+import org.octavius.report.filter.data.type.StringFilterData
+import org.octavius.util.Converters
 
 class ReportConfigurationManager {
-    
+
+    val numberTypes: Map<String, String> = mapOf(
+        Int::class.simpleName!! to "INT4",
+        Long::class.simpleName!! to "INT8",
+        Float::class.simpleName!! to "FLOAT4",
+        Double::class.simpleName!! to "FLOAT8",
+        "INT4" to Int::class.simpleName!!,
+        "INT8" to Long::class.simpleName!!,
+        "FLOAT4" to Float::class.simpleName!!,
+        "FLOAT8" to Double::class.simpleName!!
+    )
+
     fun saveConfiguration(
         name: String,
         reportName: String,
@@ -19,11 +35,11 @@ class ReportConfigurationManager {
     ): Boolean {
         return try {
             val updater = DatabaseManager.getUpdater()
-            
+
             val sortOrderList = reportState.sortOrder.value.map { (columnName, direction) ->
                 SortConfiguration(columnName, direction)
             }
-            
+
             val configSql = """
                 INSERT INTO public.report_configurations 
                 (name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default)
@@ -39,7 +55,7 @@ class ReportConfigurationManager {
                     updated_at = CURRENT_TIMESTAMP
                 RETURNING id
             """.trimIndent()
-            
+
             val configParams = mapOf(
                 "name" to name,
                 "report_name" to reportName,
@@ -47,19 +63,19 @@ class ReportConfigurationManager {
                 "sort_order" to sortOrderList,
                 "visible_columns" to reportState.visibleColumns.value.toList(),
                 "column_order" to reportState.columnKeys.toList(),
-                "page_size" to reportState.pageSize.value,
+                "page_size" to reportState.pagination.pageSize.value,
                 "is_default" to isDefault
             )
-            
+
             val configId = updater.executeReturning(configSql, configParams, "id") as Int
-            
+
             // Delete existing filter configurations for this config
             val deleteFiltersSql = "DELETE FROM public.report_filter_configs WHERE report_config_id = :config_id"
             updater.executeUpdate(deleteFiltersSql, mapOf("config_id" to configId))
-            
+
             // Save filter configurations
-            saveFilterConfigurations(configId, reportState.filterValues.value)
-            
+            saveFilterConfigurations(configId, reportState.filterData.value)
+
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -71,14 +87,14 @@ class ReportConfigurationManager {
         return try {
             val fetcher = DatabaseManager.getFetcher()
             val params = mapOf("report_name" to reportName)
-            
+
             val result = fetcher.fetchRowOrNull(
                 table = "public.report_configurations",
                 columns = "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default",
                 filter = "report_name = :report_name AND is_default = true",
                 params = params
             )
-            
+
             result?.let { row ->
                 parseConfigurationFromNewRow(row)
             }
@@ -87,12 +103,12 @@ class ReportConfigurationManager {
             null
         }
     }
-    
+
     fun listConfigurations(reportName: String): List<ReportConfiguration> {
         return try {
             val fetcher = DatabaseManager.getFetcher()
             val params = mapOf("report_name" to reportName)
-            
+
             val results = fetcher.fetchList(
                 table = "public.report_configurations",
                 columns = "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default",
@@ -100,14 +116,14 @@ class ReportConfigurationManager {
                 orderBy = "is_default DESC, name ASC",
                 params = params
             )
-            
+
             results.map { row -> parseConfigurationFromNewRow(row) }
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
         }
     }
-    
+
     fun deleteConfiguration(name: String, reportName: String): Boolean {
         return try {
             val updater = DatabaseManager.getUpdater()
@@ -123,138 +139,156 @@ class ReportConfigurationManager {
             false
         }
     }
-    
-    fun applyConfiguration(configuration: ReportConfiguration, reportState: ReportState, filters: Map<String, Filter>? = null) {
+
+    fun applyConfiguration(configuration: ReportConfiguration, reportState: ReportState) {
         val configData = configuration.configuration
-        
+
         // Zastosuj konfigurację do ReportState
         reportState.visibleColumns.value = configData.visibleColumns.toSet()
-        
+
         // Aktualizuj kolejność kolumn
         reportState.columnKeys.clear()
         reportState.columnKeys.addAll(configData.columnOrder)
-        
+
         // Zastosuj sortowanie
         reportState.sortOrder.value = configData.sortOrder.map { sortConfig ->
             sortConfig.columnName to sortConfig.sortDirection
         }
-        
+
         // Zastosuj rozmiar strony
-        reportState.pageSize.value = configData.pageSize
-        
+        reportState.pagination.pageSize.value = configData.pageSize
+
         // Reset strony na pierwszą
-        reportState.currentPage.value = 0
-        
+        reportState.pagination.resetPage()
+
         // Load and apply filters from database
-        if (filters != null && configuration.id != null) {
-            loadAndApplyFilters(configuration.id, reportState, filters)
+        if (configuration.id != null) {
+            loadAndApplyFilters(configuration.id, reportState)
         }
     }
-    
-    private fun loadAndApplyFilters(configId: Int, reportState: ReportState, filters: Map<String, Filter>) {
+
+    private fun loadAndApplyFilters(configId: Int, reportState: ReportState) {
         try {
             val fetcher = DatabaseManager.getFetcher()
             val filterConfigs = fetcher.fetchList(
                 table = "public.report_filter_configs",
-                columns = "column_name, filter_type, null_handling, boolean_value, string_filter_type, string_value, case_sensitive, number_filter_type, min_value, max_value, enum_type_name, enum_values, include_enum",
+                columns = "column_name, filter_type, null_handling, boolean_value, string_filter_type, string_value, case_sensitive, number_filter_type, number_type_name, min_value, max_value, enum_type_name, enum_values, include_enum",
                 filter = "report_config_id = :config_id",
                 params = mapOf("config_id" to configId)
             )
-            
+
             filterConfigs.forEach { filterConfig ->
                 val columnName = filterConfig["column_name"] as String
-                val currentFilter = reportState.filterValues.value[columnName]
-                
+                val currentFilter = reportState.filterData.value[columnName]
+
                 if (currentFilter != null) {
-                    when (filterConfig["filter_type"] as String) {
-                        "BOOLEAN" -> {
-                            if (currentFilter is FilterData.BooleanData) {
-                                currentFilter.value.value = filterConfig["boolean_value"] as? Boolean
-                                currentFilter.nullHandling.value = org.octavius.domain.NullHandling.valueOf(filterConfig["null_handling"] as String)
-                            }
-                        }
-                        "STRING" -> {
-                            if (currentFilter is FilterData.StringData) {
-                                currentFilter.filterType.value = StringFilterDataType.valueOf(filterConfig["string_filter_type"] as String)
-                                currentFilter.value.value = filterConfig["string_value"] as? String ?: ""
-                                currentFilter.caseSensitive.value = filterConfig["case_sensitive"] as? Boolean ?: false
-                                currentFilter.nullHandling.value = org.octavius.domain.NullHandling.valueOf(filterConfig["null_handling"] as String)
-                            }
-                        }
-                        "NUMBER" -> {
-                            if (currentFilter is FilterData.NumberData<*>) {
-                                currentFilter.filterType.value = NumberFilterDataType.valueOf(filterConfig["number_filter_type"] as String)
-                                @Suppress("UNCHECKED_CAST")
-                                val numberFilter = currentFilter as FilterData.NumberData<Number>
-                                numberFilter.minValue.value = (filterConfig["min_value"] as? Number)
-                                numberFilter.maxValue.value = (filterConfig["max_value"] as? Number)
-                                currentFilter.nullHandling.value = org.octavius.domain.NullHandling.valueOf(filterConfig["null_handling"] as String)
-                            }
-                        }
-                        "ENUM" -> {
-                            if (currentFilter is FilterData.EnumData<*>) {
-                                currentFilter.reset()
-                                
-                                val enumFilter = filters[columnName] as? EnumFilter<*>
-                                if (enumFilter != null) {
-                                    val enumClass = enumFilter.enumClass
-                                    val enumConstants = enumClass.java.enumConstants
-                                    val savedValues = (filterConfig["enum_values"] as? Array<*>)?.mapNotNull { it as? String } ?: emptyList()
-                                    
-                                    savedValues.forEach { enumString ->
-                                        val matchingEnum = enumConstants.find { it.toString() == enumString }
-                                        if (matchingEnum != null) {
-                                            currentFilter.addValue(matchingEnum)
-                                        }
-                                    }
-                                }
-                                
-                                currentFilter.include.value = filterConfig["include_enum"] as? Boolean ?: true
-                                currentFilter.nullHandling.value = org.octavius.domain.NullHandling.valueOf(filterConfig["null_handling"] as String)
-                            }
-                        }
-                    }
+                    applyFilterConfiguration(filterConfig, currentFilter)
                 }
             }
-            
+
             // Trigger refresh
-            reportState.filterValues.value = reportState.filterValues.value.toMap()
+            reportState.filterData.value = reportState.filterData.value.toMap()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
-    
-    private fun saveFilterConfigurations(configId: Int, filterValues: Map<String, FilterData<*>>) {
+
+    private fun applyFilterConfiguration(filterConfig: Map<String, Any?>, filter: FilterData) {
+        when (filter) {
+            is BooleanFilterData -> applyBooleanFilterConfig(filterConfig, filter)
+            is StringFilterData -> applyStringFilterConfig(filterConfig, filter)
+            is NumberFilterData<*> -> applyNumberFilterConfig(filterConfig, filter)
+            is EnumFilterData<*> -> applyEnumFilterConfig(filterConfig, filter)
+        }
+    }
+
+    private fun applyBooleanFilterConfig(config: Map<String, Any?>, filter: BooleanFilterData) {
+        filter.value.value = config["boolean_value"] as? Boolean
+        filter.nullHandling.value = config["null_handling"] as NullHandling
+    }
+
+    private fun applyStringFilterConfig(config: Map<String, Any?>, filter: StringFilterData) {
+        filter.filterType.value = config["string_filter_type"] as StringFilterDataType
+        filter.value.value = config["string_value"] as String
+        filter.caseSensitive.value = config["case_sensitive"] as Boolean
+        filter.nullHandling.value = config["null_handling"] as NullHandling
+    }
+
+    private fun applyNumberFilterConfig(config: Map<String, Any?>, filter: NumberFilterData<*>) {
+        filter.filterType.value = config["number_filter_type"] as NumberFilterDataType
+
+        val numberTypeName = config["number_type_name"] as String
+        val converter = DatabaseManager.getConverter()
+
+        val minValueText = config["min_value"] as? String
+        val maxValueText = config["max_value"] as? String
+
+        @Suppress("UNCHECKED_CAST")
+        val typedFilter = filter as NumberFilterData<Number>
+
+        if (minValueText != null) {
+            typedFilter.minValue.value = converter.convertToDomainType(minValueText, numberTypeName) as? Number
+        }
+
+        if (maxValueText != null) {
+            typedFilter.maxValue.value = converter.convertToDomainType(maxValueText, numberTypeName) as? Number
+        }
+
+        filter.nullHandling.value = config["null_handling"] as NullHandling
+    }
+
+    private fun applyEnumFilterConfig(config: Map<String, Any?>, filter: EnumFilterData<*>) {
+        filter.resetFilter()
+
+        val enumTypeName = config["enum_type_name"] as String
+        val enumValuesList = config["enum_values"] as List<String>
+
+
+        val converter = DatabaseManager.getConverter()
+
+        val convertedEnums = enumValuesList.map { enumValue ->
+            converter.convertToDomainType(enumValue, enumTypeName)
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        val typedFilter = filter as EnumFilterData<Any>
+        typedFilter.values.addAll(convertedEnums as List<Any>)
+
+        filter.include.value = config["include_enum"] as Boolean
+        filter.nullHandling.value = config["null_handling"] as NullHandling
+    }
+
+    private fun saveFilterConfigurations(configId: Int, filterValues: Map<String, FilterData>) {
         val updater = DatabaseManager.getUpdater()
-        
+
         filterValues.forEach { (columnName, filterData) ->
             when (filterData) {
-                is FilterData.BooleanData -> {
+                is BooleanFilterData -> {
                     if (!filterData.isActive()) return@forEach
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
                         (report_config_id, column_name, null_handling, filter_type, boolean_value)
                         VALUES (:config_id, :column_name, :null_handling, 'BOOLEAN', :boolean_value)
                     """.trimIndent()
-                    
+
                     val params = mapOf(
                         "config_id" to configId,
                         "column_name" to columnName,
                         "null_handling" to filterData.nullHandling.value,
                         "boolean_value" to filterData.value.value
                     )
-                    
+
                     updater.executeUpdate(filterSql, params)
                 }
-                
-                is FilterData.StringData -> {
+
+                is StringFilterData -> {
                     if (!filterData.isActive()) return@forEach
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
                         (report_config_id, column_name, null_handling, filter_type, string_filter_type, string_value, case_sensitive)
                         VALUES (:config_id, :column_name, :null_handling, 'STRING', :string_filter_type, :string_value, :case_sensitive)
                     """.trimIndent()
-                    
+
                     val params = mapOf(
                         "config_id" to configId,
                         "column_name" to columnName,
@@ -263,55 +297,56 @@ class ReportConfigurationManager {
                         "string_value" to filterData.value.value,
                         "case_sensitive" to filterData.caseSensitive.value
                     )
-                    
+
                     updater.executeUpdate(filterSql, params)
                 }
-                
-                is FilterData.NumberData<*> -> {
+
+                is NumberFilterData<*> -> {
                     if (!filterData.isActive()) return@forEach
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
-                        (report_config_id, column_name, null_handling, filter_type, number_filter_type, min_value, max_value)
-                        VALUES (:config_id, :column_name, :null_handling, 'NUMBER', :number_filter_type, :min_value, :max_value)
+                        (report_config_id, column_name, null_handling, filter_type, number_filter_type, number_type_name, min_value, max_value)
+                        VALUES (:config_id, :column_name, :null_handling, 'NUMBER', :number_filter_type, :number_type_name, :min_value, :max_value)
                     """.trimIndent()
-                    
+
                     val params = mapOf(
                         "config_id" to configId,
                         "column_name" to columnName,
                         "null_handling" to filterData.nullHandling.value,
                         "number_filter_type" to filterData.filterType.value,
-                        "min_value" to filterData.minValue.value?.toDouble(),
-                        "max_value" to filterData.maxValue.value?.toDouble()
+                        "number_type_name" to numberTypes[filterData.numberClass.simpleName!!],
+                        "min_value" to filterData.minValue.value?.toString(),
+                        "max_value" to filterData.maxValue.value?.toString()
                     )
-                    
+
                     updater.executeUpdate(filterSql, params)
                 }
-                
-                is FilterData.EnumData<*> -> {
+
+                is EnumFilterData<*> -> {
                     if (!filterData.isActive()) return@forEach
-                    val enumValues = filterData.values.value
-                    
+                    val enumValues = filterData.values
+
                     val filterSql = """
                         INSERT INTO public.report_filter_configs 
                         (report_config_id, column_name, null_handling, filter_type, enum_type_name, enum_values, include_enum)
                         VALUES (:config_id, :column_name, :null_handling, 'ENUM', :enum_type_name, :enum_values, :include_enum)
                     """.trimIndent()
-                    
+
                     val params = mapOf(
                         "config_id" to configId,
                         "column_name" to columnName,
                         "null_handling" to filterData.nullHandling.value,
-                        "enum_type_name" to filterData.values.value.firstOrNull()?.javaClass?.simpleName,
+                        "enum_type_name" to Converters.camelToSnakeCase(filterData.enumClass.simpleName!!),
                         "enum_values" to enumValues.toList(),
                         "include_enum" to filterData.include.value
                     )
-                    
+
                     updater.executeUpdate(filterSql, params)
                 }
             }
         }
     }
-    
+
     @Suppress("UNCHECKED_CAST")
     private fun parseConfigurationFromNewRow(row: Map<String, Any?>): ReportConfiguration {
         val sortOrder = row["sort_order"] as List<SortConfiguration>
@@ -322,9 +357,9 @@ class ReportConfigurationManager {
             visibleColumns = visibleColumns,
             columnOrder = columnOrder,
             sortOrder = sortOrder,
-            pageSize = row["page_size"] as? Int ?: 10
+            pageSize = row["page_size"] as Int
         )
-        
+
         return ReportConfiguration(
             id = row["id"] as Int,
             name = row["name"] as String,

@@ -11,20 +11,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.Filter
-import org.octavius.report.filter.type.IntegerFilter
+import org.octavius.report.filter.data.FilterData
+import org.octavius.report.filter.data.type.NumberFilterData
+import org.octavius.report.filter.ui.type.IntegerFilterRenderer
 
 class IntegerColumn(
-    fieldName: String,
+    databaseColumnName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
-) : ReportColumn(fieldName, header, width, filterable, sortable) {
+) : ReportColumn(databaseColumnName, header, width, filterable, sortable) {
 
-    override fun createFilter(): Filter? {
-        return if (filterable) IntegerFilter(fieldName) else null
+    override fun createFilterData(): FilterData {
+        return NumberFilterData(Int::class)
+    }
+
+    @Composable
+    override fun FilterRenderer(data: FilterData) {
+        @Suppress("UNCHECKED_CAST")
+        IntegerFilterRenderer(data as NumberFilterData<Int>)
     }
 
     @Composable

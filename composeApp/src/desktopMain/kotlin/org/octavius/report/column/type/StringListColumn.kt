@@ -8,26 +8,34 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.domain.FilterMode
 import org.octavius.localization.Translations
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.Filter
-import org.octavius.report.filter.type.StringListFilter
+import org.octavius.report.filter.data.FilterData
+import org.octavius.report.filter.data.type.StringFilterData
+import org.octavius.report.filter.ui.type.StringFilterRenderer
 
 class StringListColumn(
-    fieldName: String,
+    databaseColumnName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val maxVisibleItems: Int = 3,
     private val separator: String? = null
-) : ReportColumn(fieldName, header, width, filterable, sortable) {
+) : ReportColumn(databaseColumnName, header, width, filterable, sortable) {
 
-    override fun createFilter(): Filter? {
-        return if (filterable) StringListFilter(fieldName) else null
+    override fun createFilterData(): FilterData {
+        return StringFilterData(mode = mutableStateOf(FilterMode.ListAny))
+    }
+
+    @Composable
+    override fun FilterRenderer(data: FilterData) {
+        StringFilterRenderer(data as StringFilterData)
     }
 
     @Composable

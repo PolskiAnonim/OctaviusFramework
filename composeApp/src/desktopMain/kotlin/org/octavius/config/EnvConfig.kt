@@ -1,7 +1,7 @@
 package org.octavius.config
 
 import java.io.File
-import java.util.Properties
+import java.util.*
 
 object EnvConfig {
     private val properties = Properties()

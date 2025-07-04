@@ -393,7 +393,7 @@ private fun createSortDropTarget(
                 val newSort = currentSortValue.toMutableList()
                 newSort.add(columnKey to SortDirection.Ascending)
                 reportState.sortOrder.value = newSort
-                reportState.currentPage.value = 0
+                reportState.pagination.resetPage()
                 return true
             }
             return false
@@ -425,7 +425,7 @@ private fun updateSortDirection(
     if (index >= 0) {
         currentSort[index] = columnKey to newDirection
         reportState.sortOrder.value = currentSort
-        reportState.currentPage.value = 0
+        reportState.pagination.resetPage()
     }
 }
 
@@ -435,7 +435,7 @@ private fun removeSortColumn(
 ) {
     val newSort = reportState.sortOrder.value.filter { it.first != columnKey }
     reportState.sortOrder.value = newSort
-    reportState.currentPage.value = 0
+    reportState.pagination.resetPage()
 }
 
 private fun reorderSortColumns(
@@ -447,5 +447,5 @@ private fun reorderSortColumns(
     val item = newSort.removeAt(fromIndex)
     newSort.add(toIndex, item)
     reportState.sortOrder.value = newSort
-    reportState.currentPage.value = 0
+    reportState.pagination.resetPage()
 }
