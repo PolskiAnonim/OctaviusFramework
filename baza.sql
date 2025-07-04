@@ -277,8 +277,9 @@ CREATE TABLE IF NOT EXISTS public.report_filter_configs
 
     -- Kolumny specyficzne dla filtra NUMBER
     number_filter_type number_filter_data_type,
-    min_value numeric,
-    max_value numeric,
+    number_type_name TEXT,
+    min_value TEXT,
+    max_value TEXT,
 
     -- Kolumny specyficzne dla filtra ENUM
     enum_type_name text,
@@ -292,7 +293,7 @@ CREATE TABLE IF NOT EXISTS public.report_filter_configs
     CONSTRAINT BOOLEAN_FILTER_CHECK CHECK (
         NOT filter_type = 'BOOLEAN' OR
         string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
-        number_filter_type IS NULL AND min_value IS NULL AND max_value IS NULL AND
+        number_filter_type IS NULL AND number_type_name IS NULL AND min_value IS NULL AND max_value IS NULL AND
         enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
     ),
     -- STRING
@@ -300,7 +301,7 @@ CREATE TABLE IF NOT EXISTS public.report_filter_configs
         NOT filter_type = 'STRING' OR
         boolean_value IS NULL AND
         string_filter_type IS NOT NULL AND case_sensitive IS NOT NULL AND
-        number_filter_type IS NULL AND min_value IS NULL AND max_value IS NULL AND
+        number_filter_type IS NULL AND number_type_name IS NULL AND min_value IS NULL AND max_value IS NULL AND
         enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
     ),
     -- NUMBER
@@ -308,8 +309,8 @@ CREATE TABLE IF NOT EXISTS public.report_filter_configs
         NOT filter_type = 'NUMBER' OR
         boolean_value IS NULL AND
         string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
-        number_filter_type IS NOT NULL AND
         (max_value IS NULL OR min_value IS NULL OR min_value <= max_value) AND -- min_value musi być mniejsze lub równe max_value, jeśli oba istnieją
+        number_filter_type IS NOT NULL AND number_type_name IS NOT NULL AND
         enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
     ),
     -- ENUM
@@ -317,9 +318,9 @@ CREATE TABLE IF NOT EXISTS public.report_filter_configs
         NOT filter_type = 'ENUM' OR
         boolean_value IS NULL AND
         string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
-        number_filter_type IS NULL AND min_value IS NULL AND max_value IS NULL AND
+        number_filter_type IS NULL AND number_type_name IS NULL AND min_value IS NULL AND max_value IS NULL AND
         enum_type_name IS NOT NULL AND enum_values IS NOT NULL AND include_enum IS NOT NULL
-    )
+        )
 );
 
 CREATE INDEX IF NOT EXISTS idx_report_filter_configs_report_config_id ON public.report_filter_configs (report_config_id);
