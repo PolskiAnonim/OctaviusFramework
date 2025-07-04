@@ -1,20 +1,21 @@
 package org.octavius.report.filter.ui.type
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.NumberFilterDataType
 import org.octavius.localization.Translations
 import org.octavius.report.filter.data.type.NumberFilterData
-import org.octavius.report.filter.ui.EnumDropdownMenu
-import org.octavius.report.filter.ui.FilterColumnWrapper
-import org.octavius.report.filter.ui.FilterModePanel
-import org.octavius.report.filter.ui.FilterSpacer
-import org.octavius.report.filter.ui.NullHandlingPanel
+import org.octavius.report.filter.ui.*
 
 @Composable
 fun <T : Number> NumberFilterRenderer(filterData: NumberFilterData<T>, valueParser: (String) -> T?) {

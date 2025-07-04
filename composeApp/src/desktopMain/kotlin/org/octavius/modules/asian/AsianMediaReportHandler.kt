@@ -4,13 +4,13 @@ import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
 import org.octavius.localization.Translations
+import org.octavius.modules.asian.ui.AsianMediaFormScreen
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringListColumn
 import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
-import org.octavius.modules.asian.ui.AsianMediaFormScreen
 
 class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
 

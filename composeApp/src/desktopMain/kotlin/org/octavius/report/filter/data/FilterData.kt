@@ -1,7 +1,6 @@
 package org.octavius.report.filter.data
 
 import androidx.compose.runtime.MutableState
-import org.octavius.domain.EnumWithFormatter
 import org.octavius.domain.FilterMode
 import org.octavius.domain.NullHandling
 import org.octavius.report.Query

@@ -10,7 +10,6 @@ import org.octavius.localization.Translations
 import org.octavius.modules.asian.AsianMediaReportHandler
 import org.octavius.navigator.Navigator
 import org.octavius.report.component.ReportScreen
-import org.octavius.modules.asian.ui.AsianMediaFormScreen
 
 class AsianMediaReportScreen(private val navigator: Navigator) : ReportScreen() {
     override val title = Translations.get("asianMedia.report.title")

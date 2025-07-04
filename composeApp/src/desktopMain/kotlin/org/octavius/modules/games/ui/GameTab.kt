@@ -11,7 +11,6 @@ import org.octavius.localization.Translations
 import org.octavius.navigator.Navigator
 import org.octavius.navigator.Tab
 import org.octavius.navigator.TabOptions
-import org.octavius.modules.games.ui.GameReportScreen
 
 class GameTab : Tab {
     private val navigator = Navigator()

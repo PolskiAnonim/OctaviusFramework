@@ -4,8 +4,6 @@ import kotlinx.coroutines.runBlocking
 import org.octavius.database.DatabaseFetcher
 import org.octavius.database.DatabaseManager
 import org.octavius.domain.SortDirection
-import kotlin.compareTo
-import kotlin.text.toInt
 
 class ReportDataManager {
 
