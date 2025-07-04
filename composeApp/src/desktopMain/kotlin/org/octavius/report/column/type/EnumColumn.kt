@@ -28,7 +28,7 @@ class EnumColumn<T>(
         where T : Enum<T>, T : EnumWithFormatter<T> {
 
     override fun createFilterData(): FilterData {
-        return EnumFilterData<T>()
+        return EnumFilterData(enumClass)
     }
 
     @Composable

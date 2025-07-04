@@ -8,8 +8,10 @@ import org.octavius.domain.FilterMode
 import org.octavius.domain.NullHandling
 import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
+import kotlin.reflect.KClass
 
 data class EnumFilterData<E : Enum<E>>(
+    val enumClass: KClass<E>,
     val values: SnapshotStateList<E> = mutableStateListOf(),
     val include: MutableState<Boolean> = mutableStateOf(true),
     override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore),

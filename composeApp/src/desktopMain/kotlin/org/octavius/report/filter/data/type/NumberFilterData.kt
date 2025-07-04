@@ -7,8 +7,10 @@ import org.octavius.domain.NullHandling
 import org.octavius.domain.NumberFilterDataType
 import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
+import kotlin.reflect.KClass
 
 data class NumberFilterData<T : Number>(
+    val numberClass: KClass<T>,
     val filterType: MutableState<NumberFilterDataType> = mutableStateOf(NumberFilterDataType.Equals),
     val minValue: MutableState<T?> = mutableStateOf(null),
     val maxValue: MutableState<T?> = mutableStateOf(null),

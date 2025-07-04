@@ -25,7 +25,7 @@ class IntegerColumn(
 ) : ReportColumn(databaseColumnName, header, width, filterable, sortable) {
 
     override fun createFilterData(): FilterData {
-        return NumberFilterData<Int>()
+        return NumberFilterData(Int::class)
     }
 
     @Composable
