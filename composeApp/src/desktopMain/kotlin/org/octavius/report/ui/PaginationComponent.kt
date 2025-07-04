@@ -137,15 +137,27 @@ fun PageSize(pagination: ReportPagination) {
 
 @Composable
 fun ActualPage(pagination: ReportPagination) {
-    val pageInputValue = mutableStateOf(
-        TextFieldValue(
-            text = (pagination.currentPage.value + 1).toString(),
-            selection = TextRange((pagination.currentPage.value + 1).toString().length)
+    var pageInputValue by remember { 
+        mutableStateOf(
+            TextFieldValue(
+                text = (pagination.currentPage.value + 1).toString(),
+                selection = TextRange((pagination.currentPage.value + 1).toString().length)
+            )
         )
-    )
+    }
 
     var isEditingPage by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
+
+    // Synchronizuj pageInputValue z aktualną stroną gdy nie edytujemy
+    LaunchedEffect(pagination.currentPage.value) {
+        if (!isEditingPage) {
+            pageInputValue = TextFieldValue(
+                text = (pagination.currentPage.value + 1).toString(),
+                selection = TextRange((pagination.currentPage.value + 1).toString().length)
+            )
+        }
+    }
 
 
     // Wyświetlanie aktualnej strony z możliwością edycji
@@ -160,11 +172,11 @@ fun ActualPage(pagination: ReportPagination) {
 
         if (isEditingPage) {
             BasicTextField(
-                value = pageInputValue.value,
+                value = pageInputValue,
                 onValueChange = { newValue ->
                     // Pozwól tylko na cyfry
                     if (newValue.text.all { char -> char.isDigit() }) {
-                        pageInputValue.value = newValue.copy(
+                        pageInputValue = newValue.copy(
                             selection = TextRange(newValue.text.length)
                         )
                     }
@@ -192,12 +204,12 @@ fun ActualPage(pagination: ReportPagination) {
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        val newPage = pageInputValue.value.text.toLongOrNull()
+                        val newPage = pageInputValue.text.toLongOrNull()
                         if (newPage != null && newPage > 0 && newPage <= pagination.totalPages.value) {
                             pagination.currentPage.value = newPage - 1
                         } else {
                             // Przywróć poprzednią wartość jeśli wprowadzono nieprawidłową
-                            pageInputValue.value = TextFieldValue(
+                            pageInputValue = TextFieldValue(
                                 text = (pagination.currentPage.value + 1).toString(),
                                 selection = TextRange((pagination.currentPage.value + 1).toString().length)
                             )
