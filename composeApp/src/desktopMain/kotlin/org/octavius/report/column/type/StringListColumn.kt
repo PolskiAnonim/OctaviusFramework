@@ -1,6 +1,5 @@
 package org.octavius.report.column.type
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.FilterMode
 import org.octavius.localization.Translations
+import org.octavius.report.CellRendererUtils
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.data.FilterData
 import org.octavius.report.filter.data.type.StringFilterData
@@ -44,11 +44,9 @@ class StringListColumn(
         val value = item as? List<String>
 
         if (value.isNullOrEmpty()) {
-            Box(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp, horizontal = 8.dp),
-                contentAlignment = Alignment.CenterStart
+            CellRendererUtils.StandardCellWrapper(
+                modifier = modifier,
+                alignment = Alignment.CenterStart
             ) {
                 Text(
                     text = "",
@@ -57,11 +55,9 @@ class StringListColumn(
             }
         } else if (separator != null) {
             // Wyświetl jako tekst z separatorem
-            Box(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp, horizontal = 8.dp),
-                contentAlignment = Alignment.CenterStart
+            CellRendererUtils.StandardCellWrapper(
+                modifier = modifier,
+                alignment = Alignment.CenterStart
             ) {
                 Text(
                     text = value.joinToString(separator),
