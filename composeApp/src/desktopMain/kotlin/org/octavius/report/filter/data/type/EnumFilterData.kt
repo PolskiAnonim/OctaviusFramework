@@ -24,6 +24,10 @@ data class EnumFilterData<E : Enum<E>>(
         return values.isNotEmpty() || nullHandling.value != NullHandling.Ignore
     }
 
+    override fun getTrackableStates(): List<Any?> {
+        return listOf(values.toList(), include.value, nullHandling.value, mode.value)
+    }
+
     override fun getFilterFragment(columnName: String): Query? {
         if (!isActive()) return null
         

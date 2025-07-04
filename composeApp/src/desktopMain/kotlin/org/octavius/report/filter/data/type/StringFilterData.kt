@@ -26,6 +26,10 @@ data class StringFilterData(
         return value.value.trim().isNotEmpty() || nullHandling.value != NullHandling.Ignore
     }
 
+    override fun getTrackableStates(): List<Any?> {
+        return listOf(filterType.value, value.value, caseSensitive.value, nullHandling.value, mode.value)
+    }
+
     override fun getFilterFragment(columnName: String): Query? {
         if (!isActive()) return null
         val searchValue = value.value.trim()

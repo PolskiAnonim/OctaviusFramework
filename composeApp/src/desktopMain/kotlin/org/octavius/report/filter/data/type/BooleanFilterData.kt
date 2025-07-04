@@ -29,6 +29,10 @@ data class BooleanFilterData(
         return value.value != null || nullHandling.value != NullHandling.Ignore
     }
 
+    override fun getTrackableStates(): List<Any?> {
+        return listOf(value.value, nullHandling.value, mode.value)
+    }
+
     private fun buildBooleanQuery(
         columnName: String,
         value: Boolean?,

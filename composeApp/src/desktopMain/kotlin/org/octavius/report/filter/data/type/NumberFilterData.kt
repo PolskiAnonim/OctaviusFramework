@@ -26,6 +26,10 @@ data class NumberFilterData<T : Number>(
         return minValue.value != null || maxValue.value != null || nullHandling.value != NullHandling.Ignore
     }
 
+    override fun getTrackableStates(): List<Any?> {
+        return listOf(filterType.value, minValue.value, maxValue.value, nullHandling.value, mode.value)
+    }
+
     override fun getFilterFragment(columnName: String): Query? {
         if (!isActive()) return null
 

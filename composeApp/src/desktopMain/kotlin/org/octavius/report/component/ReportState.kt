@@ -9,6 +9,30 @@ import org.octavius.report.ReportPagination
 import org.octavius.report.filter.data.FilterData
 
 class ReportState {
+    private val _data = mutableStateOf<List<Map<String,Any?>>>(emptyList())
+    private val _loading = mutableStateOf(false)
+    private val _error = mutableStateOf<String?>(null)
+
+    var data: List<Map<String, Any?>>
+        get() = _data.value
+        set(value) {
+            _data.value = value
+        }
+    val loading: Boolean get() = _loading.value
+    val error: String? get() = _error.value
+
+    fun updateData(newData: List<Map<String,Any?>>) {
+        _data.value = newData
+    }
+
+    fun setLoading(loading: Boolean) {
+        _loading.value = loading
+    }
+
+    fun setError(error: String?) {
+        _error.value = error
+    }
+
     //-----------------------------------------------------Stronicowanie------------------------------------------------
     // Rozmiar strony
     val pagination = ReportPagination()
@@ -24,7 +48,7 @@ class ReportState {
     // Kolejność sortowania
     val sortOrder: MutableState<List<Pair<String, SortDirection>>> = mutableStateOf(listOf())
     // Wartości filtrów (tylko FilterData, nie Filter)
-    val filterValues: MutableState<Map<String, FilterData>> = mutableStateOf(mapOf())
+    val filterData: MutableState<Map<String, FilterData>> = mutableStateOf(mapOf())
     // Wyszukiwanie ogólne - w pasku na górze
     val searchQuery: MutableState<String> = mutableStateOf("")
 

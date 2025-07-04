@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import org.octavius.navigator.Screen
 import org.octavius.report.ui.PaginationComponent
 
@@ -25,36 +24,12 @@ abstract class ReportScreen : Screen {
     override fun Content() {
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
-        var dataList by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
         var addMenuExpanded by remember { mutableStateOf(false) }
         var configurationDialogVisible by remember { mutableStateOf(false) }
 
         val reportState = reportHandler.getReportState()
 
-        // Dla śledzenia zmian filtrów
-        val filteringState = derivedStateOf {
-            reportState.filterValues.value.mapValues { (_, filter) ->
-                filter.isActive()
-            }
-        }
-
-        // Efekt pobierający dane po zmianie parametrów
-        LaunchedEffect(
-            reportState.pagination.currentPage.value,
-            reportState.searchQuery.value,
-            reportState.pagination.pageSize.value,
-            reportState.sortOrder.value,
-            filteringState.value
-        ) {
-            reportHandler.fetchData(
-                page = reportState.pagination.currentPage.value.toInt(),
-                searchQuery = reportState.searchQuery.value,
-                pageSize = reportState.pagination.pageSize.value
-            ) { result, pages ->
-                dataList = result
-                reportState.pagination.totalPages.value = pages
-            }
-        }
+        reportHandler.DataFetcher()
 
         Column(modifier = Modifier) {
             LazyColumn(
@@ -87,7 +62,7 @@ abstract class ReportScreen : Screen {
                 }
 
                 // Tabela z danymi
-                reportTable(reportHandler, reportState, dataList)
+                reportTable(reportHandler, reportState, reportState.data)
             }
 
             // Paginacja
@@ -104,16 +79,7 @@ abstract class ReportScreen : Screen {
                 onDismiss = { configurationDialogVisible = false },
                 onConfigurationApplied = {
                     // Po zastosowaniu konfiguracji, odśwież dane
-                    coroutineScope.launch {
-                        reportHandler.fetchData(
-                            page = reportState.pagination.currentPage.value.toInt(),
-                            searchQuery = reportState.searchQuery.value,
-                            pageSize = reportState.pagination.pageSize.value
-                        ) { result, pages ->
-                            dataList = result
-                            reportState.pagination.totalPages.value = pages
-                        }
-                    }
+
                 }
             )
         }

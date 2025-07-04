@@ -29,7 +29,7 @@ fun LazyListScope.reportTable(
             visibleColumns.forEachIndexed { index, key ->
                 val column = allColumns[key]
                 if (column != null) {
-                    column.RenderHeader(reportState.filterValues.value[key], Modifier.weight(column.width))
+                    column.RenderHeader(reportState.filterData.value[key], Modifier.weight(column.width))
 
                     // Separator między kolumnami w nagłówku (oprócz ostatniej)
                     if (index < visibleColumns.size - 1) {

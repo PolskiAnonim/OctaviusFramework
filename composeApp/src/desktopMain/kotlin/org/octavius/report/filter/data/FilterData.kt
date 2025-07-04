@@ -11,6 +11,9 @@ abstract class FilterData {
     abstract val mode: MutableState<FilterMode>
 
     abstract fun getFilterFragment(columnName: String): Query?
+    
+    // Zwraca wszystkie State'y które powinny być śledzone dla reaktywności
+    abstract fun getTrackableStates(): List<Any?>
 
     fun resetFilter() {
         nullHandling.value = NullHandling.Ignore

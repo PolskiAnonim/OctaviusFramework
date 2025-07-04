@@ -60,7 +60,7 @@ class ReportConfigurationManager {
             updater.executeUpdate(deleteFiltersSql, mapOf("config_id" to configId))
             
             // Save filter configurations
-            saveFilterConfigurations(configId, reportState.filterValues.value)
+            saveFilterConfigurations(configId, reportState.filterData.value)
             
             true
         } catch (e: Exception) {
@@ -165,7 +165,7 @@ class ReportConfigurationManager {
             
             filterConfigs.forEach { filterConfig ->
                 val columnName = filterConfig["column_name"] as String
-                val currentFilter = reportState.filterValues.value[columnName]
+                val currentFilter = reportState.filterData.value[columnName]
                 
                 if (currentFilter != null) {
                     when (filterConfig["filter_type"] as String) {
@@ -225,7 +225,7 @@ class ReportConfigurationManager {
             }
             
             // Trigger refresh
-            reportState.filterValues.value = reportState.filterValues.value.toMap()
+            reportState.filterData.value = reportState.filterData.value.toMap()
         } catch (e: Exception) {
             e.printStackTrace()
         }
