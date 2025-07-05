@@ -2,6 +2,7 @@ package org.octavius.form.control.type.selection
 
 import org.octavius.database.DatabaseManager
 import org.octavius.form.ColumnInfo
+import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
 import org.octavius.form.control.type.selection.dropdown.DropdownOption
@@ -20,9 +21,10 @@ class DatabaseControl(
     private val displayColumn: String,
     private val pageSize: Int = 10,
     required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    actions: List<ControlAction<Int>>? = null,
 ) : DropdownControlBase<Int>(
-    label, columnInfo, required, dependencies
+    label, columnInfo, required, dependencies, actions
 ) {
     override val supportSearch = true
     override val supportPagination = true

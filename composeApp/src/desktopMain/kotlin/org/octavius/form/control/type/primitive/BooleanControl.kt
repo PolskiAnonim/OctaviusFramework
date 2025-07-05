@@ -8,12 +8,14 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.layout.RenderCheckboxLabel
@@ -31,18 +33,21 @@ class BooleanControl(
     columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    actions: List<ControlAction<Boolean>>? = null,
 ) : Control<Boolean>(
     label,
     columnInfo,
     required,
     dependencies,
-    hasStandardLayout = false
+    hasStandardLayout = false,
+    actions = actions
 ) {
     override val validator: ControlValidator<Boolean> = DefaultValidator()
 
     @Composable
     override fun Display(controlName: String, controlState: ControlState<Boolean>, isRequired: Boolean) {
+        val scope = rememberCoroutineScope()
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -66,6 +71,7 @@ class BooleanControl(
                             onCheckedChange = {
                                 controlState.value.value = it
                                 updateState(controlState)
+                                executeActions(controlName, it, scope)
                             }
                         )
                     } else {
@@ -74,8 +80,10 @@ class BooleanControl(
                                 ?: ToggleableState.Indeterminate,
                             onClick = {
                                 val mapping = mapOf(null to false, false to true, true to null)
-                                controlState.value.value = mapping[controlState.value.value]
+                                val newValue = mapping[controlState.value.value]
+                                controlState.value.value = newValue
                                 updateState(controlState)
+                                executeActions(controlName, newValue, scope)
                             }
                         )
                     }

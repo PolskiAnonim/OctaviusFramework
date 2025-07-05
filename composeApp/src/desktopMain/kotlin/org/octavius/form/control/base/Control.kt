@@ -3,6 +3,7 @@ package org.octavius.form.control.base
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.CoroutineScope
 import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.component.ErrorManager
@@ -30,8 +31,33 @@ abstract class Control<T : Any>(
     val dependencies: Map<String, ControlDependency<*>>?,
     var parentControl: String? = null,
     protected val hasStandardLayout: Boolean = true,
-    val validationOptions: ValidationOptions? = null
+    val validationOptions: ValidationOptions? = null,
+    val actions: List<ControlAction<T>>? = null
 ) {
+
+    /**
+     * Wykonuje zdefiniowane akcje dla tej kontrolki.
+     * Wywoływane po zmianie wartości.
+     */
+    protected fun executeActions(
+        controlName: String,
+        newValue: T?,
+        scope: CoroutineScope,
+        payload: Any? = null
+    ) {
+        actions?.forEach { action ->
+            val context = ActionContext(
+                sourceValue = newValue,
+                sourceControlName = controlName,
+                formState = formState,
+                formSchema = formSchema,
+                errorManager = errorManager,
+                coroutineScope = scope,
+                payload = payload
+            )
+            action.action.invoke(context)
+        }
+    }
     /**
      * Validator odpowiedzialny za walidację tej kontrolki.
      * Każdy typ kontrolki ma własny validator dostosowany do typu danych.

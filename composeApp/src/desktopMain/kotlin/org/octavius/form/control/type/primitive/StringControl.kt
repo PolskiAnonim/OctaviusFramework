@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringValidation
@@ -26,24 +28,29 @@ class StringControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: StringValidation? = null
+    validationOptions: StringValidation? = null,
+    actions: List<ControlAction<String>>? = null
 ) : Control<String>(
     label,
     columnInfo,
     required,
     dependencies,
-    validationOptions = validationOptions
+    validationOptions = validationOptions,
+    actions = actions
 ) {
     override val validator: ControlValidator<String> = StringValidator(validationOptions)
 
 
     @Composable
     override fun Display(controlName: String, controlState: ControlState<String>, isRequired: Boolean) {
+        val scope = rememberCoroutineScope()
+
         OutlinedTextField(
             value = controlState.value.value.orEmpty(),
             onValueChange = {
                 controlState.value.value = it
-                controlState.dirty.value = true
+                updateState(controlState)
+                executeActions(controlName, it, scope)
             },
             modifier = Modifier.fillMaxWidth().padding(
                 vertical = FormSpacing.fieldPaddingVertical,
