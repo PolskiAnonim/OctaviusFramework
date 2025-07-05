@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS asian_media.publications
     publication_type asian_media.publication_type NOT NULL,
     status asian_media.publication_status NOT NULL,
     track_progress boolean NOT NULL DEFAULT false,
-    created_at time with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at time with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT publications_pkey PRIMARY KEY (id),
     CONSTRAINT publications_title_id_publication_type_key UNIQUE (title_id, publication_type),
     CONSTRAINT publications_title_id_fkey FOREIGN KEY (title_id)
