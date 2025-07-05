@@ -10,7 +10,6 @@ import org.octavius.form.control.base.*
 import org.octavius.form.control.type.collection.StringListControl
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.BooleanControl
-import org.octavius.form.control.type.primitive.HiddenControl
 import org.octavius.form.control.type.primitive.IntegerControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.EnumControl
@@ -67,7 +66,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
 
     private fun createPublicationControls(): Map<String, Control<*>> {
         return mapOf(
-            "id" to HiddenControl<Int>(null),
+            "id" to IntegerControl(null, null),
             "publicationType" to EnumControl(
                 null,
                 Translations.get("asianMedia.form.publicationType"),

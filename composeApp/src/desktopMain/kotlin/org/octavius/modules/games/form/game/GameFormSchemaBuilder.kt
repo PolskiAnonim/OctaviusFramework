@@ -21,14 +21,14 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     Translations.get("games.form.visibleCharacterSection"),
                     required = true
                 ),
-                "playTimeExists" to HiddenControl<Boolean>(
-                    null
+                "playTimeExists" to BooleanControl(
+                    null, null
                 ),
-                "ratingsExists" to HiddenControl<Boolean>(
-                    null
+                "ratingsExists" to BooleanControl(
+                    null, null
                 ),
-                "charactersExists" to HiddenControl<Boolean>(
-                    null
+                "charactersExists" to BooleanControl(
+                    null, null
                 ),
                 // Sekcja podstawowych informacji
                 "name" to StringControl(
