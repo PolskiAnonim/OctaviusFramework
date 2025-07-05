@@ -54,29 +54,23 @@
       "label": "Filtr:",
       "clear": "Wyczyść filtr"
     },
+    "mode":{
+      "mode": "Tryb filtrowania listy",
+      "listAll": "Dowolny element",
+      "listAny": "Wszystkie elementy"
+    },
+    "number": {
+      "from": "Od",
+      "to": "Do",
+      "value": "Wartość"
+    },
     "string": {
       "exact": "Dokładnie",
       "startsWith": "Zaczyna się od",
       "endsWith": "Kończy się na",
       "contains": "Zawiera",
       "notContains": "Nie zawiera",
-      "caseSensitive": "Uwzględnij wielkość liter"
-    },
-    "list": {
-      "any": "Dowolny element",
-      "all": "Wszystkie elementy"
-    },
-    "stringList": {
-      "filter": "Filtruj zawartość listy",
-      "search": "Szukaj w liście",
-      "elementExact": "Element dokładnie równy",
-      "elementContains": "Element zawiera",
-      "elementStartsWith": "Element zaczyna się od",
-      "elementEndsWith": "Element kończy się na",
-      "elementNotContains": "Element nie zawiera",
-      "tip": "Wskazówka: Ten filtr wyszukuje tekst w każdym elemencie listy."
-    },
-    "integer": {
+      "caseSensitive": "Uwzględnij wielkość liter",
       "equals": "Równe",
       "notEquals": "Różne od",
       "lessThan": "Mniejsze niż",
@@ -84,9 +78,14 @@
       "greaterThan": "Większe niż",
       "greaterEqual": "Większe lub równe",
       "range": "Zakres",
-      "from": "Od",
-      "to": "Do",
       "value": "Wartość"
+    },
+    "list": {
+      "any": "Dowolny element",
+      "all": "Wszystkie elementy"
+    },
+    "stringList": {
+      "itemPlaceholder": "Wprowadź tekst..."
     },
     "null": {
       "values": "Wartości puste:",
@@ -101,7 +100,8 @@
       "excludeSelected": "Wyklucz zaznaczone"
     },
     "boolean": {
-      "byValue": "Filtruj według wartości"
+      "true": "Tak",
+      "false": "Nie"
     }
   },
   "validation": {

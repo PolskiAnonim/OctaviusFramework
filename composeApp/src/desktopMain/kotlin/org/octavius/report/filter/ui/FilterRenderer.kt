@@ -60,7 +60,7 @@ fun FilterModePanel(filterData: FilterData) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = Translations.get("filter.mode"),
+            text = Translations.get("filter.mode.mode"),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(end = 8.dp)
         )
