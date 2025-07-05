@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.form.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.layout.RenderNormalLabel
@@ -40,14 +41,16 @@ import org.octavius.ui.theme.FormSpacing
 abstract class DropdownControlBase<T : Any>(
     label: String?,
     columnInfo: ColumnInfo?,
-    required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null
+    required: Boolean?,
+    dependencies: Map<String, ControlDependency<*>>?,
+    actions: List<ControlAction<T>>?
 ) : Control<T>(
     label,
     columnInfo,
     required,
     dependencies,
-    hasStandardLayout = false
+    hasStandardLayout = false,
+    actions = actions
 ) {
     override val validator: ControlValidator<T> = DefaultValidator()
 
@@ -68,6 +71,7 @@ abstract class DropdownControlBase<T : Any>(
         var isLoading by remember { mutableStateOf(false) }
         var currentPage by remember { mutableStateOf(0) }
         var totalPages by remember { mutableStateOf(1) }
+        val scope = rememberCoroutineScope()
 
         // Efekt pobierający opcje gdy menu jest otwarte
         LaunchedEffect(expanded, searchQuery, currentPage) {
@@ -191,6 +195,7 @@ abstract class DropdownControlBase<T : Any>(
                                     onClick = {
                                         controlState.value.value = option.value
                                         updateState(controlState)
+                                        executeActions(controlName, option.value, scope)
                                         expanded = false
                                     }
                                 )
