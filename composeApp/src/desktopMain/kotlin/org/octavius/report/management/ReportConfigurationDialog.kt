@@ -1,4 +1,4 @@
-package org.octavius.report.component
+package org.octavius.report.management
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,8 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.octavius.localization.Translations
-import org.octavius.report.ReportConfiguration
-import org.octavius.report.ReportConfigurationManager
+import org.octavius.report.component.ReportState
 
 @Composable
 fun ReportConfigurationDialog(

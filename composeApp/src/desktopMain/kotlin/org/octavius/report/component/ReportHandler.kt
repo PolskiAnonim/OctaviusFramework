@@ -3,7 +3,7 @@ package org.octavius.report.component
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import org.octavius.report.ReportConfigurationManager
+import org.octavius.report.management.ReportConfigurationManager
 import org.octavius.report.column.ReportColumn
 
 abstract class ReportHandler {

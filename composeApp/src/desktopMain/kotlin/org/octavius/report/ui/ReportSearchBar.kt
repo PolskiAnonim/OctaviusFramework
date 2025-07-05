@@ -1,4 +1,4 @@
-package org.octavius.report.component
+package org.octavius.report.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row

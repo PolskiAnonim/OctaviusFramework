@@ -1,4 +1,4 @@
-package org.octavius.report.component
+package org.octavius.report.management
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.draganddrop.dragAndDropSource
@@ -17,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.SortDirection
 import org.octavius.localization.Translations
+import org.octavius.report.component.ReportState
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 
@@ -304,8 +306,8 @@ private fun SortingSection(
 private fun DraggableChip(
     text: String,
     dragData: String,
-    backgroundColor: androidx.compose.ui.graphics.Color,
-    textColor: androidx.compose.ui.graphics.Color,
+    backgroundColor: Color,
+    textColor: Color,
     modifier: Modifier = Modifier,
     onDrop: (String) -> Boolean = { false },
     leadingIcon: @Composable (() -> Unit)? = null,
