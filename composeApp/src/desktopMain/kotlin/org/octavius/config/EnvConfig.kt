@@ -36,24 +36,24 @@ object EnvConfig {
     }
     
     // Funkcja pomocnicza do pobierania wartości z fallback
-    private fun getProperty(key: String, defaultValue: String): String {
-        return properties.getProperty(key) ?: System.getenv(key) ?: defaultValue
+    private fun getProperty(key: String): String {
+        return properties.getProperty(key) ?: System.getenv(key)
     }
     
     // Konfiguracja bazy danych
-    val dbUrl: String get() = getProperty("DB_URL", "jdbc:postgresql://localhost:5430/novels_games")
-    val dbUsername: String get() = getProperty("DB_USERNAME", "postgres")
-    val dbPassword: String get() = getProperty("DB_PASSWORD", "1234")
-    val dbMaxPoolSize: Int get() = getProperty("DB_MAX_POOL_SIZE", "10").toIntOrNull() ?: 10
+    val dbUrl: String get() = getProperty("DB_URL")
+    val dbUsername: String get() = getProperty("DB_USERNAME")
+    val dbPassword: String get() = getProperty("DB_PASSWORD")
+    val dbMaxPoolSize: Int get() = getProperty("DB_MAX_POOL_SIZE").toIntOrNull() ?: 10
     
     // Konfiguracja TypeRegistry
-    val baseDomainPackage: String get() = getProperty("BASE_DOMAIN_PACKAGE", "org.octavius.domain")
+    val baseDomainPackage: String get() = getProperty("BASE_DOMAIN_PACKAGE")
     
     // Schematy bazy danych
-    val dbSchemas: List<String> get() = getProperty("DB_SCHEMAS", "public,asian_media,games")
+    val dbSchemas: List<String> get() = getProperty("DB_SCHEMAS")
         .split(",").map { it.trim() }
 
-    val language: String get() = getProperty("LANGUAGE", "pl")
+    val language: String get() = getProperty("LANGUAGE")
 
     // Funkcja do wyświetlenia aktualnej konfiguracji
     fun printConfig() {
