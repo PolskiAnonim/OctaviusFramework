@@ -42,7 +42,8 @@ abstract class Control<T : Any>(
     protected fun executeActions(
         controlName: String,
         newValue: T?,
-        scope: CoroutineScope
+        scope: CoroutineScope,
+        payload: Any? = null
     ) {
         actions?.forEach { action ->
             val context = ActionContext(
@@ -51,7 +52,8 @@ abstract class Control<T : Any>(
                 formState = formState,
                 formSchema = formSchema,
                 errorManager = errorManager,
-                coroutineScope = scope
+                coroutineScope = scope,
+                payload = payload
             )
             action.action.invoke(context)
         }

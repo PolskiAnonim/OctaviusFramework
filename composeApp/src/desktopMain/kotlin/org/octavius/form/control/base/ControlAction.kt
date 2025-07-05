@@ -32,7 +32,8 @@ data class ActionContext<T>(
     val formState: FormState,
     val formSchema: FormSchema,
     val errorManager: ErrorManager,
-    val coroutineScope: CoroutineScope
+    val coroutineScope: CoroutineScope,
+    val payload: Any? = null // Dodatkowe dane, przykładowo dla kontrolek dropdown dodatkowa wartość
 ) {
     /**
      * Aktualizuje wartość kontrolki o podanej nazwie.
