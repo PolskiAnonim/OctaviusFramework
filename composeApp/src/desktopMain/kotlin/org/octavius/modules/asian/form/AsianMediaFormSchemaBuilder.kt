@@ -77,7 +77,16 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 null,
                 Translations.get("asianMedia.form.readingStatus"),
                 PublicationStatus::class,
-                required = true
+                required = true,
+                actions = listOf(
+                    ControlAction {
+                        val shouldBeChecked = (sourceValue in listOf(
+                            PublicationStatus.PlanToRead, PublicationStatus.Reading,
+                            PublicationStatus.Completed
+                        ))
+                        updateLocalControl("trackProgress", shouldBeChecked)
+                    }
+                )
             ),
             "trackProgress" to BooleanControl(
                 null,
