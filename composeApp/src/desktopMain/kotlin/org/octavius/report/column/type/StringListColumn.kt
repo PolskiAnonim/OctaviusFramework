@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.domain.FilterMode
+import org.octavius.report.FilterMode
 import org.octavius.localization.Translations
 import org.octavius.report.CellRendererUtils
 import org.octavius.report.column.ReportColumn

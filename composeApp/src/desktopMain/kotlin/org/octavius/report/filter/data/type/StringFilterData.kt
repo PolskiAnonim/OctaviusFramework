@@ -6,10 +6,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-import org.octavius.domain.FilterMode
-import org.octavius.domain.NullHandling
-import org.octavius.domain.NumberFilterDataType
-import org.octavius.domain.StringFilterDataType
+import org.octavius.report.FilterMode
+import org.octavius.report.NullHandling
+import org.octavius.report.StringFilterDataType
 import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
 

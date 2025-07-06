@@ -7,14 +7,13 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.floatOrNull
-import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
-import org.octavius.domain.FilterMode
-import org.octavius.domain.NullHandling
-import org.octavius.domain.NumberFilterDataType
+import org.octavius.report.FilterMode
+import org.octavius.report.NullHandling
+import org.octavius.report.NumberFilterDataType
 import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
 import kotlin.reflect.KClass

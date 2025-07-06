@@ -12,7 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.domain.NumberFilterDataType
+import org.octavius.report.NumberFilterDataType
 import org.octavius.localization.Translations
 import org.octavius.report.filter.data.type.NumberFilterData
 import org.octavius.report.filter.ui.*

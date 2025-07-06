@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.EnumWithFormatter
-import org.octavius.domain.FilterMode
-import org.octavius.domain.NullHandling
+import org.octavius.report.FilterMode
+import org.octavius.report.NullHandling
 import org.octavius.localization.Translations
 import org.octavius.report.filter.data.FilterData
 

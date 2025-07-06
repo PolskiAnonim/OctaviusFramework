@@ -12,8 +12,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
-import org.octavius.domain.FilterMode
-import org.octavius.domain.NullHandling
+import org.octavius.report.FilterMode
+import org.octavius.report.NullHandling
 import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
 import kotlin.reflect.KClass

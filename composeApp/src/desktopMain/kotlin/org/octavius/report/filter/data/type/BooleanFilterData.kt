@@ -3,8 +3,8 @@ package org.octavius.report.filter.data.type
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.serialization.json.*
-import org.octavius.domain.FilterMode
-import org.octavius.domain.NullHandling
+import org.octavius.report.FilterMode
+import org.octavius.report.NullHandling
 import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
 
