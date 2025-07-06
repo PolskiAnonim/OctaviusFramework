@@ -3,6 +3,8 @@ package org.octavius.report.component
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import org.octavius.report.management.ReportConfigurationManager
 import org.octavius.report.column.ReportColumn
 
@@ -34,14 +36,31 @@ abstract class ReportHandler {
             }
         }
 
-        // Efekt pobierający dane po zmianie parametrów
-        LaunchedEffect(
-            reportState.pagination.currentPage.value,
+        // Aktualne wartości kluczy, które powodują reset paginacji
+        val mainKeys = listOf(
             reportState.searchQuery.value,
             reportState.pagination.pageSize.value,
             reportState.sortOrder.value,
             filterSnapshot.value
-        ) {
+        )
+
+        val previousMainKeys = remember { mutableStateOf(mainKeys) }
+
+        LaunchedEffect(mainKeys, reportState.pagination.currentPage.value) {
+            val mainKeysChanged = previousMainKeys.value != mainKeys
+
+            if (mainKeysChanged) {
+                previousMainKeys.value = mainKeys
+
+                if (reportState.pagination.currentPage.value > 0) {
+                    reportState.pagination.resetPage()
+                    return@LaunchedEffect
+                }
+            }
+            // Dane są pobierane, jeśli:
+            // 1. Zmieniła się tylko strona (`mainKeysChanged` jest false).
+            // 2. Zmieniły się główne parametry, a aktualna strona to 0 (przez reset bądź taka była)
+            // 3. Jest to pierwsze uruchomienie komponentu.
             reportDataManager.fetchData()
         }
     }

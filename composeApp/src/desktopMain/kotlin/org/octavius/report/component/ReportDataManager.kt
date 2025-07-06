@@ -69,11 +69,6 @@ class ReportDataManager {
 
         reportState.pagination.totalItems.value = totalItems
         reportState.pagination.totalPages.value = totalPages
-
-        // Upewnij się, że aktualna strona jest prawidłowa
-        if (reportState.pagination.currentPage.value compareTo totalPages > 0 && totalPages > 0) {
-            reportState.pagination.currentPage.value = totalPages - 1
-        }
     }
 
     private fun buildOrderClause(): String {
