@@ -128,11 +128,6 @@ object DatabaseManager {
         return databaseUpdater
     }
 
-    fun getConverter(): DatabaseToKotlinTypesConverter {
-        return typesConverter
-    }
-
-
     /**
      * Pobiera encję z automatycznym łączeniem tabel wedlug relacji.
      *

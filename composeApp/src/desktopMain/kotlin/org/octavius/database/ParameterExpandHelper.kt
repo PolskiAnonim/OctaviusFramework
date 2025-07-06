@@ -1,5 +1,6 @@
 package org.octavius.database
 
+import kotlinx.serialization.json.JsonObject
 import org.octavius.util.Converters
 import org.postgresql.util.PGobject
 import kotlin.reflect.full.memberProperties
@@ -85,9 +86,18 @@ class ParameterExpandHelper {
         return when {
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
             isDataClass(paramValue) -> expandRowParameter(paramName, paramValue!!)
+            paramValue is JsonObject -> createJsonParameter(paramName, paramValue)
             paramValue is Enum<*> -> createEnumParameter(paramName, paramValue)
             else -> ":$paramName" to mapOf(paramName to paramValue)
         }
+    }
+
+    private fun createJsonParameter(paramName: String, paramValue: JsonObject): Pair<String, Map<String, Any?>> {
+        val pgObject = PGobject().apply {
+            value = paramValue.toString()
+            type = "jsonb"
+        }
+        return ":$paramName" to mapOf(paramName to pgObject)
     }
 
     /**

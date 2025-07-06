@@ -1,6 +1,7 @@
 package org.octavius.report.filter.data
 
 import androidx.compose.runtime.MutableState
+import kotlinx.serialization.json.JsonObject
 import org.octavius.domain.FilterMode
 import org.octavius.domain.NullHandling
 import org.octavius.report.Query
@@ -35,4 +36,8 @@ abstract class FilterData {
             } ?: Query("$columnName IS NOT NULL")
         }
     }
+
+    // Serializacja i deserializacja danych do bazy
+    abstract fun serialize(): JsonObject
+    abstract fun deserialize(data: JsonObject)
 }

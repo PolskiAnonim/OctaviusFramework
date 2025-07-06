@@ -1,5 +1,6 @@
 package org.octavius.report.management
 
+import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
 
 data class ReportConfiguration(
@@ -16,5 +17,6 @@ data class ReportConfigurationData(
     val visibleColumns: List<String>,
     val columnOrder: List<String>,
     val sortOrder: List<SortConfiguration>,
-    val pageSize: Int = 10
+    val pageSize: Int,
+    val filters: List<FilterConfig>,
 )

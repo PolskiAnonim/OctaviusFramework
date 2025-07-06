@@ -2,6 +2,7 @@ package org.octavius.report.filter.data.type
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.serialization.json.*
 import org.octavius.domain.FilterMode
 import org.octavius.domain.NullHandling
 import org.octavius.report.Query
@@ -16,7 +17,7 @@ data class BooleanFilterData(
     override fun getFilterFragment(columnName: String): Query? {
         val boolValue = value.value
         if (!isActive()) return null
-        
+
         val baseQuery = buildBooleanQuery(columnName, boolValue, mode.value)
         return applyNullHandling(baseQuery, columnName)
     }
@@ -39,17 +40,34 @@ data class BooleanFilterData(
         mode: FilterMode
     ): Query? {
         if (value == null) return null
-        
+
         return when (mode) {
             FilterMode.Single -> {
                 Query("$columnName = :$columnName", mapOf(columnName to value))
             }
+
             FilterMode.ListAny -> {
                 Query("$columnName && :$columnName", mapOf(columnName to listOf(value)))
             }
+
             FilterMode.ListAll -> {
                 Query("$columnName @> :$columnName", mapOf(columnName to listOf(value)))
             }
         }
+    }
+
+    override fun serialize(): JsonObject {
+        return buildJsonObject {
+            put("value", value.value)
+            put("nullHandling", nullHandling.value.name)
+            put("mode", mode.value.name)
+        }
+    }
+
+    override fun deserialize(data: JsonObject) {
+        resetFilter()
+        value.value = data["value"]!!.jsonPrimitive.booleanOrNull
+        nullHandling.value = data["nullHandling"]!!.jsonPrimitive.content.let { NullHandling.valueOf(it) }
+        mode.value = data["mode"]!!.jsonPrimitive.content.let { FilterMode.valueOf(it) }
     }
 }

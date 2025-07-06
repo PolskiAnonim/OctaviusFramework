@@ -2,6 +2,16 @@ package org.octavius.report.filter.data.type
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 import org.octavius.domain.FilterMode
 import org.octavius.domain.NullHandling
 import org.octavius.domain.NumberFilterDataType
@@ -167,6 +177,36 @@ data class NumberFilterData<T : Number>(
                     else -> null
                 }
             }
+        }
+    }
+
+    override fun serialize(): JsonObject {
+        return buildJsonObject {
+            put("filterType", filterType.value.name)
+            put("minValue", minValue.value)
+            put("maxValue", maxValue.value)
+            put("nullHandling", nullHandling.value.name)
+            put("mode", mode.value.name)
+        }
+    }
+
+    override fun deserialize(data: JsonObject) {
+        resetFilter()
+        filterType.value = data["filterType"]!!.jsonPrimitive.content.let { NumberFilterDataType.valueOf(it) }
+        minValue.value = data["minValue"]!!.jsonPrimitive.let { convertToNumber(it) }
+        maxValue.value = data["maxValue"]!!.jsonPrimitive.let { convertToNumber(it) }
+        nullHandling.value = data["nullHandling"]!!.jsonPrimitive.content.let { NullHandling.valueOf(it) }
+        mode.value = data["mode"]!!.jsonPrimitive.content.let { FilterMode.valueOf(it) }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun convertToNumber(jsonPrimitive: JsonPrimitive): T? {
+        return when (numberClass) {
+            Int::class -> jsonPrimitive.intOrNull as T?
+            Long::class -> jsonPrimitive.longOrNull as T?
+            Float::class -> jsonPrimitive.floatOrNull as T?
+            Double::class -> jsonPrimitive.doubleOrNull as T?
+            else -> null
         }
     }
 }

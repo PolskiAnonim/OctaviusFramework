@@ -215,6 +215,21 @@ $BODY$;
 
 -- CONFIGURATIONS
 
+CREATE TYPE public.sort_direction AS ENUM
+    ('ASCENDING', 'DESCENDING');
+
+CREATE TYPE public.sort_configuration AS
+(
+    column_name text,
+    sort_direction sort_direction
+);
+
+CREATE TYPE public.filter_config AS
+(
+    column_name text,
+    config jsonb
+);
+
 CREATE TABLE IF NOT EXISTS public.report_configurations
 (
     id SERIAL,
@@ -226,6 +241,7 @@ CREATE TABLE IF NOT EXISTS public.report_configurations
     column_order text[] COLLATE pg_catalog."default",
     page_size integer NOT NULL DEFAULT 10,
     is_default boolean DEFAULT false,
+    filters filter_config[] NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT report_configurations_pkey PRIMARY KEY (id),
@@ -237,93 +253,6 @@ CREATE OR REPLACE TRIGGER update_report_configurations_modtime
     ON public.report_configurations
     FOR EACH ROW
 EXECUTE FUNCTION public.update_modified_column();
-
-CREATE TYPE public.sort_direction AS ENUM
-    ('ASCENDING', 'DESCENDING');
-
-CREATE TYPE public.sort_configuration AS
-(
-    column_name text,
-    sort_direction sort_direction
-);
-
--- FILTRY
-CREATE TYPE public.null_handling AS ENUM('INCLUDE', 'EXCLUDE', 'ONLY_NULL');
-
-CREATE TYPE public.string_filter_data_type AS ENUM('EXACT', 'STARTS_WITH', 'ENDS_WITH', 'CONTAINS', 'NOT_CONTAINS');
-
-CREATE TYPE public.number_filter_data_type AS ENUM('EQUALS', 'NOT_EQUALS', 'LESS_THAN', 'LESS_EQUALS', 'GREATER_THAN',
-'GREATER_EQUALS', 'RANGE');
-
-CREATE TYPE public.filter_data_type AS ENUM
-    ('BOOLEAN', 'STRING', 'NUMBER', 'ENUM');
-
-CREATE TABLE IF NOT EXISTS public.report_filter_configs
-(
-    -- Wspólne kolumny
-    id SERIAL,
-    report_config_id integer NOT NULL REFERENCES public.report_configurations(id) ON DELETE CASCADE,
-    column_name text NOT NULL,
-    null_handling null_handling NOT NULL DEFAULT 'INCLUDE',
-    filter_type filter_data_type NOT NULL, -- To jest klucz, po którym dzielimy dane
-
-    -- Kolumny specyficzne dla filtra BOOLEAN
-    boolean_value boolean,
-
-    -- Kolumny specyficzne dla filtra STRING
-    string_filter_type string_filter_data_type,
-    string_value text,
-    case_sensitive boolean,
-
-    -- Kolumny specyficzne dla filtra NUMBER
-    number_filter_type number_filter_data_type,
-    number_type_name TEXT,
-    min_value TEXT,
-    max_value TEXT,
-
-    -- Kolumny specyficzne dla filtra ENUM
-    enum_type_name text,
-    enum_values text[],
-    include_enum boolean,
-
-    PRIMARY KEY(id),
-    UNIQUE (report_config_id, column_name),
-
-    -- BOOLEAN
-    CONSTRAINT BOOLEAN_FILTER_CHECK CHECK (
-        NOT filter_type = 'BOOLEAN' OR
-        string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
-        number_filter_type IS NULL AND number_type_name IS NULL AND min_value IS NULL AND max_value IS NULL AND
-        enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
-    ),
-    -- STRING
-    CONSTRAINT STRING_FILTER_CHECK CHECK (
-        NOT filter_type = 'STRING' OR
-        boolean_value IS NULL AND
-        string_filter_type IS NOT NULL AND case_sensitive IS NOT NULL AND
-        number_filter_type IS NULL AND number_type_name IS NULL AND min_value IS NULL AND max_value IS NULL AND
-        enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
-    ),
-    -- NUMBER
-    CONSTRAINT NUMBER_FILTER_CHECK CHECK (
-        NOT filter_type = 'NUMBER' OR
-        boolean_value IS NULL AND
-        string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
-        (max_value IS NULL OR min_value IS NULL OR min_value <= max_value) AND -- min_value musi być mniejsze lub równe max_value, jeśli oba istnieją
-        number_filter_type IS NOT NULL AND number_type_name IS NOT NULL AND
-        enum_type_name IS NULL AND enum_values IS NULL AND include_enum IS NULL
-    ),
-    -- ENUM
-    CONSTRAINT ENUM_FILTER_CHECK CHECK (
-        NOT filter_type = 'ENUM' OR
-        boolean_value IS NULL AND
-        string_filter_type IS NULL AND string_value IS NULL AND case_sensitive IS NULL AND
-        number_filter_type IS NULL AND number_type_name IS NULL AND min_value IS NULL AND max_value IS NULL AND
-        enum_type_name IS NOT NULL AND enum_values IS NOT NULL AND include_enum IS NOT NULL
-        )
-);
-
-CREATE INDEX IF NOT EXISTS idx_report_filter_configs_report_config_id ON public.report_filter_configs (report_config_id);
 
 --------------------------SETTINGS
 

@@ -1,5 +1,6 @@
 package org.octavius.domain
 
+import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.Translations
 
 enum class SortDirection {
@@ -78,3 +79,8 @@ enum class FilterMode: EnumWithFormatter<FilterMode> {
         }
     }
 }
+
+data class FilterConfig(
+    val columnName: String,
+    val config: JsonObject
+)
