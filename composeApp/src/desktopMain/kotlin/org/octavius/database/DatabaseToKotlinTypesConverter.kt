@@ -166,7 +166,15 @@ class DatabaseToKotlinTypesConverter(private val typeRegistry: TypeRegistry) {
 
         // Rekurencyjnie konwertujemy każdy element tablicy używając głównej funkcji konwersji
         return elements.map { elementValue ->
-            convertToDomainType(elementValue, elementType)
+            // Sprawdzamy, czy string reprezentujący element SAM jest tablicą.
+            val isNestedArray = elementValue?.trim()?.startsWith('{') ?: false
+
+            // Jeśli to zagnieżdżona tablica, rekurencyjnie wywołujemy konwersję
+            // dla CAŁEGO typu tablicowego (np. "_text"), a nie dla jego elementu ("text").
+            // W przeciwnym razie, kontynuujemy standardową logikę z elementType.
+            val typeNameToUse = if (isNestedArray) typeInfo.typeName else elementType
+
+            convertToDomainType(elementValue, typeNameToUse)
         }
     }
 
