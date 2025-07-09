@@ -8,7 +8,8 @@ import org.octavius.modules.asian.ui.AsianMediaFormScreen
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
 import org.octavius.report.column.type.EnumColumn
-import org.octavius.report.column.type.StringListColumn
+import org.octavius.report.column.type.MultiRowColumn
+import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
 
@@ -30,10 +31,13 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
         )
 
         val columns = mapOf(
-            "titles" to StringListColumn(
-                databaseColumnName = "titles",
-                header = Translations.get("games.general.titles"),
-                width = 2f
+            "titles" to MultiRowColumn(
+                wrappedColumn = StringColumn(
+                    databaseColumnName = "titles",
+                    header = Translations.get("games.general.titles"),
+                    width = 2f
+                ),
+                maxVisibleItems = 5
             ),
             "language" to EnumColumn(
                 databaseColumnName = "language",
