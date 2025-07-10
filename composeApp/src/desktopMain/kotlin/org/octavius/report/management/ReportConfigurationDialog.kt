@@ -18,8 +18,7 @@ import org.octavius.report.component.ReportState
 fun ReportConfigurationDialog(
     reportName: String,
     reportState: ReportState,
-    onDismiss: () -> Unit,
-    onConfigurationApplied: () -> Unit
+    onDismiss: () -> Unit
 ) {
     var showSaveDialog by remember { mutableStateOf(false) }
     var configurations by remember { mutableStateOf(emptyList<ReportConfiguration>()) }
@@ -88,7 +87,6 @@ fun ReportConfigurationDialog(
                             configuration = config,
                             onLoad = {
                                 configManager.applyConfiguration(config, reportState)
-                                onConfigurationApplied()
                                 onDismiss()
                             },
                             onDelete = {

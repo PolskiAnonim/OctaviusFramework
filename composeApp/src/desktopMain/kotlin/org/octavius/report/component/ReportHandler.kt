@@ -27,6 +27,23 @@ abstract class ReportHandler {
 
     abstract fun createReportStructure(): ReportStructure
 
+    fun getColumns(): Map<String, ReportColumn> = reportStructure.getAllColumns()
+
+    fun getReportState(): ReportState = reportState
+
+    private fun loadDefaultConfiguration() {
+        val configManager = ReportConfigurationManager()
+        val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
+
+        if (defaultConfig != null) {
+            configManager.applyConfiguration(defaultConfig, reportState)
+        }
+    }
+
+    fun getReportName(): String {
+        return reportStructure.reportName
+    }
+
     @Composable
     fun DataFetcher() {
         // Snapshot wszystkich wartości filtrów
@@ -64,22 +81,4 @@ abstract class ReportHandler {
             reportDataManager.fetchData()
         }
     }
-
-    fun getColumns(): Map<String, ReportColumn> = reportStructure.getAllColumns()
-
-    fun getReportState(): ReportState = reportState
-
-    private fun loadDefaultConfiguration() {
-        val configManager = ReportConfigurationManager()
-        val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
-        
-        if (defaultConfig != null) {
-            configManager.applyConfiguration(defaultConfig, reportState)
-        }
-    }
-
-    fun getReportName(): String {
-        return reportStructure.reportName
-    }
-
 }

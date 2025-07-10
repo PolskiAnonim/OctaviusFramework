@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
 import org.octavius.navigator.Screen
 import org.octavius.report.management.ColumnManagementPanel
 import org.octavius.report.ui.PaginationComponent
@@ -26,18 +28,14 @@ abstract class ReportScreen : Screen {
 
     @Composable
     override fun Content() {
-        val lazyListState = rememberLazyListState()
-        val coroutineScope = rememberCoroutineScope()
-        var addMenuExpanded by remember { mutableStateOf(false) }
-        var configurationDialogVisible by remember { mutableStateOf(false) }
-
+        val uiState = rememberReportUIState()
         val reportState = reportHandler.getReportState()
 
         reportHandler.DataFetcher()
 
         Column(modifier = Modifier) {
             LazyColumn(
-                state = lazyListState,
+                state = uiState.lazyListState,
                 modifier = Modifier.weight(1f)
             ) {
                 item {
@@ -57,35 +55,43 @@ abstract class ReportScreen : Screen {
                             reportState.searchQuery.value = query
                             reportState.pagination.resetPage()
                         },
-                        onAddMenuClick = { addMenuExpanded = !addMenuExpanded },
-                        addMenuExpanded = addMenuExpanded,
-                        onAddMenuDismiss = { addMenuExpanded = false },
+                        onAddMenuClick = { uiState.addMenuExpanded.value = !uiState.addMenuExpanded.value },
+                        addMenuExpanded = uiState.addMenuExpanded.value,
+                        onAddMenuDismiss = { uiState.addMenuExpanded.value = false },
                         addMenuContent = { AddMenu() },
-                        onConfigurationClick = { configurationDialogVisible = true }
+                        onConfigurationClick = { uiState.configurationDialogVisible.value = true }
                     )
                 }
 
                 // Tabela z danymi
                 reportTable(reportHandler, reportState, reportState.data)
             }
-
-            // Paginacja
-            PaginationComponent(
-                reportState.pagination
-            )
+            PaginationComponent(reportState.pagination)
         }
-        
         // Dialog konfiguracji
-        if (configurationDialogVisible) {
+        if (uiState.configurationDialogVisible.value) {
             ReportConfigurationDialog(
                 reportName = reportHandler.getReportName(),
                 reportState = reportState,
-                onDismiss = { configurationDialogVisible = false },
-                onConfigurationApplied = {
-                    // Po zastosowaniu konfiguracji, odśwież dane
-
-                }
+                onDismiss = { uiState.configurationDialogVisible.value = false },
             )
         }
     }
+
+    @Composable
+    private fun rememberReportUIState(): ReportUIState {
+        return ReportUIState(
+            lazyListState = rememberLazyListState(),
+            coroutineScope = rememberCoroutineScope(),
+            addMenuExpanded = remember { mutableStateOf(false) },
+            configurationDialogVisible = remember { mutableStateOf(false) }
+        )
+    }
+
+    private data class ReportUIState(
+        val lazyListState: LazyListState,
+        val coroutineScope: CoroutineScope,
+        val addMenuExpanded: MutableState<Boolean>,
+        val configurationDialogVisible: MutableState<Boolean>
+    )
 }
