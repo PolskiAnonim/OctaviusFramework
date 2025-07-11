@@ -5,7 +5,7 @@ import org.octavius.localization.Translations
 import org.octavius.modules.games.ui.GameFormScreen
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
-import org.octavius.report.ReportAction
+import org.octavius.report.ReportRowAction
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportHandler
@@ -35,7 +35,7 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
         )
 
         val rowActions = listOf(
-            ReportAction(Translations.get("report.actions.edit")) {
+            ReportRowAction(Translations.get("report.actions.edit")) {
                 // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
                 val id = rowData["id"] as? Int
                 if (id != null) {

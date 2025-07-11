@@ -11,7 +11,7 @@ import org.octavius.report.component.ReportState
  * @param icon Opcjonalna ikona dla pozycji w menu.
  * @param action Logika do wykonania, otrzymuje ReportActionContext.
  */
-data class ReportAction(
+data class ReportRowAction(
     val label: String,
     val icon: ImageVector? = null,
     val action: ReportActionContext.() -> Unit

@@ -1,7 +1,7 @@
 package org.octavius.report.component
 
 import org.octavius.report.Query
-import org.octavius.report.ReportAction
+import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.special.ActionColumn
 
@@ -17,7 +17,7 @@ class ReportStructure(
     private val initColumns: Map<String, ReportColumn>,
     val reportConfig: String, // W przyszłości obiekt
     val reportName: String,
-    val rowActions: List<ReportAction> = emptyList()
+    val rowActions: List<ReportRowAction> = emptyList()
 ) {
     lateinit var columns: Map<String, ReportColumn>
 

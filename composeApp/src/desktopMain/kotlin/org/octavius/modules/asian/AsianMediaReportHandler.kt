@@ -7,7 +7,7 @@ import org.octavius.localization.Translations
 import org.octavius.modules.asian.ui.AsianMediaFormScreen
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
-import org.octavius.report.ReportAction
+import org.octavius.report.ReportRowAction
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.MultiRowColumn
 import org.octavius.report.column.type.StringColumn
@@ -61,7 +61,7 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
         )
 
         val rowActions = listOf(
-            ReportAction(Translations.get("report.actions.edit")) {
+            ReportRowAction(Translations.get("report.actions.edit")) {
                 val id = rowData["title_id"] as? Int
                 if (id != null) {
                     navigator.addScreen(
