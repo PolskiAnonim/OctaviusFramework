@@ -53,8 +53,8 @@ data class StringFilterData(
         
         return when (mode) {
             FilterMode.Single -> buildSingleStringQuery(columnName, searchValue, filterType, caseSensitive)
-            FilterMode.ListAny -> buildListStringQuery(columnName, searchValue, filterType, caseSensitive, "&&")
-            FilterMode.ListAll -> buildListStringQuery(columnName, searchValue, filterType, caseSensitive, "@>")
+            FilterMode.ListAny -> buildListStringQuery(columnName, searchValue, filterType, caseSensitive, false)
+            FilterMode.ListAll -> buildListStringQuery(columnName, searchValue, filterType, caseSensitive, true)
         }
     }
     
@@ -91,33 +91,34 @@ data class StringFilterData(
         searchValue: String,
         filterType: StringFilterDataType,
         caseSensitive: Boolean,
-        operator: String
+        isAllMode: Boolean
     ): Query {
         val valueParam = if (caseSensitive) searchValue else searchValue.lowercase()
         
         return when (filterType) {
             StringFilterDataType.Exact -> {
+                val operator = if (isAllMode) "@>" else "&&"
                 Query("$columnName $operator :$columnName", mapOf(columnName to listOf(valueParam)))
             }
             StringFilterDataType.StartsWith -> {
                 val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
-                      mapOf(columnName to "$valueParam%"))
+                val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition NOT LIKE :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
+                Query(existsType, mapOf(columnName to "$valueParam%"))
             }
             StringFilterDataType.EndsWith -> {
                 val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
-                      mapOf(columnName to "%$valueParam"))
+                val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition NOT LIKE :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
+                Query(existsType, mapOf(columnName to "%$valueParam"))
             }
             StringFilterDataType.Contains -> {
                 val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
-                      mapOf(columnName to "%$valueParam%"))
+                val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition NOT LIKE :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
+                Query(existsType, mapOf(columnName to "%$valueParam%"))
             }
             StringFilterDataType.NotContains -> {
                 val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                Query("NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)", 
-                      mapOf(columnName to "%$valueParam%"))
+                val existsType = if (isAllMode) "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)" else "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
+                Query(existsType, mapOf(columnName to "%$valueParam%"))
             }
         }
     }

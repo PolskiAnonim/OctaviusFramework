@@ -55,8 +55,8 @@ data class NumberFilterData<T : Number>(
         
         return when (mode) {
             FilterMode.Single -> buildSingleNumberQuery(columnName, min, max, filterType)
-            FilterMode.ListAny -> buildListNumberQuery(columnName, min, max, filterType, "&&")
-            FilterMode.ListAll -> buildListNumberQuery(columnName, min, max, filterType, "@>")
+            FilterMode.ListAny -> buildListNumberQuery(columnName, min, max, filterType, false)
+            FilterMode.ListAll -> buildListNumberQuery(columnName, min, max, filterType, true)
         }
     }
     
@@ -120,50 +120,58 @@ data class NumberFilterData<T : Number>(
         min: T?,
         max: T?,
         filterType: NumberFilterDataType,
-        operator: String
+        isAllMode: Boolean
     ): Query? {
         return when (filterType) {
             NumberFilterDataType.Equals -> {
                 if (min != null) {
+                    val operator = if (isAllMode) "@>" else "&&"
                     Query("$columnName $operator :$columnName", mapOf(columnName to listOf(min)))
                 } else null
             }
             NumberFilterDataType.NotEquals -> {
                 if (min != null) {
+                    val operator = if (isAllMode) "@>" else "&&"
                     Query("NOT ($columnName $operator :$columnName)", mapOf(columnName to listOf(min)))
                 } else null
             }
             NumberFilterDataType.LessThan -> {
                 if (max != null) {
-                    Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)", mapOf(columnName to max))
+                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
+                    Query(existsType, mapOf(columnName to max))
                 } else null
             }
             NumberFilterDataType.LessEquals -> {
                 if (max != null) {
-                    Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)", mapOf(columnName to max))
+                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
+                    Query(existsType, mapOf(columnName to max))
                 } else null
             }
             NumberFilterDataType.GreaterThan -> {
                 if (min != null) {
-                    Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)", mapOf(columnName to min))
+                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)"
+                    Query(existsType, mapOf(columnName to min))
                 } else null
             }
             NumberFilterDataType.GreaterEquals -> {
                 if (min != null) {
-                    Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)", mapOf(columnName to min))
+                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
+                    Query(existsType, mapOf(columnName to min))
                 } else null
             }
             NumberFilterDataType.Range -> {
                 when {
                     min != null && max != null -> {
-                        Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)",
-                            mapOf("${columnName}_min" to min, "${columnName}_max" to max))
+                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN :${columnName}_min AND :${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)"
+                        Query(existsType, mapOf("${columnName}_min" to min, "${columnName}_max" to max))
                     }
                     min != null -> {
-                        Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)", mapOf(columnName to min))
+                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
+                        Query(existsType, mapOf(columnName to min))
                     }
                     max != null -> {
-                        Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)", mapOf(columnName to max))
+                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
+                        Query(existsType, mapOf(columnName to max))
                     }
                     else -> null
                 }
