@@ -2,15 +2,7 @@ package org.octavius.report.filter.data.type
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.floatOrNull
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.*
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.NumberFilterDataType

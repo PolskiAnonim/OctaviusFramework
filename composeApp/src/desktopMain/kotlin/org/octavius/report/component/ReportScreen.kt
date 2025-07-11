@@ -12,8 +12,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.navigator.Screen
 import org.octavius.report.management.ColumnManagementPanel
-import org.octavius.report.ui.PaginationComponent
 import org.octavius.report.management.ReportConfigurationDialog
+import org.octavius.report.ui.PaginationComponent
 import org.octavius.report.ui.ReportSearchBar
 import org.octavius.report.ui.reportTable
 

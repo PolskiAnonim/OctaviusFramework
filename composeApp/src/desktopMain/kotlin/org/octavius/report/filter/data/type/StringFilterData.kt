@@ -8,8 +8,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
-import org.octavius.report.StringFilterDataType
 import org.octavius.report.Query
+import org.octavius.report.StringFilterDataType
 import org.octavius.report.filter.data.FilterData
 
 data class StringFilterData(

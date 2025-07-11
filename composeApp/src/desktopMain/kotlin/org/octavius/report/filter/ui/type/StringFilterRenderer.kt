@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.report.StringFilterDataType
 import org.octavius.localization.Translations
+import org.octavius.report.StringFilterDataType
 import org.octavius.report.filter.data.type.StringFilterData
 import org.octavius.report.filter.ui.*
 
