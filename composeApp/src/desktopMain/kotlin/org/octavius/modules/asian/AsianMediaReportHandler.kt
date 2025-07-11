@@ -7,6 +7,7 @@ import org.octavius.localization.Translations
 import org.octavius.modules.asian.ui.AsianMediaFormScreen
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
+import org.octavius.report.ReportRowAction
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.MultiRowColumn
 import org.octavius.report.column.type.StringColumn
@@ -59,21 +60,21 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
             )
         )
 
-        return ReportStructure(query, columns, "", "asianMedia")
-    }
+        val rowActions = listOf(
+            ReportRowAction(Translations.get("report.actions.edit")) {
+                val id = rowData["title_id"] as? Int
+                if (id != null) {
+                    navigator.addScreen(
+                        AsianMediaFormScreen(
+                        entityId = id,
+                        onSaveSuccess = { navigator.removeScreen() },
+                        onCancel = { navigator.removeScreen() }
+                        )
+                    )
+                }
+            }
+        )
 
-
-
-    override var onRowClick: ((Map<String, Any?>) -> Unit)? = { rowData ->
-        // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
-        val id = rowData["title_id"] as? Int
-        if (id != null) {
-            navigator.addScreen(
-                AsianMediaFormScreen(
-                entityId = id,
-                onSaveSuccess = { navigator.removeScreen() },
-                onCancel = { navigator.removeScreen() }
-            ))
-        }
+        return ReportStructure(query, columns, "", "asianMedia", rowActions)
     }
 }

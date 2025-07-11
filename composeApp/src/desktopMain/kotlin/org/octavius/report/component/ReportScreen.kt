@@ -41,6 +41,7 @@ abstract class ReportScreen : Screen {
                 item {
                     // Panel zarządzania kolumnami
                     ColumnManagementPanel(
+                        manageableColumnKeys = reportHandler.getManageableColumnKeys(),
                         columnNames = reportHandler.getColumns().map { it.key to it.value.header }.toMap(),
                         reportState = reportState,
                         modifier = Modifier.padding(8.dp)

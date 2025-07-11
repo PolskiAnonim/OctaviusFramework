@@ -251,6 +251,10 @@
     },
     "management": {
       "columnManagement": "Zarządzanie kolumnami"
+    },
+    "actions": {
+      "menuDescription": "Opcje",
+      "edit": "Edytuj"
     }
   },
   "expandable": {

@@ -16,6 +16,7 @@ abstract class ReportHandler {
 
     init {
         reportStructure = this.createReportStructure()
+        reportStructure.initSpecialColumns(reportState)
         val filterValues = reportStructure.getAllColumns().filterValues { v -> v.filterable }.mapValues { it.value.getFilterData()!! }
         reportState.filterData.value = filterValues
         reportState.initialize(reportStructure.getAllColumns().keys, reportStructure.reportConfig)
@@ -23,9 +24,9 @@ abstract class ReportHandler {
         reportDataManager.setReferences(reportStructure, reportState)
     }
 
-    open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
-
     abstract fun createReportStructure(): ReportStructure
+
+    fun getManageableColumnKeys(): List<String> = reportStructure.manageableColumnKeys
 
     fun getColumns(): Map<String, ReportColumn> = reportStructure.getAllColumns()
 

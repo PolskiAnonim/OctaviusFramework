@@ -11,12 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
+import org.octavius.report.ColumnWidth
 import org.octavius.report.filter.data.FilterData
 
 abstract class ReportColumn(
     val databaseColumnName: String,
     val header: String,
-    val width: Float,
+    val width: ColumnWidth,
     val filterable: Boolean,
     val sortable: Boolean
 ) {
@@ -39,10 +40,10 @@ abstract class ReportColumn(
         Box(
             modifier = modifier
                 .padding(horizontal = 4.dp),
-            contentAlignment = Alignment.Companion.Center
+            contentAlignment = Alignment.Center
         ) {
             Row(
-                verticalAlignment = Alignment.Companion.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = if (hasFilter) {
                     Modifier.Companion.clickable { showColumnMenu = true }

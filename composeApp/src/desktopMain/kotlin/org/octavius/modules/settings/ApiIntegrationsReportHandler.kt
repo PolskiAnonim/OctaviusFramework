@@ -11,13 +11,6 @@ import org.octavius.report.component.ReportStructure
 
 class ApiIntegrationsReportHandler(val navigator: Navigator) : ReportHandler() {
 
-    override var onRowClick: ((Map<String, Any?>) -> Unit)? = { rowData ->
-        val id = rowData["id"] as? Int
-        if (id != null) {
-            // TODO: Open API integration form
-        }
-    }
-
     override fun createReportStructure(): ReportStructure {
         val query = Query(
             """
