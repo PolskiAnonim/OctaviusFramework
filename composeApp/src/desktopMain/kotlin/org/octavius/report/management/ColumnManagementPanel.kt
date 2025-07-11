@@ -38,6 +38,7 @@ private object ChipConstants {
 
 @Composable
 fun ColumnManagementPanel(
+    manageableColumnKeys: List<String>,
     columnNames: Map<String, String>,
     reportState: ReportState,
     modifier: Modifier = Modifier
@@ -75,7 +76,7 @@ fun ColumnManagementPanel(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Sekcja widocznych kolumn z możliwością sortowania
-                ColumnsSection(columnNames = columnNames, reportState = reportState)
+                ColumnsSection(manageableColumnKeys = manageableColumnKeys, columnNames = columnNames, reportState = reportState)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -89,6 +90,7 @@ fun ColumnManagementPanel(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun ColumnsSection(
+    manageableColumnKeys: List<String>,
     columnNames: Map<String, String>,
     reportState: ReportState
 ) {
@@ -113,7 +115,9 @@ private fun ColumnsSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(allColumns) { columnKey ->
+            // Iterujemy po aktualnej kolejności WSZYSTKICH kolumn, ale filtrujemy te,
+            // które nie są zarządzalne
+            items(allColumns.filter { manageableColumnKeys.contains(it) }) { columnKey ->
                 val isVisible = visibleColumns.value.contains(columnKey)
                 val index = allColumns.indexOf(columnKey)
                 DraggableChip(

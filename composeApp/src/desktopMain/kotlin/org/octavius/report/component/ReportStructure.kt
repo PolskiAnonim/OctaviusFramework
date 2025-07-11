@@ -21,6 +21,13 @@ class ReportStructure(
 ) {
     lateinit var columns: Map<String, ReportColumn>
 
+    /**
+     * Zwraca listę kluczy kolumn, które mogą być zarządzane przez użytkownika
+     * w panelu konfiguracji (ukrywanie, zmiana kolejności).
+     * Pomija kolumny specjalne (np. akcje).
+     */
+    val manageableColumnKeys: List<String> get() = initColumns.keys.toList()
+
     fun initSpecialColumns(reportState: ReportState) {
         val specialColumns = mutableMapOf<String, ReportColumn>()
         if (rowActions.isNotEmpty()) {

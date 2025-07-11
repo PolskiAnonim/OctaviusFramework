@@ -26,6 +26,8 @@ abstract class ReportHandler {
 
     abstract fun createReportStructure(): ReportStructure
 
+    fun getManageableColumnKeys(): List<String> = reportStructure.manageableColumnKeys
+
     fun getColumns(): Map<String, ReportColumn> = reportStructure.getAllColumns()
 
     fun getReportState(): ReportState = reportState
