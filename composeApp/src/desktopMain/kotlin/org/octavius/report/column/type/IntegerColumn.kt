@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import org.octavius.report.CellRendererUtils
+import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.data.FilterData
 import org.octavius.report.filter.data.type.NumberFilterData
@@ -19,7 +20,7 @@ class IntegerColumn(
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
-) : ReportColumn(databaseColumnName, header, width, filterable, sortable) {
+) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
 
     override fun createFilterData(): FilterData {
         return NumberFilterData(Int::class)

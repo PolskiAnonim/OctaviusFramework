@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.report.CellRendererUtils
+import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.data.FilterData
 import org.octavius.report.filter.data.type.EnumFilterData
@@ -21,7 +22,7 @@ class EnumColumn<T>(
     sortable: Boolean = false,
     filterable: Boolean = true,
     val enumClass: KClass<T>,
-) : ReportColumn(databaseColumnName, header, width, filterable, sortable)
+) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable)
         where T : Enum<T>, T : EnumWithFormatter<T> {
 
     override fun createFilterData(): FilterData {

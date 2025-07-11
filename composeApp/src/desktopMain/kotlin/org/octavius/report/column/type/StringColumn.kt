@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.octavius.report.CellRendererUtils
+import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.data.FilterData
 import org.octavius.report.filter.data.type.StringFilterData
@@ -17,7 +18,7 @@ class StringColumn(
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true
-) : ReportColumn(databaseColumnName, header, width, filterable, sortable) {
+) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
 
     override fun createFilterData(): FilterData {
         return StringFilterData()

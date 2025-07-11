@@ -2,17 +2,20 @@ package org.octavius.report.column.type.special
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.data.FilterData
 
 /**
  * Specjalna kolumna, konfigurująca przestrzeń o konkretnym przeznaczeniu.
  * Nie jest sortowalna ani filtrowalna.
+ * Posiada stałą ustaloną szerokość
  */
-abstract class SpecialColumn(technicalName: String, width: Float) : ReportColumn(
+abstract class SpecialColumn(technicalName: String, width: Dp) : ReportColumn(
     technicalName,
     "",
-    width,
+    width = ColumnWidth.Fixed(width),
     filterable = false,
     sortable = false
 ) {

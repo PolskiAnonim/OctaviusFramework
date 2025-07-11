@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.report.ColumnWidth
 import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportState
 
@@ -29,19 +30,23 @@ fun LazyListScope.reportTable(
             val allColumns = reportHandler.getColumns()
 
             visibleColumns.forEachIndexed { index, key ->
-                val column = allColumns[key]
-                if (column != null) {
-                    column.RenderHeader(reportState.filterData.value[key], Modifier.weight(column.width))
+                val column = allColumns[key]!!
 
-                    // Separator między kolumnami w nagłówku (oprócz ostatniej)
-                    if (index < visibleColumns.size - 1) {
-                        Box(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .fillMaxHeight()
-                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
-                        )
-                    }
+                val cellModifier = when (val colWidth = column.width) {
+                    is ColumnWidth.Fixed -> Modifier.width(colWidth.width)
+                    is ColumnWidth.Flexible -> Modifier.weight(colWidth.weight)
+                }
+
+                column.RenderHeader(reportState.filterData.value[key], cellModifier)
+
+                // Separator między kolumnami w nagłówku (oprócz ostatniej)
+                if (index < visibleColumns.size - 1) {
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .fillMaxHeight()
+                            .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
+                    )
                 }
             }
         }

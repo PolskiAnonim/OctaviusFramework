@@ -2,6 +2,7 @@ package org.octavius.report
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.unit.Dp
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Translations
 
@@ -80,4 +81,23 @@ enum class FilterMode: EnumWithFormatter<FilterMode> {
             ListAll -> Translations.get("filter.list.all")
         }
     }
+}
+
+/**
+ * Reprezentuje szerokość kolumny w raporcie.
+ * Może być stała (w Dp) lub elastyczna (jako waga w RowScope).
+ */
+sealed class ColumnWidth {
+    /**
+     * Stała szerokość kolumny, zdefiniowana w Dp.
+     * Używana dla kolumn z UI, jak przyciski akcji.
+     */
+    data class Fixed(val width: Dp) : ColumnWidth()
+
+    /**
+     * Elastyczna szerokość kolumny, zdefiniowana jako waga.
+     * Kolumna zajmie przestrzeń proporcjonalną do swojej wagi.
+     * Używana dla kolumn z danymi.
+     */
+    data class Flexible(val weight: Float) : ColumnWidth()
 }

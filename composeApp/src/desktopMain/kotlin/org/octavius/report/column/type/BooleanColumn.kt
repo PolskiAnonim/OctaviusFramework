@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.octavius.localization.Translations
 import org.octavius.report.CellRendererUtils
+import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.data.FilterData
 import org.octavius.report.filter.data.type.BooleanFilterData
@@ -26,7 +27,7 @@ class BooleanColumn(
     private val trueText: String = Translations.get("report.column.boolean.true"),
     private val falseText: String = Translations.get("report.column.boolean.false"),
     private val showIcon: Boolean = true
-) : ReportColumn(databaseColumnName, header, width, filterable, sortable) {
+) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
     @Composable
     override fun FilterRenderer(data: FilterData) {
         BooleanFilterRenderer(data as BooleanFilterData, trueText, falseText)
