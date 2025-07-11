@@ -35,7 +35,7 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
         )
 
         val rowActions = listOf(
-            ReportAction("Edytuj") {
+            ReportAction(Translations.get("report.actions.edit")) {
                 // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
                 val id = rowData["id"] as? Int
                 if (id != null) {

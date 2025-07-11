@@ -61,7 +61,7 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
         )
 
         val rowActions = listOf(
-            ReportAction("Edycja") {
+            ReportAction(Translations.get("report.actions.edit")) {
                 val id = rowData["title_id"] as? Int
                 if (id != null) {
                     navigator.addScreen(

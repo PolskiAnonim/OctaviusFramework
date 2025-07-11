@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.localization.Translations
 import org.octavius.report.ReportAction
 import org.octavius.report.ReportActionContext
 import org.octavius.report.column.ReportColumn
@@ -51,7 +52,7 @@ class ActionColumn(
             IconButton(onClick = { expanded = true }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Opcje", // TODO: Lepsza translacja
+                    contentDescription = Translations.get("report.actions.menuDescription"),
                     modifier = Modifier.Companion.size(18.dp)
                 )
             }
