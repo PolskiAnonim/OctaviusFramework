@@ -60,7 +60,7 @@ fun FilterModePanel(filterData: FilterData) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = Translations.get("filter.mode.mode"),
+            text = Translations.get("filter.mode"),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(end = 8.dp)
         )
@@ -71,7 +71,7 @@ fun FilterModePanel(filterData: FilterData) {
                 filterData.mode.value = FilterMode.ListAny
             }
         )
-        Text(Translations.get("filter.mode.listAny"), modifier = Modifier.padding(end = 12.dp))
+        Text(FilterMode.ListAny.toDisplayString(), modifier = Modifier.padding(end = 12.dp))
 
         RadioButton(
             selected = filterData.mode.value == FilterMode.ListAll,
@@ -79,7 +79,7 @@ fun FilterModePanel(filterData: FilterData) {
                 filterData.mode.value = FilterMode.ListAll
             }
         )
-        Text(Translations.get("filter.mode.listAll"))
+        Text(FilterMode.ListAll.toDisplayString())
     }
 }
 
