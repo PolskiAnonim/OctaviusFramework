@@ -5,25 +5,13 @@ import org.octavius.localization.Translations
 import org.octavius.modules.games.ui.GameFormScreen
 import org.octavius.navigator.Navigator
 import org.octavius.report.Query
+import org.octavius.report.ReportAction
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
 
 class GameReportHandler(val navigator: Navigator) : ReportHandler() {
-
-    override var onRowClick: ((Map<String, Any?>) -> Unit)? = { rowData ->
-        // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
-        val id = rowData["id"] as? Int
-        if (id != null) {
-            navigator.addScreen(
-                GameFormScreen(
-                entityId = id,
-                onSaveSuccess = { navigator.removeScreen() },
-                onCancel = { navigator.removeScreen() }
-            ))
-        }
-    }
 
     override fun createReportStructure(): ReportStructure {
         val query = Query(
@@ -46,7 +34,22 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
             ),
         )
 
-        return ReportStructure(query, columns, "", "games")
+        val rowActions = listOf(
+            ReportAction("Edytuj") {
+                // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
+                val id = rowData["id"] as? Int
+                if (id != null) {
+                    navigator.addScreen(
+                        GameFormScreen(
+                            entityId = id,
+                            onSaveSuccess = { navigator.removeScreen() },
+                            onCancel = { navigator.removeScreen() }
+                        ))
+                }
+            }
+        )
+
+        return ReportStructure(query, columns, "", "games", rowActions)
     }
 
 }

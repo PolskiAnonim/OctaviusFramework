@@ -1,7 +1,9 @@
 package org.octavius.report.component
 
 import org.octavius.report.Query
+import org.octavius.report.ReportAction
 import org.octavius.report.column.ReportColumn
+import org.octavius.report.column.type.special.ActionColumn
 
 /**
  * ReportStructure
@@ -12,10 +14,20 @@ import org.octavius.report.column.ReportColumn
  */
 class ReportStructure(
     val query: Query,
-    private val columns: Map<String, ReportColumn>,
+    private val initColumns: Map<String, ReportColumn>,
     val reportConfig: String, // W przyszłości obiekt
-    val reportName: String
+    val reportName: String,
+    val rowActions: List<ReportAction> = emptyList()
 ) {
+    lateinit var columns: Map<String, ReportColumn>
+
+    fun initSpecialColumns(reportState: ReportState) {
+        val specialColumns = mutableMapOf<String, ReportColumn>()
+        if (rowActions.isNotEmpty()) {
+            specialColumns.put("_actions", ActionColumn(rowActions, reportState))
+        }
+        columns = specialColumns + initColumns
+    }
 
     /**
      * Zwraca kolumnę o danej nazwie

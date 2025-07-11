@@ -16,14 +16,13 @@ abstract class ReportHandler {
 
     init {
         reportStructure = this.createReportStructure()
+        reportStructure.initSpecialColumns(reportState)
         val filterValues = reportStructure.getAllColumns().filterValues { v -> v.filterable }.mapValues { it.value.getFilterData()!! }
         reportState.filterData.value = filterValues
         reportState.initialize(reportStructure.getAllColumns().keys, reportStructure.reportConfig)
         loadDefaultConfiguration()
         reportDataManager.setReferences(reportStructure, reportState)
     }
-
-    open var onRowClick: ((Map<String, Any?>) -> Unit)? = null
 
     abstract fun createReportStructure(): ReportStructure
 

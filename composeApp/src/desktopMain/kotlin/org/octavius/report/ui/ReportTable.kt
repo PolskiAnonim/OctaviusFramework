@@ -57,8 +57,7 @@ fun LazyListScope.reportTable(
         ReportRow(
             rowData = rowData,
             visibleColumns = visibleColumns,
-            allColumns = reportHandler.getColumns(),
-            onRowClick = reportHandler.onRowClick
+            allColumns = reportHandler.getColumns()
         )
 
         // Separator

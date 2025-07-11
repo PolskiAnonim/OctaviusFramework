@@ -8,13 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.column.ReportColumn
+import org.octavius.report.column.type.special.SpecialColumn
 
 @Composable
 fun ReportRow(
     rowData: Map<String, Any?>,
     visibleColumns: List<String>,
     allColumns: Map<String, ReportColumn>,
-    onRowClick: ((Map<String, Any?>) -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -22,13 +22,6 @@ fun ReportRow(
             .fillMaxWidth()
             .height(IntrinsicSize.Max)
             .padding(vertical = 4.dp)
-            .run {
-                if (onRowClick != null) {
-                    this.clickable { onRowClick.invoke(rowData) }
-                } else {
-                    this
-                }
-            }
     ) {
         visibleColumns.forEachIndexed { index, key ->
             val column = allColumns[key]
@@ -38,7 +31,13 @@ fun ReportRow(
                         .weight(column.width)
                         .padding(horizontal = 4.dp)
                 ) {
-                    column.RenderCell(rowData[column.databaseColumnName], Modifier)
+                    // Dla SpecialColumn, 'item' to cała mapa. Dla innych - konkretna wartość.
+                    val cellData = if (column is SpecialColumn) {
+                        rowData
+                    } else {
+                        rowData[column.databaseColumnName]
+                    }
+                    column.RenderCell(cellData, Modifier)
                 }
 
                 // Separator między kolumnami (oprócz ostatniej)
