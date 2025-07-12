@@ -21,10 +21,6 @@ class ReportState {
     val loading: Boolean get() = _loading.value
     val error: String? get() = _error.value
 
-    fun updateData(newData: List<Map<String,Any?>>) {
-        _data.value = newData
-    }
-
     fun setLoading(loading: Boolean) {
         _loading.value = loading
     }

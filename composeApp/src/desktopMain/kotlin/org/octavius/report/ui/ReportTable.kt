@@ -27,7 +27,7 @@ fun LazyListScope.reportTable(
             val visibleColumns = reportState.columnKeys.filter { 
                 reportState.visibleColumns.value.contains(it) 
             }
-            val allColumns = reportHandler.getColumns()
+            val allColumns = reportHandler.reportStructure.getAllColumns()
 
             visibleColumns.forEachIndexed { index, key ->
                 val column = allColumns[key]!!
@@ -62,7 +62,7 @@ fun LazyListScope.reportTable(
         ReportRow(
             rowData = rowData,
             visibleColumns = visibleColumns,
-            allColumns = reportHandler.getColumns()
+            allColumns = reportHandler.reportStructure.getAllColumns()
         )
 
         // Separator

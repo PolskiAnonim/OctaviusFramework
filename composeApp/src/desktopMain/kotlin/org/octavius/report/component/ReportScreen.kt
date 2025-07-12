@@ -29,7 +29,7 @@ abstract class ReportScreen : Screen {
     @Composable
     override fun Content() {
         val uiState = rememberReportUIState()
-        val reportState = reportHandler.getReportState()
+        val reportState = reportHandler.reportState
 
         reportHandler.DataFetcher()
 
@@ -41,8 +41,8 @@ abstract class ReportScreen : Screen {
                 item {
                     // Panel zarządzania kolumnami
                     ColumnManagementPanel(
-                        manageableColumnKeys = reportHandler.getManageableColumnKeys(),
-                        columnNames = reportHandler.getColumns().map { it.key to it.value.header }.toMap(),
+                        manageableColumnKeys = reportHandler.reportStructure.manageableColumnKeys,
+                        columnNames = reportHandler.reportStructure.getAllColumns().map { it.key to it.value.header }.toMap(),
                         reportState = reportState,
                         modifier = Modifier.padding(8.dp)
                     )

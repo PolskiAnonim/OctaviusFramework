@@ -5,13 +5,13 @@ import org.octavius.report.column.ReportColumn
 import org.octavius.report.management.ReportConfigurationManager
 
 abstract class ReportHandler {
-
-    private val reportStructure: ReportStructure
-    private val reportState = ReportState()
+    
+    val reportStructure: ReportStructure
+    val reportState = ReportState()
     private val reportDataManager = ReportDataManager()
 
     init {
-        reportStructure = this.createReportStructure()
+        reportStructure = createReportStructure()
         reportStructure.initSpecialColumns(reportState)
         val filterValues = reportStructure.getAllColumns().filterValues { v -> v.filterable }.mapValues { it.value.getFilterData()!! }
         reportState.filterData.value = filterValues
@@ -21,12 +21,6 @@ abstract class ReportHandler {
     }
 
     abstract fun createReportStructure(): ReportStructure
-
-    fun getManageableColumnKeys(): List<String> = reportStructure.manageableColumnKeys
-
-    fun getColumns(): Map<String, ReportColumn> = reportStructure.getAllColumns()
-
-    fun getReportState(): ReportState = reportState
 
     private fun loadDefaultConfiguration() {
         val configManager = ReportConfigurationManager()
