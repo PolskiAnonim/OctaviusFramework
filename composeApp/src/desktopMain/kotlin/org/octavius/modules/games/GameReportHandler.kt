@@ -24,13 +24,12 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
         )
 
         val columns = mapOf(
-            "name" to StringColumn("game_name", Translations.get("games.general.gameName"), filterable = true),
-            "series" to StringColumn("series_name", Translations.get("games.general.series"), filterable = true),
+            "name" to StringColumn("game_name", Translations.get("games.general.gameName")),
+            "series" to StringColumn("series_name", Translations.get("games.general.series")),
             "status" to EnumColumn(
                 "status",
                 Translations.get("games.general.status"),
-                enumClass = GameStatus::class,
-                filterable = true
+                enumClass = GameStatus::class
             ),
         )
 

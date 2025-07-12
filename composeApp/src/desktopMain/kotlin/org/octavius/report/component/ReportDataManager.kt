@@ -4,6 +4,9 @@ import kotlinx.coroutines.runBlocking
 import org.octavius.database.DatabaseFetcher
 import org.octavius.database.DatabaseManager
 import org.octavius.domain.SortDirection
+import org.octavius.report.Query
+import org.octavius.report.filter.Filter
+import org.octavius.report.filter.data.FilterData
 
 class ReportDataManager {
 
@@ -15,10 +18,21 @@ class ReportDataManager {
         this.reportState = reportState
     }
 
+    private fun <T : FilterData> getQueryFragment(
+        columnName: String,
+        filter: Filter<T>,
+        data: FilterData
+    ): Query? {
+        @Suppress("UNCHECKED_CAST")
+        val specificData = data as T
+
+        return filter.createQueryFragment(columnName, specificData)
+    }
+
     private fun buildFilterClause(params: MutableMap<String, Any>): String {
         val columnFilters = reportState.filterData.value.mapNotNull { (columnKey, filterData) ->
-            val column = reportStructure.getColumn(columnKey)
-            column?.let { filterData.getFilterFragment(it.databaseColumnName) }
+            val column = reportStructure.getColumn(columnKey)!!
+            getQueryFragment(column.databaseColumnName, column.filter!!, filterData)
         }
 
         val filterConditions = columnFilters.map { fragment ->

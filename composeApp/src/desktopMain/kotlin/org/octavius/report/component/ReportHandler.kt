@@ -1,11 +1,10 @@
 package org.octavius.report.component
 
 import androidx.compose.runtime.*
-import org.octavius.report.column.ReportColumn
 import org.octavius.report.management.ReportConfigurationManager
 
 abstract class ReportHandler {
-    
+
     val reportStructure: ReportStructure
     val reportState = ReportState()
     private val reportDataManager = ReportDataManager()
@@ -13,7 +12,7 @@ abstract class ReportHandler {
     init {
         reportStructure = createReportStructure()
         reportStructure.initSpecialColumns(reportState)
-        val filterValues = reportStructure.getAllColumns().filterValues { v -> v.filterable }.mapValues { it.value.getFilterData()!! }
+        val filterValues = reportStructure.getAllColumns().filterValues { v -> v.filterable }.mapValues { it.value.createFilterAndFilterData()!! }
         reportState.filterData.value = filterValues
         reportState.initialize(reportStructure.getAllColumns().keys, reportStructure.reportConfig)
         loadDefaultConfiguration()

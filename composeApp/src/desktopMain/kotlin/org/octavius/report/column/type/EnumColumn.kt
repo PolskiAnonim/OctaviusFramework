@@ -9,9 +9,8 @@ import org.octavius.domain.EnumWithFormatter
 import org.octavius.report.CellRendererUtils
 import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.data.FilterData
-import org.octavius.report.filter.data.type.EnumFilterData
-import org.octavius.report.filter.ui.type.EnumFilterRenderer
+import org.octavius.report.filter.Filter
+import org.octavius.report.filter.type.EnumFilter
 import kotlin.reflect.KClass
 
 
@@ -25,14 +24,8 @@ class EnumColumn<T>(
 ) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable)
         where T : Enum<T>, T : EnumWithFormatter<T> {
 
-    override fun createFilterData(): FilterData {
-        return EnumFilterData(enumClass)
-    }
-
-    @Composable
-    override fun FilterRenderer(data: FilterData) {
-        @Suppress("UNCHECKED_CAST")
-        EnumFilterRenderer(data as EnumFilterData<T>, enumClass)
+    override fun createFilter(): Filter<*> {
+        return EnumFilter(enumClass)
     }
 
     @Composable

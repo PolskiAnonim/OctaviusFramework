@@ -1,21 +1,19 @@
 package org.octavius.report.filter.data
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.serialization.json.JsonObject
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
-import org.octavius.report.Query
 
 abstract class FilterData {
-    abstract val nullHandling: MutableState<NullHandling>
-    abstract val mode: MutableState<FilterMode>
+    val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore)
+    val mode: MutableState<FilterMode> = mutableStateOf(FilterMode.Single)
 
-    abstract fun getFilterFragment(columnName: String): Query?
-    
     // Zwraca wszystkie State'y które powinny być śledzone dla reaktywności
     abstract fun getTrackableStates(): List<Any?>
 
-    fun resetFilter() {
+    fun resetFilterData() {
         nullHandling.value = NullHandling.Ignore
         mode.value = if (mode.value == FilterMode.ListAll) FilterMode.ListAny else mode.value
         resetValue()
@@ -24,18 +22,6 @@ abstract class FilterData {
     protected abstract fun resetValue()
 
     abstract fun isActive(): Boolean
-
-    protected fun applyNullHandling(baseQuery: Query?, columnName: String): Query? {
-        return when (nullHandling.value) {
-            NullHandling.Ignore -> baseQuery
-            NullHandling.Include -> baseQuery?.let {
-                Query("(${it.sql} OR $columnName IS NULL)", it.params)
-            } ?: Query("$columnName IS NULL")
-            NullHandling.Exclude -> baseQuery?.let {
-                Query("(${it.sql} AND $columnName IS NOT NULL)", it.params)
-            } ?: Query("$columnName IS NOT NULL")
-        }
-    }
 
     // Serializacja i deserializacja danych do bazy
     abstract fun serialize(): JsonObject

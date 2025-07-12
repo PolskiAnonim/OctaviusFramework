@@ -37,7 +37,7 @@ fun LazyListScope.reportTable(
                     is ColumnWidth.Flexible -> Modifier.weight(colWidth.weight)
                 }
 
-                column.RenderHeader(reportState.filterData.value[key], cellModifier)
+                column.RenderHeader(key, reportState, cellModifier)
 
                 // Separator między kolumnami w nagłówku (oprócz ostatniej)
                 if (index < visibleColumns.size - 1) {

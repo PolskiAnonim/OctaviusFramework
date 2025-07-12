@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.report.CellRendererUtils
 import org.octavius.report.FilterMode
 import org.octavius.report.column.ReportColumn
+import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 import kotlin.math.min
 
@@ -27,19 +28,15 @@ class MultiRowColumn(
     wrappedColumn.sortable
 ) {
 
-    override fun createFilterData(): FilterData {
-        // W tym przypadku oryginalna kolumna będzie posiadała filterable = true czyli nie zwróci null
-        val filterData = wrappedColumn.getFilterData()!!
-        
-        // Dla MultiRowColumn zawsze ustawiamy tryb ListAny (zmiana na kontekst listy)
-        filterData.mode.value = FilterMode.ListAny
-        
-        return filterData
+
+    override fun createFilter(): Filter<*> {
+        return wrappedColumn.createFilter()
     }
 
-    @Composable
-    override fun FilterRenderer(data: FilterData) {
-        wrappedColumn.FilterRenderer(data)
+    override fun createFilterData(filter: Filter<*>): FilterData {
+        val filterData = super.createFilterData(filter)
+        filterData.mode.value = FilterMode.ListAny
+        return filterData
     }
 
     @Composable

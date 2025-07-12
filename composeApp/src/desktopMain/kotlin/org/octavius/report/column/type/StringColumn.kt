@@ -8,9 +8,8 @@ import androidx.compose.ui.Modifier
 import org.octavius.report.CellRendererUtils
 import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.data.FilterData
-import org.octavius.report.filter.data.type.StringFilterData
-import org.octavius.report.filter.ui.type.StringFilterRenderer
+import org.octavius.report.filter.Filter
+import org.octavius.report.filter.type.StringFilter
 
 class StringColumn(
     databaseColumnName: String,
@@ -20,13 +19,8 @@ class StringColumn(
     filterable: Boolean = true
 ) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
 
-    override fun createFilterData(): FilterData {
-        return StringFilterData()
-    }
-
-    @Composable
-    override fun FilterRenderer(data: FilterData) {
-        StringFilterRenderer(data as StringFilterData)
+    override fun createFilter(): Filter<*> {
+        return StringFilter()
     }
 
     @Composable

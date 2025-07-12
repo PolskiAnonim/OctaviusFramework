@@ -6,18 +6,13 @@ import kotlinx.serialization.json.*
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.NumberFilterDataType
-import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
 import kotlin.reflect.KClass
 
-data class NumberFilterData<T : Number>(
-    val numberClass: KClass<T>,
-    val filterType: MutableState<NumberFilterDataType> = mutableStateOf(NumberFilterDataType.Equals),
-    val minValue: MutableState<T?> = mutableStateOf(null),
-    val maxValue: MutableState<T?> = mutableStateOf(null),
-    override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore),
-    override val mode: MutableState<FilterMode> = mutableStateOf(FilterMode.Single)
-) : FilterData() {
+class NumberFilterData<T : Number>(val numberClass: KClass<T>) : FilterData() {
+    val filterType: MutableState<NumberFilterDataType> = mutableStateOf(NumberFilterDataType.Equals)
+    val minValue: MutableState<T?> = mutableStateOf(null)
+    val maxValue: MutableState<T?> = mutableStateOf(null)
 
     override fun resetValue() {
         filterType.value = NumberFilterDataType.Equals
@@ -33,152 +28,6 @@ data class NumberFilterData<T : Number>(
         return listOf(filterType.value, minValue.value, maxValue.value, nullHandling.value, mode.value)
     }
 
-    override fun getFilterFragment(columnName: String): Query? {
-        if (!isActive()) return null
-
-        val min = minValue.value
-        val max = maxValue.value
-        
-        val baseQuery = buildNumberQuery(columnName, min, max, mode.value, filterType.value)
-        return applyNullHandling(baseQuery, columnName)
-    }
-
-    private fun buildNumberQuery(
-        columnName: String,
-        min: T?,
-        max: T?,
-        mode: FilterMode,
-        filterType: NumberFilterDataType
-    ): Query? {
-        val hasValues = min != null || max != null
-        if (!hasValues) return null
-        
-        return when (mode) {
-            FilterMode.Single -> buildSingleNumberQuery(columnName, min, max, filterType)
-            FilterMode.ListAny -> buildListNumberQuery(columnName, min, max, filterType, false)
-            FilterMode.ListAll -> buildListNumberQuery(columnName, min, max, filterType, true)
-        }
-    }
-    
-    private fun buildSingleNumberQuery(
-        columnName: String,
-        min: T?,
-        max: T?,
-        filterType: NumberFilterDataType
-    ): Query? {
-        return when (filterType) {
-            NumberFilterDataType.Equals -> {
-                if (min != null) {
-                    Query("$columnName = :$columnName", mapOf(columnName to min))
-                } else null
-            }
-            NumberFilterDataType.NotEquals -> {
-                if (min != null) {
-                    Query("$columnName != :$columnName", mapOf(columnName to min))
-                } else null
-            }
-            NumberFilterDataType.LessThan -> {
-                if (max != null) {
-                    Query("$columnName < :$columnName", mapOf(columnName to max))
-                } else null
-            }
-            NumberFilterDataType.LessEquals -> {
-                if (max != null) {
-                    Query("$columnName <= :$columnName", mapOf(columnName to max))
-                } else null
-            }
-            NumberFilterDataType.GreaterThan -> {
-                if (min != null) {
-                    Query("$columnName > :$columnName", mapOf(columnName to min))
-                } else null
-            }
-            NumberFilterDataType.GreaterEquals -> {
-                if (min != null) {
-                    Query("$columnName >= :$columnName", mapOf(columnName to min))
-                } else null
-            }
-            NumberFilterDataType.Range -> {
-                when {
-                    min != null && max != null -> {
-                        Query("$columnName BETWEEN :${columnName}_min AND :${columnName}_max",
-                            mapOf("${columnName}_min" to min, "${columnName}_max" to max))
-                    }
-                    min != null -> {
-                        Query("$columnName >= :$columnName", mapOf(columnName to min))
-                    }
-                    max != null -> {
-                        Query("$columnName <= :$columnName", mapOf(columnName to max))
-                    }
-                    else -> null
-                }
-            }
-        }
-    }
-
-    private fun buildListNumberQuery(
-        columnName: String,
-        min: T?,
-        max: T?,
-        filterType: NumberFilterDataType,
-        isAllMode: Boolean
-    ): Query? {
-        return when (filterType) {
-            NumberFilterDataType.Equals -> {
-                if (min != null) {
-                    val operator = if (isAllMode) "@>" else "&&"
-                    Query("$columnName $operator :$columnName", mapOf(columnName to listOf(min)))
-                } else null
-            }
-            NumberFilterDataType.NotEquals -> {
-                if (min != null) {
-                    val operator = if (isAllMode) "@>" else "&&"
-                    Query("NOT ($columnName $operator :$columnName)", mapOf(columnName to listOf(min)))
-                } else null
-            }
-            NumberFilterDataType.LessThan -> {
-                if (max != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
-                    Query(existsType, mapOf(columnName to max))
-                } else null
-            }
-            NumberFilterDataType.LessEquals -> {
-                if (max != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
-                    Query(existsType, mapOf(columnName to max))
-                } else null
-            }
-            NumberFilterDataType.GreaterThan -> {
-                if (min != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)"
-                    Query(existsType, mapOf(columnName to min))
-                } else null
-            }
-            NumberFilterDataType.GreaterEquals -> {
-                if (min != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
-                    Query(existsType, mapOf(columnName to min))
-                } else null
-            }
-            NumberFilterDataType.Range -> {
-                when {
-                    min != null && max != null -> {
-                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN :${columnName}_min AND :${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)"
-                        Query(existsType, mapOf("${columnName}_min" to min, "${columnName}_max" to max))
-                    }
-                    min != null -> {
-                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
-                        Query(existsType, mapOf(columnName to min))
-                    }
-                    max != null -> {
-                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
-                        Query(existsType, mapOf(columnName to max))
-                    }
-                    else -> null
-                }
-            }
-        }
-    }
-
     override fun serialize(): JsonObject {
         return buildJsonObject {
             put("filterType", filterType.value.name)
@@ -190,7 +39,7 @@ data class NumberFilterData<T : Number>(
     }
 
     override fun deserialize(data: JsonObject) {
-        resetFilter()
+        resetFilterData()
         filterType.value = data["filterType"]!!.jsonPrimitive.content.let { NumberFilterDataType.valueOf(it) }
         minValue.value = data["minValue"]!!.jsonPrimitive.let { convertToNumber(it) }
         maxValue.value = data["maxValue"]!!.jsonPrimitive.let { convertToNumber(it) }

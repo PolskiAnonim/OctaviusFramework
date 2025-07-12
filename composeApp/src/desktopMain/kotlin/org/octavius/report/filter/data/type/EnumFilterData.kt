@@ -7,17 +7,12 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.serialization.json.*
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
-import org.octavius.report.Query
 import org.octavius.report.filter.data.FilterData
 import kotlin.reflect.KClass
 
-data class EnumFilterData<E : Enum<E>>(
-    val enumClass: KClass<E>,
-    val values: SnapshotStateList<E> = mutableStateListOf(),
-    val include: MutableState<Boolean> = mutableStateOf(true),
-    override val nullHandling: MutableState<NullHandling> = mutableStateOf(NullHandling.Ignore),
-    override val mode: MutableState<FilterMode> = mutableStateOf(FilterMode.Single)
-) : FilterData() {
+class EnumFilterData<E : Enum<E>>(val enumClass: KClass<E>) : FilterData() {
+    val values: SnapshotStateList<E> = mutableStateListOf()
+    val include: MutableState<Boolean> = mutableStateOf(true)
 
     override fun resetValue() {
         values.clear()
@@ -29,48 +24,6 @@ data class EnumFilterData<E : Enum<E>>(
 
     override fun getTrackableStates(): List<Any?> {
         return listOf(values.toList(), include.value, nullHandling.value, mode.value)
-    }
-
-    override fun getFilterFragment(columnName: String): Query? {
-        if (!isActive()) return null
-        
-        val selectedValues = values
-        
-        val baseQuery = buildEnumQuery(columnName, selectedValues, mode.value, include.value)
-        return applyNullHandling(baseQuery, columnName)
-    }
-    
-    private fun buildEnumQuery(
-        columnName: String,
-        values: List<E>,
-        mode: FilterMode,
-        include: Boolean
-    ): Query? {
-        if (values.isEmpty()) return null
-        
-        return when (mode) {
-            FilterMode.Single -> {
-                if (include) {
-                    Query("$columnName = ANY(:$columnName)", mapOf(columnName to values))
-                } else {
-                    Query("$columnName != ALL(:$columnName)", mapOf(columnName to values))
-                }
-            }
-            FilterMode.ListAny -> {
-                if (include) {
-                    Query("$columnName && :$columnName", mapOf(columnName to values))
-                } else {
-                    Query("NOT ($columnName && :$columnName)", mapOf(columnName to values))
-                }
-            }
-            FilterMode.ListAll -> {
-                if (include) {
-                    Query("$columnName @> :$columnName", mapOf(columnName to values))
-                } else {
-                    Query("NOT ($columnName @> :$columnName)", mapOf(columnName to values))
-                }
-            }
-        }
     }
 
     override fun serialize(): JsonObject {
@@ -87,7 +40,7 @@ data class EnumFilterData<E : Enum<E>>(
     }
 
     override fun deserialize(data: JsonObject) {
-        resetFilter()
+        resetFilterData()
         values.addAll(data["values"]!!.jsonArray.map { element -> 
             enumClass.java.enumConstants.first { it.name == element.jsonPrimitive.content }
         })

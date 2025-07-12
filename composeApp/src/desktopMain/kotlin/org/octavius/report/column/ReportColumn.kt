@@ -12,6 +12,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
 import org.octavius.report.ColumnWidth
+import org.octavius.report.component.ReportState
+import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 
 abstract class ReportColumn(
@@ -21,20 +23,25 @@ abstract class ReportColumn(
     val filterable: Boolean,
     val sortable: Boolean
 ) {
-    fun getFilterData(): FilterData? {
-        return if (filterable) {
-            createFilterData()
-        } else null
+
+    val filter: Filter<*>? by lazy {
+        if (filterable) createFilter() else null
     }
 
-    /**
-     * Tworzy filtr dla tej kolumny (tylko jeśli filterable = true)
-     */
-    protected abstract fun createFilterData(): FilterData
+    abstract fun createFilter() : Filter<*>
+
+    protected open fun createFilterData(filter: Filter<*>): FilterData {
+        return filter.createDefaultData()
+    }
+
+    fun createFilterAndFilterData(): FilterData? {
+        return filter?.let { createFilterData(it) }
+    }
 
     @Composable
-    fun RenderHeader(filterData: FilterData?, modifier: Modifier = Modifier) {
-        val hasFilter = filterData != null
+    fun RenderHeader(columnKey: String, reportState: ReportState, modifier: Modifier = Modifier) {
+        val filterData = reportState.filterData.value[columnKey]
+
         var showColumnMenu by remember { mutableStateOf(false) }
 
         Box(
@@ -45,9 +52,9 @@ abstract class ReportColumn(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = if (hasFilter) {
-                    Modifier.Companion.clickable { showColumnMenu = true }
-                } else Modifier.Companion
+                modifier = if (filterData != null) {
+                    Modifier.clickable { showColumnMenu = true }
+                } else Modifier
             ) {
                 Text(
                     text = header,
@@ -56,7 +63,7 @@ abstract class ReportColumn(
                 )
 
                 // Wskaźnik aktywnego filtra
-                if (hasFilter && filterData.getFilterFragment(databaseColumnName) != null) {
+                if (filterData?.isActive() ?: false) {
                     Icon(
                         imageVector = Icons.Default.FilterAlt,
                         contentDescription = Translations.get("filter.general.active"),
@@ -67,43 +74,41 @@ abstract class ReportColumn(
             }
 
             // Menu filtra dla kolumny
-            if (hasFilter) {
+            if (filterData != null) {
                 DropdownMenu(
                     expanded = showColumnMenu,
                     onDismissRequest = { showColumnMenu = false }
                 ) {
-                    filterData.let { data ->
-                        Column(
-                            modifier = Modifier.Companion.padding(16.dp)
-                        ) {
-                            Text(
-                                text = Translations.get("filter.general.label") + " $header",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.Companion.padding(bottom = 8.dp)
-                            )
+                    Column(
+                        modifier = Modifier.Companion.padding(16.dp)
+                    ) {
+                        Text(
+                            text = Translations.get("filter.general.label") + " $header",
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.Companion.padding(bottom = 8.dp)
+                        )
 
-                            FilterRenderer(data)
+                        RenderFilter(filter!!, filterData)
 
-                            // Przycisk wyczyść filtr
-                            if (data.getFilterFragment(databaseColumnName) != null) {
-                                Row(
-                                    modifier = Modifier.Companion.padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        // Przycisk wyczyść filtr
+                        if (filterData.isActive()) {
+                            Row(
+                                modifier = Modifier.Companion.padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        filterData.resetFilterData()
+                                        showColumnMenu = false
+                                    }
                                 ) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            filterData.resetFilter()
-                                            showColumnMenu = false
-                                        }
-                                    ) {
-                                        Text(Translations.get("filter.general.clear"))
-                                    }
+                                    Text(Translations.get("filter.general.clear"))
+                                }
 
-                                    Button(
-                                        onClick = { showColumnMenu = false }
-                                    ) {
-                                        Text(Translations.get("action.close"))
-                                    }
+                                Button(
+                                    onClick = { showColumnMenu = false }
+                                ) {
+                                    Text(Translations.get("action.close"))
                                 }
                             }
                         }
@@ -113,8 +118,20 @@ abstract class ReportColumn(
         }
     }
 
+    /**
+     * Funkcja renderująca filtr - zmienia * w T dla typu generycznego
+     * Wymagana aby zadowolić kompilator
+     */
     @Composable
-    abstract fun FilterRenderer(data: FilterData)
+    private fun <T : FilterData> RenderFilter(
+        filter: Filter<T>,
+        data: FilterData
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val specificData = data as T
+
+        filter.Render(specificData)
+    }
 
     @Composable
     abstract fun RenderCell(item: Any?, modifier: Modifier)

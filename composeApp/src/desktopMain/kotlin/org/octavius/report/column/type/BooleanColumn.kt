@@ -13,9 +13,8 @@ import org.octavius.localization.Translations
 import org.octavius.report.CellRendererUtils
 import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.filter.data.FilterData
-import org.octavius.report.filter.data.type.BooleanFilterData
-import org.octavius.report.filter.ui.type.BooleanFilterRenderer
+import org.octavius.report.filter.Filter
+import org.octavius.report.filter.type.BooleanFilter
 
 
 class BooleanColumn(
@@ -28,13 +27,9 @@ class BooleanColumn(
     private val falseText: String = Translations.get("report.column.boolean.false"),
     private val showIcon: Boolean = true
 ) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
-    @Composable
-    override fun FilterRenderer(data: FilterData) {
-        BooleanFilterRenderer(data as BooleanFilterData, trueText, falseText)
-    }
 
-    override fun createFilterData(): FilterData {
-        return BooleanFilterData()
+    override fun createFilter(): Filter<*> {
+        return BooleanFilter(trueText, falseText)
     }
 
     @Composable
