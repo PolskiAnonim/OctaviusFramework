@@ -7,13 +7,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.octavius.localization.Translations
-import org.octavius.modules.games.GameReportHandler
+import org.octavius.modules.games.GameReportStructureBuilder
 import org.octavius.navigator.Navigator
 import org.octavius.report.component.ReportScreen
+import org.octavius.report.component.ReportStructureBuilder
 
 class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
     override val title = Translations.get("games.report.title")
-    override val reportHandler = GameReportHandler(navigator)
+    override fun createReportStructure(): ReportStructureBuilder = GameReportStructureBuilder(navigator)
 
     @Composable
     override fun AddMenu() {

@@ -6,12 +6,12 @@ import org.octavius.report.Query
 import org.octavius.report.column.type.BooleanColumn
 import org.octavius.report.column.type.IntegerColumn
 import org.octavius.report.column.type.StringColumn
-import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
+import org.octavius.report.component.ReportStructureBuilder
 
-class ApiIntegrationsReportHandler(val navigator: Navigator) : ReportHandler() {
+class ApiIntegrationsReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
 
-    override fun createReportStructure(): ReportStructure {
+    override fun build(): ReportStructure {
         val query = Query(
             """
             SELECT id, name, enabled, api_key, endpoint_url, port, last_sync
@@ -37,6 +37,6 @@ class ApiIntegrationsReportHandler(val navigator: Navigator) : ReportHandler() {
             )
         )
 
-        return ReportStructure(query, columns, "", "api_integrations")
+        return ReportStructure(query, columns, "api_integrations")
     }
 }
