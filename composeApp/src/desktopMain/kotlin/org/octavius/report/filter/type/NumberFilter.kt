@@ -12,10 +12,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.Translations
 import org.octavius.report.FilterMode
 import org.octavius.report.NumberFilterDataType
 import org.octavius.report.Query
+import org.octavius.report.ReportEvent
 import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.FilterSpacer
@@ -26,33 +28,35 @@ class NumberFilter<T : Number>(
     private val numberClass: KClass<T>,
     private val valueParser: (String) -> T?
 ) : Filter<NumberFilterData<T>>() {
-    override fun createDefaultData(): NumberFilterData<T> {
-        return NumberFilterData(numberClass)
-    }
+
+    override fun createDefaultData(): NumberFilterData<T> = NumberFilterData(numberClass)
+
+    override fun deserializeData(data: JsonObject): NumberFilterData<T> = NumberFilterData.deserialize(data, numberClass)
 
     @Composable
-    override fun RenderFilterUI(data: NumberFilterData<T>) {
+    override fun RenderFilterUI(onEvent: (ReportEvent) -> Unit, columnKey: String, data: NumberFilterData<T>) {
         EnumDropdownMenu(
-            currentValue = data.filterType.value,
+            currentValue = data.filterType,
             options = NumberFilterDataType.entries,
-            onValueChange = { data.filterType.value = it }
+            onValueChange = { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(filterType = it))) }
         )
 
         FilterSpacer()
 
-        if (data.filterType.value == NumberFilterDataType.Range) {
+        if (data.filterType == NumberFilterDataType.Range) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedTextField(
-                    value = data.minValue.value?.toString() ?: "",
+                    value = data.minValue?.toString() ?: "",
                     onValueChange = { input ->
                         try {
-                            data.minValue.value = if (input.isEmpty()) null else valueParser(input)
+                            val value = if (input.isEmpty()) null else valueParser(input)
+                            onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = value)))
                         } catch (e: NumberFormatException) {
                             // Ignore invalid input
-                            data.minValue.value = null
+                            onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = null)))
                         }
                     },
                     label = { Text(Translations.get("filter.number.from")) },
@@ -61,13 +65,14 @@ class NumberFilter<T : Number>(
                 )
 
                 OutlinedTextField(
-                    value = data.maxValue.value?.toString() ?: "",
+                    value = data.maxValue?.toString() ?: "",
                     onValueChange = { input ->
                         try {
-                            data.maxValue.value = if (input.isEmpty()) null else valueParser(input)
+                            val value = if (input.isEmpty()) null else valueParser(input)
+                            onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(maxValue = value)))
                         } catch (e: NumberFormatException) {
                             // Ignore invalid input
-                            data.maxValue.value = null
+                            onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(maxValue = null)))
                         }
                     },
                     label = { Text(Translations.get("filter.number.to")) },
@@ -77,21 +82,29 @@ class NumberFilter<T : Number>(
             }
         } else {
             OutlinedTextField(
-                value = data.minValue.value?.toString() ?: "",
+                value = data.minValue?.toString() ?: "",
                 onValueChange = { input ->
                     try {
-                        data.minValue.value = if (input.isEmpty()) null else valueParser(input)
+                        val value = if (input.isEmpty()) null else valueParser(input)
+                        onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = value)))
                     } catch (e: NumberFormatException) {
                         // Ignore invalid input
-                        data.minValue.value = null
+                        onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = null)))
                     }
                 },
                 label = { Text(Translations.get("filter.number.value")) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    if (data.minValue.value != null) {
-                        IconButton(onClick = { data.minValue.value = null }) {
+                    if (data.minValue != null) {
+                        IconButton(onClick = {
+                            onEvent.invoke(
+                                ReportEvent.FilterChanged(
+                                    columnKey,
+                                    data.copy(minValue = null)
+                                )
+                            )
+                        }) {
                             Icon(Icons.Default.Clear, Translations.get("filter.general.clear"))
                         }
                     }
@@ -104,11 +117,11 @@ class NumberFilter<T : Number>(
         columnName: String,
         data: NumberFilterData<T>
     ): Query? {
-        val min = data.minValue.value
-        val max = data.maxValue.value
-        val filterType = data.filterType.value
+        val min = data.minValue
+        val max = data.maxValue
+        val filterType = data.filterType
 
-        return when (data.mode.value) {
+        return when (data.mode) {
             FilterMode.Single -> buildSingleNumberQuery(columnName, min, max, filterType)
             FilterMode.ListAny -> buildListNumberQuery(columnName, min, max, filterType, false)
             FilterMode.ListAll -> buildListNumberQuery(columnName, min, max, filterType, true)
@@ -127,43 +140,54 @@ class NumberFilter<T : Number>(
                     Query("$columnName = :$columnName", mapOf(columnName to min))
                 } else null
             }
+
             NumberFilterDataType.NotEquals -> {
                 if (min != null) {
                     Query("$columnName != :$columnName", mapOf(columnName to min))
                 } else null
             }
+
             NumberFilterDataType.LessThan -> {
                 if (max != null) {
                     Query("$columnName < :$columnName", mapOf(columnName to max))
                 } else null
             }
+
             NumberFilterDataType.LessEquals -> {
                 if (max != null) {
                     Query("$columnName <= :$columnName", mapOf(columnName to max))
                 } else null
             }
+
             NumberFilterDataType.GreaterThan -> {
                 if (min != null) {
                     Query("$columnName > :$columnName", mapOf(columnName to min))
                 } else null
             }
+
             NumberFilterDataType.GreaterEquals -> {
                 if (min != null) {
                     Query("$columnName >= :$columnName", mapOf(columnName to min))
                 } else null
             }
+
             NumberFilterDataType.Range -> {
                 when {
                     min != null && max != null -> {
-                        Query("$columnName BETWEEN :${columnName}_min AND :${columnName}_max",
-                            mapOf("${columnName}_min" to min, "${columnName}_max" to max))
+                        Query(
+                            "$columnName BETWEEN :${columnName}_min AND :${columnName}_max",
+                            mapOf("${columnName}_min" to min, "${columnName}_max" to max)
+                        )
                     }
+
                     min != null -> {
                         Query("$columnName >= :$columnName", mapOf(columnName to min))
                     }
+
                     max != null -> {
                         Query("$columnName <= :$columnName", mapOf(columnName to max))
                     }
+
                     else -> null
                 }
             }
@@ -184,50 +208,66 @@ class NumberFilter<T : Number>(
                     Query("$columnName $operator :$columnName", mapOf(columnName to listOf(min)))
                 } else null
             }
+
             NumberFilterDataType.NotEquals -> {
                 if (min != null) {
                     val operator = if (isAllMode) "@>" else "&&"
                     Query("NOT ($columnName $operator :$columnName)", mapOf(columnName to listOf(min)))
                 } else null
             }
+
             NumberFilterDataType.LessThan -> {
                 if (max != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
+                    val existsType =
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
                     Query(existsType, mapOf(columnName to max))
                 } else null
             }
+
             NumberFilterDataType.LessEquals -> {
                 if (max != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
+                    val existsType =
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
                     Query(existsType, mapOf(columnName to max))
                 } else null
             }
+
             NumberFilterDataType.GreaterThan -> {
                 if (min != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)"
+                    val existsType =
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)"
                     Query(existsType, mapOf(columnName to min))
                 } else null
             }
+
             NumberFilterDataType.GreaterEquals -> {
                 if (min != null) {
-                    val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
+                    val existsType =
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
                     Query(existsType, mapOf(columnName to min))
                 } else null
             }
+
             NumberFilterDataType.Range -> {
                 when {
                     min != null && max != null -> {
-                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN :${columnName}_min AND :${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)"
+                        val existsType =
+                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN :${columnName}_min AND :${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)"
                         Query(existsType, mapOf("${columnName}_min" to min, "${columnName}_max" to max))
                     }
+
                     min != null -> {
-                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
+                        val existsType =
+                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
                         Query(existsType, mapOf(columnName to min))
                     }
+
                     max != null -> {
-                        val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
+                        val existsType =
+                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
                         Query(existsType, mapOf(columnName to max))
                     }
+
                     else -> null
                 }
             }

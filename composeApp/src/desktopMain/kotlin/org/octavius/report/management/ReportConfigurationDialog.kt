@@ -12,10 +12,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.octavius.localization.Translations
+import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState
 
 @Composable
 fun ReportConfigurationDialog(
+    onEvent: (ReportEvent) -> Unit,
     reportName: String,
     reportState: ReportState,
     onDismiss: () -> Unit
@@ -86,7 +88,7 @@ fun ReportConfigurationDialog(
                         ConfigurationItem(
                             configuration = config,
                             onLoad = {
-                                configManager.applyConfiguration(config, reportState)
+                                onEvent.invoke(ReportEvent.ApplyConfiguration(config))
                                 onDismiss()
                             },
                             onDelete = {

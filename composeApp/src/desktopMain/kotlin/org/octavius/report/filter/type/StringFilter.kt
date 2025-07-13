@@ -10,9 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.Translations
 import org.octavius.report.FilterMode
 import org.octavius.report.Query
+import org.octavius.report.ReportEvent
 import org.octavius.report.StringFilterDataType
 import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter
@@ -21,21 +23,21 @@ import org.octavius.report.filter.data.type.StringFilterData
 
 class StringFilter: Filter<StringFilterData>() {
 
-    override fun createDefaultData(): StringFilterData {
-        return StringFilterData()
-    }
+    override fun createDefaultData(): StringFilterData = StringFilterData()
+
+    override fun deserializeData(data: JsonObject): StringFilterData = StringFilterData.deserialize(data)
 
     @Composable
-    override fun RenderFilterUI(data: StringFilterData) {
+    override fun RenderFilterUI(onEvent: (ReportEvent) -> Unit, columnKey: String, data: StringFilterData) {
         OutlinedTextField(
-            value = data.value.value,
-            onValueChange = { data.value.value = it },
+            value = data.value,
+            onValueChange = { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(value = it))) },
             label = { Text(Translations.get("filter.string.value")) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                if (data.value.value.isNotEmpty()) {
-                    IconButton(onClick = { data.value.value = "" }) {
+                if (data.value.isNotEmpty()) {
+                    IconButton(onClick =  { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(value = ""))) }) {
                         Icon(Icons.Default.Clear, Translations.get("filter.general.clear"))
                     }
                 }
@@ -45,9 +47,9 @@ class StringFilter: Filter<StringFilterData>() {
         FilterSpacer()
 
         EnumDropdownMenu(
-            currentValue = data.filterType.value,
+            currentValue = data.filterType,
             options = StringFilterDataType.entries,
-            onValueChange = { data.filterType.value = it }
+            onValueChange =  { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(filterType = it))) },
         )
 
 
@@ -58,8 +60,8 @@ class StringFilter: Filter<StringFilterData>() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(
-                checked = data.caseSensitive.value,
-                onCheckedChange = { data.caseSensitive.value = it }
+                checked = data.caseSensitive,
+                onCheckedChange =  { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(caseSensitive = it))) },
             )
             Text(
                 text = Translations.get("filter.string.caseSensitive"),
@@ -72,10 +74,10 @@ class StringFilter: Filter<StringFilterData>() {
         columnName: String,
         data: StringFilterData
     ): Query? {
-        val value = data.value.value.trim()
-        val filterType = data.filterType.value
-        val caseSensitive = data.caseSensitive.value
-        return when (data.mode.value) {
+        val value = data.value.trim()
+        val filterType = data.filterType
+        val caseSensitive = data.caseSensitive
+        return when (data.mode) {
             FilterMode.Single -> buildSingleStringQuery(columnName, value, filterType, caseSensitive)
             FilterMode.ListAny -> buildListStringQuery(columnName, value, filterType, caseSensitive, false)
             FilterMode.ListAll -> buildListStringQuery(columnName, value, filterType, caseSensitive, true)

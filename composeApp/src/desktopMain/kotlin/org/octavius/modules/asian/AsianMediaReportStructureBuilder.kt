@@ -11,13 +11,12 @@ import org.octavius.report.ReportRowAction
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.MultiRowColumn
 import org.octavius.report.column.type.StringColumn
-import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
+import org.octavius.report.component.ReportStructureBuilder
 
-class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
+class AsianMediaReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
 
-
-    override fun createReportStructure(): ReportStructure {
+    override fun buildStructure(): ReportStructure {
         val query = Query(
             """
             SELECT 
@@ -75,6 +74,6 @@ class AsianMediaReportHandler(val navigator: Navigator) : ReportHandler() {
             }
         )
 
-        return ReportStructure(query, columns, "", "asianMedia", rowActions)
+        return ReportStructure(query, columns, "asianMedia", rowActions)
     }
 }

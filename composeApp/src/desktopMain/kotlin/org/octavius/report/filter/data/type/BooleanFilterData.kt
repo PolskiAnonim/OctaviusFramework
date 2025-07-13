@@ -1,39 +1,43 @@
 package org.octavius.report.filter.data.type
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import kotlinx.serialization.json.*
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.filter.data.FilterData
 
-class BooleanFilterData: FilterData() {
-    val value: MutableState<Boolean?> = mutableStateOf(null)
-
-    override fun resetValue() {
-        value.value = null
-    }
+data class BooleanFilterData(
+    override val mode: FilterMode = FilterMode.Single,
+    override val nullHandling: NullHandling = NullHandling.Ignore,
+    val value: Boolean? = null
+) : FilterData {
 
     override fun isActive(): Boolean {
-        return value.value != null || nullHandling.value != NullHandling.Ignore
-    }
-
-    override fun getTrackableStates(): List<Any?> {
-        return listOf(value.value, nullHandling.value, mode.value)
+        return value != null || nullHandling != NullHandling.Ignore
     }
 
     override fun serialize(): JsonObject {
         return buildJsonObject {
-            put("value", value.value)
-            put("nullHandling", nullHandling.value.name)
-            put("mode", mode.value.name)
+            put("value", value)
+            put("nullHandling", nullHandling.name)
+            put("mode", mode.name)
         }
     }
 
-    override fun deserialize(data: JsonObject) {
-        resetFilterData()
-        value.value = data["value"]!!.jsonPrimitive.booleanOrNull
-        nullHandling.value = data["nullHandling"]!!.jsonPrimitive.content.let { NullHandling.valueOf(it) }
-        mode.value = data["mode"]!!.jsonPrimitive.content.let { FilterMode.valueOf(it) }
+    companion object {
+        fun deserialize(data: JsonObject): BooleanFilterData {
+            return BooleanFilterData(
+                value = data["value"]!!.jsonPrimitive.booleanOrNull,
+                nullHandling = data["nullHandling"]!!.jsonPrimitive.content.let { NullHandling.valueOf(it) },
+                mode = data["mode"]!!.jsonPrimitive.content.let { FilterMode.valueOf(it) }
+            )
+        }
+    }
+
+    override fun withMode(newMode: FilterMode): FilterData {
+        return this.copy(mode = newMode)
+    }
+
+    override fun withNullHandling(newNullHandling: NullHandling): FilterData {
+        return this.copy(nullHandling = newNullHandling)
     }
 }

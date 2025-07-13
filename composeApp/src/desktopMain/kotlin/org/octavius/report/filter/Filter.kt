@@ -11,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.Translations
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.Query
+import org.octavius.report.ReportEvent
 import org.octavius.report.filter.data.FilterData
 
 abstract class Filter<T : FilterData> {
@@ -24,12 +26,13 @@ abstract class Filter<T : FilterData> {
      */
     abstract fun createDefaultData(): T
 
+    abstract fun deserializeData(data: JsonObject): T
     /**
      * Renderuje unikalny interfejs użytkownika dla tego konkretnego filtra.
      * Ta metoda będzie implementowana przez każdą podklasę (BooleanFilter, StringFilter, etc.).
      */
     @Composable
-    abstract fun RenderFilterUI(data: T)
+    abstract fun RenderFilterUI(onEvent: (ReportEvent) -> Unit, columnKey: String, data: T)
 
     /**
      * Tworzy fragment zapytania SQL na podstawie danych z filtra.
@@ -44,11 +47,12 @@ abstract class Filter<T : FilterData> {
     }
 
     private fun applyNullHandling(columnName: String, baseQuery: Query?, data: T): Query? {
-        return when (data.nullHandling.value) {
+        return when (data.nullHandling) {
             NullHandling.Ignore -> baseQuery
             NullHandling.Include -> baseQuery?.let {
                 Query("(${it.sql} OR $columnName IS NULL)", it.params)
             } ?: Query("$columnName IS NULL")
+
             NullHandling.Exclude -> baseQuery?.let {
                 Query("(${it.sql} AND $columnName IS NOT NULL)", it.params)
             } ?: Query("$columnName IS NOT NULL")
@@ -60,16 +64,16 @@ abstract class Filter<T : FilterData> {
      * Buduje cały UI, włączając w to wspólne panele.
      */
     @Composable
-    fun Render(data: T) {
+    fun Render(onEvent: (ReportEvent) -> Unit, columnKey: String, data: T) {
         Column(modifier = Modifier.padding(8.dp)) {
             // Renderujemy unikalną część dla danego typu filtra
-            RenderFilterUI(data)
+            RenderFilterUI(onEvent, columnKey, data)
 
             // Renderujemy wspólne elementy, które były w FilterRenderer.txt
             FilterSpacer()
-            FilterModePanel(data)
+            FilterModePanel(onEvent, columnKey, data)
             FilterSpacer()
-            NullHandlingPanel(data)
+            NullHandlingPanel(onEvent, columnKey, data)
         }
     }
 
@@ -77,7 +81,7 @@ abstract class Filter<T : FilterData> {
     // --- WSPÓLNE KOMPONENTY UI ---
 
     @Composable
-    fun NullHandlingPanel(filterData: FilterData) {
+    fun NullHandlingPanel(onEvent: (ReportEvent) -> Unit, columnKey: String, filterData: FilterData) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -89,25 +93,36 @@ abstract class Filter<T : FilterData> {
             )
 
             RadioButton(
-                selected = filterData.nullHandling.value == NullHandling.Ignore,
+                selected = filterData.nullHandling == NullHandling.Ignore,
                 onClick = {
-                    filterData.nullHandling.value = NullHandling.Ignore
+                    onEvent.invoke(
+                        ReportEvent.FilterChanged(
+                            columnKey,
+                            filterData.withNullHandling(NullHandling.Ignore)
+                        )
+                    )
                 }
             )
             Text(Translations.get("filter.null.ignore"), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
-                selected = filterData.nullHandling.value == NullHandling.Include,
+                selected = filterData.nullHandling == NullHandling.Ignore,
                 onClick = {
-                    filterData.nullHandling.value = NullHandling.Include
+                    ReportEvent.FilterChanged(
+                        columnKey,
+                        filterData.withNullHandling(NullHandling.Ignore)
+                    )
                 }
             )
             Text(Translations.get("filter.null.include"), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
-                selected = filterData.nullHandling.value == NullHandling.Exclude,
+                selected = filterData.nullHandling == NullHandling.Exclude,
                 onClick = {
-                    filterData.nullHandling.value = NullHandling.Exclude
+                    ReportEvent.FilterChanged(
+                        columnKey,
+                        filterData.withNullHandling(NullHandling.Exclude)
+                    )
                 }
             )
             Text(Translations.get("filter.null.exclude"))
@@ -115,8 +130,8 @@ abstract class Filter<T : FilterData> {
     }
 
     @Composable
-    fun FilterModePanel(filterData: FilterData) {
-        if (filterData.mode.value == FilterMode.Single) return
+    fun FilterModePanel(onEvent: (ReportEvent) -> Unit, columnKey: String, filterData: FilterData) {
+        if (filterData.mode == FilterMode.Single) return
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -128,17 +143,18 @@ abstract class Filter<T : FilterData> {
             )
 
             RadioButton(
-                selected = filterData.mode.value == FilterMode.ListAny,
+                selected = filterData.mode == FilterMode.ListAny,
                 onClick = {
-                    filterData.mode.value = FilterMode.ListAny
+                    onEvent.invoke(ReportEvent.FilterChanged(columnKey, filterData.withMode(FilterMode.ListAny)))
                 }
+
             )
             Text(FilterMode.ListAny.toDisplayString(), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
-                selected = filterData.mode.value == FilterMode.ListAll,
+                selected = filterData.mode == FilterMode.ListAll,
                 onClick = {
-                    filterData.mode.value = FilterMode.ListAll
+                    onEvent.invoke(ReportEvent.FilterChanged(columnKey, filterData.withMode(FilterMode.ListAll)))
                 }
             )
             Text(FilterMode.ListAll.toDisplayString())

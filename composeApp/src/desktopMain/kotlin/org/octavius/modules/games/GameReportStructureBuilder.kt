@@ -8,12 +8,12 @@ import org.octavius.report.Query
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringColumn
-import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportStructure
+import org.octavius.report.component.ReportStructureBuilder
 
-class GameReportHandler(val navigator: Navigator) : ReportHandler() {
+class GameReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
 
-    override fun createReportStructure(): ReportStructure {
+    override fun buildStructure(): ReportStructure {
         val query = Query(
             """
             SELECT games.id, games.name AS game_name, series.name AS series_name, games.status
@@ -48,7 +48,7 @@ class GameReportHandler(val navigator: Navigator) : ReportHandler() {
             }
         )
 
-        return ReportStructure(query, columns, "", "games", rowActions)
+        return ReportStructure(query, columns, "games", rowActions)
     }
 
 }

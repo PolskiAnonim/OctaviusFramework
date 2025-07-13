@@ -1,51 +1,56 @@
 package org.octavius.report.filter.data.type
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.serialization.json.*
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.filter.data.FilterData
 import kotlin.reflect.KClass
 
-class EnumFilterData<E : Enum<E>>(val enumClass: KClass<E>) : FilterData() {
-    val values: SnapshotStateList<E> = mutableStateListOf()
-    val include: MutableState<Boolean> = mutableStateOf(true)
-
-    override fun resetValue() {
-        values.clear()
-    }
+data class EnumFilterData<E : Enum<E>>(
+    val enumClass: KClass<E>,
+    override val mode: FilterMode = FilterMode.Single,
+    override val nullHandling: NullHandling = NullHandling.Ignore,
+    val values: List<E> = emptyList(),
+    val include: Boolean = true
+) : FilterData {
 
     override fun isActive(): Boolean {
-        return values.isNotEmpty() || nullHandling.value != NullHandling.Ignore
-    }
-
-    override fun getTrackableStates(): List<Any?> {
-        return listOf(values.toList(), include.value, nullHandling.value, mode.value)
+        return values.isNotEmpty() || nullHandling != NullHandling.Ignore
     }
 
     override fun serialize(): JsonObject {
         return buildJsonObject {
             putJsonArray("values") {
-               for (value in values) {
-                   add(value.name)
-               }
+                for (value in values) {
+                    add(value.name)
+                }
             }
-            put("include", include.value)
-            put("nullHandling", nullHandling.value.name)
-            put("mode", mode.value.name)
+            put("include", include)
+            put("nullHandling", nullHandling.name)
+            put("mode", mode.name)
         }
     }
 
-    override fun deserialize(data: JsonObject) {
-        resetFilterData()
-        values.addAll(data["values"]!!.jsonArray.map { element -> 
-            enumClass.java.enumConstants.first { it.name == element.jsonPrimitive.content }
-        })
-        include.value = data["include"]!!.jsonPrimitive.boolean
-        nullHandling.value = data["nullHandling"]!!.jsonPrimitive.content.let { NullHandling.valueOf(it) }
-        mode.value = data["mode"]!!.jsonPrimitive.content.let { FilterMode.valueOf(it) }
+
+    companion object {
+        fun <E: Enum<E>> deserialize(data: JsonObject, enumClass: KClass<E>): EnumFilterData<E> {
+            return EnumFilterData(
+                enumClass = enumClass,
+                values = data["values"]!!.jsonArray.map { element ->
+                    enumClass.java.enumConstants.first { it.name == element.jsonPrimitive.content }
+                },
+                include = data["include"]!!.jsonPrimitive.boolean,
+                nullHandling = data["nullHandling"]!!.jsonPrimitive.content.let { NullHandling.valueOf(it) },
+                mode = data["mode"]!!.jsonPrimitive.content.let { FilterMode.valueOf(it) }
+            )
+        }
+    }
+
+    override fun withMode(newMode: FilterMode): FilterData {
+        return this.copy(mode = newMode)
+    }
+
+    override fun withNullHandling(newNullHandling: NullHandling): FilterData {
+        return this.copy(nullHandling = newNullHandling)
     }
 }

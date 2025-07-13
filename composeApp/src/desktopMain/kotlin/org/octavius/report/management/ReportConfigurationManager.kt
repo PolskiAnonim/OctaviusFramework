@@ -17,7 +17,7 @@ class ReportConfigurationManager {
         return try {
             val updater = DatabaseManager.getUpdater()
 
-            val sortOrderList = reportState.sortOrder.value.map { (columnName, direction) ->
+            val sortOrderList = reportState.sortOrder.map { (columnName, direction) ->
                 SortConfiguration(columnName, direction)
             }
 
@@ -38,7 +38,7 @@ class ReportConfigurationManager {
                 RETURNING id
             """.trimIndent()
 
-            val filterConfig = reportState.filterData.value.map { (columnName, filterData) ->
+            val filterConfig = reportState.filterData.map { (columnName, filterData) ->
                 FilterConfig(columnName, filterData.serialize())
             }
 
@@ -47,9 +47,9 @@ class ReportConfigurationManager {
                 "report_name" to reportName,
                 "description" to description,
                 "sort_order" to sortOrderList,
-                "visible_columns" to reportState.visibleColumns.value.toList(),
-                "column_order" to reportState.columnKeys.toList(),
-                "page_size" to reportState.pagination.pageSize.value,
+                "visible_columns" to reportState.visibleColumns.toList(),
+                "column_order" to reportState.columnKeysOrder.toList(),
+                "page_size" to reportState.pagination.pageSize,
                 "is_default" to isDefault,
                 "filters" to filterConfig
             )
@@ -118,32 +118,6 @@ class ReportConfigurationManager {
         } catch (e: Exception) {
             e.printStackTrace()
             false
-        }
-    }
-
-    fun applyConfiguration(configuration: ReportConfiguration, reportState: ReportState) {
-        val configData = configuration.configuration
-
-        // Zastosuj konfigurację do ReportState
-        reportState.visibleColumns.value = configData.visibleColumns.toSet()
-
-        // Aktualizuj kolejność kolumn
-        reportState.columnKeys.clear()
-        reportState.columnKeys.addAll(configData.columnOrder)
-
-        // Zastosuj sortowanie
-        reportState.sortOrder.value = configData.sortOrder.map { sortConfig ->
-            sortConfig.columnName to sortConfig.sortDirection
-        }
-
-        // Zastosuj rozmiar strony
-        reportState.pagination.pageSize.value = configData.pageSize
-
-        // Reset strony na pierwszą
-        reportState.pagination.resetPage()
-
-        configData.filters.forEach { filter ->
-            reportState.filterData.value[filter.columnName]!!.deserialize(filter.config)
         }
     }
 

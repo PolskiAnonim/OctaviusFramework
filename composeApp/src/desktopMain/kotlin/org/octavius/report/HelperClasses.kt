@@ -1,7 +1,5 @@
 package org.octavius.report
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Translations
@@ -12,15 +10,13 @@ data class Query(
     val params: Map<String, Any> = emptyMap()
 )
 
-data class ReportPagination(
-    val currentPage: MutableState<Long> = mutableStateOf(0),
-    val totalPages: MutableState<Long> = mutableStateOf(1),
-    val totalItems: MutableState<Long> = mutableStateOf(0),
-    val pageSize: MutableState<Int> = mutableStateOf(10)
+data class ReportPaginationState(
+    val currentPage: Long = 0,
+    val totalPages: Long = 1,
+    val totalItems: Long = 0,
+    val pageSize: Int = 10
 ) {
-    fun resetPage() {
-        currentPage.value = 0
-    }
+    fun resetPage(): ReportPaginationState = this.copy(currentPage = 0)
 }
 
 enum class NumberFilterDataType: EnumWithFormatter<NumberFilterDataType> {

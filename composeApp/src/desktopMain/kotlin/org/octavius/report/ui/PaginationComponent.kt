@@ -22,16 +22,17 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
-import org.octavius.report.ReportPagination
+import org.octavius.report.ReportEvent
+import org.octavius.report.ReportPaginationState
 
 @Composable
 fun PaginationComponent(
-    pagination: ReportPagination,
-    modifier: Modifier = Modifier
+    pagination: ReportPaginationState,
+    onEvent: (ReportEvent) -> Unit,
 ) {
     Surface(
         color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = modifier.height(60.dp)
+        modifier = Modifier.height(60.dp)
     ) {
         Row(
             modifier = Modifier
@@ -40,24 +41,24 @@ fun PaginationComponent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PreviousPage(pagination)
-            ActualPage(pagination)
-            PageSize(pagination)
-            NextPage(pagination)
+            PreviousPage(pagination, onEvent)
+            ActualPage(pagination, onEvent)
+            PageSize(pagination, onEvent)
+            NextPage(pagination, onEvent)
         }
     }
 }
 
 @Composable
-fun PreviousPage(pagination: ReportPagination) {
+fun PreviousPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit) {
     // Przycisk poprzedniej strony
     IconButton(
         onClick = {
-            if (pagination.currentPage.value > 0) {
-                pagination.currentPage.value = pagination.currentPage.value - 1
+            if (pagination.currentPage > 0) {
+                onEvent.invoke(ReportEvent.PageChanged(pagination.currentPage - 1))
             }
         },
-        enabled = pagination.currentPage.value > 0
+        enabled = pagination.currentPage > 0
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -68,15 +69,15 @@ fun PreviousPage(pagination: ReportPagination) {
 }
 
 @Composable
-fun NextPage(pagination: ReportPagination) {
+fun NextPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit) {
     // Przycisk następnej strony
     IconButton(
         onClick = {
-            if (pagination.currentPage.value < pagination.totalPages.value - 1) {
-                pagination.currentPage.value = pagination.currentPage.value + 1
+            if (pagination.currentPage < pagination.totalPages - 1) {
+                onEvent.invoke(ReportEvent.PageChanged(pagination.currentPage + 1))
             }
         },
-        enabled = pagination.currentPage.value < pagination.totalPages.value - 1
+        enabled = pagination.currentPage < pagination.totalPages - 1
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -87,7 +88,7 @@ fun NextPage(pagination: ReportPagination) {
 }
 
 @Composable
-fun PageSize(pagination: ReportPagination) {
+fun PageSize(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit) {
     // Selektor rozmiaru strony
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -111,7 +112,7 @@ fun PageSize(pagination: ReportPagination) {
                 contentPadding = PaddingValues(4.dp)
             ) {
                 Text(
-                    text = pagination.pageSize.value.toString(),
+                    text = pagination.pageSize.toString(),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -124,8 +125,7 @@ fun PageSize(pagination: ReportPagination) {
                     DropdownMenuItem(
                         text = { Text(size.toString()) },
                         onClick = {
-                            pagination.pageSize.value = size
-                            pagination.resetPage()
+                            onEvent.invoke(ReportEvent.PageSizeChanged(size))
                             expanded = false
                         }
                     )
@@ -136,28 +136,18 @@ fun PageSize(pagination: ReportPagination) {
 }
 
 @Composable
-fun ActualPage(pagination: ReportPagination) {
-    var pageInputValue by remember { 
+fun ActualPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit) {
+    var pageInputValue by remember(pagination.currentPage) {
         mutableStateOf(
             TextFieldValue(
-                text = (pagination.currentPage.value + 1).toString(),
-                selection = TextRange((pagination.currentPage.value + 1).toString().length)
+                text = (pagination.currentPage + 1).toString(),
+                selection = TextRange((pagination.currentPage + 1).toString().length)
             )
         )
     }
 
     var isEditingPage by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
-
-    // Synchronizuj pageInputValue z aktualną stroną gdy nie edytujemy
-    LaunchedEffect(pagination.currentPage.value) {
-        if (!isEditingPage) {
-            pageInputValue = TextFieldValue(
-                text = (pagination.currentPage.value + 1).toString(),
-                selection = TextRange((pagination.currentPage.value + 1).toString().length)
-            )
-        }
-    }
 
 
     // Wyświetlanie aktualnej strony z możliwością edycji
@@ -205,15 +195,12 @@ fun ActualPage(pagination: ReportPagination) {
                 keyboardActions = KeyboardActions(
                     onDone = {
                         val newPage = pageInputValue.text.toLongOrNull()
-                        if (newPage != null && newPage > 0 && newPage <= pagination.totalPages.value) {
-                            pagination.currentPage.value = newPage - 1
-                        } else {
-                            // Przywróć poprzednią wartość jeśli wprowadzono nieprawidłową
-                            pageInputValue = TextFieldValue(
-                                text = (pagination.currentPage.value + 1).toString(),
-                                selection = TextRange((pagination.currentPage.value + 1).toString().length)
-                            )
+                        if (newPage != null && newPage > 0 && newPage <= pagination.totalPages) {
+                            onEvent(ReportEvent.PageChanged(newPage - 1))
                         }
+                        // Jeśli wpisano złą wartość, pole samo się zresetuje
+                        // przy następnej rekompozycji, bo `remember(pagination.currentPage)`
+                        // zobaczy, że stan globalny się nie zmienił.
                         isEditingPage = false
                     }
                 )
@@ -232,12 +219,12 @@ fun ActualPage(pagination: ReportPagination) {
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
-                Text("${pagination.currentPage.value + 1}")
+                Text("${pagination.currentPage + 1}")
             }
         }
 
         Text(
-            text = " " + Translations.get("pagination.of") + " ${pagination.totalPages.value}",
+            text = " " + Translations.get("pagination.of") + " ${pagination.totalPages}",
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
     }

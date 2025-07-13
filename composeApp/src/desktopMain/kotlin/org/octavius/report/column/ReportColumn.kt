@@ -12,6 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
 import org.octavius.report.ColumnWidth
+import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
@@ -28,7 +29,7 @@ abstract class ReportColumn(
         if (filterable) createFilter() else null
     }
 
-    abstract fun createFilter() : Filter<*>
+    abstract fun createFilter(): Filter<*>
 
     protected open fun createFilterData(filter: Filter<*>): FilterData {
         return filter.createDefaultData()
@@ -39,8 +40,13 @@ abstract class ReportColumn(
     }
 
     @Composable
-    fun RenderHeader(columnKey: String, reportState: ReportState, modifier: Modifier = Modifier) {
-        val filterData = reportState.filterData.value[columnKey]
+    fun RenderHeader(
+        onEvent: (ReportEvent) -> Unit,
+        columnKey: String,
+        reportState: ReportState,
+        modifier: Modifier = Modifier
+    ) {
+        val filterData = reportState.filterData[columnKey]
 
         var showColumnMenu by remember { mutableStateOf(false) }
 
@@ -88,7 +94,7 @@ abstract class ReportColumn(
                             modifier = Modifier.Companion.padding(bottom = 8.dp)
                         )
 
-                        RenderFilter(filter!!, filterData)
+                        RenderFilter(onEvent, columnKey, filter!!, filterData)
 
                         // Przycisk wyczyść filtr
                         if (filterData.isActive()) {
@@ -98,7 +104,7 @@ abstract class ReportColumn(
                             ) {
                                 OutlinedButton(
                                     onClick = {
-                                        filterData.resetFilterData()
+                                        onEvent.invoke(ReportEvent.ClearFilter(columnKey))
                                         showColumnMenu = false
                                     }
                                 ) {
@@ -124,13 +130,15 @@ abstract class ReportColumn(
      */
     @Composable
     private fun <T : FilterData> RenderFilter(
+        onEvent: (ReportEvent) -> Unit,
+        columnKey: String,
         filter: Filter<T>,
         data: FilterData
     ) {
         @Suppress("UNCHECKED_CAST")
         val specificData = data as T
 
-        filter.Render(specificData)
+        filter.Render(onEvent, columnKey, specificData)
     }
 
     @Composable

@@ -7,13 +7,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.ColumnWidth
+import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportHandler
 import org.octavius.report.component.ReportState
+import org.octavius.report.component.ReportStructure
 
 fun LazyListScope.reportTable(
-    reportHandler: ReportHandler,
+    onEvent: (ReportEvent) -> Unit,
+    reportStructure: ReportStructure,
     reportState: ReportState,
-    dataList: List<Map<String, Any?>>
 ) {
     // Nagłówki kolumn
     item {
@@ -24,10 +26,10 @@ fun LazyListScope.reportTable(
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .padding(vertical = 8.dp)
         ) {
-            val visibleColumns = reportState.columnKeys.filter { 
-                reportState.visibleColumns.value.contains(it) 
+            val visibleColumns = reportState.columnKeysOrder.filter {
+                reportState.visibleColumns.contains(it)
             }
-            val allColumns = reportHandler.reportStructure.getAllColumns()
+            val allColumns = reportStructure.getAllColumns()
 
             visibleColumns.forEachIndexed { index, key ->
                 val column = allColumns[key]!!
@@ -37,7 +39,7 @@ fun LazyListScope.reportTable(
                     is ColumnWidth.Flexible -> Modifier.weight(colWidth.weight)
                 }
 
-                column.RenderHeader(key, reportState, cellModifier)
+                column.RenderHeader(onEvent, key, reportState, cellModifier)
 
                 // Separator między kolumnami w nagłówku (oprócz ostatniej)
                 if (index < visibleColumns.size - 1) {
@@ -53,16 +55,16 @@ fun LazyListScope.reportTable(
     }
 
     // Wiersze danych
-    items(dataList.size) { index ->
-        val rowData = dataList[index]
-        val visibleColumns = reportState.columnKeys.filter { 
-            reportState.visibleColumns.value.contains(it) 
+    items(reportState.data.size) { index ->
+        val rowData = reportState.data[index]
+        val visibleColumns = reportState.columnKeysOrder.filter {
+            reportState.visibleColumns.contains(it)
         }
 
         ReportRow(
             rowData = rowData,
             visibleColumns = visibleColumns,
-            allColumns = reportHandler.reportStructure.getAllColumns()
+            allColumns = reportStructure.getAllColumns()
         )
 
         // Separator

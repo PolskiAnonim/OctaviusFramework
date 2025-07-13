@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.SortDirection
 import org.octavius.localization.Translations
+import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
@@ -38,9 +39,10 @@ private object ChipConstants {
 
 @Composable
 fun ColumnManagementPanel(
+    onEvent: (ReportEvent) -> Unit,
+    reportState: ReportState,
     manageableColumnKeys: List<String>,
     columnNames: Map<String, String>,
-    reportState: ReportState,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -76,12 +78,12 @@ fun ColumnManagementPanel(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Sekcja widocznych kolumn z możliwością sortowania
-                ColumnsSection(manageableColumnKeys = manageableColumnKeys, columnNames = columnNames, reportState = reportState)
+                ColumnsSection(onEvent, manageableColumnKeys = manageableColumnKeys, columnNames = columnNames, reportState = reportState)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Sekcja sortowania
-                SortingSection(reportState = reportState, columnNames = columnNames)
+                SortingSection(onEvent, reportState = reportState, columnNames = columnNames)
             }
         }
     }
@@ -90,16 +92,19 @@ fun ColumnManagementPanel(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun ColumnsSection(
+    onEvent: (ReportEvent) -> Unit,
     manageableColumnKeys: List<String>,
     columnNames: Map<String, String>,
     reportState: ReportState
 ) {
-    val allColumns = reportState.columnKeys
+    val allColumns = reportState.columnKeysOrder
     val visibleColumns = reportState.visibleColumns
     val onDragEnd = { fromIndex: Int, toIndex: Int ->
         if (fromIndex != toIndex) {
-            val item = reportState.columnKeys.removeAt(fromIndex)
-            reportState.columnKeys.add(toIndex, item)
+            val columnKeysOrder = reportState.columnKeysOrder.toMutableList()
+            val item = columnKeysOrder.removeAt(fromIndex)
+            columnKeysOrder.add(toIndex, item)
+            onEvent.invoke(ReportEvent.ColumnOrderChanged(columnKeysOrder))
         }
     }
     Column {
@@ -118,7 +123,7 @@ private fun ColumnsSection(
             // Iterujemy po aktualnej kolejności WSZYSTKICH kolumn, ale filtrujemy te,
             // które nie są zarządzalne
             items(allColumns.filter { manageableColumnKeys.contains(it) }) { columnKey ->
-                val isVisible = visibleColumns.value.contains(columnKey)
+                val isVisible = visibleColumns.contains(columnKey)
                 val index = allColumns.indexOf(columnKey)
                 DraggableChip(
                     text = columnNames[columnKey]!!,
@@ -152,6 +157,7 @@ private fun ColumnsSection(
                     leadingIcon = {
                         Box(modifier = Modifier.clickable {
                             toggleColumnVisibility(
+                                onEvent,
                                 reportState,
                                 columnKey,
                                 isVisible
@@ -173,11 +179,12 @@ private fun ColumnsSection(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun SortingSection(
+    onEvent: (ReportEvent) -> Unit,
     reportState: ReportState,
     columnNames: Map<String, String>
 ) {
     // Pobierz kolumny z report state (fallback)
-    val allColumns = reportState.columnKeys
+    val allColumns = reportState.columnKeysOrder
     Column {
         Text(
             text = Translations.get("report.columns.sorting"),
@@ -188,7 +195,7 @@ private fun SortingSection(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Aktualne sortowania
-        val currentSort = reportState.sortOrder.value
+        val currentSort = reportState.sortOrder
         if (currentSort.isNotEmpty()) {
             Text(
                 text = Translations.get("report.columns.activeSorting"),
@@ -216,7 +223,7 @@ private fun SortingSection(
                                     val fromIndex = parts[1].toIntOrNull() ?: return@DraggableChip false
 
                                     if (draggedColumnKey != columnKey) {
-                                        reorderSortColumns(reportState, fromIndex, sortIndex)
+                                        reorderSortColumns(onEvent, reportState, fromIndex, sortIndex)
                                         return@DraggableChip true
                                     }
                                 }
@@ -236,6 +243,7 @@ private fun SortingSection(
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.clickable {
                                     updateSortDirection(
+                                        onEvent,
                                         reportState,
                                         columnKey,
                                         if (direction == SortDirection.Ascending) SortDirection.Descending else SortDirection.Ascending
@@ -248,7 +256,7 @@ private fun SortingSection(
                                 text = "×",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.clickable { removeSortColumn(reportState, columnKey) }
+                                modifier = Modifier.clickable { removeSortColumn(onEvent,reportState, columnKey) }
                             )
                         }
                     )
@@ -272,7 +280,7 @@ private fun SortingSection(
                 .fillMaxWidth()
                 .dragAndDropTarget(
                     shouldStartDragAndDrop = { true },
-                    target = createSortDropTarget(allColumns, reportState)
+                    target = createSortDropTarget(onEvent, allColumns, reportState)
                 )
                 .background(
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
@@ -381,6 +389,7 @@ private fun extractTransferData(event: DragAndDropEvent): String? {
 }
 
 private fun createSortDropTarget(
+    onEvent: (ReportEvent) -> Unit,
     allColumns: List<String>,
     reportState: ReportState
 ): DragAndDropTarget {
@@ -394,12 +403,11 @@ private fun createSortDropTarget(
                 transferData
             }
 
-            val currentSortValue = reportState.sortOrder.value
+            val currentSortValue = reportState.sortOrder
             if (allColumns.contains(columnKey) && !currentSortValue.any { it.first == columnKey }) {
                 val newSort = currentSortValue.toMutableList()
                 newSort.add(columnKey to SortDirection.Ascending)
-                reportState.sortOrder.value = newSort
-                reportState.pagination.resetPage()
+                onEvent.invoke(ReportEvent.SortOrderChanged(newSort))
                 return true
             }
             return false
@@ -408,50 +416,53 @@ private fun createSortDropTarget(
 }
 
 private fun toggleColumnVisibility(
+    onEvent: (ReportEvent) -> Unit,
     reportState: ReportState,
     columnKey: String,
     isVisible: Boolean
 ) {
     if (isVisible) {
-        reportState.visibleColumns.value = reportState.visibleColumns.value.filter { it != columnKey }.toSet()
+        val visibleColumns = reportState.visibleColumns.toMutableSet()
+        visibleColumns.remove(columnKey)
+        onEvent.invoke(ReportEvent.ColumnVisibilityChanged(visibleColumns.toSet()))
     } else {
-        val mutableSet = reportState.visibleColumns.value.toMutableSet()
-        mutableSet.add(columnKey)
-        reportState.visibleColumns.value = mutableSet.toSet()
+        val visibleColumns = reportState.visibleColumns.toMutableSet()
+        visibleColumns.add(columnKey)
+        onEvent.invoke(ReportEvent.ColumnVisibilityChanged(visibleColumns.toSet()))
     }
 }
 
 private fun updateSortDirection(
+    onEvent: (ReportEvent) -> Unit,
     reportState: ReportState,
     columnKey: String,
     newDirection: SortDirection
 ) {
-    val currentSort = reportState.sortOrder.value.toMutableList()
+    val currentSort = reportState.sortOrder.toMutableList()
     val index = currentSort.indexOfFirst { it.first == columnKey }
     if (index >= 0) {
         currentSort[index] = columnKey to newDirection
-        reportState.sortOrder.value = currentSort
-        reportState.pagination.resetPage()
+        onEvent.invoke(ReportEvent.SortOrderChanged(currentSort))
     }
 }
 
 private fun removeSortColumn(
+    onEvent: (ReportEvent) -> Unit,
     reportState: ReportState,
     columnKey: String
 ) {
-    val newSort = reportState.sortOrder.value.filter { it.first != columnKey }
-    reportState.sortOrder.value = newSort
-    reportState.pagination.resetPage()
+    val newSort = reportState.sortOrder.filter { it.first != columnKey }
+    onEvent.invoke(ReportEvent.SortOrderChanged(newSort))
 }
 
 private fun reorderSortColumns(
+    onEvent: (ReportEvent) -> Unit,
     reportState: ReportState,
     fromIndex: Int,
     toIndex: Int,
 ) {
-    val newSort = reportState.sortOrder.value.toMutableList()
+    val newSort = reportState.sortOrder.toMutableList()
     val item = newSort.removeAt(fromIndex)
     newSort.add(toIndex, item)
-    reportState.sortOrder.value = newSort
-    reportState.pagination.resetPage()
+    onEvent.invoke(ReportEvent.SortOrderChanged(newSort))
 }

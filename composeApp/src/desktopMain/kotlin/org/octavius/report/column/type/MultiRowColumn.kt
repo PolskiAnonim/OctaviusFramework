@@ -35,8 +35,7 @@ class MultiRowColumn(
 
     override fun createFilterData(filter: Filter<*>): FilterData {
         val filterData = super.createFilterData(filter)
-        filterData.mode.value = FilterMode.ListAny
-        return filterData
+        return filterData.withMode(FilterMode.ListAny)
     }
 
     @Composable

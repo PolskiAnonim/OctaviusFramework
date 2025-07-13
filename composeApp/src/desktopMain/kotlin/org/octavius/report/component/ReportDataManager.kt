@@ -1,22 +1,16 @@
 package org.octavius.report.component
 
-import kotlinx.coroutines.runBlocking
 import org.octavius.database.DatabaseFetcher
 import org.octavius.database.DatabaseManager
 import org.octavius.domain.SortDirection
 import org.octavius.report.Query
+import org.octavius.report.ReportPaginationState
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 
-class ReportDataManager {
-
-    lateinit var reportStructure: ReportStructure
-    lateinit var reportState: ReportState
-
-    fun setReferences(reportStructure: ReportStructure, reportState: ReportState) {
-        this.reportStructure = reportStructure
-        this.reportState = reportState
-    }
+class ReportDataManager(
+    val reportStructure: ReportStructure
+) {
 
     private fun <T : FilterData> getQueryFragment(
         columnName: String,
@@ -29,8 +23,8 @@ class ReportDataManager {
         return filter.createQueryFragment(columnName, specificData)
     }
 
-    private fun buildFilterClause(params: MutableMap<String, Any>): String {
-        val columnFilters = reportState.filterData.value.mapNotNull { (columnKey, filterData) ->
+    private fun buildFilterClause(reportState: ReportState, params: MutableMap<String, Any>): String {
+        val columnFilters = reportState.filterData.mapNotNull { (columnKey, filterData) ->
             val column = reportStructure.getColumn(columnKey)!!
             getQueryFragment(column.databaseColumnName, column.filter!!, filterData)
         }
@@ -42,15 +36,15 @@ class ReportDataManager {
             }
         }
 
-        val searchConditions = buildSearchConditions(params)
+        val searchConditions = buildSearchConditions(reportState, params)
 
         return combineConditions(filterConditions, searchConditions)
     }
 
-    private fun buildSearchConditions(params: MutableMap<String, Any>): List<String> {
-        if (reportState.searchQuery.value.isBlank()) return emptyList()
+    private fun buildSearchConditions(reportState: ReportState,params: MutableMap<String, Any>): List<String> {
+        if (reportState.searchQuery.isBlank()) return emptyList()
 
-        params["searchQuery"] = "%${reportState.searchQuery.value}%"
+        params["searchQuery"] = "%${reportState.searchQuery}%"
 
         return reportStructure.getAllColumns()
             .filter { (_, column) -> column.filterable }
@@ -72,28 +66,28 @@ class ReportDataManager {
     }
 
     private fun updatePagination(
+        reportState: ReportState,
         fetcher: DatabaseFetcher,
         sourceSql: String,
         filterClause: String,
         params: MutableMap<String, Any>
-    ) {
+    ): ReportPaginationState {
         val totalItems = fetcher.fetchCount(sourceSql, filterClause, params)
-        val pageSize = reportState.pagination.pageSize.value
+        val pageSize = reportState.pagination.pageSize
         val totalPages = if (totalItems == 0L) 0 else (totalItems + pageSize - 1) / pageSize
 
-        reportState.pagination.totalItems.value = totalItems
-        reportState.pagination.totalPages.value = totalPages
+        return reportState.pagination.copy(totalItems = totalItems, totalPages = totalPages)
     }
 
-    private fun buildOrderClause(): String {
-        if (reportState.sortOrder.value.isEmpty()) return ""
+    private fun buildOrderClause(reportState: ReportState): String {
+        if (reportState.sortOrder.isEmpty()) return ""
 
         val sortDirectionMap = mapOf(
             SortDirection.Descending to "DESC",
             SortDirection.Ascending to "ASC"
         )
 
-        val orderFragments = reportState.sortOrder.value.mapNotNull { (columnKey, direction) ->
+        val orderFragments = reportState.sortOrder.mapNotNull { (columnKey, direction) ->
             val column = reportStructure.getColumn(columnKey)
             column?.let { "${it.databaseColumnName} ${sortDirectionMap[direction]}" }
         }
@@ -101,23 +95,21 @@ class ReportDataManager {
         return orderFragments.joinToString(", ")
     }
 
-    fun fetchData() {
-        reportState.setLoading(true)
-        reportState.setError(null)
+    fun fetchData(reportState: ReportState): Pair<List<Map<String,Any?>>, ReportPaginationState> {
 
         val query = reportStructure.query
         val params = query.params.toMutableMap()
-        val filterClause = buildFilterClause(params)
-        val orderClause = buildOrderClause()
+        val filterClause = buildFilterClause(reportState, params)
+        val orderClause = buildOrderClause(reportState)
 
         val fetcher = DatabaseManager.getFetcher()
 
         // Najpierw zaktualizuj paginację
-        updatePagination(fetcher, query.sql, filterClause, params)
+        val paginationState = updatePagination(reportState, fetcher, query.sql, filterClause, params)
 
         // Następnie pobierz dane dla aktualnej strony
-        val offset = reportState.pagination.currentPage.value * reportState.pagination.pageSize.value
-        val limit = reportState.pagination.pageSize.value
+        val offset = reportState.pagination.currentPage * reportState.pagination.pageSize
+        val limit = reportState.pagination.pageSize
 
         val data = fetcher.fetchPagedList(
             table = query.sql,
@@ -129,15 +121,6 @@ class ReportDataManager {
             params = params
         )
 
-        reportState.data = data
-        reportState.setLoading(false)
+        return Pair(data, paginationState)
     }
-
-    fun refreshData() {
-        // Wrapper dla compatibility z synchronicznym kodem
-        runBlocking {
-            fetchData()
-        }
-    }
-
 }
