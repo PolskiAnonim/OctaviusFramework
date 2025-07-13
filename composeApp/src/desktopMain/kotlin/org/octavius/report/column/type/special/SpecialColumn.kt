@@ -14,8 +14,7 @@ import org.octavius.report.filter.Filter
  * Nie jest sortowalna ani filtrowalna.
  * Posiada stałą ustaloną szerokość
  */
-abstract class SpecialColumn(technicalName: String, width: Dp) : ReportColumn(
-    technicalName,
+abstract class SpecialColumn(width: Dp) : ReportColumn(
     "",
     width = ColumnWidth.Fixed(width),
     filterable = false,

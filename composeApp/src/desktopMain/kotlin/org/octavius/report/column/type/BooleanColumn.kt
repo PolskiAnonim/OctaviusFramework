@@ -18,7 +18,6 @@ import org.octavius.report.filter.type.BooleanFilter
 
 
 class BooleanColumn(
-    databaseColumnName: String,
     header: String,
     width: Float = 1f,
     filterable: Boolean = false,
@@ -26,7 +25,7 @@ class BooleanColumn(
     private val trueText: String = Translations.get("report.column.boolean.true"),
     private val falseText: String = Translations.get("report.column.boolean.false"),
     private val showIcon: Boolean = true
-) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
+) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable) {
 
     override fun createFilter(): Filter<*> {
         return BooleanFilter(trueText, falseText)

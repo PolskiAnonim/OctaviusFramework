@@ -26,7 +26,7 @@ class ReportDataManager(
     private fun buildFilterClause(reportState: ReportState, params: MutableMap<String, Any>): String {
         val columnFilters = reportState.filterData.mapNotNull { (columnKey, filterData) ->
             val column = reportStructure.getColumn(columnKey)!!
-            getQueryFragment(column.databaseColumnName, column.filter!!, filterData)
+            getQueryFragment(columnKey, column.filter!!, filterData)
         }
 
         val filterConditions = columnFilters.map { fragment ->
@@ -48,7 +48,7 @@ class ReportDataManager(
 
         return reportStructure.getAllColumns()
             .filter { (_, column) -> column.filterable }
-            .map { (_, column) -> "CAST(${column.databaseColumnName} AS TEXT) ILIKE :searchQuery" }
+            .map { (columnKey, _) -> "CAST($columnKey AS TEXT) ILIKE :searchQuery" }
     }
 
     private fun combineConditions(filterConditions: List<String>, searchConditions: List<String>): String {
@@ -87,9 +87,8 @@ class ReportDataManager(
             SortDirection.Ascending to "ASC"
         )
 
-        val orderFragments = reportState.sortOrder.mapNotNull { (columnKey, direction) ->
-            val column = reportStructure.getColumn(columnKey)
-            column?.let { "${it.databaseColumnName} ${sortDirectionMap[direction]}" }
+        val orderFragments = reportState.sortOrder.map { (columnKey, direction) ->
+            "$columnKey ${sortDirectionMap[direction]}"
         }
 
         return orderFragments.joinToString(", ")

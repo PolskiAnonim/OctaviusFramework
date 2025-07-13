@@ -23,7 +23,6 @@ import org.octavius.report.component.ReportState
 class ActionColumn(
     private val actions: List<ReportRowAction>
 ) : SpecialColumn(
-    technicalName = "_actions", // Nazwa techniczna
     width = 60.dp
 ) {
 

@@ -13,13 +13,12 @@ import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.NumberFilter
 
 class IntegerColumn(
-    databaseColumnName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
-) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
+) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable) {
 
     override fun createFilter(): Filter<*> {
         return NumberFilter(Int::class) { it.toIntOrNull() }

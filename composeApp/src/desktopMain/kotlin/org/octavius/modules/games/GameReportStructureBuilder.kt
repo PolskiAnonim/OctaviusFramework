@@ -24,10 +24,9 @@ class GameReportStructureBuilder(val navigator: Navigator) : ReportStructureBuil
         )
 
         val columns = mapOf(
-            "name" to StringColumn("game_name", Translations.get("games.general.gameName")),
-            "series" to StringColumn("series_name", Translations.get("games.general.series")),
+            "game_name" to StringColumn( Translations.get("games.general.gameName")),
+            "series_name" to StringColumn(Translations.get("games.general.series")),
             "status" to EnumColumn(
-                "status",
                 Translations.get("games.general.status"),
                 enumClass = GameStatus::class
             ),

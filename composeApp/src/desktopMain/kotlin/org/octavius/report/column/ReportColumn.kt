@@ -18,7 +18,6 @@ import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 
 abstract class ReportColumn(
-    val databaseColumnName: String,
     val header: String,
     val width: ColumnWidth,
     val filterable: Boolean,

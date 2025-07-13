@@ -44,7 +44,7 @@ fun ReportRow(
                 if (column is SpecialColumn) {
                     column.RenderCell(rowData, reportState, onEvent, modifier)
                 } else {
-                    column.RenderCell(rowData[column.databaseColumnName], Modifier)
+                    column.RenderCell(rowData[key], Modifier)
                 }
             }
 

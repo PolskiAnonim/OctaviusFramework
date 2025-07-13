@@ -12,12 +12,11 @@ import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.StringFilter
 
 class StringColumn(
-    databaseColumnName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true
-) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable) {
+) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable) {
 
     override fun createFilter(): Filter<*> {
         return StringFilter()

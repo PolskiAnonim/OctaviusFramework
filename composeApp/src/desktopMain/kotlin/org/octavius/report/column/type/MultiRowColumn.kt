@@ -21,7 +21,6 @@ class MultiRowColumn(
     private val wrappedColumn: ReportColumn,
     private val maxVisibleItems: Int = 3
 ) : ReportColumn(
-    wrappedColumn.databaseColumnName,
     wrappedColumn.header,
     wrappedColumn.width,
     wrappedColumn.filterable,

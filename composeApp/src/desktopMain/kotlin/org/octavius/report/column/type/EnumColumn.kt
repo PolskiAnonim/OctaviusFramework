@@ -15,13 +15,12 @@ import kotlin.reflect.KClass
 
 
 class EnumColumn<T>(
-    databaseColumnName: String,
     header: String,
     width: Float = 1f,
     sortable: Boolean = false,
     filterable: Boolean = true,
     val enumClass: KClass<T>,
-) : ReportColumn(databaseColumnName, header, ColumnWidth.Flexible(width), filterable, sortable)
+) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable)
         where T : Enum<T>, T : EnumWithFormatter<T> {
 
     override fun createFilter(): Filter<*> {

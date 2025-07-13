@@ -33,26 +33,22 @@ class AsianMediaReportStructureBuilder(val navigator: Navigator) : ReportStructu
         val columns = mapOf(
             "titles" to MultiRowColumn(
                 wrappedColumn = StringColumn(
-                    databaseColumnName = "titles",
                     header = Translations.get("games.general.titles"),
                     width = 2f
                 ),
                 maxVisibleItems = 5
             ),
             "language" to EnumColumn(
-                databaseColumnName = "language",
                 header = Translations.get("games.general.language"),
                 enumClass = PublicationLanguage::class,
                 width = 1f
             ),
-            "publicationType" to EnumColumn(
-                databaseColumnName = "publication_type",
+            "publication_type" to EnumColumn(
                 header = Translations.get("games.general.publicationType"),
                 enumClass = PublicationType::class,
                 width = 1.5f
             ),
             "status" to EnumColumn(
-                databaseColumnName = "status",
                 header = Translations.get("games.general.status"),
                 enumClass = PublicationStatus::class,
                 width = 1.5f
