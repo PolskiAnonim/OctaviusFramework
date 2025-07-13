@@ -13,7 +13,7 @@ import org.octavius.report.component.ReportStructureBuilder
 
 class GameReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
 
-    override fun build(): ReportStructure {
+    override fun buildStructure(): ReportStructure {
         val query = Query(
             """
             SELECT games.id, games.name AS game_name, series.name AS series_name, games.status

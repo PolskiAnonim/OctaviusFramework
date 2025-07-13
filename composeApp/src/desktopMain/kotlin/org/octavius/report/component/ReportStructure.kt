@@ -50,9 +50,14 @@ class ReportStructure(
 
 /**
  * Fabryka do tworzenia struktur raportów
- * Zawiera jedną funkcję - build
  * Służy do tworzenia klasy ReportStructure
  */
 abstract class ReportStructureBuilder {
-    abstract fun build(): ReportStructure
+    fun build(): ReportStructure {
+        val structure = buildStructure()
+        structure.initSpecialColumns()
+        return structure
+    }
+
+    abstract fun buildStructure(): ReportStructure
 }

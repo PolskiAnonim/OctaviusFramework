@@ -11,7 +11,7 @@ import org.octavius.report.component.ReportStructureBuilder
 
 class ApiIntegrationsReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
 
-    override fun build(): ReportStructure {
+    override fun buildStructure(): ReportStructure {
         val query = Query(
             """
             SELECT id, name, enabled, api_key, endpoint_url, port, last_sync

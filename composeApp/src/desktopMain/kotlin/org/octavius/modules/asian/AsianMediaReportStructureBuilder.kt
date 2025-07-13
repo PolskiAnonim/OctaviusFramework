@@ -16,7 +16,7 @@ import org.octavius.report.component.ReportStructureBuilder
 
 class AsianMediaReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
 
-    override fun build(): ReportStructure {
+    override fun buildStructure(): ReportStructure {
         val query = Query(
             """
             SELECT 
