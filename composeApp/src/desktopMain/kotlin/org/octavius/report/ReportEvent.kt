@@ -11,16 +11,14 @@ import org.octavius.report.management.ReportConfiguration
 sealed interface ReportEvent {
     
     fun triggersDataReload(): Boolean = when (this) {
-        is Initialize, is RefreshData, is SearchQueryChanged, 
+        is Initialize, is SearchQueryChanged,
         is PageChanged, is PageSizeChanged, is SortOrderChanged,
         is FilterChanged, is ClearFilter, is ApplyConfiguration -> true
-        
-        is ColumnVisibilityChanged, is ColumnOrderChanged, 
-        is SaveConfiguration, is DeleteConfiguration -> false
+
+        is ColumnVisibilityChanged, is ColumnOrderChanged -> false
     }
     // Inicjalizacja i odświeżanie
     object Initialize : ReportEvent
-    object RefreshData : ReportEvent
 
     // Wyszukiwanie
     data class SearchQueryChanged(val query: String) : ReportEvent
@@ -42,6 +40,4 @@ sealed interface ReportEvent {
 
     // Konfiguracje
     data class ApplyConfiguration(val configuration: ReportConfiguration) : ReportEvent
-    data class SaveConfiguration(val name: String, val description: String?, val isDefault: Boolean) : ReportEvent
-    data class DeleteConfiguration(val name: String) : ReportEvent
 }

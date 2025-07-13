@@ -67,13 +67,8 @@ class ReportEventHandler(
       is ReportEvent.ColumnOrderChanged -> currentState.copy(columnKeysOrder = event.newColumnOrder)
       is ReportEvent.ColumnVisibilityChanged -> currentState.copy(visibleColumns = event.newVisibleColumns)
       is ReportEvent.ApplyConfiguration -> applyConfiguration(currentState, event.configuration)
-      
       // Eventy które nie zmieniają stanu bezpośrednio
-      is ReportEvent.Initialize, is ReportEvent.RefreshData -> currentState
-      is ReportEvent.SaveConfiguration, is ReportEvent.DeleteConfiguration -> {
-
-        currentState
-      }
+      is ReportEvent.Initialize -> currentState
     }
   }
   
