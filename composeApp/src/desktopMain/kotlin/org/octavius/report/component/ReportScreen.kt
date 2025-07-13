@@ -2,7 +2,6 @@ package org.octavius.report.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -13,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.navigator.Screen
+import org.octavius.report.ReportEvent
 import org.octavius.report.management.ColumnManagementPanel
 import org.octavius.report.management.ReportConfigurationDialog
 import org.octavius.report.ui.PaginationComponent
@@ -21,37 +21,52 @@ import org.octavius.report.ui.reportTable
 
 abstract class ReportScreen : Screen {
     abstract override val title: String
-    abstract val reportHandler: ReportHandler
+    
+    abstract fun createReportStructure(): ReportStructureBuilder
+
+    lateinit var reportHandler: ReportHandler
 
 
     @Composable
-    override fun Content() {
-        val uiState = rememberReportUIState()
-        val reportState = reportHandler.reportState
+    private fun rememberReportHandler() {
+        val scope = rememberCoroutineScope()
+        val reportStructure = remember { createReportStructure().build() }
 
-        reportHandler.DataFetcher()
+        reportHandler = remember(scope, reportStructure) {
+            ReportHandler(
+                coroutineScope = scope,
+                reportStructure = reportStructure
+            )
+        }
+    }
+
+    @Composable
+    override fun Content() {
+        rememberReportHandler()
+        val uiState = rememberReportUIState()
 
         Scaffold(
             topBar = {
                 ColumnManagementPanel(
+                    onEvent = reportHandler::sendEvent,
+                    reportState = reportHandler.state.value,
                     manageableColumnKeys = reportHandler.reportStructure.manageableColumnKeys,
                     columnNames = reportHandler.reportStructure.getAllColumns().map { it.key to it.value.header }
                         .toMap(),
-                    reportState = reportState,
                     modifier = Modifier.padding(8.dp)
                 )
             },
             bottomBar = {
-                PaginationComponent(reportState.pagination)
+                PaginationComponent(reportHandler.state.value.pagination, onEvent = reportHandler::sendEvent)
             }
         ) { innerPadding ->
             Column(modifier = Modifier.padding(innerPadding)) {
                 // Pasek wyszukiwania
                 ReportSearchBar(
-                    searchQuery = reportState.searchQuery.value,
+
+                    searchQuery = reportHandler.state.value.searchQuery,
                     onSearchChange = { query ->
-                        reportState.searchQuery.value = query
-                        reportState.pagination.resetPage()
+                        reportHandler.sendEvent(ReportEvent.SearchQueryChanged(query))
                     },
                     onAddMenuClick = { uiState.addMenuExpanded.value = !uiState.addMenuExpanded.value },
                     addMenuExpanded = uiState.addMenuExpanded.value,
@@ -66,7 +81,7 @@ abstract class ReportScreen : Screen {
                 ) {
 
                     // Tabela z danymi
-                    reportTable(reportHandler, reportState, reportState.data)
+                    reportTable(reportHandler, reportHandler.state.value, reportHandler.state.value.data)
                 }
             }
         }
@@ -74,8 +89,8 @@ abstract class ReportScreen : Screen {
         // Dialog konfiguracji
         if (uiState.configurationDialogVisible.value) {
             ReportConfigurationDialog(
-                reportName = reportHandler.getReportName(),
-                reportState = reportState,
+                reportName = reportHandler.reportStructure.reportName,
+                reportState = reportHandler.state.value,
                 onDismiss = { uiState.configurationDialogVisible.value = false },
             )
         }
