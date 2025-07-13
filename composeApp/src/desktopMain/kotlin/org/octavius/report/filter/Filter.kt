@@ -27,6 +27,7 @@ abstract class Filter<T : FilterData> {
     abstract fun createDefaultData(): T
 
     abstract fun deserializeData(data: JsonObject): T
+
     /**
      * Renderuje unikalny interfejs użytkownika dla tego konkretnego filtra.
      * Ta metoda będzie implementowana przez każdą podklasę (BooleanFilter, StringFilter, etc.).
@@ -106,11 +107,11 @@ abstract class Filter<T : FilterData> {
             Text(Translations.get("filter.null.ignore"), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
-                selected = filterData.nullHandling == NullHandling.Ignore,
+                selected = filterData.nullHandling == NullHandling.Include,
                 onClick = {
                     ReportEvent.FilterChanged(
                         columnKey,
-                        filterData.withNullHandling(NullHandling.Ignore)
+                        filterData.withNullHandling(NullHandling.Include)
                     )
                 }
             )
@@ -119,10 +120,13 @@ abstract class Filter<T : FilterData> {
             RadioButton(
                 selected = filterData.nullHandling == NullHandling.Exclude,
                 onClick = {
-                    ReportEvent.FilterChanged(
-                        columnKey,
-                        filterData.withNullHandling(NullHandling.Exclude)
+                    onEvent.invoke(
+                        ReportEvent.FilterChanged(
+                            columnKey,
+                            filterData.withNullHandling(NullHandling.Exclude)
+                        )
                     )
+
                 }
             )
             Text(Translations.get("filter.null.exclude"))
