@@ -64,7 +64,9 @@ fun LazyListScope.reportTable(
         ReportRow(
             rowData = rowData,
             visibleColumns = visibleColumns,
-            allColumns = reportStructure.getAllColumns()
+            allColumns = reportStructure.getAllColumns(),
+            onEvent,
+            reportState
         )
 
         // Separator

@@ -8,14 +8,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.ColumnWidth
+import org.octavius.report.ReportEvent
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.special.SpecialColumn
+import org.octavius.report.component.ReportState
 
 @Composable
 fun ReportRow(
     rowData: Map<String, Any?>,
     visibleColumns: List<String>,
     allColumns: Map<String, ReportColumn>,
+    onEvent: (ReportEvent) -> Unit,
+    reportState: ReportState,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -36,13 +40,12 @@ fun ReportRow(
                 modifier = cellModifier,
                 contentAlignment = Alignment.CenterStart
             ) {
-                // Dla SpecialColumn, 'item' to cała mapa. Dla innych - konkretna wartość.
-                val cellData = if (column is SpecialColumn) {
-                    rowData
+                // Dla SpecialColumn, przekazywany jest dodatkowy kontekst
+                if (column is SpecialColumn) {
+                    column.RenderCell(rowData, reportState, onEvent, modifier)
                 } else {
-                    rowData[column.databaseColumnName]
+                    column.RenderCell(rowData[column.databaseColumnName], Modifier)
                 }
-                column.RenderCell(cellData, Modifier)
             }
 
             // Separator między kolumnami (oprócz ostatniej)

@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
 import org.octavius.report.ReportActionContext
+import org.octavius.report.ReportEvent
 import org.octavius.report.ReportRowAction
+import org.octavius.report.component.ReportState
 
 /**
  * Specjalna kolumna, która renderuje menu akcji dla każdego wiersza.
@@ -24,8 +26,14 @@ class ActionColumn(
     technicalName = "_actions", // Nazwa techniczna
     width = 60.dp
 ) {
+
     @Composable
-    override fun RenderCell(item: Any?, modifier: Modifier) {
+    override fun RenderCell(
+        item: Any?,
+        reportState: ReportState,
+        onEvent: (ReportEvent) -> Unit,
+        modifier: Modifier
+    ) {
         var expanded by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
@@ -55,7 +63,7 @@ class ActionColumn(
                             { Icon(it, contentDescription = reportAction.label) }
                         },
                         onClick = {
-                            val context = ReportActionContext(rowData, scope)
+                            val context = ReportActionContext(rowData, reportState, onEvent, scope)
                             reportAction.action.invoke(context)
                             expanded = false
                         }

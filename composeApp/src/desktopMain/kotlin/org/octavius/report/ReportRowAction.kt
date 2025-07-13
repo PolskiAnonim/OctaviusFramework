@@ -26,5 +26,7 @@ data class ReportRowAction(
  */
 data class ReportActionContext(
     val rowData: Map<String, Any?>,
+    val ReportState: ReportState,
+    val onEvent: (ReportEvent) -> Unit,
     val coroutineScope: CoroutineScope
 )
