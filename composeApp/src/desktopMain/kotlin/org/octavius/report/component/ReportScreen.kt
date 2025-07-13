@@ -81,7 +81,7 @@ abstract class ReportScreen : Screen {
                 ) {
 
                     // Tabela z danymi
-                    reportTable(reportHandler, reportHandler.state.value, reportHandler.state.value.data)
+                    reportTable(reportHandler::sendEvent, reportHandler.reportStructure, reportHandler.state.value, reportHandler.state.value.data)
                 }
             }
         }
@@ -89,6 +89,7 @@ abstract class ReportScreen : Screen {
         // Dialog konfiguracji
         if (uiState.configurationDialogVisible.value) {
             ReportConfigurationDialog(
+                onEvent = reportHandler::sendEvent,
                 reportName = reportHandler.reportStructure.reportName,
                 reportState = reportHandler.state.value,
                 onDismiss = { uiState.configurationDialogVisible.value = false },
