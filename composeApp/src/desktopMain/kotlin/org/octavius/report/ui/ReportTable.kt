@@ -16,7 +16,6 @@ fun LazyListScope.reportTable(
     onEvent: (ReportEvent) -> Unit,
     reportStructure: ReportStructure,
     reportState: ReportState,
-    dataList: List<Map<String, Any?>>
 ) {
     // Nagłówki kolumn
     item {
@@ -56,8 +55,8 @@ fun LazyListScope.reportTable(
     }
 
     // Wiersze danych
-    items(dataList.size) { index ->
-        val rowData = dataList[index]
+    items(reportState.data.size) { index ->
+        val rowData = reportState.data[index]
         val visibleColumns = reportState.columnKeysOrder.filter {
             reportState.visibleColumns.contains(it)
         }

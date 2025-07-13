@@ -79,7 +79,7 @@ abstract class ReportScreen : Screen {
                 ) {
 
                     // Tabela z danymi
-                    reportTable(reportHandler::onEvent, reportHandler.reportStructure, state, state.data)
+                    reportTable(reportHandler::onEvent, reportHandler.reportStructure, state)
                 }
             }
         }
