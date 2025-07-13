@@ -11,7 +11,7 @@ class ReportHandler(
     val reportStructure: ReportStructure
 ) {
 
-    fun sendEvent(event: ReportEvent) {
+    fun onEvent(event: ReportEvent) {
         eventHandler.onEvent(event)
     }
 
@@ -34,9 +34,9 @@ class ReportHandler(
     private fun loadDefaultConfiguration() {
         val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
         if (defaultConfig != null) {
-            sendEvent(ReportEvent.ApplyConfiguration(defaultConfig))
+            onEvent(ReportEvent.ApplyConfiguration(defaultConfig))
         } else {
-            sendEvent(ReportEvent.Initialize)
+            onEvent(ReportEvent.Initialize)
         }
     }
 }

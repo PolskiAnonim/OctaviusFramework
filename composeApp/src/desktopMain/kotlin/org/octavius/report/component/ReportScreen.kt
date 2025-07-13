@@ -21,18 +21,16 @@ import org.octavius.report.ui.reportTable
 
 abstract class ReportScreen : Screen {
     abstract override val title: String
-    
-    abstract fun createReportStructure(): ReportStructureBuilder
 
-    lateinit var reportHandler: ReportHandler
+    abstract fun createReportStructure(): ReportStructureBuilder
 
 
     @Composable
-    private fun rememberReportHandler() {
+    private fun rememberReportHandler(): ReportHandler {
         val scope = rememberCoroutineScope()
         val reportStructure = remember { createReportStructure().build() }
 
-        reportHandler = remember(scope, reportStructure) {
+        return remember(scope, reportStructure) {
             ReportHandler(
                 coroutineScope = scope,
                 reportStructure = reportStructure
@@ -42,14 +40,15 @@ abstract class ReportScreen : Screen {
 
     @Composable
     override fun Content() {
-        rememberReportHandler()
+        val reportHandler: ReportHandler = rememberReportHandler()
+        val state by reportHandler.state.collectAsState()
         val uiState = rememberReportUIState()
 
         Scaffold(
             topBar = {
                 ColumnManagementPanel(
-                    onEvent = reportHandler::sendEvent,
-                    reportState = reportHandler.state.value,
+                    onEvent = reportHandler::onEvent,
+                    reportState = state,
                     manageableColumnKeys = reportHandler.reportStructure.manageableColumnKeys,
                     columnNames = reportHandler.reportStructure.getAllColumns().map { it.key to it.value.header }
                         .toMap(),
@@ -57,16 +56,15 @@ abstract class ReportScreen : Screen {
                 )
             },
             bottomBar = {
-                PaginationComponent(reportHandler.state.value.pagination, onEvent = reportHandler::sendEvent)
+                PaginationComponent(state.pagination, onEvent = reportHandler::onEvent)
             }
         ) { innerPadding ->
             Column(modifier = Modifier.padding(innerPadding)) {
                 // Pasek wyszukiwania
                 ReportSearchBar(
-
-                    searchQuery = reportHandler.state.value.searchQuery,
+                    searchQuery = state.searchQuery,
                     onSearchChange = { query ->
-                        reportHandler.sendEvent(ReportEvent.SearchQueryChanged(query))
+                        reportHandler.onEvent(ReportEvent.SearchQueryChanged(query))
                     },
                     onAddMenuClick = { uiState.addMenuExpanded.value = !uiState.addMenuExpanded.value },
                     addMenuExpanded = uiState.addMenuExpanded.value,
@@ -81,7 +79,7 @@ abstract class ReportScreen : Screen {
                 ) {
 
                     // Tabela z danymi
-                    reportTable(reportHandler::sendEvent, reportHandler.reportStructure, reportHandler.state.value, reportHandler.state.value.data)
+                    reportTable(reportHandler::onEvent, reportHandler.reportStructure, state, state.data)
                 }
             }
         }
@@ -89,7 +87,7 @@ abstract class ReportScreen : Screen {
         // Dialog konfiguracji
         if (uiState.configurationDialogVisible.value) {
             ReportConfigurationDialog(
-                onEvent = reportHandler::sendEvent,
+                onEvent = reportHandler::onEvent,
                 reportName = reportHandler.reportStructure.reportName,
                 reportState = reportHandler.state.value,
                 onDismiss = { uiState.configurationDialogVisible.value = false },
