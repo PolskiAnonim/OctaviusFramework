@@ -13,15 +13,13 @@ import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
 import org.octavius.report.ReportActionContext
 import org.octavius.report.ReportRowAction
-import org.octavius.report.component.ReportState
 
 /**
  * Specjalna kolumna, która renderuje menu akcji dla każdego wiersza.
  * Nie jest sortowalna ani filtrowalna.
  */
 class ActionColumn(
-    private val actions: List<ReportRowAction>,
-    private val reportState: ReportState
+    private val actions: List<ReportRowAction>
 ) : SpecialColumn(
     technicalName = "_actions", // Nazwa techniczna
     width = 60.dp
@@ -57,7 +55,7 @@ class ActionColumn(
                             { Icon(it, contentDescription = reportAction.label) }
                         },
                         onClick = {
-                            val context = ReportActionContext(rowData, reportState, scope)
+                            val context = ReportActionContext(rowData, scope)
                             reportAction.action.invoke(context)
                             expanded = false
                         }
