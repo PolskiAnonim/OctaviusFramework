@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 import kotlinx.coroutines.launch
 import org.octavius.report.ReportEvent
+import org.octavius.report.management.ReportConfiguration
 
 // Jako że ReportEventHandler zarządza pobieraniem danych to on będzie głównie używał
 // DataManagera - żeby jednak ReportHandler był ciągle centralnym elementem on go inicjalizuje
@@ -90,6 +91,31 @@ class ReportEventHandler(
         stateFlow.value = stateFlow.value.copy(isLoading = false, error = "Błąd pobierania danych: ${e.message}")
       }
     }
+  }
+
+  private fun applyConfiguration(state: ReportState, configuration: ReportConfiguration): ReportState {
+    val configData = configuration.configuration
+
+    // Deserializuj filtry, tworząc nową mapę stanów filtrów
+    val newFilterDataMap = state.filterData.toMutableMap()
+    configData.filters.forEach { filterConfig ->
+      val columnKey = filterConfig.columnName
+      val column = reportStructure.getColumn(columnKey)
+
+      if (column?.filter != null) {
+        // Używamy fabryki z klasy Filter do stworzenia nowej instancji FilterData
+        val newFilterState = column.filter!!.deserializeData(filterConfig.config)
+        newFilterDataMap[columnKey] = newFilterState
+      }
+    }
+
+      return state.copy(
+        pagination = state.pagination.copy(currentPage = 0, pageSize = configData.pageSize),
+        visibleColumns = configData.visibleColumns.toSet(),
+        columnKeysOrder = configData.columnOrder,
+        sortOrder = configData.sortOrder.map { (columnName, sortDirection) -> columnName to sortDirection },
+        filterData = newFilterDataMap
+      )
   }
 
 }
