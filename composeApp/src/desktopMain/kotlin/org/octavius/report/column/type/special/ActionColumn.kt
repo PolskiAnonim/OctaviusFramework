@@ -17,8 +17,16 @@ import org.octavius.report.ReportRowAction
 import org.octavius.report.component.ReportState
 
 /**
- * Specjalna kolumna, która renderuje menu akcji dla każdego wiersza.
- * Nie jest sortowalna ani filtrowalna.
+ * Specjalna kolumna renderująca menu akcji (dropdown) dla każdego wiersza w raporcie.
+ * Wyświetla ikonę trzech kropek która po kliknięciu otwiera menu z dostępnymi akcjami.
+ * 
+ * Każda akcja otrzymuje kontekst zawierający:
+ * - Dane wiersza
+ * - Stan raportu  
+ * - Funkcję obsługi zdarzeń
+ * - Scope dla operacji asynchronicznych
+ * 
+ * @param actions Lista akcji do wyświetlenia w menu
  */
 class ActionColumn(
     private val actions: List<ReportRowAction>

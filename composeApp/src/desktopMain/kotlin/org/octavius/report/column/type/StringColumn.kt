@@ -11,10 +11,19 @@ import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.StringFilter
 
+/**
+ * Kolumna do wyświetlania danych tekstowych w raporcie.
+ * Obsługuje filtrowanie tekstowe.
+ * 
+ * @param header Nagłówek kolumny
+ * @param width Względna szerokość kolumny (domyślnie 1.0)
+ * @param sortable Czy kolumna obsługuje sortowanie (domyślnie true)
+ * @param filterable Czy kolumna obsługuje filtrowanie (domyślnie true)
+ */
 class StringColumn(
     header: String,
     width: Float = 1f,
-    sortable: Boolean = false,
+    sortable: Boolean = true,
     filterable: Boolean = true
 ) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable) {
 

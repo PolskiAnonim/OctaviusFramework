@@ -10,9 +10,16 @@ import org.octavius.report.component.ReportState
 import org.octavius.report.filter.Filter
 
 /**
- * Specjalna kolumna, konfigurująca przestrzeń o konkretnym przeznaczeniu.
- * Nie jest sortowalna ani filtrowalna.
- * Posiada stałą ustaloną szerokość
+ * Klasa bazowa dla specjalnych kolumn w systemie raportowania.
+ * Specjalne kolumny to kolumny funkcjonalne (np. akcje, kontrolki) które nie wyświetlają danych z bazy.
+ * 
+ * Charakterystyki:
+ * - Pusty nagłówek
+ * - Stała szerokość w dp
+ * - Nie obsługują filtrowania ani sortowania
+ * - Wymagają pełnego kontekstu (ReportState, onEvent) do renderowania
+ * 
+ * @param width Stała szerokość kolumny w dp
  */
 abstract class SpecialColumn(width: Dp) : ReportColumn(
     "",
@@ -20,19 +27,32 @@ abstract class SpecialColumn(width: Dp) : ReportColumn(
     filterable = false,
     sortable = false
 ) {
-    // Nie tworzy danych filtra
+    /**
+     * Specjalne kolumny nie obsługują filtrowania.
+     * Ta metoda rzuca wyjątek jeśli zostanie wywołana.
+     */
     override fun createFilter(): Filter<*> = throw NotImplementedError("SpecialColumn does not support filtering.")
 
     /**
-     * Ta metoda jest nadpisywana, aby zapewnić, że nikt jej nie wywoła dla SpecialColumn.
-     * Zawsze powinna być używana wersja z pełnym kontekstem.
+     * Ta metoda jest nadpisywana jako final aby zapewnić, że nikt jej nie wywoła dla SpecialColumn.
+     * Zawsze powinna być używana wersja z pełnym kontekstem (ReportState i onEvent).
+     * 
+     * @throws NotImplementedError Zawsze rzuca wyjątek
      */
     @Composable
     final override fun RenderCell(item: Any?, modifier: Modifier) {
         throw NotImplementedError("For SpecialColumn, use the RenderCell overload with ReportState and onEvent.")
     }
 
-    // Metoda wygenerowania komórki z całym kontekstem
+    /**
+     * Renderuje zawartość komórki specjalnej z pełnym kontekstem raportu.
+     * Specjalne kolumny wymagają dostępu do stanu raportu i funkcji obsługi zdarzeń.
+     * 
+     * @param item Dane wiersza (zwykle Map<String, Any?>)
+     * @param reportState Stan raportu zawierający filtry, sortowanie itp.
+     * @param onEvent Funkcja obsługi zdarzeń raportowania
+     * @param modifier Modyfikator Compose dla komórki
+     */
     @Composable
     abstract fun RenderCell(item: Any?, reportState: ReportState, onEvent: (ReportEvent) -> Unit, modifier: Modifier)
 }

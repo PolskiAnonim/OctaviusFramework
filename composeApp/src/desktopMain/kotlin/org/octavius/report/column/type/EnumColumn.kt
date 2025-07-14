@@ -13,11 +13,22 @@ import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.EnumFilter
 import kotlin.reflect.KClass
 
-
+/**
+ * Kolumna do wyświetlania wartości enum w raporcie.
+ * Wymaga aby enum implementował EnumWithFormatter dla poprawnego wyświetlania.
+ * Obsługuje filtrowanie przez dostępnych wartości Enum.
+ * 
+ * @param T Typ enum dziedziczący po EnumWithFormatter
+ * @param header Nagłówek kolumny
+ * @param width Względna szerokość kolumny (domyślnie 1.0)
+ * @param sortable Czy kolumna obsługuje sortowanie (domyślnie true)
+ * @param filterable Czy kolumna obsługuje filtrowanie (domyślnie true)
+ * @param enumClass Klasa enum używana do tworzenia filtra
+ */
 class EnumColumn<T>(
     header: String,
     width: Float = 1f,
-    sortable: Boolean = false,
+    sortable: Boolean = true,
     filterable: Boolean = true,
     val enumClass: KClass<T>,
 ) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable)

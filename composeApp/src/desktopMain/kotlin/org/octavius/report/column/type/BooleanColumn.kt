@@ -16,11 +16,23 @@ import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.BooleanFilter
 
-
+/**
+ * Kolumna do wyświetlania wartości boolean w raporcie.
+ * Może wyświetlać dane jako ikony (check/close) lub jako tekst.
+ * Obsługuje filtrowanie przez wybór wartości true/false.
+ * 
+ * @param header Nagłówek kolumny
+ * @param width Względna szerokość kolumny (domyślnie 1.0)
+ * @param filterable Czy kolumna obsługuje filtrowanie (domyślnie true)
+ * @param sortable Czy kolumna obsługuje sortowanie (domyślnie true)
+ * @param trueText Tekst wyświetlany dla wartości true
+ * @param falseText Tekst wyświetlany dla wartości false
+ * @param showIcon Czy pokazywać ikony zamiast tekstu (domyślnie true)
+ */
 class BooleanColumn(
     header: String,
     width: Float = 1f,
-    filterable: Boolean = false,
+    filterable: Boolean = true,
     sortable: Boolean = true,
     private val trueText: String = Translations.get("report.column.boolean.true"),
     private val falseText: String = Translations.get("report.column.boolean.false"),

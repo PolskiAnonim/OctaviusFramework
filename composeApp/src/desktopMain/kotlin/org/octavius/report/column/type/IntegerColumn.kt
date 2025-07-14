@@ -12,10 +12,20 @@ import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.NumberFilter
 
+/**
+ * Kolumna do wyświetlania liczb całkowitych w raporcie.
+ * Obsługuje filtrowanie numeryczne.
+ * 
+ * @param header Nagłówek kolumny
+ * @param width Względna szerokość kolumny (domyślnie 1.0)
+ * @param sortable Czy kolumna obsługuje sortowanie (domyślnie true)
+ * @param filterable Czy kolumna obsługuje filtrowanie (domyślnie true)
+ * @param formatter Funkcja formatowania liczb do wyświetlenia (domyślnie toString)
+ */
 class IntegerColumn(
     header: String,
     width: Float = 1f,
-    sortable: Boolean = false,
+    sortable: Boolean = true,
     filterable: Boolean = true,
     private val formatter: (Int?) -> String = { it?.toString() ?: "" }
 ) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable) {

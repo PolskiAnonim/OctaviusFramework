@@ -17,6 +17,14 @@ import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 import kotlin.math.min
 
+/**
+ * Wrapper kolumny pozwalający na wyświetlanie list elementów w jednej komórce.
+ * Każdy element listy jest renderowany przez oryginalną kolumnę, a elementy są oddzielone separatorami.
+ * Automatycznie zmienia kontekst filtra kolumny na listowy
+ * 
+ * @param wrappedColumn Oryginalna kolumna używana do renderowania pojedynczych elementów
+ * @param maxVisibleItems Maksymalna liczba widocznych elementów w komórce (domyślnie 3)
+ */
 class MultiRowColumn(
     private val wrappedColumn: ReportColumn,
     private val maxVisibleItems: Int = 3
