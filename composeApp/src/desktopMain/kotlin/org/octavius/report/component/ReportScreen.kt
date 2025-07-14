@@ -3,7 +3,6 @@ package org.octavius.report.component
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
@@ -12,12 +11,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.navigator.Screen
+import org.octavius.report.LocalReportContext
+import org.octavius.report.ReportContext
 import org.octavius.report.ReportEvent
 import org.octavius.report.management.ColumnManagementPanel
 import org.octavius.report.management.ReportConfigurationDialog
 import org.octavius.report.ui.PaginationComponent
 import org.octavius.report.ui.ReportSearchBar
-import org.octavius.report.ui.reportTable
+import org.octavius.report.ui.table.ReportTable
 
 abstract class ReportScreen : Screen {
     abstract override val title: String
@@ -43,6 +44,21 @@ abstract class ReportScreen : Screen {
         val reportHandler: ReportHandler = rememberReportHandler()
         val state by reportHandler.state.collectAsState()
         val uiState = rememberReportUIState()
+
+        val reportContext = remember(state) {
+            ReportContext(
+                reportState = state,
+                reportStructure = reportHandler.reportStructure,
+                onEvent = reportHandler::onEvent
+            )
+        }
+
+        // Przy zmianie danych
+        LaunchedEffect(state.data) {
+            // Przewiń listę na samą górę (do elementu o indeksie 0)
+            uiState.lazyListState.animateScrollToItem(0)
+        }
+
 
         Scaffold(
             topBar = {
@@ -73,13 +89,8 @@ abstract class ReportScreen : Screen {
                     onConfigurationClick = { uiState.configurationDialogVisible.value = true }
                 )
 
-                LazyColumn(
-                    state = uiState.lazyListState,
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    // Tabela z danymi
-                    reportTable(reportHandler::onEvent, reportHandler.reportStructure, state)
+                CompositionLocalProvider(LocalReportContext provides reportContext) {
+                    ReportTable(uiState.lazyListState)
                 }
             }
         }

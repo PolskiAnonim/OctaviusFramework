@@ -59,7 +59,7 @@ class ReportHandler(
             }
             is ReportEvent.ClearFilter -> {
                 val newFilters = currentState.filterData.toMutableMap().apply {
-                    val defaultFilterData = reportStructure.getColumn(event.columnKey)!!.createFilterAndFilterData()!!
+                    val defaultFilterData = reportStructure.getColumn(event.columnKey).createFilterAndFilterData()!!
                     this[event.columnKey] = defaultFilterData
                 }
                 currentState.copy(filterData = newFilters, pagination = currentState.pagination.resetPage())
@@ -109,7 +109,7 @@ class ReportHandler(
             val columnKey = filterConfig.columnName
             val column = reportStructure.getColumn(columnKey)
 
-            if (column?.filter != null) {
+            if (column.filter != null) {
                 // Używamy fabryki z klasy Filter do stworzenia nowej instancji FilterData
                 val newFilterState = column.filter!!.deserializeData(filterConfig.config)
                 newFilterDataMap[columnKey] = newFilterState

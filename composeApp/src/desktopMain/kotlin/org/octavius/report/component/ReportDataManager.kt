@@ -25,7 +25,7 @@ class ReportDataManager(
 
     private fun buildFilterClause(reportState: ReportState, params: MutableMap<String, Any>): String {
         val columnFilters = reportState.filterData.mapNotNull { (columnKey, filterData) ->
-            val column = reportStructure.getColumn(columnKey)!!
+            val column = reportStructure.getColumn(columnKey)
             getQueryFragment(columnKey, column.filter!!, filterData)
         }
 
