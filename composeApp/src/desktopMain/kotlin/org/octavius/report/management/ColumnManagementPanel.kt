@@ -1,10 +1,6 @@
 package org.octavius.report.management
 
 import androidx.compose.foundation.*
-import androidx.compose.foundation.draganddrop.dragAndDropSource
-import androidx.compose.foundation.draganddrop.dragAndDropTarget
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -16,8 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draganddrop.*
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.SortDirection
@@ -25,18 +19,11 @@ import org.octavius.localization.Translations
 import org.octavius.report.LocalReportContext
 import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState
-import java.awt.datatransfer.DataFlavor
-import java.awt.datatransfer.StringSelection
-
-private object ChipConstants {
-    val chipShape = RoundedCornerShape(16.dp)
-    val horizontalPadding = 12.dp
-    val verticalPadding = 6.dp
-    val iconSpacing = 4.dp
-    val dropZoneHeight = 40.dp
-    val borderWidth = 1.dp
-    val dropZoneBorderWidth = 2.dp
-}
+import org.octavius.ui.component.ChipConstants
+import org.octavius.ui.component.DraggableChip
+import org.octavius.ui.component.DropZone
+import org.octavius.ui.component.DropZoneConstants
+import org.octavius.util.extractTransferData
 
 @Composable
 fun ColumnManagementPanel(
@@ -177,8 +164,7 @@ private fun ColumnsSection() {
 @Composable
 private fun SortingSection() {
     val reportContext = LocalReportContext.current
-    // Pobierz kolumny z report state (fallback)
-    val allColumns = reportContext.reportState.columnKeysOrder
+
     Column {
         Text(
             text = Translations.get("report.columns.sorting"),
@@ -260,151 +246,42 @@ private fun SortingSection() {
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Strefa docelowa dla przeciągania kolumn do sortowania
-        Text(
-            text = Translations.get("report.columns.sortZone"),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Box(
+        DropZone(
             modifier = Modifier
                 .fillMaxWidth()
-                .dragAndDropTarget(
-                    shouldStartDragAndDrop = { true },
-                    target = createSortDropTarget(reportContext.onEvent, allColumns, reportContext.reportState)
-                )
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .border(
-                    width = ChipConstants.dropZoneBorderWidth,
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = RoundedCornerShape(8.dp)
-                )
                 .padding(16.dp)
-                .height(ChipConstants.dropZoneHeight)
-        ) {
-            if (currentSort.isEmpty()) {
-                Text(
-                    text = Translations.get("report.columns.dragColumnsHere"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            } else {
-                Text(
-                    text = Translations.get("report.columns.dragMoreColumns"),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
-    }
-}
+                .height(DropZoneConstants.dropZoneHeight),
+            onDrop = { event ->
+                val transferData = extractTransferData(event) ?: return@DropZone false
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
-@Composable
-private fun DraggableChip(
-    text: String,
-    dragData: String,
-    backgroundColor: Color,
-    textColor: Color,
-    modifier: Modifier = Modifier,
-    onDrop: (String) -> Boolean = { false },
-    leadingIcon: @Composable (() -> Unit)? = null,
-    trailingIcon: @Composable (() -> Unit)? = null
-) {
-    val dragHandleInteractionSource = remember { MutableInteractionSource() }
-    val isDragHandleHovered by dragHandleInteractionSource.collectIsHoveredAsState()
-
-    Surface(
-        shape = ChipConstants.chipShape,
-        color = backgroundColor,
-        modifier = modifier
-            .dragAndDropTarget(
-                shouldStartDragAndDrop = { true },
-                target = object : DragAndDropTarget {
-                    override fun onDrop(event: DragAndDropEvent): Boolean {
-                        val transferData = extractTransferData(event) ?: return false
-                        return onDrop(transferData)
-                    }
+                val columnKey = if (transferData.contains(":")) {
+                    transferData.split(":")[0]
+                } else {
+                    transferData
                 }
-            )
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = ChipConstants.horizontalPadding,
-                vertical = ChipConstants.verticalPadding
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ChipConstants.iconSpacing)
-        ) {
-            Icon(
-                imageVector = Icons.Default.DragHandle,
-                contentDescription = Translations.get("report.columns.dragToReorder"),
-                tint = if (isDragHandleHovered) MaterialTheme.colorScheme.primary else textColor,
-                modifier = Modifier
-                    .hoverable(dragHandleInteractionSource)
-                    .dragAndDropSource {
-                        DragAndDropTransferData(
-                            transferable = DragAndDropTransferable(StringSelection(dragData)),
-                            supportedActions = listOf(DragAndDropTransferAction.Move, DragAndDropTransferAction.Copy)
-                        )
-                    }
-            )
 
-            leadingIcon?.invoke()
+                val currentSort = reportContext.reportState.sortOrder
+                if (!currentSort.any { it.first == columnKey }) {
+                    val newSort = reportContext.reportState.sortOrder.toMutableList()
+                    newSort.add(columnKey to SortDirection.Ascending)
+                    reportContext.onEvent.invoke(ReportEvent.SortOrderChanged(newSort))
+                    return@DropZone true
+                }
+                return@DropZone false
+            }
+        ) { isHovered ->
+            val textKey = if (reportContext.reportState.sortOrder.isEmpty()) {
+                "report.columns.dragColumnsHere"
+            } else {
+                "report.columns.dragMoreColumns"
+            }
 
             Text(
-                text = text,
+                text = Translations.get(textKey),
                 style = MaterialTheme.typography.bodyMedium,
-                color = textColor
+                color = if (isHovered) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.Center)
             )
-
-            trailingIcon?.invoke()
-        }
-    }
-}
-
-@OptIn(ExperimentalComposeUiApi::class)
-private fun extractTransferData(event: DragAndDropEvent): String? {
-    return event.awtTransferable.let { transferable ->
-        if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-            transferable.getTransferData(DataFlavor.stringFlavor) as String
-        } else {
-            null
-        }
-    }
-}
-
-private fun createSortDropTarget(
-    onEvent: (ReportEvent) -> Unit,
-    allColumns: List<String>,
-    reportState: ReportState
-): DragAndDropTarget {
-    return object : DragAndDropTarget {
-        override fun onDrop(event: DragAndDropEvent): Boolean {
-            val transferData = extractTransferData(event) ?: return false
-
-            val columnKey = if (transferData.contains(":")) {
-                transferData.split(":")[0]
-            } else {
-                transferData
-            }
-
-            val currentSortValue = reportState.sortOrder
-            if (allColumns.contains(columnKey) && !currentSortValue.any { it.first == columnKey }) {
-                val newSort = currentSortValue.toMutableList()
-                newSort.add(columnKey to SortDirection.Ascending)
-                onEvent.invoke(ReportEvent.SortOrderChanged(newSort))
-                return true
-            }
-            return false
         }
     }
 }
