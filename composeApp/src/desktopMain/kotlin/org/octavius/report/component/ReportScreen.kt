@@ -59,37 +59,30 @@ abstract class ReportScreen : Screen {
             uiState.lazyListState.animateScrollToItem(0)
         }
 
-
-        Scaffold(
-            topBar = {
-                ColumnManagementPanel(
-                    onEvent = reportHandler::onEvent,
-                    reportState = state,
-                    manageableColumnKeys = reportHandler.reportStructure.manageableColumnKeys,
-                    columnNames = reportHandler.reportStructure.getAllColumns().map { it.key to it.value.header }
-                        .toMap(),
-                    modifier = Modifier.padding(8.dp)
-                )
-            },
-            bottomBar = {
-                PaginationComponent(state.pagination, onEvent = reportHandler::onEvent)
-            }
-        ) { innerPadding ->
-            Column(modifier = Modifier.padding(innerPadding)) {
-                // Pasek wyszukiwania
-                ReportSearchBar(
-                    searchQuery = state.searchQuery,
-                    onSearchChange = { query ->
-                        reportHandler.onEvent(ReportEvent.SearchQueryChanged(query))
-                    },
-                    onAddMenuClick = { uiState.addMenuExpanded.value = !uiState.addMenuExpanded.value },
-                    addMenuExpanded = uiState.addMenuExpanded.value,
-                    onAddMenuDismiss = { uiState.addMenuExpanded.value = false },
-                    addMenuContent = { AddMenu() },
-                    onConfigurationClick = { uiState.configurationDialogVisible.value = true }
-                )
-
-                CompositionLocalProvider(LocalReportContext provides reportContext) {
+        CompositionLocalProvider(LocalReportContext provides reportContext) {
+            Scaffold(
+                topBar = {
+                    ColumnManagementPanel(
+                        modifier = Modifier.padding(8.dp)
+                    )
+                },
+                bottomBar = {
+                    PaginationComponent(state.pagination, onEvent = reportHandler::onEvent)
+                }
+            ) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    // Pasek wyszukiwania
+                    ReportSearchBar(
+                        searchQuery = state.searchQuery,
+                        onSearchChange = { query ->
+                            reportHandler.onEvent(ReportEvent.SearchQueryChanged(query))
+                        },
+                        onAddMenuClick = { uiState.addMenuExpanded.value = !uiState.addMenuExpanded.value },
+                        addMenuExpanded = uiState.addMenuExpanded.value,
+                        onAddMenuDismiss = { uiState.addMenuExpanded.value = false },
+                        addMenuContent = { AddMenu() },
+                        onConfigurationClick = { uiState.configurationDialogVisible.value = true }
+                    )
                     ReportTable(uiState.lazyListState)
                 }
             }

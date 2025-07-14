@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.SortDirection
 import org.octavius.localization.Translations
+import org.octavius.report.LocalReportContext
 import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState
 import java.awt.datatransfer.DataFlavor
@@ -39,10 +40,6 @@ private object ChipConstants {
 
 @Composable
 fun ColumnManagementPanel(
-    onEvent: (ReportEvent) -> Unit,
-    reportState: ReportState,
-    manageableColumnKeys: List<String>,
-    columnNames: Map<String, String>,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -68,7 +65,9 @@ fun ColumnManagementPanel(
                     )
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                        contentDescription = if (isExpanded) Translations.get("expandable.collapse") else Translations.get("expandable.expand")
+                        contentDescription = if (isExpanded) Translations.get("expandable.collapse") else Translations.get(
+                            "expandable.expand"
+                        )
                     )
                 }
 
@@ -78,12 +77,12 @@ fun ColumnManagementPanel(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Sekcja widocznych kolumn z możliwością sortowania
-                ColumnsSection(onEvent, manageableColumnKeys = manageableColumnKeys, columnNames = columnNames, reportState = reportState)
+                ColumnsSection()
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Sekcja sortowania
-                SortingSection(onEvent, reportState = reportState, columnNames = columnNames)
+                SortingSection()
             }
         }
     }
@@ -91,20 +90,16 @@ fun ColumnManagementPanel(
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun ColumnsSection(
-    onEvent: (ReportEvent) -> Unit,
-    manageableColumnKeys: List<String>,
-    columnNames: Map<String, String>,
-    reportState: ReportState
-) {
-    val allColumns = reportState.columnKeysOrder
-    val visibleColumns = reportState.visibleColumns
+private fun ColumnsSection() {
+    val reportContext = LocalReportContext.current
+    val allColumns = reportContext.reportState.columnKeysOrder
+    val visibleColumns = reportContext.reportState.visibleColumns
     val onDragEnd = { fromIndex: Int, toIndex: Int ->
         if (fromIndex != toIndex) {
-            val columnKeysOrder = reportState.columnKeysOrder.toMutableList()
+            val columnKeysOrder = reportContext.reportState.columnKeysOrder.toMutableList()
             val item = columnKeysOrder.removeAt(fromIndex)
             columnKeysOrder.add(toIndex, item)
-            onEvent.invoke(ReportEvent.ColumnOrderChanged(columnKeysOrder))
+            reportContext.onEvent.invoke(ReportEvent.ColumnOrderChanged(columnKeysOrder))
         }
     }
     Column {
@@ -122,11 +117,11 @@ private fun ColumnsSection(
         ) {
             // Iterujemy po aktualnej kolejności WSZYSTKICH kolumn, ale filtrujemy te,
             // które nie są zarządzalne
-            items(allColumns.filter { manageableColumnKeys.contains(it) }) { columnKey ->
+            items(allColumns.filter { reportContext.reportStructure.manageableColumnKeys.contains(it) }) { columnKey ->
                 val isVisible = visibleColumns.contains(columnKey)
                 val index = allColumns.indexOf(columnKey)
                 DraggableChip(
-                    text = columnNames[columnKey]!!,
+                    text = reportContext.reportStructure.getColumn(columnKey).header,
                     dragData = "$columnKey:$index",
                     backgroundColor = if (isVisible) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(
                         alpha = 0.8f
@@ -157,15 +152,17 @@ private fun ColumnsSection(
                     leadingIcon = {
                         Box(modifier = Modifier.clickable {
                             toggleColumnVisibility(
-                                onEvent,
-                                reportState,
+                                reportContext.onEvent,
+                                reportContext.reportState,
                                 columnKey,
                                 isVisible
                             )
                         }) {
                             Icon(
                                 imageVector = if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (isVisible) Translations.get("report.columns.hideColumn") else Translations.get("report.columns.showColumn"),
+                                contentDescription = if (isVisible) Translations.get("report.columns.hideColumn") else Translations.get(
+                                    "report.columns.showColumn"
+                                ),
                                 tint = if (isVisible) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -178,13 +175,10 @@ private fun ColumnsSection(
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun SortingSection(
-    onEvent: (ReportEvent) -> Unit,
-    reportState: ReportState,
-    columnNames: Map<String, String>
-) {
+private fun SortingSection() {
+    val reportContext = LocalReportContext.current
     // Pobierz kolumny z report state (fallback)
-    val allColumns = reportState.columnKeysOrder
+    val allColumns = reportContext.reportState.columnKeysOrder
     Column {
         Text(
             text = Translations.get("report.columns.sorting"),
@@ -195,7 +189,7 @@ private fun SortingSection(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Aktualne sortowania
-        val currentSort = reportState.sortOrder
+        val currentSort = reportContext.reportState.sortOrder
         if (currentSort.isNotEmpty()) {
             Text(
                 text = Translations.get("report.columns.activeSorting"),
@@ -211,7 +205,7 @@ private fun SortingSection(
                 items(currentSort) { (columnKey, direction) ->
                     val sortIndex = currentSort.indexOfFirst { it.first == columnKey }
                     DraggableChip(
-                        text = columnNames[columnKey]!!,
+                        text = reportContext.reportStructure.getColumn(columnKey).header,
                         dragData = "SORT:$columnKey:$sortIndex",
                         backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                         textColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -223,7 +217,7 @@ private fun SortingSection(
                                     val fromIndex = parts[1].toIntOrNull() ?: return@DraggableChip false
 
                                     if (draggedColumnKey != columnKey) {
-                                        reorderSortColumns(onEvent, reportState, fromIndex, sortIndex)
+                                        reorderSortColumns(reportContext.onEvent, reportContext.reportState, fromIndex, sortIndex)
                                         return@DraggableChip true
                                     }
                                 }
@@ -243,8 +237,8 @@ private fun SortingSection(
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.clickable {
                                     updateSortDirection(
-                                        onEvent,
-                                        reportState,
+                                        reportContext.onEvent,
+                                        reportContext.reportState,
                                         columnKey,
                                         if (direction == SortDirection.Ascending) SortDirection.Descending else SortDirection.Ascending
                                     )
@@ -256,7 +250,7 @@ private fun SortingSection(
                                 text = "×",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.clickable { removeSortColumn(onEvent,reportState, columnKey) }
+                                modifier = Modifier.clickable { removeSortColumn(reportContext.onEvent, reportContext.reportState, columnKey) }
                             )
                         }
                     )
@@ -280,7 +274,7 @@ private fun SortingSection(
                 .fillMaxWidth()
                 .dragAndDropTarget(
                     shouldStartDragAndDrop = { true },
-                    target = createSortDropTarget(onEvent, allColumns, reportState)
+                    target = createSortDropTarget(reportContext.onEvent, allColumns, reportContext.reportState)
                 )
                 .background(
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
