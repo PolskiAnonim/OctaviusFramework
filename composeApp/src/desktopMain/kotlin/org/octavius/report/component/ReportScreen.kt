@@ -15,7 +15,7 @@ import org.octavius.report.LocalReportContext
 import org.octavius.report.ReportContext
 import org.octavius.report.ReportEvent
 import org.octavius.report.management.ColumnManagementPanel
-import org.octavius.report.management.ReportConfigurationDialog
+import org.octavius.report.configuration.ReportConfigurationDialog
 import org.octavius.report.ui.PaginationComponent
 import org.octavius.report.ui.ReportSearchBar
 import org.octavius.report.ui.table.ReportTable

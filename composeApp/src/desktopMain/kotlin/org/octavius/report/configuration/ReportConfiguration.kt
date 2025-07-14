@@ -1,4 +1,4 @@
-package org.octavius.report.management
+package org.octavius.report.configuration
 
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration

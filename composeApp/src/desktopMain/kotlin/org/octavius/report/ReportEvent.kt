@@ -2,7 +2,7 @@ package org.octavius.report
 
 import org.octavius.domain.SortDirection
 import org.octavius.report.filter.data.FilterData
-import org.octavius.report.management.ReportConfiguration
+import org.octavius.report.configuration.ReportConfiguration
 
 /**
  * Definiuje wszystkie możliwe akcje/intencje użytkownika,

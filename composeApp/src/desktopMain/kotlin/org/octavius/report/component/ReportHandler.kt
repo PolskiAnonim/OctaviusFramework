@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.octavius.report.ReportEvent
-import org.octavius.report.management.ReportConfiguration
-import org.octavius.report.management.ReportConfigurationManager
+import org.octavius.report.configuration.ReportConfiguration
+import org.octavius.report.configuration.ReportConfigurationManager
 
 class ReportHandler(
     private val coroutineScope: CoroutineScope,

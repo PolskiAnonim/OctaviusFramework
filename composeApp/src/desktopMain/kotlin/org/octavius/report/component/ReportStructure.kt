@@ -4,8 +4,6 @@ import org.octavius.report.Query
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.special.ActionColumn
-import org.octavius.report.management.ReportConfiguration
-import org.octavius.report.management.ReportConfigurationData
 
 /**
  * ReportStructure
