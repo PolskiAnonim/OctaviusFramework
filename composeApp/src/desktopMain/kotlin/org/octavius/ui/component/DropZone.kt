@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.unit.dp
+import org.octavius.util.extractTransferData
 
 object DropZoneConstants {
     val dropZoneHeight = 40.dp
@@ -26,7 +27,7 @@ object DropZoneConstants {
 @Composable
 fun DropZone(
     modifier: Modifier = Modifier,
-    onDrop: (DragAndDropEvent) -> Boolean,
+    onDrop: (String) -> Boolean,
     content: @Composable BoxScope.(isHovered: Boolean) -> Unit
 ) {
     var isHovered by remember { mutableStateOf(false) }
@@ -43,7 +44,8 @@ fun DropZone(
 
             override fun onDrop(event: DragAndDropEvent): Boolean {
                 isHovered = false // Resetuj stan po zrzuceniu
-                return onDrop(event)
+                val transferData = extractTransferData(event) ?: return false
+                return onDrop(transferData)
             }
         }
     }

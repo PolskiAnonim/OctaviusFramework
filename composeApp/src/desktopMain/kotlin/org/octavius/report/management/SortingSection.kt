@@ -29,7 +29,6 @@ import org.octavius.report.component.ReportState
 import org.octavius.ui.component.DraggableChip
 import org.octavius.ui.component.DropZone
 import org.octavius.ui.component.DropZoneConstants
-import org.octavius.util.extractTransferData
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -122,9 +121,7 @@ fun SortingSection() {
                 .fillMaxWidth()
                 .padding(16.dp)
                 .height(DropZoneConstants.dropZoneHeight),
-            onDrop = { event ->
-                val transferData = extractTransferData(event) ?: return@DropZone false
-
+            onDrop = { transferData ->
                 val columnKey = if (transferData.contains(":")) {
                     transferData.split(":")[0]
                 } else {
