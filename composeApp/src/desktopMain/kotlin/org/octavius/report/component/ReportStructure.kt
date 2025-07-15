@@ -4,8 +4,6 @@ import org.octavius.report.Query
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.special.ActionColumn
-import org.octavius.report.management.ReportConfiguration
-import org.octavius.report.management.ReportConfigurationData
 
 /**
  * ReportStructure
@@ -40,7 +38,13 @@ class ReportStructure(
     /**
      * Zwraca kolumnę o danej nazwie
      */
-    fun getColumn(name: String): ReportColumn? = columns[name]
+    fun getColumn(name: String): ReportColumn {
+        val column = columns[name]
+        if (column == null) {
+            NotImplementedError("Column with such name not found")
+        }
+        return columns[name]!!
+    }
 
     /**
      * Zwraca wszystkie kolumny zdefiniowane w tej strukturze

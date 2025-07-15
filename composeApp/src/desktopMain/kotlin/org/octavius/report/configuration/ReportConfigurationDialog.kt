@@ -1,4 +1,4 @@
-package org.octavius.report.management
+package org.octavius.report.configuration
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
