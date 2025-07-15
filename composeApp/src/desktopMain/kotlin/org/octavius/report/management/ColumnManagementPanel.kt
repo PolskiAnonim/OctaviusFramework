@@ -3,7 +3,8 @@ package org.octavius.report.management
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,9 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
+import org.octavius.report.component.ReportState
 
 @Composable
 fun ColumnManagementPanel(
+    reportState: ReportState,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -51,12 +54,12 @@ fun ColumnManagementPanel(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Sekcja widocznych kolumn z możliwością sortowania
-                ColumnsSection()
+                ColumnsSection(reportState)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Sekcja sortowania
-                SortingSection()
+                SortingSection(reportState)
             }
         }
     }

@@ -1,13 +1,17 @@
 package org.octavius.report.component
 
+import androidx.compose.runtime.compositionLocalOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.octavius.domain.SortDirection
 import org.octavius.report.ReportEvent
 import org.octavius.report.configuration.ReportConfiguration
 import org.octavius.report.configuration.ReportConfigurationManager
+
+val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHandler provided") }
 
 class ReportHandler(
     private val coroutineScope: CoroutineScope,
@@ -133,4 +137,71 @@ class ReportHandler(
             onEvent(ReportEvent.Initialize)
         }
     }
+
+    //-------------------------------------Sorting and visibility handling----------------------------------------------
+
+    fun toggleColumnVisibility(
+        columnKey: String,
+        isVisible: Boolean
+    ) {
+        if (isVisible) {
+            val visibleColumns = state.value.visibleColumns.toMutableSet()
+            visibleColumns.remove(columnKey)
+            onEvent(ReportEvent.ColumnVisibilityChanged(visibleColumns.toSet()))
+        } else {
+            val visibleColumns = state.value.visibleColumns.toMutableSet()
+            visibleColumns.add(columnKey)
+            onEvent(ReportEvent.ColumnVisibilityChanged(visibleColumns.toSet()))
+        }
+    }
+
+    fun reorderColumns(fromIndex: Int, toIndex: Int) {
+        val columnKeysOrder = state.value.columnKeysOrder.toMutableList()
+        val item = columnKeysOrder.removeAt(fromIndex)
+        columnKeysOrder.add(toIndex, item)
+        onEvent(ReportEvent.ColumnOrderChanged(columnKeysOrder))
+    }
+
+    fun updateSortDirection(
+        columnKey: String,
+        newDirection: SortDirection
+    ) {
+        val currentSort = state.value.sortOrder.toMutableList()
+        val index = currentSort.indexOfFirst { it.first == columnKey }
+        if (index >= 0) {
+            currentSort[index] = columnKey to newDirection
+            onEvent(ReportEvent.SortOrderChanged(currentSort))
+        }
+    }
+
+    fun removeSortColumn(
+        columnKey: String
+    ) {
+        val newSort = state.value.sortOrder.filter { it.first != columnKey }
+        onEvent(ReportEvent.SortOrderChanged(newSort))
+    }
+
+    fun addSortColumn(
+        columnKey: String
+    ): Boolean {
+        val currentSort = state.value.sortOrder
+        if (!currentSort.any { it.first == columnKey }) {
+            val newSort = state.value.sortOrder.toMutableList()
+            newSort.add(columnKey to SortDirection.Ascending)
+            onEvent(ReportEvent.SortOrderChanged(newSort))
+            return true
+        }
+        return false
+    }
+
+    fun reorderSortColumns(
+        fromIndex: Int,
+        toIndex: Int,
+    ) {
+        val newSort = state.value.sortOrder.toMutableList()
+        val item = newSort.removeAt(fromIndex)
+        newSort.add(toIndex, item)
+        onEvent(ReportEvent.SortOrderChanged(newSort))
+    }
+
 }

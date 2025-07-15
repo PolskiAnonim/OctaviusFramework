@@ -2,12 +2,7 @@ package org.octavius.report.management
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -22,26 +17,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
-import org.octavius.report.LocalReportContext
-import org.octavius.report.ReportEvent
+import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.ui.component.ChipConstants
 import org.octavius.ui.component.DraggableChip
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun ColumnsSection() {
-    val reportContext = LocalReportContext.current
-    val allColumns = reportContext.reportState.columnKeysOrder
-    val visibleColumns = reportContext.reportState.visibleColumns
-    val onDragEnd = { fromIndex: Int, toIndex: Int ->
-        if (fromIndex != toIndex) {
-            val columnKeysOrder = reportContext.reportState.columnKeysOrder.toMutableList()
-            val item = columnKeysOrder.removeAt(fromIndex)
-            columnKeysOrder.add(toIndex, item)
-            reportContext.onEvent.invoke(ReportEvent.ColumnOrderChanged(columnKeysOrder))
-        }
-    }
+fun ColumnsSection(
+    reportState: ReportState
+) {
+    val reportHandler = LocalReportHandler.current
+    val allColumns = reportState.columnKeysOrder
+    val visibleColumns = reportState.visibleColumns
+
     Column {
         Text(
             text = Translations.get("report.columns.columns"),
@@ -57,11 +46,11 @@ fun ColumnsSection() {
         ) {
             // Iterujemy po aktualnej kolejności WSZYSTKICH kolumn, ale filtrujemy te,
             // które nie są zarządzalne
-            items(allColumns.filter { reportContext.reportStructure.manageableColumnKeys.contains(it) }) { columnKey ->
+            items(allColumns.filter { reportHandler.reportStructure.manageableColumnKeys.contains(it) }) { columnKey ->
                 val isVisible = visibleColumns.contains(columnKey)
                 val index = allColumns.indexOf(columnKey)
                 DraggableChip(
-                    text = reportContext.reportStructure.getColumn(columnKey).header,
+                    text = reportHandler.reportStructure.getColumn(columnKey).header,
                     dragData = "$columnKey:$index",
                     backgroundColor = if (isVisible) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(
                         alpha = 0.8f
@@ -83,7 +72,7 @@ fun ColumnsSection() {
                             val fromIndex = parts[1].toIntOrNull() ?: return@DraggableChip false
 
                             if (draggedColumnKey != columnKey) {
-                                onDragEnd(fromIndex, index)
+                                reportHandler.reorderColumns(fromIndex, index)
                                 return@DraggableChip true
                             }
                         }
@@ -91,12 +80,7 @@ fun ColumnsSection() {
                     },
                     leadingIcon = {
                         Box(modifier = Modifier.clickable {
-                            toggleColumnVisibility(
-                                reportContext.onEvent,
-                                reportContext.reportState,
-                                columnKey,
-                                isVisible
-                            )
+                            reportHandler.toggleColumnVisibility(columnKey, isVisible)
                         }) {
                             Icon(
                                 imageVector = if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
@@ -110,22 +94,5 @@ fun ColumnsSection() {
                 )
             }
         }
-    }
-}
-
-private fun toggleColumnVisibility(
-    onEvent: (ReportEvent) -> Unit,
-    reportState: ReportState,
-    columnKey: String,
-    isVisible: Boolean
-) {
-    if (isVisible) {
-        val visibleColumns = reportState.visibleColumns.toMutableSet()
-        visibleColumns.remove(columnKey)
-        onEvent.invoke(ReportEvent.ColumnVisibilityChanged(visibleColumns.toSet()))
-    } else {
-        val visibleColumns = reportState.visibleColumns.toMutableSet()
-        visibleColumns.add(columnKey)
-        onEvent.invoke(ReportEvent.ColumnVisibilityChanged(visibleColumns.toSet()))
     }
 }

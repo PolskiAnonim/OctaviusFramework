@@ -11,11 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.navigator.Screen
-import org.octavius.report.LocalReportContext
-import org.octavius.report.ReportContext
 import org.octavius.report.ReportEvent
-import org.octavius.report.management.ColumnManagementPanel
 import org.octavius.report.configuration.ReportConfigurationDialog
+import org.octavius.report.management.ColumnManagementPanel
 import org.octavius.report.ui.PaginationComponent
 import org.octavius.report.ui.ReportSearchBar
 import org.octavius.report.ui.table.ReportTable
@@ -45,24 +43,17 @@ abstract class ReportScreen : Screen {
         val state by reportHandler.state.collectAsState()
         val uiState = rememberReportUIState()
 
-        val reportContext = remember(state) {
-            ReportContext(
-                reportState = state,
-                reportStructure = reportHandler.reportStructure,
-                onEvent = reportHandler::onEvent
-            )
-        }
-
         // Przy zmianie danych
         LaunchedEffect(state.data) {
             // Przewiń listę na samą górę (do elementu o indeksie 0)
             uiState.lazyListState.animateScrollToItem(0)
         }
 
-        CompositionLocalProvider(LocalReportContext provides reportContext) {
+        CompositionLocalProvider(LocalReportHandler provides reportHandler) {
             Scaffold(
                 topBar = {
                     ColumnManagementPanel(
+                        reportState = state,
                         modifier = Modifier.padding(8.dp)
                     )
                 },
@@ -83,7 +74,7 @@ abstract class ReportScreen : Screen {
                         addMenuContent = { AddMenu() },
                         onConfigurationClick = { uiState.configurationDialogVisible.value = true }
                     )
-                    ReportTable(uiState.lazyListState)
+                    ReportTable(state, uiState.lazyListState)
                 }
             }
         }

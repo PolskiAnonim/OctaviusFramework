@@ -8,16 +8,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.report.ColumnWidth
-import org.octavius.report.LocalReportContext
 import org.octavius.report.column.type.special.SpecialColumn
+import org.octavius.report.component.LocalReportHandler
+import org.octavius.report.component.ReportState
 
 @Composable
 fun ReportRow(
+    reportState: ReportState,
     rowData: Map<String, Any?>,
     visibleColumns: List<String>,
     modifier: Modifier = Modifier
 ) {
-    val reportContext = LocalReportContext.current
+    val reportHandler = LocalReportHandler.current
 
     Row(
         modifier = modifier
@@ -26,7 +28,7 @@ fun ReportRow(
             .padding(vertical = 4.dp)
     ) {
         visibleColumns.forEachIndexed { index, key ->
-            val column = reportContext.reportStructure.getColumn(key)
+            val column = reportHandler.reportStructure.getColumn(key)
 
             val cellModifier = when (val colWidth = column.width) {
                 is ColumnWidth.Fixed -> Modifier.width(colWidth.width)
@@ -39,7 +41,7 @@ fun ReportRow(
             ) {
                 // Dla SpecialColumn, przekazywany jest dodatkowy kontekst
                 if (column is SpecialColumn) {
-                    column.RenderCell(rowData, reportContext.reportState, reportContext.onEvent, modifier)
+                    column.RenderCell(rowData, reportState, reportHandler::onEvent, modifier)
                 } else {
                     column.RenderCell(rowData[key], Modifier)
                 }

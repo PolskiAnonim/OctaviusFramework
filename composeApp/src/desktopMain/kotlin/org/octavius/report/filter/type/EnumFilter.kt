@@ -20,7 +20,6 @@ import org.octavius.report.Query
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.FilterSpacer
-import org.octavius.report.filter.data.type.BooleanFilterData
 import org.octavius.report.filter.data.type.EnumFilterData
 import kotlin.reflect.KClass
 
