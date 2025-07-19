@@ -110,7 +110,6 @@ class RepeatableControl(
         val state = ControlState(
             initValue = mutableStateOf(initialRowsList),
             value = mutableStateOf(copyInitToValue(initialRowsList) + additionalRows),
-            dirty = mutableStateOf(true) // ta kontrolka zawsze jest dirty
         )
         return state
     }
@@ -122,7 +121,6 @@ class RepeatableControl(
                 label = label,
                 onAddClick = {
                     rowManager.addRow(controlState)
-                    updateState(controlState)
                 },
                 canAdd = rowManager.canAddRow(controlState)
             )
@@ -135,9 +133,7 @@ class RepeatableControl(
                     index = index,
                     canDelete = rowManager.canDeleteRow(controlState),
                     onDelete = {
-                        if (rowManager.deleteRow(controlState, index)) {
-                            updateState(controlState)
-                        }
+                        rowManager.deleteRow(controlState, index)
                     },
                     content = {
                         RepeatableRowContent(
@@ -174,7 +170,7 @@ class RepeatableControl(
             rowControls.mapValues { (fieldName, control) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val fieldState = states[hierarchicalName]!!
-                control.getResult(hierarchicalName, fieldState)!! // Zwraca ControlResultData
+                control.getResult(hierarchicalName, fieldState)
             }
         }
 

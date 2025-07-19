@@ -96,15 +96,6 @@ abstract class Control<T : Any>(
     }
 
     /**
-     * Aktualizuje stan kontrolki, ustawiając flagę dirty jeśli wartość się zmieniła.
-     */
-    fun updateState(state: ControlState<T>) {
-        if (state.value.value != state.initValue.value) {
-            state.dirty.value = true
-        }
-    }
-
-    /**
      * Waliduje kontrolkę przy użyciu przypisanego validatora.
      */
     fun validateControl(

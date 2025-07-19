@@ -70,7 +70,6 @@ class BooleanControl(
                             checked = currentValue,
                             onCheckedChange = {
                                 controlState.value.value = it
-                                updateState(controlState)
                                 executeActions(controlName, it, scope)
                             }
                         )
@@ -82,7 +81,6 @@ class BooleanControl(
                                 val mapping = mapOf(null to false, false to true, true to null)
                                 val newValue = mapping[controlState.value.value]
                                 controlState.value.value = newValue
-                                updateState(controlState)
                                 executeActions(controlName, newValue, scope)
                             }
                         )

@@ -101,7 +101,6 @@ class StringListControl(
                             updatedList.add("")
                             currentList = updatedList
                             controlState.value.value = updatedList
-                            controlState.dirty.value = true
                         },
                         modifier = Modifier.size(24.dp)
                     ) {
@@ -145,7 +144,6 @@ class StringListControl(
                                 updatedList[index] = newValue
                                 currentList = updatedList
                                 controlState.value.value = updatedList
-                                controlState.dirty.value = true
                             },
                             modifier = Modifier.weight(1f).padding(horizontal = FormSpacing.fieldPaddingHorizontal),
                             singleLine = true,
@@ -170,7 +168,6 @@ class StringListControl(
                                         updatedList.removeAt(index)
                                         currentList = updatedList
                                         controlState.value.value = updatedList
-                                        controlState.dirty.value = true
                                     },
                                     modifier = Modifier.size(32.dp)
                                 ) {

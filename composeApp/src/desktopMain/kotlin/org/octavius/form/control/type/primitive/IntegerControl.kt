@@ -56,7 +56,6 @@ class IntegerControl(
             value = textValue,
             onValueChange = { newText ->
                 textValue = newText
-                controlState.dirty.value = true
 
                 if (newText.isEmpty()) {
                     controlState.value.value = null

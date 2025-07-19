@@ -45,7 +45,6 @@ class StringControl(
             value = controlState.value.value.orEmpty(),
             onValueChange = {
                 controlState.value.value = it
-                updateState(controlState)
                 executeActions(controlName, it, scope)
             },
             modifier = Modifier.fillMaxWidth().padding(
