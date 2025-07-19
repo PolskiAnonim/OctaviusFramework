@@ -140,7 +140,7 @@ class DatabaseUpdater(
 
         // Dodaj parametry dla zwykłych danych
         operation.data.forEach { (key, value) ->
-            params[key] = value.currentValue
+            params[key] = value
         }
 
         // Dodaj parametry dla kluczy obcych
@@ -194,7 +194,7 @@ class DatabaseUpdater(
 
         // Dodaj parametry dla danych do zaktualizowania
         operation.data.forEach { (key, value) ->
-            params[key] = value.currentValue
+            params[key] = value
         }
 
         // Dodaj parametr dla WHERE clause

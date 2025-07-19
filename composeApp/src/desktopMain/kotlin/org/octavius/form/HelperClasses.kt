@@ -35,7 +35,7 @@ sealed class SaveOperation {
      */
     data class Insert(
         override val tableName: String,
-        val data: Map<String, ControlResultData>,
+        val data: Map<String, Any?>,
         override val foreignKeys: List<ForeignKey> = emptyList(),
         val returningId: Boolean = true
     ) : SaveOperation()
@@ -50,7 +50,7 @@ sealed class SaveOperation {
      */
     data class Update(
         override val tableName: String,
-        val data: Map<String, ControlResultData>,
+        val data: Map<String, Any?>,
         val id: Int? = null,
         override val foreignKeys: List<ForeignKey> = emptyList()
     ) : SaveOperation()

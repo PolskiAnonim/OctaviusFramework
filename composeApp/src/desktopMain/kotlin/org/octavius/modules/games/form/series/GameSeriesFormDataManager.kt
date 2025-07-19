@@ -17,8 +17,8 @@ class GameSeriesFormDataManager : FormDataManager() {
     }
 
     override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<SaveOperation> {
-        val seriesData = mutableMapOf<String, ControlResultData>()
-        seriesData["name"] = formData["name"]!!
+        val seriesData = mutableMapOf<String, Any?>()
+        seriesData["name"] = formData["name"]!!.currentValue
 
         return if (loadedId != null) {
             listOf(SaveOperation.Update("series", seriesData, loadedId))
