@@ -7,7 +7,7 @@ import org.octavius.localization.Translations
 
 class GameSeriesFormValidator : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
-        val name = formData["name"]?.value as? String
+        val name = formData["name"]?.currentValue as? String
         if (!name.isNullOrBlank()) {
             // Sprawdź unikalność nazwy serii
             val existingCount = DatabaseManager.getFetcher().fetchCount("series", "name = :name", mapOf("name" to name))

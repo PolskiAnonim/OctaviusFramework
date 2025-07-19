@@ -66,11 +66,11 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
 
         // Obsługa publikacji
-        val publicationsResult = formData["publications"]!!.value as RepeatableResultValue
+        val publicationsResult = formData["publications"]!!.currentValue as RepeatableResultValue
 
         // Usunięte publikacje
         publicationsResult.deletedRows.forEach { rowData ->
-            val pubId = rowData["id"]!!.value as Int
+            val pubId = rowData["id"]!!.currentValue as Int
             // publication_volumes zostanie usunięte kaskadowo
             result.add(SaveOperation.Delete("publications", pubId))
         }
@@ -92,7 +92,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             )
 
             // Jeśli track_progress = true, UPDATE volumes (trigger już stworzył wiersz)
-            if (rowData["trackProgress"]!!.value == true) {
+            if (rowData["trackProgress"]!!.currentValue == true) {
                 val volumesData = mutableMapOf<String, ControlResultData>()
                 volumesData["volumes"] = rowData["volumes"]!!
                 volumesData["translated_volumes"] = rowData["translatedVolumes"]!!
@@ -113,7 +113,7 @@ class AsianMediaFormDataManager : FormDataManager() {
 
         // Zmodyfikowane publikacje
         publicationsResult.modifiedRows.forEach { rowData ->
-            val pubId = rowData["id"]!!.value as Int
+            val pubId = rowData["id"]!!.currentValue as Int
 
             val publicationData = mutableMapOf<String, ControlResultData>()
             publicationData["publication_type"] = rowData["publicationType"]!!
@@ -129,7 +129,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             )
 
             // Obsługa publication_volumes
-            val trackProgress = rowData["trackProgress"]!!.value as Boolean
+            val trackProgress = rowData["trackProgress"]!!.currentValue as Boolean
 
             if (trackProgress) {
                 val volumesData = mutableMapOf<String, ControlResultData>()

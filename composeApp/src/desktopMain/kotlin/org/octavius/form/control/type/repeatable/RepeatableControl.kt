@@ -157,7 +157,7 @@ class RepeatableControl(
 
     override fun convertToResult(
         state: ControlState<*>, // Ten state to ControlState<List<RepeatableRow>> dla RepeatableControl
-    ): Any? {
+    ): ControlResultData {
         @Suppress("UNCHECKED_CAST")
         val controlState = state as ControlState<List<RepeatableRow>>
         val states = formState.getAllStates()
@@ -173,9 +173,8 @@ class RepeatableControl(
         val deletedRowsValues = deletedRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldControlState = states[hierarchicalName]!!
-                val value = control.getResult(hierarchicalName, fieldControlState)
-                ControlResultData(value, fieldControlState.dirty.value)
+                val fieldState = states[hierarchicalName]!!
+                control.getResult(hierarchicalName, fieldState)!! // Zwraca ControlResultData
             }
         }
 
@@ -183,8 +182,7 @@ class RepeatableControl(
             rowControls.mapValues { (fieldName, control) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val fieldControlState = states[hierarchicalName]!!
-                val value = control.getResult(hierarchicalName, fieldControlState)
-                ControlResultData(value, fieldControlState.dirty.value)
+                control.getResult(hierarchicalName, fieldControlState)
             }
         }
 
@@ -192,8 +190,7 @@ class RepeatableControl(
             rowControls.mapValues { (fieldName, control) ->
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
                 val fieldControlState = states[hierarchicalName]!!
-                val value = control.getResult(hierarchicalName, fieldControlState)
-                ControlResultData(value, fieldControlState.dirty.value)
+                control.getResult(hierarchicalName, fieldControlState)
             }
         }
 
@@ -202,10 +199,13 @@ class RepeatableControl(
             formState.removeControlStatesWithPrefix("$controlName[${row.id}]")
         }
 
-        return RepeatableResultValue(
-            deletedRows = deletedRowsValues,
-            addedRows = newRowsValues,
-            modifiedRows = changedRowsValues
+        return ControlResultData(
+            currentValue = RepeatableResultValue(
+                deletedRows = deletedRowsValues,
+                addedRows = newRowsValues,
+                modifiedRows = changedRowsValues
+            ),
+            initialValue = null  // Oryginalne wartości są już zawarte w currentValue dla poszczególnych kontrolek
         )
     }
 }

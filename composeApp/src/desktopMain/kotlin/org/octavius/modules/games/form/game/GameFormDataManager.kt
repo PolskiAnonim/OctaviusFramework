@@ -65,9 +65,9 @@ class GameFormDataManager : FormDataManager() {
             result.add(SaveOperation.Insert("games", gameData))
         }
         // Play time
-        val status = formData["status"]!!.value as GameStatus
+        val status = formData["status"]!!.currentValue as GameStatus
 
-        if (formData["playTimeExists"]!!.value as Boolean) {
+        if (formData["playTimeExists"]!!.currentValue as Boolean) {
             if (status in statusesWithDetails) {
                 val playTimeData = mutableMapOf<String, ControlResultData>()
                 playTimeData["play_time_hours"] = formData["playTimeHours"]!!
@@ -101,7 +101,7 @@ class GameFormDataManager : FormDataManager() {
             )
         }
 
-        if (formData["ratingsExists"]!!.value as Boolean) {
+        if (formData["ratingsExists"]!!.currentValue as Boolean) {
             if (status in statusesWithDetails) {
                 val ratingsData = mutableMapOf<String, ControlResultData>()
                 ratingsData["story_rating"] = formData["storyRating"]!!
@@ -130,8 +130,8 @@ class GameFormDataManager : FormDataManager() {
             )
         }
 
-        if (formData["charactersExists"]!!.value as Boolean) {
-            if (formData["visibleCharactersSection"]!!.value as Boolean) {
+        if (formData["charactersExists"]!!.currentValue as Boolean) {
+            if (formData["visibleCharactersSection"]!!.currentValue as Boolean) {
                 val charactersData = mutableMapOf<String, ControlResultData>()
                 charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!
                 charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!
@@ -151,7 +151,7 @@ class GameFormDataManager : FormDataManager() {
                     )
                 )
             }
-        } else if (formData["visibleCharactersSection"]!!.value as Boolean) {
+        } else if (formData["visibleCharactersSection"]!!.currentValue as Boolean) {
             val charactersData = mutableMapOf<String, ControlResultData>()
             charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!
             charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!

@@ -29,7 +29,7 @@ sealed class SaveOperation {
      * Operacja wstawienia nowego rekordu.
      *
      * @param tableName nazwa tabeli
-     * @param data dane do wstawienia (kontrolka -> wartość)
+     * @param data dane do wstawienia (klucz -> wartość)
      * @param foreignKeys lista kluczy obcych
      * @param returningId czy zwrócić ID nowo utworzonego rekordu
      */
@@ -85,12 +85,12 @@ data class ForeignKey(
 /**
  * Dane wyniku kontrolki zebrane podczas przetwarzania formularza.
  *
- * @param value wartość kontrolki przygotowana do zapisu w bazie danych
- * @param dirty czy wartość została zmieniona przez użytkownika
+ * @param currentValue wartość kontrolki przygotowana do zapisu w bazie danych
+ * @param initialValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
  */
 data class ControlResultData(
-    val value: Any?,
-    val dirty: Boolean
+    val currentValue: Any?,
+    val initialValue: Any?
 )
 
 /**

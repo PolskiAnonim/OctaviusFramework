@@ -12,7 +12,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
     private fun validateTitleDuplication(formData: Map<String, ControlResultData>): Boolean {
         @Suppress("UNCHECKED_CAST")
-        val titles = formData["titles"]!!.value as List<String>
+        val titles = formData["titles"]!!.currentValue as List<String>
         val hasDuplicates = titles.size != titles.toSet().size
 
         if (hasDuplicates) {
@@ -24,7 +24,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
     private fun validateTitlesAgainstDatabase(formData: Map<String, ControlResultData>): Boolean {
         @Suppress("UNCHECKED_CAST")
-        val titles = formData["titles"]!!.value as List<String>
+        val titles = formData["titles"]!!.currentValue as List<String>
 
         if (titles.isEmpty()) return true
 

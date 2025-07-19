@@ -67,9 +67,8 @@ class FormState {
         val result = mutableMapOf<String, ControlResultData>()
 
         schema.getAllControls().forEach { (controlName, control) ->
-            val state = _controlStates[controlName]!!
-            val value = control.getResult(controlName, state)
-            result[controlName] = ControlResultData(value, state.dirty.value)
+            val state = _controlStates[controlName]!! // Stan musi istnieć, jeśli kontrolka jest w schemacie
+            result[controlName] = control.getResult(controlName, state)
         }
 
         return result

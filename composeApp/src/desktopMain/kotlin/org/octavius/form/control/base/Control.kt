@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.form.ColumnInfo
+import org.octavius.form.ControlResultData
 import org.octavius.form.ControlState
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
@@ -116,25 +117,29 @@ abstract class Control<T : Any>(
 
 
     /**
-     * Pobiera wynik kontrolki do zapisu w bazie danych.
-     * Zwraca null jeśli kontrolka jest niewidoczna.
+     * Pobiera wynik kontrolki (wartość bieżącą i początkową) do dalszego przetwarzania.
+     * Jeśli kontrolka jest niewidoczna, jej currentValue jest ustawiane na null,
+     * ale initialValue jest zachowywane, aby dać kontekst do FormDataManager.
      */
     fun getResult(
         controlName: String,
         state: ControlState<*>
-    ): Any? {
-        if (!validator.isControlVisible(this, controlName)) return null
-        return convertToResult(state)
+    ): ControlResultData {
+        val result = convertToResult(state)
+        // Jeśli kontrolka jest niewidoczna, zerujemy jej bieżącą wartość, ale zachowujemy początkową.
+        return if (!validator.isControlVisible(this, controlName)) {
+            result.copy(currentValue = null)
+        } else {
+            result
+        }
     }
 
     /**
      * Konwertuje stan kontrolki na wynik do zapisu.
      * Może być przesłonięta dla niestandardowych konwersji.
      */
-    protected open fun convertToResult(
-        state: ControlState<*>
-    ): Any? {
-        return state.value.value
+    protected open fun convertToResult(state: ControlState<*>): ControlResultData {
+        return ControlResultData(currentValue = state.value.value, initialValue = state.initValue.value)
     }
 
     /**
