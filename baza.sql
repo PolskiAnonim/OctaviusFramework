@@ -199,6 +199,28 @@ AS
 SELECT sum(play_time_hours) AS time_played
 FROM games.play_time;
 
+CREATE TABLE IF NOT EXISTS games.categories
+(
+    id integer NOT NULL DEFAULT nextval('games.categories_id_seq'::regclass),
+    name text COLLATE pg_catalog."default",
+    CONSTRAINT categories_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS games.categories_to_games
+(
+    category_id integer NOT NULL,
+    game_id integer NOT NULL,
+    CONSTRAINT categories_to_games_pkey PRIMARY KEY (category_id, game_id),
+    CONSTRAINT categories_to_games_category_id_fkey FOREIGN KEY (category_id)
+        REFERENCES games.categories (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT categories_to_games_game_id_fkey FOREIGN KEY (game_id)
+        REFERENCES games.games (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
 -- PUBLIC
 
 CREATE OR REPLACE FUNCTION public.update_modified_column()

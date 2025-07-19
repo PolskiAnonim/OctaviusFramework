@@ -10,6 +10,7 @@ import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.primitive.DoubleControl
 import org.octavius.form.control.type.primitive.IntegerControl
 import org.octavius.form.control.type.primitive.StringControl
+import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.DatabaseControl
 import org.octavius.form.control.type.selection.EnumControl
 import org.octavius.localization.Translations
@@ -159,13 +160,33 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                             comparisonType = ComparisonType.Equals
                         )
                     )
+                ),
+                // Sekcja kategorii
+                "categories" to RepeatableControl(
+                    rowControls = mapOf(
+                        "category" to DatabaseControl(
+                            columnInfo = null,
+                            label = Translations.getPlural("games.form.category", 1),
+                            relatedTable = "categories",
+                            displayColumn = "name",
+                            required = true
+                        )
+                    ),
+                    rowOrder = listOf("category"),
+                    label = Translations.getPlural("games.form.category", 2),
+                    validationOptions = RepeatableValidation(
+                        minItems = 0,
+                        maxItems = 10,
+                        uniqueFields = listOf("category")
+                    )
                 )
             ),
             listOf(
                 "basicInfo",
                 "playTimeSection",
                 "ratingsSection",
-                "charactersSection"
+                "charactersSection",
+                "categories"
             )
         )
     }

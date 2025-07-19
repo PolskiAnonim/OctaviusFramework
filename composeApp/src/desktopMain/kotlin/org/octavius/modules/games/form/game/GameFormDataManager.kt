@@ -7,6 +7,7 @@ import org.octavius.form.ForeignKey
 import org.octavius.form.SaveOperation
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
+import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class GameFormDataManager : FormDataManager() {
     override fun defineTableRelations(): List<TableRelation> {
@@ -25,7 +26,8 @@ class GameFormDataManager : FormDataManager() {
                 "visibleCharactersSection" to false,
                 "playTimeExists" to false,
                 "ratingsExists" to false,
-                "charactersExists" to false
+                "charactersExists" to false,
+                "categories" to emptyList<Map<String, Any?>>()
             )
         } else {
             val dataExists = DatabaseManager.getFetcher().fetchRow(
@@ -38,12 +40,22 @@ class GameFormDataManager : FormDataManager() {
                 CASE WHEN r.game_id IS NULL THEN FALSE ELSE TRUE END AS ratings_exists
                 """,
                 "g.id = :id", mapOf("id" to loadedId)
-                )
+            )
+
+            // Załaduj kategorie dla tej gry
+            val categories = DatabaseManager.getFetcher().fetchList(
+                "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id",
+                "ctg.category_id as category",
+                "ctg.game_id = :gameId",
+                params = mapOf("gameId" to loadedId)
+            )
+
             mapOf(
                 "visibleCharactersSection" to dataExists["characters_exists"]!!,
                 "charactersExists" to dataExists["characters_exists"]!!,
                 "playTimeExists" to dataExists["play_time_exists"]!!,
-                "ratingsExists" to dataExists["ratings_exists"]!!
+                "ratingsExists" to dataExists["ratings_exists"]!!,
+                "categories" to categories.map { it.mapKeys { (key, _) -> if (key == "original_category") "originalCategory" else key } },
             )
         }
     }
@@ -160,6 +172,64 @@ class GameFormDataManager : FormDataManager() {
                 SaveOperation.Insert(
                     "characters",
                     charactersData,
+                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
+                    returningId = false
+                )
+            )
+        }
+
+        // Obsługa kategorii
+        val categoriesResult = formData["categories"]!!.currentValue as RepeatableResultValue
+
+        // Usunięte kategorie
+        categoriesResult.deletedRows.forEach { rowData ->
+            val categoryId = rowData["category"]!!.initialValue as Int
+            result.add(
+                SaveOperation.Delete(
+                    "categories_to_games",
+                    foreignKeys = listOf(
+                        ForeignKey("game_id", "games", loadedId),
+                        ForeignKey("category_id", "categories", categoryId)
+                    )
+                )
+            )
+        }
+
+        // Zmodyfikowane kategorie - dla many-to-many DELETE starej + INSERT nowej
+        categoriesResult.modifiedRows.forEach { rowData ->
+            val categoryData = mutableMapOf<String, Any?>()
+            val category = rowData["category"]!!
+            categoryData["category_id"] = category.currentValue
+
+            result.add(
+                SaveOperation.Delete(
+                    "categories_to_games",
+                    foreignKeys = listOf(
+                        ForeignKey("game_id", "games", loadedId),
+                        ForeignKey("category_id", "categories", category.initialValue as Int)
+                    ),
+                )
+            )
+
+            result.add(
+                SaveOperation.Insert(
+                    "categories_to_games",
+                    categoryData,
+                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
+                    returningId = false
+                )
+            )
+        }
+
+        // Dodane kategorie
+        categoriesResult.addedRows.forEach { rowData ->
+            val categoryData = mutableMapOf<String, Any?>()
+            categoryData["category_id"] = rowData["category"]!!.currentValue
+
+            result.add(
+                SaveOperation.Insert(
+                    "categories_to_games",
+                    categoryData,
                     foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
                     returningId = false
                 )

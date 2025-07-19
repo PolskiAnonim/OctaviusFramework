@@ -129,6 +129,10 @@
     "form": {
       "atmosphereRating": "Ocena atmosfery (1-10)",
       "basicInfo": "Podstawowe informacje",
+      "category": {
+        "one": "Kategoria",
+        "few": "Kategorie"
+      },
       "characters": "Postacie",
       "distinctiveAntagonist": "Charakterystyczny antagonista",
       "distinctiveCharacters": "Charakterystyczne postacie",
