@@ -8,23 +8,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.octavius.localization.Translations
 import org.octavius.modules.games.GameReportStructureBuilder
-import org.octavius.navigator.Navigator
+import org.octavius.navigation.AppRouter
 import org.octavius.report.component.ReportScreen
 import org.octavius.report.component.ReportStructureBuilder
 
-class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
+class GameReportScreen() : ReportScreen() {
     override val title = Translations.get("games.report.title")
-    override fun createReportStructure(): ReportStructureBuilder = GameReportStructureBuilder(navigator)
+    override fun createReportStructure(): ReportStructureBuilder = GameReportStructureBuilder()
 
     @Composable
     override fun AddMenu() {
         DropdownMenuItem(
             text = { Text(Translations.get("games.report.newGame")) },
             onClick = {
-                navigator.addScreen(
+                AppRouter.navigateTo(
                     GameFormScreen(
-                        onSaveSuccess = { navigator.removeScreen() },
-                        onCancel = { navigator.removeScreen() }
+                        onSaveSuccess = { AppRouter.goBack() },
+                        onCancel = { AppRouter.goBack() }
                     ))
             },
             leadingIcon = {
@@ -37,10 +37,10 @@ class GameReportScreen(private val navigator: Navigator) : ReportScreen() {
         DropdownMenuItem(
             text = { Text(Translations.get("games.report.newSeries")) },
             onClick = {
-                navigator.addScreen(
+                AppRouter.navigateTo(
                     GameSeriesFormScreen(
-                        onSaveSuccess = { navigator.removeScreen() },
-                        onCancel = { navigator.removeScreen() }
+                        onSaveSuccess = { AppRouter.goBack() },
+                        onCancel = { AppRouter.goBack() }
                     ))
             },
             leadingIcon = {

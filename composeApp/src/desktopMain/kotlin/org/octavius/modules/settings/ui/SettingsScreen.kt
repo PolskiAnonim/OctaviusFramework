@@ -17,8 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
-import org.octavius.navigator.LocalNavigator
-import org.octavius.navigator.Screen
+import org.octavius.navigation.AppRouter
+import org.octavius.navigation.Screen
 import org.octavius.ui.theme.FormSpacing
 
 class SettingsScreen() : Screen {
@@ -33,7 +33,6 @@ class SettingsScreen() : Screen {
 
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.current
 
         val settingOptions = listOf(
             SettingOption(
@@ -53,7 +52,7 @@ class SettingsScreen() : Screen {
                 description = Translations.get("settings.api.description"),
                 icon = Icons.Default.Api,
                 onClick = {
-                    navigator.addScreen(ApiIntegrationsReportScreen(navigator))
+                    AppRouter.navigateTo(ApiIntegrationsReportScreen())
                 }
             )
         )

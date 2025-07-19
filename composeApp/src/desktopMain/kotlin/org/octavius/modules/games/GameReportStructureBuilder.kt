@@ -3,7 +3,7 @@ package org.octavius.modules.games
 import org.octavius.domain.game.GameStatus
 import org.octavius.localization.Translations
 import org.octavius.modules.games.ui.GameFormScreen
-import org.octavius.navigator.Navigator
+import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.type.EnumColumn
@@ -11,7 +11,7 @@ import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportStructure
 import org.octavius.report.component.ReportStructureBuilder
 
-class GameReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
+class GameReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun buildStructure(): ReportStructure {
         val query = Query(
@@ -37,11 +37,11 @@ class GameReportStructureBuilder(val navigator: Navigator) : ReportStructureBuil
                 // Obsługa kliknięcia wiersza, np. otwieranie formularza edycji
                 val id = rowData["id"] as? Int
                 if (id != null) {
-                    navigator.addScreen(
+                    AppRouter.navigateTo(
                         GameFormScreen(
                             entityId = id,
-                            onSaveSuccess = { navigator.removeScreen() },
-                            onCancel = { navigator.removeScreen() }
+                            onSaveSuccess = { AppRouter.goBack() },
+                            onCancel = { AppRouter.goBack() }
                         ))
                 }
             }

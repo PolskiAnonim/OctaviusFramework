@@ -8,23 +8,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.octavius.localization.Translations
 import org.octavius.modules.asian.AsianMediaReportStructureBuilder
-import org.octavius.navigator.Navigator
+import org.octavius.navigation.AppRouter
 import org.octavius.report.component.ReportScreen
 import org.octavius.report.component.ReportStructureBuilder
 
-class AsianMediaReportScreen(private val navigator: Navigator) : ReportScreen() {
+class AsianMediaReportScreen() : ReportScreen() {
     override val title = Translations.get("asianMedia.report.title")
-    override fun createReportStructure(): ReportStructureBuilder = AsianMediaReportStructureBuilder(navigator)
+    override fun createReportStructure(): ReportStructureBuilder = AsianMediaReportStructureBuilder()
 
     @Composable
     override fun AddMenu() {
         DropdownMenuItem(
             text = { Text(Translations.get("asianMedia.report.newTitle")) },
             onClick = {
-                navigator.addScreen(
+                AppRouter.navigateTo(
                     AsianMediaFormScreen(
-                    onSaveSuccess = { navigator.removeScreen() },
-                    onCancel = { navigator.removeScreen() }
+                    onSaveSuccess = { AppRouter.goBack() },
+                    onCancel = { AppRouter.goBack() }
                 ))
             },
             leadingIcon = {

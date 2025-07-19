@@ -11,7 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
-import org.octavius.navigator.Screen
+import org.octavius.navigation.Screen
 import org.octavius.ui.component.LocalSnackbarManager
 
 /**

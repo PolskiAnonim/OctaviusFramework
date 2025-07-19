@@ -5,7 +5,7 @@ import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
 import org.octavius.localization.Translations
 import org.octavius.modules.asian.ui.AsianMediaFormScreen
-import org.octavius.navigator.Navigator
+import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.type.EnumColumn
@@ -14,7 +14,7 @@ import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportStructure
 import org.octavius.report.component.ReportStructureBuilder
 
-class AsianMediaReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
+class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun buildStructure(): ReportStructure {
         val query = Query(
@@ -59,11 +59,11 @@ class AsianMediaReportStructureBuilder(val navigator: Navigator) : ReportStructu
             ReportRowAction(Translations.get("report.actions.edit")) {
                 val id = rowData["title_id"] as? Int
                 if (id != null) {
-                    navigator.addScreen(
+                    AppRouter.navigateTo(
                         AsianMediaFormScreen(
-                        entityId = id,
-                        onSaveSuccess = { navigator.removeScreen() },
-                        onCancel = { navigator.removeScreen() }
+                            entityId = id,
+                            onSaveSuccess = { AppRouter.goBack() },
+                            onCancel = { AppRouter.goBack() }
                         )
                     )
                 }

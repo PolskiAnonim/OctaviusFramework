@@ -1,7 +1,6 @@
 package org.octavius.modules.settings
 
 import org.octavius.localization.Translations
-import org.octavius.navigator.Navigator
 import org.octavius.report.Query
 import org.octavius.report.column.type.BooleanColumn
 import org.octavius.report.column.type.IntegerColumn
@@ -9,7 +8,7 @@ import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportStructure
 import org.octavius.report.component.ReportStructureBuilder
 
-class ApiIntegrationsReportStructureBuilder(val navigator: Navigator) : ReportStructureBuilder() {
+class ApiIntegrationsReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun buildStructure(): ReportStructure {
         val query = Query(
