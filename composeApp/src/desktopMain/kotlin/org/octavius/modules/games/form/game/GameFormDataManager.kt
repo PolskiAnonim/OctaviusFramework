@@ -54,10 +54,10 @@ class GameFormDataManager : FormDataManager() {
 
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
         // Obsługa głównej tabeli games
-        val gameData = mutableMapOf<String, ControlResultData>()
-        gameData["name"] = formData["name"]!!
-        gameData["series"] = formData["series"]!!
-        gameData["status"] = formData["status"]!!
+        val gameData = mutableMapOf<String, Any?>()
+        gameData["name"] = formData["name"]!!.currentValue
+        gameData["series"] = formData["series"]!!.currentValue
+        gameData["status"] = formData["status"]!!.currentValue
 
         if (loadedId != null) {
             result.add(SaveOperation.Update("games", gameData, loadedId))
@@ -65,13 +65,13 @@ class GameFormDataManager : FormDataManager() {
             result.add(SaveOperation.Insert("games", gameData))
         }
         // Play time
-        val status = formData["status"]!!.value as GameStatus
+        val status = formData["status"]!!.currentValue as GameStatus
 
-        if (formData["playTimeExists"]!!.value as Boolean) {
+        if (formData["playTimeExists"]!!.currentValue as Boolean) {
             if (status in statusesWithDetails) {
-                val playTimeData = mutableMapOf<String, ControlResultData>()
-                playTimeData["play_time_hours"] = formData["playTimeHours"]!!
-                playTimeData["completion_count"] = formData["completionCount"]!!
+                val playTimeData = mutableMapOf<String, Any?>()
+                playTimeData["play_time_hours"] = formData["playTimeHours"]!!.currentValue
+                playTimeData["completion_count"] = formData["completionCount"]!!.currentValue
                 result.add(
                     SaveOperation.Update(
                         "play_time",
@@ -88,9 +88,9 @@ class GameFormDataManager : FormDataManager() {
                 )
             }
         } else if (status in statusesWithDetails) {
-            val playTimeData = mutableMapOf<String, ControlResultData>()
-            playTimeData["play_time_hours"] = formData["playTimeHours"]!!
-            playTimeData["completion_count"] = formData["completionCount"]!!
+            val playTimeData = mutableMapOf<String, Any?>()
+            playTimeData["play_time_hours"] = formData["playTimeHours"]!!.currentValue
+            playTimeData["completion_count"] = formData["completionCount"]!!.currentValue
             result.add(
                 SaveOperation.Insert(
                     "play_time",
@@ -101,12 +101,12 @@ class GameFormDataManager : FormDataManager() {
             )
         }
 
-        if (formData["ratingsExists"]!!.value as Boolean) {
+        if (formData["ratingsExists"]!!.currentValue as Boolean) {
             if (status in statusesWithDetails) {
-                val ratingsData = mutableMapOf<String, ControlResultData>()
-                ratingsData["story_rating"] = formData["storyRating"]!!
-                ratingsData["gameplay_rating"] = formData["gameplayRating"]!!
-                ratingsData["atmosphere_rating"] = formData["atmosphereRating"]!!
+                val ratingsData = mutableMapOf<String, Any?>()
+                ratingsData["story_rating"] = formData["storyRating"]!!.currentValue
+                ratingsData["gameplay_rating"] = formData["gameplayRating"]!!.currentValue
+                ratingsData["atmosphere_rating"] = formData["atmosphereRating"]!!.currentValue
                 result.add(
                     SaveOperation.Update(
                         "ratings",
@@ -116,10 +116,10 @@ class GameFormDataManager : FormDataManager() {
                 )
             }
         } else if (status in statusesWithDetails) {
-            val ratingsData = mutableMapOf<String, ControlResultData>()
-            ratingsData["story_rating"] = formData["storyRating"]!!
-            ratingsData["gameplay_rating"] = formData["gameplayRating"]!!
-            ratingsData["atmosphere_rating"] = formData["atmosphereRating"]!!
+            val ratingsData = mutableMapOf<String, Any?>()
+            ratingsData["story_rating"] = formData["storyRating"]!!.currentValue
+            ratingsData["gameplay_rating"] = formData["gameplayRating"]!!.currentValue
+            ratingsData["atmosphere_rating"] = formData["atmosphereRating"]!!.currentValue
             result.add(
                 SaveOperation.Insert(
                     "ratings",
@@ -130,12 +130,12 @@ class GameFormDataManager : FormDataManager() {
             )
         }
 
-        if (formData["charactersExists"]!!.value as Boolean) {
-            if (formData["visibleCharactersSection"]!!.value as Boolean) {
-                val charactersData = mutableMapOf<String, ControlResultData>()
-                charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!
-                charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!
-                charactersData["has_distinctive_antagonist"] = formData["hasDistinctiveAntagonist"]!!
+        if (formData["charactersExists"]!!.currentValue as Boolean) {
+            if (formData["visibleCharactersSection"]!!.currentValue as Boolean) {
+                val charactersData = mutableMapOf<String, Any?>()
+                charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!.currentValue
+                charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!.currentValue
+                charactersData["has_distinctive_antagonist"] = formData["hasDistinctiveAntagonist"]!!.currentValue
                 result.add(
                     SaveOperation.Update(
                         "characters",
@@ -151,11 +151,11 @@ class GameFormDataManager : FormDataManager() {
                     )
                 )
             }
-        } else if (formData["visibleCharactersSection"]!!.value as Boolean) {
-            val charactersData = mutableMapOf<String, ControlResultData>()
-            charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!
-            charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!
-            charactersData["has_distinctive_antagonist"] = formData["hasDistinctiveAntagonist"]!!
+        } else if (formData["visibleCharactersSection"]!!.currentValue as Boolean) {
+            val charactersData = mutableMapOf<String, Any?>()
+            charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!.currentValue
+            charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!.currentValue
+            charactersData["has_distinctive_antagonist"] = formData["hasDistinctiveAntagonist"]!!.currentValue
             result.add(
                 SaveOperation.Insert(
                     "characters",

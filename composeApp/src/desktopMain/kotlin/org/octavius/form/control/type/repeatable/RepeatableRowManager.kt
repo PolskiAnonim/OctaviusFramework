@@ -18,16 +18,15 @@ class RepeatableRowManager(
         val newRow = createRow(newIndex, controlName, rowControls, formState)
         currentRows.add(newRow)
         controlState.value.value = currentRows
-        controlState.dirty.value = true
     }
     
     fun deleteRow(
         controlState: ControlState<List<RepeatableRow>>,
         index: Int
-    ): Boolean {
+    ) {
         val minRows = validationOptions?.minItems ?: 0
         if (controlState.value.value!!.size <= minRows) {
-            return false
+            return
         }
         
         val currentRows = controlState.value.value!!.toMutableList()
@@ -50,8 +49,7 @@ class RepeatableRowManager(
         }
         
         controlState.value.value = currentRows
-        controlState.dirty.value = true
-        return true
+        return
     }
     
     fun canAddRow(controlState: ControlState<List<RepeatableRow>>): Boolean {

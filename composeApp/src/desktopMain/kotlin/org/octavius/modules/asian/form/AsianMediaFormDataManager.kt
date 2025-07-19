@@ -53,9 +53,9 @@ class AsianMediaFormDataManager : FormDataManager() {
         val result = mutableListOf<SaveOperation>()
 
         // Obsługa tabeli titles
-        val titleData = mutableMapOf<String, ControlResultData>()
-        titleData["titles"] = formData["titles"]!!
-        titleData["language"] = formData["language"]!!
+        val titleData = mutableMapOf<String, Any?>()
+        titleData["titles"] = formData["titles"]!!.currentValue
+        titleData["language"] = formData["language"]!!.currentValue
 
         val titleId = if (loadedId != null) {
             result.add(SaveOperation.Update("titles", titleData, loadedId))
@@ -66,39 +66,39 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
 
         // Obsługa publikacji
-        val publicationsResult = formData["publications"]!!.value as RepeatableResultValue
+        val publicationsResult = formData["publications"]!!.currentValue as RepeatableResultValue
 
         // Usunięte publikacje
         publicationsResult.deletedRows.forEach { rowData ->
-            val pubId = rowData["id"]!!.value as Int
+            val pubId = rowData["id"]!!.initialValue as Int
             // publication_volumes zostanie usunięte kaskadowo
             result.add(SaveOperation.Delete("publications", pubId))
         }
 
         // Dodane publikacje
         publicationsResult.addedRows.forEach { rowData ->
-            val publicationData = mutableMapOf<String, ControlResultData>()
-            publicationData["publication_type"] = rowData["publicationType"]!!
-            publicationData["status"] = rowData["status"]!!
-            publicationData["track_progress"] = rowData["trackProgress"]!!
+            val publicationData = mutableMapOf<String, Any?>()
+            publicationData["publication_type"] = rowData["publicationType"]!!.currentValue
+            publicationData["status"] = rowData["status"]!!.currentValue
+            publicationData["track_progress"] = rowData["trackProgress"]!!.currentValue
 
             result.add(
                 SaveOperation.Insert(
                     "publications",
                     publicationData,
-                    // Dla braku title value jest nullem i będzie podstawione w DatabaseManager
+                    // Dla braku titleId value jest nullem i będzie podstawione w DatabaseManager
                     listOf(ForeignKey("title_id", "titles", titleId))
                 )
             )
 
             // Jeśli track_progress = true, UPDATE volumes (trigger już stworzył wiersz)
-            if (rowData["trackProgress"]!!.value == true) {
-                val volumesData = mutableMapOf<String, ControlResultData>()
-                volumesData["volumes"] = rowData["volumes"]!!
-                volumesData["translated_volumes"] = rowData["translatedVolumes"]!!
-                volumesData["chapters"] = rowData["chapters"]!!
-                volumesData["translated_chapters"] = rowData["translatedChapters"]!!
-                volumesData["original_completed"] = rowData["originalCompleted"]!!
+            if (rowData["trackProgress"]!!.currentValue == true) {
+                val volumesData = mutableMapOf<String, Any?>()
+                volumesData["volumes"] = rowData["volumes"]!!.currentValue
+                volumesData["translated_volumes"] = rowData["translatedVolumes"]!!.currentValue
+                volumesData["chapters"] = rowData["chapters"]!!.currentValue
+                volumesData["translated_chapters"] = rowData["translatedChapters"]!!.currentValue
+                volumesData["original_completed"] = rowData["originalCompleted"]!!.currentValue
 
                 result.add(
                     SaveOperation.Update(
@@ -113,12 +113,12 @@ class AsianMediaFormDataManager : FormDataManager() {
 
         // Zmodyfikowane publikacje
         publicationsResult.modifiedRows.forEach { rowData ->
-            val pubId = rowData["id"]!!.value as Int
+            val pubId = rowData["id"]!!.initialValue as Int
 
-            val publicationData = mutableMapOf<String, ControlResultData>()
-            publicationData["publication_type"] = rowData["publicationType"]!!
-            publicationData["status"] = rowData["status"]!!
-            publicationData["track_progress"] = rowData["trackProgress"]!!
+            val publicationData = mutableMapOf<String, Any?>()
+            publicationData["publication_type"] = rowData["publicationType"]!!.currentValue
+            publicationData["status"] = rowData["status"]!!.currentValue
+            publicationData["track_progress"] = rowData["trackProgress"]!!.currentValue
 
             result.add(
                 SaveOperation.Update(
@@ -129,15 +129,15 @@ class AsianMediaFormDataManager : FormDataManager() {
             )
 
             // Obsługa publication_volumes
-            val trackProgress = rowData["trackProgress"]!!.value as Boolean
+            val trackProgress = rowData["trackProgress"]!!.currentValue as Boolean
 
             if (trackProgress) {
-                val volumesData = mutableMapOf<String, ControlResultData>()
-                volumesData["volumes"] = rowData["volumes"]!!
-                volumesData["translated_volumes"] = rowData["translatedVolumes"]!!
-                volumesData["chapters"] = rowData["chapters"]!!
-                volumesData["translated_chapters"] = rowData["translatedChapters"]!!
-                volumesData["original_completed"] = rowData["originalCompleted"]!!
+                val volumesData = mutableMapOf<String, Any?>()
+                volumesData["volumes"] = rowData["volumes"]!!.currentValue
+                volumesData["translated_volumes"] = rowData["translatedVolumes"]!!.currentValue
+                volumesData["chapters"] = rowData["chapters"]!!.currentValue
+                volumesData["translated_chapters"] = rowData["translatedChapters"]!!.currentValue
+                volumesData["original_completed"] = rowData["originalCompleted"]!!.currentValue
 
                 result.add(
                     SaveOperation.Update(

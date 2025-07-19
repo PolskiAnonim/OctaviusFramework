@@ -168,7 +168,6 @@ abstract class DropdownControlBase<T : Any>(
                                 text = { Text(Translations.get("form.dropdown.noSelection")) },
                                 onClick = {
                                     controlState.value.value = null
-                                    updateState(controlState)
                                     expanded = false
                                 }
                             )
@@ -194,7 +193,6 @@ abstract class DropdownControlBase<T : Any>(
                                     text = { Text(option.displayText) },
                                     onClick = {
                                         controlState.value.value = option.value
-                                        updateState(controlState)
                                         executeActions(controlName, option.value, scope)
                                         expanded = false
                                     }

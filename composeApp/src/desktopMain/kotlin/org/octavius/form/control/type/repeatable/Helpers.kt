@@ -85,10 +85,11 @@ fun getRowTypes(
     val changedRows = controlState.value.value!!.filter { currentRow ->
         if (currentRow.id !in initialRowIds) return@filter false
 
-        // Sprawdź czy jakiekolwiek pole w tym wierszu jest dirty
+        // Sprawdź czy jakiekolwiek pole w tym wierszu jest zmienione
         rowControls.keys.any { fieldName ->
             val hierarchicalName = "$controlName[${currentRow.id}].$fieldName"
-            globalStates[hierarchicalName]?.dirty?.value == true
+            val state = globalStates[hierarchicalName]!!
+            state.initValue.value != state.value.value
         }
     }
     return Triple(newRows, deletedRows, changedRows)

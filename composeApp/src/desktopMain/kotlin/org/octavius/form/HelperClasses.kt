@@ -29,13 +29,13 @@ sealed class SaveOperation {
      * Operacja wstawienia nowego rekordu.
      *
      * @param tableName nazwa tabeli
-     * @param data dane do wstawienia (kontrolka -> wartość)
+     * @param data dane do wstawienia (klucz -> wartość)
      * @param foreignKeys lista kluczy obcych
      * @param returningId czy zwrócić ID nowo utworzonego rekordu
      */
     data class Insert(
         override val tableName: String,
-        val data: Map<String, ControlResultData>,
+        val data: Map<String, Any?>,
         override val foreignKeys: List<ForeignKey> = emptyList(),
         val returningId: Boolean = true
     ) : SaveOperation()
@@ -50,7 +50,7 @@ sealed class SaveOperation {
      */
     data class Update(
         override val tableName: String,
-        val data: Map<String, ControlResultData>,
+        val data: Map<String, Any?>,
         val id: Int? = null,
         override val foreignKeys: List<ForeignKey> = emptyList()
     ) : SaveOperation()
@@ -85,12 +85,12 @@ data class ForeignKey(
 /**
  * Dane wyniku kontrolki zebrane podczas przetwarzania formularza.
  *
- * @param value wartość kontrolki przygotowana do zapisu w bazie danych
- * @param dirty czy wartość została zmieniona przez użytkownika
+ * @param currentValue wartość kontrolki przygotowana do zapisu w bazie danych
+ * @param initialValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
  */
 data class ControlResultData(
-    val value: Any?,
-    val dirty: Boolean
+    val currentValue: Any?,
+    val initialValue: Any?
 )
 
 /**
@@ -102,10 +102,8 @@ data class ControlResultData(
  * @param T typ danych przechowywanych przez kontrolkę
  * @param value bieżąca wartość kontrolki (edytowana przez użytkownika)
  * @param initValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
- * @param dirty czy wartość została zmieniona od załadowania
  */
 data class ControlState<T>(
     val value: MutableState<T?> = mutableStateOf(null),
-    val initValue: MutableState<T?> = mutableStateOf(null),
-    val dirty: MutableState<Boolean> = mutableStateOf(false),
+    val initValue: MutableState<T?> = mutableStateOf(null)
 )
