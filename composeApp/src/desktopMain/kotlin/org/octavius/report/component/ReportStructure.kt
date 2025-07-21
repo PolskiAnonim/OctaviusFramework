@@ -53,15 +53,51 @@ class ReportStructure(
 }
 
 /**
- * Fabryka do tworzenia struktur raportów
- * Służy do tworzenia klasy ReportStructure
+ * Fabryka do tworzenia struktur raportów.
+ * Używa wzorca "Template Method" do zdefiniowania szkieletu budowania raportu.
+ * Klasy dziedziczące muszą dostarczyć implementacje dla poszczególnych części raportu.
  */
 abstract class ReportStructureBuilder {
+    /**
+     * Główna metoda budująca. Orkiestruje proces i nie powinna być nadpisywana.
+     */
     fun build(): ReportStructure {
         val structure = buildStructure()
         structure.initSpecialColumns()
         return structure
     }
 
-    abstract fun buildStructure(): ReportStructure
+    /**
+     * Metoda szablonowa, która składa raport z części dostarczonych
+     * przez metody abstrakcyjne.
+     */
+    private fun buildStructure(): ReportStructure {
+        return ReportStructure(
+            query = buildQuery(),
+            initColumns = buildColumns(),
+            reportName = getReportName(),
+            rowActions = buildRowActions()
+        )
+    }
+
+    /**
+     * Zwraca nazwę raportu.
+     */
+    abstract fun getReportName(): String
+
+    /**
+     * Buduje i zwraca obiekt Query dla raportu.
+     */
+    abstract fun buildQuery(): Query
+
+    /**
+     * Buduje i zwraca mapę kolumn dla raportu.
+     */
+    abstract fun buildColumns(): Map<String, ReportColumn>
+
+    /**
+     * Buduje i zwraca listę akcji dla wierszy.
+     * Domyślnie zwraca pustą listę, ponieważ nie każdy raport ma akcje.
+     */
+    open fun buildRowActions(): List<ReportRowAction> = emptyList()
 }
