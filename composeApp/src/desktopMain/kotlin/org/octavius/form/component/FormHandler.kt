@@ -5,7 +5,7 @@ import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 
 /**
- * Abstrakcyjna klasa obsługująca cykl życia formularza.
+ * Klasa obsługująca cykl życia formularza.
  *
  * FormHandler koordynuje pracę wszystkich komponentów formularza:
  * - FormSchema - definicja struktury formularza
@@ -15,17 +15,18 @@ import org.octavius.form.control.base.Control
  *
  * @param entityId ID edytowanej encji (null dla nowych rekordów)
  */
-abstract class FormHandler(protected val entityId: Int? = null) {
+class FormHandler(
+    private val entityId: Int? = null,
+    formSchemaBuilder: FormSchemaBuilder,
+    val formDataManager: FormDataManager,
+    val formValidator: FormValidator = FormValidator()
+) {
     val errorManager: ErrorManager = ErrorManager()
-    protected val formState: FormState = FormState()
-    protected val formSchema: FormSchema
-    protected val formDataManager: FormDataManager
-    protected val formValidator: FormValidator
+    private val formState: FormState = FormState()
+    private val formSchema: FormSchema = formSchemaBuilder.build()
+
 
     init {
-        formSchema = createFormSchema()
-        formDataManager = createDataManager()
-        formValidator = createFormValidator()
         setupFormReferences()
         if (entityId != null) {
             loadData()
@@ -57,19 +58,6 @@ abstract class FormHandler(protected val entityId: Int? = null) {
      */
     fun onSaveClicked(): Boolean = saveForm()
     fun onCancelClicked() { /* logika anulowania */
-    }
-
-    /**
-     * Metody abstrakcyjne do implementacji w klasach pochodnych
-     */
-    protected abstract fun createFormSchema(): FormSchema
-    protected abstract fun createDataManager(): FormDataManager
-
-    /**
-     * Tworzy validator dla formularza. Można przesłonić dla niestandardowych reguł walidacji.
-     */
-    protected open fun createFormValidator(): FormValidator {
-        return FormValidator()
     }
 
     /**
