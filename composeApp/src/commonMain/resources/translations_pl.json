@@ -4,7 +4,7 @@
     "cancel": "Anuluj",
     "close": "Zamknij",
     "load": "Wczytaj",
-    "refresh": "Odśwież",
+    "overwrite": "Nadpisz",
     "remove": "Usuń",
     "save": "Zapisz"
   },
@@ -58,10 +58,6 @@
     "expand": "Rozwiń"
   },
   "filter": {
-    "boolean": {
-      "false": "Nie",
-      "true": "Tak"
-    },
     "enum": {
       "excludeSelected": "Wyklucz zaznaczone",
       "includeSelected": "Uwzględnij zaznaczone",
@@ -104,9 +100,6 @@
       "range": "Zakres",
       "startsWith": "Zaczyna się od",
       "value": "Wartość"
-    },
-    "stringList": {
-      "itemPlaceholder": "Wprowadź tekst..."
     }
   },
   "form": {
@@ -180,8 +173,7 @@
     }
   },
   "navigation": {
-    "back": "Wstecz",
-    "noNavigator": "No Navigator found!"
+    "back": "Wstecz"
   },
   "pagination": {
     "nextPage": "Następna strona",
@@ -206,13 +198,9 @@
       "ascending": "Rosnąco",
       "columns": "Kolumny",
       "descending": "Malejąco",
-      "dragColumnsHere": "Przeciągnij kolumny tutaj aby dodać sortowanie",
-      "dragMoreColumns": "Przeciągnij więcej kolumn aby dodać dodatkowe sortowanie",
       "dragToReorder": "Przeciągnij aby zmienić kolejność",
       "hideColumn": "Ukryj kolumnę",
-      "more": "... ({0} więcej)",
       "showColumn": "Pokaż kolumnę",
-      "sortZone": "Strefa sortowania (przeciągnij kolumny tutaj):",
       "sorting": "Sortowanie"
     },
     "configuration": {
@@ -223,8 +211,11 @@
       "defaultConfig": "Domyślna",
       "description": "Opis (opcjonalny)",
       "errorSaving": "Błąd podczas zapisywania konfiguracji",
+      "management": "Zarządzanie konfiguracjami",
       "name": "Nazwa konfiguracji",
       "nameRequired": "Nazwa jest wymagana",
+      "noSavedConfigurations": "Brak zapisanych konfiguracji",
+      "overwriteWarning": "Uwaga! Nadpisujesz istniejącą konfigurację",
       "saveConfiguration": "Zapisz konfigurację",
       "saveCurrent": "Zapisz obecną konfigurację",
       "savedConfigurations": "Zapisane konfiguracje:",

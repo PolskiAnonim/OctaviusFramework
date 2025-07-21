@@ -3,60 +3,51 @@ package org.octavius.report.configuration
 import org.octavius.database.DatabaseManager
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
-import org.octavius.report.component.ReportState
+import org.octavius.form.SaveOperation
 
 class ReportConfigurationManager {
 
-    fun saveConfiguration(
-        name: String,
-        reportName: String,
-        description: String?,
-        reportState: ReportState,
-        isDefault: Boolean = false
-    ): Boolean {
+    fun saveConfiguration(configuration: ReportConfiguration): Boolean {
         return try {
+            val fetcher = DatabaseManager.getFetcher()
             val updater = DatabaseManager.getUpdater()
 
-            val sortOrderList = reportState.sortOrder.map { (columnName, direction) ->
-                SortConfiguration(columnName, direction)
-            }
+            val existingConfigId = fetcher.fetchField(
+                table = "public.report_configurations",
+                field = "id",
+                filter = "name = :name AND report_name = :report_name",
+                params = mapOf("name" to configuration.name, "report_name" to configuration.reportName)
+            ) as? Int
 
-            val configSql = """
-                INSERT INTO public.report_configurations 
-                (name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters)
-                VALUES (:name, :report_name, :description, :sort_order, :visible_columns, :column_order, :page_size, :is_default, :filters)
-                ON CONFLICT (name, report_name) 
-                DO UPDATE SET 
-                    description = EXCLUDED.description,
-                    sort_order = EXCLUDED.sort_order,
-                    visible_columns = EXCLUDED.visible_columns,
-                    column_order = EXCLUDED.column_order,
-                    page_size = EXCLUDED.page_size,
-                    is_default = EXCLUDED.is_default,
-                    filters = EXCLUDED.filters,
-                    updated_at = CURRENT_TIMESTAMP
-                RETURNING id
-            """.trimIndent()
+            val configData = configuration.configuration
 
-            val filterConfig = reportState.filterData.map { (columnName, filterData) ->
-                FilterConfig(columnName, filterData.serialize())
-            }
-
-            val configParams = mapOf(
-                "name" to name,
-                "report_name" to reportName,
-                "description" to description,
-                "sort_order" to sortOrderList,
-                "visible_columns" to reportState.visibleColumns.toList(),
-                "column_order" to reportState.columnKeysOrder.toList(),
-                "page_size" to reportState.pagination.pageSize,
-                "is_default" to isDefault,
-                "filters" to filterConfig
+            val dataMap: Map<String, Any?> = mapOf(
+                "name" to configuration.name,
+                "report_name" to configuration.reportName,
+                "description" to configuration.description,
+                "sort_order" to configData.sortOrder,
+                "visible_columns" to configData.visibleColumns,
+                "column_order" to configData.columnOrder,
+                "page_size" to configData.pageSize,
+                "is_default" to configuration.isDefault,
+                "filters" to configData.filters
             )
 
-            val configId = updater.executeReturning(configSql, configParams, "id") as Int
+            val operation = if (existingConfigId != null) {
+                SaveOperation.Update(
+                    tableName = "public.report_configurations",
+                    data = dataMap,
+                    id = existingConfigId
+                )
+            } else {
+                SaveOperation.Insert(
+                    tableName = "public.report_configurations",
+                    data = dataMap,
+                    returningId = false
+                )
+            }
 
-
+            updater.updateDatabase(listOf(operation))
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -113,8 +104,7 @@ class ReportConfigurationManager {
                 "name" to name,
                 "report_name" to reportName
             )
-            updater.executeUpdate(sql, params)
-            true
+            updater.executeUpdate(sql, params) > 0
         } catch (e: Exception) {
             e.printStackTrace()
             false
