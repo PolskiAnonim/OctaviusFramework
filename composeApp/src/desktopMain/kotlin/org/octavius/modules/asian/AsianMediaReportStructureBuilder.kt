@@ -23,10 +23,11 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
                 t.id as title_id,
                 t.titles,
                 t.language,
-                p.publication_type,
-                p.status
+                ARRAY_AGG(p.publication_type ORDER BY p.id) AS publication_type,
+                ARRAY_AGG(p.status ORDER BY p.id) as status
             FROM titles t
             JOIN publications p ON p.title_id = t.id
+            GROUP BY t.id
             """.trimIndent()
         )
 
@@ -43,15 +44,21 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
                 enumClass = PublicationLanguage::class,
                 width = 1f
             ),
-            "publication_type" to EnumColumn(
-                header = Translations.get("games.general.publicationType"),
-                enumClass = PublicationType::class,
-                width = 1.5f
+            "publication_type" to MultiRowColumn(
+                wrappedColumn = EnumColumn(
+                    header = Translations.get("games.general.publicationType"),
+                    enumClass = PublicationType::class,
+                    width = 1.5f
+                ),
+                maxVisibleItems = 9
             ),
-            "status" to EnumColumn(
-                header = Translations.get("games.general.status"),
-                enumClass = PublicationStatus::class,
-                width = 1.5f
+            "status" to MultiRowColumn(
+                wrappedColumn = EnumColumn(
+                    header = Translations.get("games.general.status"),
+                    enumClass = PublicationStatus::class,
+                    width = 1.5f
+                ),
+                maxVisibleItems = 9
             )
         )
 
