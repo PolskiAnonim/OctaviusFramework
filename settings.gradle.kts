@@ -1,4 +1,4 @@
-rootProject.name = "NovelsKotlin"
+rootProject.name = "Octavius"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -28,4 +28,6 @@ dependencyResolutionManagement {
     }
 }
 
-include(":composeApp")
+include(":composeApp",
+    ":core"
+)

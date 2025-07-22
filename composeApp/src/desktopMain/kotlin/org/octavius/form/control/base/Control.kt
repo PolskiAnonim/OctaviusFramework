@@ -4,7 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineScope
-import org.octavius.form.ColumnInfo
+import org.octavius.database.ColumnInfo
 import org.octavius.form.ControlResultData
 import org.octavius.form.ControlState
 import org.octavius.form.component.ErrorManager

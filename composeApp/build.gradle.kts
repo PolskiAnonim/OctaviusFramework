@@ -27,12 +27,9 @@ kotlin {
             implementation(libs.kotlinx.datetime)
         }
         desktopMain.dependencies {
+            implementation(project(":core"))
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.postgres)
-            implementation(libs.hikari)
-            implementation(libs.kotlin.reflect)
-            implementation(libs.spring.jdbc)
         }
     }
 }

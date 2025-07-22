@@ -2,9 +2,9 @@ package org.octavius.modules.asian.form
 
 import org.octavius.database.DatabaseManager
 import org.octavius.form.ControlResultData
-import org.octavius.form.ForeignKey
-import org.octavius.form.SaveOperation
-import org.octavius.form.TableRelation
+import org.octavius.database.ForeignKey
+import org.octavius.database.SaveOperation
+import org.octavius.database.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 

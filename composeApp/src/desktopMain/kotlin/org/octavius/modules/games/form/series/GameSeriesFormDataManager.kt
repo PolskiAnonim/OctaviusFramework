@@ -1,8 +1,8 @@
 package org.octavius.modules.games.form.series
 
 import org.octavius.form.ControlResultData
-import org.octavius.form.SaveOperation
-import org.octavius.form.TableRelation
+import org.octavius.database.SaveOperation
+import org.octavius.database.TableRelation
 import org.octavius.form.component.FormDataManager
 
 class GameSeriesFormDataManager : FormDataManager() {

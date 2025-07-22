@@ -1,6 +1,5 @@
 package org.octavius.database
 
-import org.octavius.form.ColumnInfo
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 /**

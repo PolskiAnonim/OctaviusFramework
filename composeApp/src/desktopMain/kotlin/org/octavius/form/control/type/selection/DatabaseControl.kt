@@ -1,7 +1,7 @@
 package org.octavius.form.control.type.selection
 
 import org.octavius.database.DatabaseManager
-import org.octavius.form.ColumnInfo
+import org.octavius.database.ColumnInfo
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase

@@ -1,6 +1,5 @@
 package org.octavius.database
 
-import org.octavius.form.ColumnInfo
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
 

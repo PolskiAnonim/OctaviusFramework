@@ -1,7 +1,6 @@
 package org.octavius.util
 
-import java.util.*
-
+import java.util.Locale
 
 object Converters {
     fun snakeToCamelCase(snakeStr: String, firstLarge: Boolean = false): String {
