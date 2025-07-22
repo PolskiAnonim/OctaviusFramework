@@ -29,6 +29,9 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp",
+    ":feature-asian-media",
+    ":feature-settings",
+    ":feature-games",
     ":form-engine",
     ":report-engine",
     ":navigation",

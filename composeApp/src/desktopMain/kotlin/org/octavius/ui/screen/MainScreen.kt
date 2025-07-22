@@ -18,11 +18,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import org.octavius.modules.asian.ui.AsianMediaTab
 import org.octavius.modules.games.ui.GameTab
-import org.octavius.modules.settings.ui.SettingsTab
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.AppTabBar
 import org.octavius.navigation.ScreenContent
 import org.octavius.notifier.LocalNotifier
+import org.octavius.modules.settings.ui.SettingsTab
 import org.octavius.ui.component.SnackbarManager
 
 /**

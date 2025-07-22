@@ -1,8 +1,8 @@
 package org.octavius.modules.games.ui
 
 import androidx.compose.runtime.Composable
-import octavius.composeapp.generated.resources.Res
-import octavius.composeapp.generated.resources.game_icon
+import octavius.feature_games.generated.resources.Res
+import octavius.feature_games.generated.resources.game_icon
 import org.jetbrains.compose.resources.painterResource
 import org.octavius.localization.Translations
 import org.octavius.navigation.Screen

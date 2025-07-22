@@ -1,8 +1,8 @@
 package org.octavius.modules.settings.ui
 
 import androidx.compose.runtime.Composable
-import octavius.composeapp.generated.resources.Res
-import octavius.composeapp.generated.resources.settings_icon
+import octavius.feature_settings.generated.resources.Res
+import octavius.feature_settings.generated.resources.settings_icon
 import org.jetbrains.compose.resources.painterResource
 import org.octavius.localization.Translations
 import org.octavius.navigation.Screen

@@ -33,6 +33,9 @@ kotlin {
             implementation(project(":ui-kit"))
             implementation(project(":form-engine"))
             implementation(project(":report-engine"))
+            implementation(project(":feature-games"))
+            implementation(project(":feature-settings"))
+            implementation(project(":feature-asian-media"))
             implementation(compose.desktop.currentOs)
         }
     }
