@@ -28,7 +28,8 @@ dependencyResolutionManagement {
     }
 }
 
-include(":composeApp",
+include(
+    ":desktop-app",
     ":feature-asian-media",
     ":feature-settings",
     ":feature-games",
