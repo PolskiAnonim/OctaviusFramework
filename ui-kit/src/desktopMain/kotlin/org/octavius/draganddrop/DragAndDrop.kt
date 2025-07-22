@@ -1,4 +1,4 @@
-package org.octavius.util
+package org.octavius.draganddrop
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draganddrop.DragAndDropEvent

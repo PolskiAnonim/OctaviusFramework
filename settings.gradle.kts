@@ -29,6 +29,8 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp",
+    ":form-engine",
+    ":report-engine",
     ":navigation",
     ":ui-kit",
     ":core"

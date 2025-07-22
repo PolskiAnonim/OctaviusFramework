@@ -31,6 +31,8 @@ kotlin {
             implementation(project(":core"))
             implementation(project(":navigation"))
             implementation(project(":ui-kit"))
+            implementation(project(":form-engine"))
+            implementation(project(":report-engine"))
             implementation(compose.desktop.currentOs)
         }
     }

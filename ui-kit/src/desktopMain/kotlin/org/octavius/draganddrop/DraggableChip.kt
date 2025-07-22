@@ -1,4 +1,4 @@
-package org.octavius.ui.component
+package org.octavius.draganddrop
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.draganddrop.dragAndDropSource
@@ -30,7 +30,6 @@ import androidx.compose.ui.draganddrop.DragAndDropTransferable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
-import org.octavius.util.extractTransferData
 import java.awt.datatransfer.StringSelection
 
 object ChipConstants {

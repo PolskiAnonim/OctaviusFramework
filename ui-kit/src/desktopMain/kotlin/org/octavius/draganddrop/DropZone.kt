@@ -1,4 +1,4 @@
-package org.octavius.ui.component
+package org.octavius.draganddrop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.unit.dp
-import org.octavius.util.extractTransferData
 
 object DropZoneConstants {
     val dropZoneHeight = 40.dp

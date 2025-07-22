@@ -20,9 +20,9 @@ import org.octavius.domain.SortDirection
 import org.octavius.localization.Translations
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
-import org.octavius.ui.component.DraggableChip
-import org.octavius.ui.component.DropZone
-import org.octavius.ui.component.DropZoneConstants
+import org.octavius.draganddrop.DraggableChip
+import org.octavius.draganddrop.DropZone
+import org.octavius.draganddrop.DropZoneConstants
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
