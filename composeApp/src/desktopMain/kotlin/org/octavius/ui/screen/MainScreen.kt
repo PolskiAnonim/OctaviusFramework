@@ -22,7 +22,7 @@ import org.octavius.modules.settings.ui.SettingsTab
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.AppTabBar
 import org.octavius.navigation.ScreenContent
-import org.octavius.ui.component.LocalSnackbarManager
+import org.octavius.notifier.LocalNotifier
 import org.octavius.ui.component.SnackbarManager
 
 /**
@@ -67,7 +67,7 @@ object MainScreen {
 
         if (navState == null) return
 
-        CompositionLocalProvider(LocalSnackbarManager provides snackbarManager) {
+        CompositionLocalProvider(LocalNotifier provides snackbarManager) {
             val snackbarHostState = remember { SnackbarHostState() }
             snackbarManager.HandleSnackbar(snackbarHostState)
 

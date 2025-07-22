@@ -29,6 +29,8 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(project(":core"))
+            implementation(project(":navigation"))
+            implementation(project(":ui-kit"))
             implementation(compose.desktop.currentOs)
         }
     }

@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Translations
 import org.octavius.navigation.Screen
-import org.octavius.ui.component.LocalSnackbarManager
+import org.octavius.notifier.LocalNotifier
 
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę
@@ -29,7 +29,7 @@ abstract class FormScreen(
      */
     @Composable
     override fun Content() {
-        val snackbarManager = LocalSnackbarManager.current
+        val notifier = LocalNotifier.current
         val scrollState = rememberScrollState()
 
         Column(
@@ -60,10 +60,10 @@ abstract class FormScreen(
             ActionButtons(
                 onSave = {
                     if (formHandler.onSaveClicked()) {
-                        snackbarManager.showSnackbar(Translations.get("form.actions.savedSuccessfully"))
+                        notifier.showMessage(Translations.get("form.actions.savedSuccessfully"))
                         onSaveSuccess()
                     } else {
-                        snackbarManager.showSnackbar(Translations.get("form.actions.containsErrors"))
+                        notifier.showMessage(Translations.get("form.actions.containsErrors"))
                     }
                 },
                 onCancel = {

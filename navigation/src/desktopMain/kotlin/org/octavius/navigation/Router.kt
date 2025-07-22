@@ -1,12 +1,5 @@
 package org.octavius.navigation
 
-import org.octavius.modules.asian.ui.AsianMediaReportScreen
-import org.octavius.modules.asian.ui.AsianMediaTab
-import org.octavius.modules.games.ui.GameReportScreen
-import org.octavius.modules.games.ui.GameTab
-import org.octavius.modules.settings.ui.SettingsScreen
-import org.octavius.modules.settings.ui.SettingsTab
-
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -33,7 +26,7 @@ data class AppNavigationState(
  *
  * ## Architektura
  *
- * - **Zakładki**: Główne sekcje aplikacji (Asian Media, Games, Settings)
+ * - **Zakładki**: Główne sekcje aplikacji
  * - **Stosy nawigacji**: Każda zakładka ma własny stos ekranów z możliwością nawigacji w przód/tył
  * - **Reaktywny stan**: UI obserwuje zmiany stanu przez `StateFlow`
  * - **Bezpieczeństwo**: Zabezpieczenia przed nieprawidłowym stanem (np. cofanie z ekranu głównego)
@@ -42,7 +35,7 @@ data class AppNavigationState(
  *
  * ### Przełączanie zakładek
  * ```kotlin
- * AppRouter.switchToTab(1u) // Przejdź do zakładki Games (index 1)
+ * AppRouter.switchToTab(1u) // Przejdź do zakładki o indexie  1
  * ```
  *
  * ### Nawigacja do nowego ekranu

@@ -3,16 +3,16 @@ package org.octavius.ui.component
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
+import org.octavius.notifier.Notifier
 
 /**
  * Globalny menedżer powiadomień snackbar używany w całej aplikacji.
  * 
  * Zapewnia centralizowane zarządzanie wyświetlaniem komunikatów snackbar
  * z możliwością wywołania z dowolnego miejsca w aplikacji przez CompositionLocal.
- * 
- * @see LocalSnackbarManager
+ *
  */
-class SnackbarManager {
+class SnackbarManager: Notifier {
     private val _snackbarMessage = mutableStateOf("")
     private val _showSnackbar = mutableStateOf(false)
     
@@ -27,7 +27,7 @@ class SnackbarManager {
      * 
      * @param message Tekst komunikatu do wyświetlenia
      */
-    fun showSnackbar(message: String) {
+    override fun showMessage(message: String) {
         _snackbarMessage.value = message
         _showSnackbar.value = true
     }
@@ -53,19 +53,4 @@ class SnackbarManager {
             }
         }
     }
-}
-
-/**
- * CompositionLocal umożliwiający dostęp do globalnego SnackbarManager.
- * 
- * Użycie:
- * ```kotlin
- * val snackbarManager = LocalSnackbarManager.current
- * snackbarManager.showSnackbar("Komunikat")
- * ```
- * 
- * @throws IllegalStateException gdy SnackbarManager nie został dostarczony
- */
-val LocalSnackbarManager = compositionLocalOf<SnackbarManager> { 
-    error("SnackbarManager not provided") 
 }

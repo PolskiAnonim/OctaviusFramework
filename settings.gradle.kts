@@ -29,5 +29,7 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp",
+    ":navigation",
+    ":ui-kit",
     ":core"
 )
