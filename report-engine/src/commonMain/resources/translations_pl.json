@@ -1,0 +1,95 @@
+{
+  "filter": {
+    "enum": {
+      "excludeSelected": "Wyklucz zaznaczone",
+      "includeSelected": "Uwzględnij zaznaczone",
+      "selectValues": "Wybierz wartości",
+      "selectionMode": "Tryb wyboru:"
+    },
+    "general": {
+      "active": "Filtr aktywny",
+      "clear": "Wyczyść filtr",
+      "label": "Filtr:"
+    },
+    "list": {
+      "all": "Wszystkie elementy",
+      "any": "Dowolny element"
+    },
+    "mode": "Tryb filtrowania listy",
+    "null": {
+      "exclude": "Wyklucz",
+      "ignore": "Ignoruj",
+      "include": "Dołącz",
+      "values": "Wartości puste:"
+    },
+    "number": {
+      "equals": "Równe",
+      "from": "Od",
+      "greaterEqual": "Większe lub równe",
+      "greaterThan": "Większe niż",
+      "lessEqual": "Mniejsze lub równe",
+      "lessThan": "Mniejsze niż",
+      "notEquals": "Różne od",
+      "range": "Zakres",
+      "to": "Do",
+      "value": "Wartość"
+    },
+    "string": {
+      "caseSensitive": "Uwzględnij wielkość liter",
+      "contains": "Zawiera",
+      "endsWith": "Kończy się na",
+      "exact": "Dokładnie",
+      "notContains": "Nie zawiera",
+      "startsWith": "Zaczyna się od",
+      "value": "Wartość"
+    }
+  },
+  "report": {
+    "actions": {
+      "edit": "Edytuj",
+      "menuDescription": "Opcje"
+    },
+    "column": {
+      "boolean": {
+        "false": "Nie",
+        "true": "Tak"
+      }
+    },
+    "columns": {
+      "activeSorting": "Aktywne sortowania:",
+      "ascending": "Rosnąco",
+      "columns": "Kolumny",
+      "descending": "Malejąco",
+      "dragToReorder": "Przeciągnij aby zmienić kolejność",
+      "hideColumn": "Ukryj kolumnę",
+      "showColumn": "Pokaż kolumnę",
+      "sorting": "Sortowanie"
+    },
+    "configuration": {
+      "configuration": {
+        "many": "Konfiguracje raportu",
+        "one": "Konfiguracja raportu"
+      },
+      "defaultConfig": "Domyślna",
+      "description": "Opis (opcjonalny)",
+      "errorSaving": "Błąd podczas zapisywania konfiguracji",
+      "management": "Zarządzanie konfiguracjami",
+      "name": "Nazwa konfiguracji",
+      "nameRequired": "Nazwa jest wymagana",
+      "noSavedConfigurations": "Brak zapisanych konfiguracji",
+      "overwriteWarning": "Uwaga! Nadpisujesz istniejącą konfigurację",
+      "saveConfiguration": "Zapisz konfigurację",
+      "saveCurrent": "Zapisz obecną konfigurację",
+      "savedConfigurations": "Zapisane konfiguracje:",
+      "setAsDefault": "Ustaw jako domyślną"
+    },
+    "management": {
+      "columnManagement": "Zarządzanie kolumnami"
+    }
+  },
+  "search": {
+    "clear": "Wyczyść",
+    "placeholder": "Szukaj...",
+    "search": "Szukaj"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "action": {
+    "add": "Dodaj",
+    "cancel": "Anuluj",
+    "close": "Zamknij",
+    "load": "Wczytaj",
+    "overwrite": "Nadpisz",
+    "remove": "Usuń",
+    "save": "Zapisz"
+  },
+  "app": {
+    "name": "Octavius"
+  },
+  "expandable": {
+    "collapse": "Zwiń",
+    "expand": "Rozwiń"
+  },
+
+  "navigation": {
+    "back": "Wstecz"
+  },
+  "pagination": {
+    "nextPage": "Następna strona",
+    "of": "z",
+    "page": "Strona",
+    "previousPage": "Poprzednia strona",
+    "size": "Rozmiar:"
+  },
+  "tabs": {
+    "asianMedia": "Azjatyckie",
+    "games": "Gry",
+    "settings": "Ustawienia"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "games": {
+    "form": {
+      "atmosphereRating": "Ocena atmosfery (1-10)",
+      "basicInfo": "Podstawowe informacje",
+      "category": {
+        "one": "Kategoria",
+        "few": "Kategorie"
+      },
+      "characters": "Postacie",
+      "distinctiveAntagonist": "Charakterystyczny antagonista",
+      "distinctiveCharacters": "Charakterystyczne postacie",
+      "distinctiveProtagonist": "Charakterystyczny protagonista",
+      "editGame": "Edytuj grę",
+      "editSeries": "Edytuj serię",
+      "gameplayRating": "Ocena rozgrywki (1-10)",
+      "newGame": "Nowa gra",
+      "newSeries": "Nowa seria",
+      "playCount": "Liczba przejść",
+      "playTime": "Czas gry",
+      "playTimeHours": "Czas gry (godziny)",
+      "ratings": "Oceny",
+      "series": "Seria",
+      "status": "Status",
+      "storyRating": "Ocena fabuły (1-10)",
+      "visibleCharacterSection": "Widoczna sekcja postaci"
+    },
+    "general": {
+      "gameName": "Nazwa",
+      "language": "Język",
+      "publicationType": "Typ publikacji",
+      "series": "Seria",
+      "status": "Status",
+      "titles": "Tytuły"
+    },
+    "report": {
+      "newGame": "Nowa gra",
+      "newSeries": "Nowa seria",
+      "title": "Gry"
+    },
+    "series": {
+      "basicInfo": "Informacje o serii",
+      "name": "Nazwa serii"
+    },
+    "status": {
+      "endless": "Gra bez końca",
+      "notPlaying": "Nie gram",
+      "played": "Grałem",
+      "playing": "Gram",
+      "toPlay": "Do zagrania"
+    },
+    "validation": {
+      "duplicatedSeries": "Seria o tej nazwie już istnieje"
+    }
+  }
+}

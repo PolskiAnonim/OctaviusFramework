@@ -1,31 +1,43 @@
 # Octavius Framework
 
-Aplikacja desktopowa w Kotlin Compose Multiplatform do śledzenia azjatyckich mediów (powieści, manga, manhwa) i gier.
+Aplikacja desktopowa w Kotlin Compose Multiplatform do zarządzania i śledzenia azjatyckich mediów (powieści, manga, manhwa) oraz gier. Aplikacja wykorzystuje własne frameworki formularzy i raportów.
 
-## Funkcje
+## ✨ Kluczowe funkcje
 
-- **Zarządzanie publikacjami azjatyckimi**: Śledzenie powieści, mangi, manhw
-- **Zarządzanie grami**: Organizacja kolekcji gier z seriami i metadanymi
-- **Zaawansowane formularze**: Własny system formularzy z walidacją i automatyczną obsługą bazy danych
-- **Raporty**: Tabele z filtrowaniem, sortowaniem i konfigurowalnymi kolumnami
-- **Interfejs po polsku**: Pełna lokalizacja z obsługą form liczby mnogiej
+### 📚 Zarządzanie kolekcjami
+- **Publikacje azjatyckie**: Kompleksowe śledzenie powieści, mangi, manhw z postępem czytania
+- **Gry**: Organizacja kolekcji gier z seriami, platformami i metadanymi
 
-## Technologie
+### 🚀 Zaawansowane frameworki
+- **System formularzy**: Własny silnik z prostymi kontrolkami, kontrolkami wyboru, sekcjami i kontrolką sekcji powtarzalnej
+- **System raportów**: Dynamiczne tabele z filtrowaniem, sortowaniem, zarządzaniem kolumnami
+- **Nawigacja**: Centralny router z zarządzaniem stosami dla każdej zakładki
+- **Walidacja**: Wielopoziomowa walidacja pól i reguł biznesowych
 
-- **Kotlin Multiplatform** + **Compose Multiplatform**
-- **PostgreSQL** z trzema schematami (public, asian_media, games)
-- **Spring JDBC** + **HikariCP**
-- **Material 3**
+### 🎨 Nowoczesny interfejs
+- **Material 3**: Pełne wsparcie Material Design 3
+- **Drag & Drop**: Zaawansowane przesuwanie elementów
+- **Lokalizacja**: Pełna lokalizacja z obsługą form liczby mnogiej
 
-## Uruchamianie
+## 🛠️ Stack technologiczny
 
-### Wymagania
-- JDK 24+
-- PostgreSQL 17+
-- Baza danych `novels_games` ze schematem z `baza.sql`
+### Główne Technologie
+- **Kotlin Multiplatform**
+- **Compose Multiplatform**
+- **PostgreSQL**
+- **Spring JDBC**
+- **HikariCP**
 
-### Konfiguracja
-Utwórz plik `composeApp/.env`:
+## 🚀 Uruchamianie
+
+### Wymagania systemowe
+- **JDK 24+**
+- **PostgreSQL 17+**
+- **Baza danych** `novels_games` ze schematem z `baza.sql`
+
+### Konfiguracja środowiska
+
+Utwórz plik `desktop-app/.env`:
 ```env
 DB_URL=jdbc:postgresql://localhost:5430/novels_games
 DB_USERNAME=postgres
@@ -38,53 +50,112 @@ LANGUAGE=pl
 
 ### Budowanie i uruchamianie
 
-Na WSL:
+**WSL/Windows:**
 ```bash
 source ~/.bashrc
 ./gradlew1 build
 ./gradlew1 run
 ```
 
-Standardowo:
+**Standardowe środowiska:**
 ```bash
 ./gradlew build
 ./gradlew run
 ```
 
-## Architektura
+### Walidacja tłumaczeń
+```bash
+./gradlew validateTranslations
+```
 
-### Baza danych
-- Multi-schema PostgreSQL (public, asian_media, games)
-- Automatyczne mapowanie typów PostgreSQL na Kotlin
-- Zaawansowana obsługa złożonych typów (arrays, enums, composite types)
+## 🏗️ Architektura
 
-### System formularzy
-Własny framework formularzy z:
-- Deklaratywnymi schematami
-- Walidacją
-- Automatyczną translacją na operacje bazodanowe
-- Różnymi typami kontrolek (primitive, selection, collection, layout)
-
-### Wzorzec domenowy
-Każda encja ma:
-- Model domeny (Game.kt, Publication.kt)
-- FormDataManager (ładowanie danych, operacje zapisu)
-- FormHandler (logika biznesowa)
-- FormSchemaBuilder (definicja UI)
-- FormValidator (walidacja)
-- System raportów (tabele z filtrowaniem)
-
-## Struktura projektu
+### Struktura modułowa
 
 ```
-composeApp/src/desktopMain/kotlin/org/octavius/
-├── app/          # Punkt wejścia
-├── config/       # Konfiguracja
-├── database/     # Warstwa bazy danych
-├── domain/       # Modele domeny
-├── form/         # System formularzy
-├── modules/      # Moduły funkcjonalne
-├── report/       # System raportów
-├── ui/           # Komponenty UI i motywy
-└── util/         # Narzędzia
+Octavius/
+├──  desktop-app/           # Główna aplikacja i punkt wejścia
+├──  core/                  # Fundamenty: database, domain, config
+├──  form-engine/           # Framework formularzy
+├──  report-engine/         # Framework raportów  
+├──  navigation/            # System nawigacji
+├──  ui-kit/                # Współdzielone komponenty UI
+├──  feature-asian-media/   # Moduł publikacji azjatyckich
+├──  feature-games/         # Moduł gier
+└──  feature-settings/      # Moduł ustawień
 ```
+
+### 🔧 System formularzy (form-engine)
+
+Zaawansowany framework zorientowany na dane:
+
+**Typy kontrolek:**
+- **Primitive**: String, Integer, Double, Boolean
+- **Selection/Dropdown**: Enum, Database
+- **Collection**: StringList (dynamiczne tablice)
+- **Container**: Section (grupowanie)
+- **Repeatable**: Dynamiczne zarządzanie wierszami
+
+**Zaawansowane funkcje:**
+- **Dependencies**: Kontrolki mogą się pokazywać/ukrywać na podstawie innych wartości
+- **Actions**: Automatyczne akcje przy zmianie wartości
+- **Validation**: Wielopoziomowa walidacja z regułami biznesowymi
+
+### 📊 System raportów (report-engine)
+
+Dynamiczne tabele z pełną konfiguracją:
+
+**Funkcje:**
+- **Zarządzanie kolumnami**: Drag & drop, pokazywanie/ukrywanie kolumn, zmiana kolejności
+- **Filtry**: Specyficzne dla typu (string, number, enum, boolean)
+- **Sortowanie**: Wielokolumnowe z zachowaniem stanu
+- **Paginacja**: Efektywne ładowanie danych
+- **Konfiguracja**: Zapisywanie/ładowanie układów tabel
+
+### 🧭 System nawigacji
+
+Centralny router
+
+```kotlin
+AppRouter (Singleton) -> AppNavigationState -> Tab Stacks -> Screens
+```
+
+**Kluczowe cechy:**
+- **Oddzielny stos na każdą zakładkę**: Każda zakładka ma niezależną historię nawigacji
+- **Globalny dostęp**: Funkcje nawigacji dostępne z każdego miejsca
+
+### 🗄️ Warstwa bazy danych
+
+**TypeRegistry** - Automatyczne skanowanie schematów PostgreSQL:
+- Mapowanie typów PostgreSQL na klasy Kotlin
+- Obsługa ENUM, COMPOSITE i ARRAY
+- Wsparcie dla wielu schematów (public, asian_media, games)
+
+**Komponenty:**
+- **DatabaseManager**: Singleton z HikariCP pool
+- **DatabaseFetcher**: Zaawansowane operacje SELECT
+- **DatabaseUpdater**: Transakcyjne operacje UPDATE/INSERT/DELETE
+- **RowMappers**: Automatyczna konwersja ResultSet na obiekty Kotlin
+
+## 📁 Wzorzec domenowy
+
+Każda encja biznesowa następuje konsekwentny wzorzec:
+
+```kotlin
+modules/[domain]/
+├── form/
+│   ├── [Entity]FormDataManager.kt    # Operacje bazodanowe
+│   ├── [Entity]FormSchemaBuilder.kt  # Definicja struktury formularza
+│   └── [Entity]FormValidator.kt      # Reguły walidacji
+├── ui/
+│   ├── [Entity]FormScreen.kt         # UI formularza
+│   ├── [Entity]ReportScreen.kt       # UI raportu
+│   └── [Entity]Tab.kt                # Zakładka główna
+└── [Entity]ReportStructureBuilder.kt # Definicja raportu
+```
+
+## 🌍 System lokalizacji
+
+- **Tłumaczenia oparte o pliki JSON**: `translations_pl.json` w każdym module
+- **Obsługa liczby mnogiej**
+- **Walidacja**: Automatyczne sprawdzanie użycia kluczy tłumaczeń/task `validateTranslations`

@@ -1,0 +1,33 @@
+{
+  "form": {
+    "actions": {
+      "containsErrors": "Formularz zawiera błędy",
+      "errorsLabel": "Błędy:",
+      "itemLabel": "Element {0}",
+      "savedSuccessfully": "Formularz został zapisany pomyślnie"
+    },
+    "dropdown": {
+      "noResults": "Brak wyników",
+      "noSelection": "Brak wyboru",
+      "selectOption": "Wybierz opcję"
+    },
+    "stringList": {
+      "itemPlaceholder": "Wprowadź tekst..."
+    }
+  },
+  "validation": {
+    "duplicateInRow": "Duplikat wartości w wierszu {0}",
+    "invalidFormat": "Nieprawidłowy format",
+    "itemMaxLength": "Element {0}: Maksymalna długość to {1} znaków",
+    "itemMinLength": "Element {0}: Minimalna długość to {1} znaków",
+    "itemPatternError": "Element {0}: {1}",
+    "maxDecimalPlaces": "Maksymalnie {0} miejsc po przecinku",
+    "maxItems": "Maksymalnie {0} elementów",
+    "maxLength": "Maksymalna długość to {0} znaków",
+    "maxValue": "Wartość musi być mniejsza lub równa {0}",
+    "minItems": "Wymagane minimum {0} elementów",
+    "minLength": "Minimalna długość to {0} znaków",
+    "minValue": "Wartość musi być większa lub równa {0}",
+    "multipleOf": "Wartość musi być wielokrotnością {0}"
+  }
+}
