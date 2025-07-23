@@ -1,0 +1,25 @@
+{
+  "settings": {
+    "api": {
+      "columns": {
+        "apiKey": "Klucz API",
+        "enabled": "Włączona",
+        "endpointUrl": "URL Endpoint",
+        "lastSync": "Ostatnia synchronizacja",
+        "name": "Nazwa",
+        "port": "Port"
+      },
+      "description": "Zarządzaj integracjami z zewnętrznymi API",
+      "title": "Integracje API"
+    },
+    "database": {
+      "description": "Konfiguracja połączenia z bazą danych",
+      "title": "Ustawienia bazy danych"
+    },
+    "language": {
+      "description": "Zmień język interfejsu aplikacji",
+      "title": "Język aplikacji"
+    },
+    "title": "Ustawienia"
+  }
+}

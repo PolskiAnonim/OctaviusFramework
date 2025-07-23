@@ -56,6 +56,3 @@ compose.desktop {
         }
     }
 }
-
-// Apply translation validation tasks
-apply(from = "../gradle/translation-validation.gradle.kts")

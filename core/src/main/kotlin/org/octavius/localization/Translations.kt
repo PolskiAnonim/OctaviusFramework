@@ -62,29 +62,67 @@ object Translations {
      * obiekt JSON aby zapobiec crashom aplikacji.
      */
     init {
+        translations = loadTranslations()
+    }
+
+    private fun loadTranslations(): JsonObject {
         val languageCode = EnvConfig.language
+        val fileName = "translations_$languageCode.json"
+        var combinedJson = JsonObject(emptyMap())
 
         try {
-            val fileName ="translations_$languageCode.json"
-            val jsonString = this::class.java.classLoader.getResource(fileName)!!.readText()
-            translations = json.parseToJsonElement(jsonString)
+            // Używamy getResources (w liczbie mnogiej), aby znaleźć wszystkie pasujące pliki w classpath
+            val resourceUrls = Thread.currentThread().contextClassLoader.getResources(fileName)
+
+            for (url in resourceUrls) {
+                val jsonString = url.readText()
+                val jsonElement = json.parseToJsonElement(jsonString)
+
+                if (jsonElement is JsonObject) {
+                    // Łączymy nowo wczytany JSON z już istniejącym
+                    combinedJson = mergeJsonObjects(combinedJson, jsonElement)
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            // W przypadku błędu, ustawiamy pusty obiekt JSON, by uniknąć crashy
-            translations = JsonObject(emptyMap())
+            // W razie błędu zwracamy to, co udało się załadować do tej pory, lub pusty obiekt
+            return combinedJson.ifEmpty { JsonObject(emptyMap()) }
         }
+        return combinedJson
+    }
+
+    /**
+     * Rekursywnie łączy dwa obiekty JSON.
+     * Jeśli klucz istnieje w obu obiektach i wartością jest kolejny obiekt,
+     * są one również łączone. W przeciwnym razie wartość z `source` nadpisuje `target`.
+     */
+    private fun mergeJsonObjects(target: JsonObject, source: JsonObject): JsonObject {
+        val result = target.toMutableMap()
+
+        source.forEach { (key, sourceValue) ->
+            val targetValue = target[key]
+
+            // Jeśli oba klucze wskazują na obiekty JSON, połącz je rekursywnie
+            if (targetValue is JsonObject && sourceValue is JsonObject) {
+                result[key] = mergeJsonObjects(targetValue, sourceValue)
+            } else {
+                // W przeciwnym razie, wartość ze źródła (później załadowanego modułu) wygrywa
+                result[key] = sourceValue
+            }
+        }
+        return JsonObject(result)
     }
 
     /**
      * Pobiera tłumaczenie dla podanego klucza z opcjonalnymi parametrami.
-     * 
+     *
      * Obsługuje zagnieżdżone klucze using dot notation (np. "navigation.back").
      * Parametry w szablonie są oznaczone jako {0}, {1}, {2} itp.
-     * 
+     *
      * @param key Klucz tłumaczenia w formacie dot notation
      * @param args Parametry do wstawienia w szablon
      * @return Przetłumaczony i sformatowany tekst, lub oryginalny klucz jeśli nie znaleziono tłumaczenia
-     * 
+     *
      * Przykłady:
      * ```kotlin
      * Translations.get("navigation.back") // "Powrót"

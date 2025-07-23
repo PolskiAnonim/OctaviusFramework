@@ -16,7 +16,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         val hasDuplicates = titles.size != titles.toSet().size
 
         if (hasDuplicates) {
-            errorManager.addFieldError("titles", Translations.get("validation.duplicateTitles"))
+            errorManager.addFieldError("titles", Translations.get("asianMedia.form.duplicateTitles"))
         }
 
         return !hasDuplicates
@@ -36,7 +36,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
             "title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}", params)
 
         if (count > 0L) {
-            errorManager.addGlobalError(Translations.get("validation.titlesAlreadyExist"))
+            errorManager.addGlobalError(Translations.get("asianMedia.form.titlesAlreadyExist"))
         }
 
         return count == 0L

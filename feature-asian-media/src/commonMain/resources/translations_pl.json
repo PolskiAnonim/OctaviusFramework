@@ -1,0 +1,46 @@
+{
+  "asianMedia": {
+    "form": {
+      "chapterCount": "Liczba rozdziałów",
+      "duplicateTitles": "Wykryto duplikaty w tytułach",
+      "editTitle": "Edytuj tytuł",
+      "newTitle": "Nowy tytuł",
+      "originalCompleted": "Oryginał ukończony",
+      "originalLanguage": "Język oryginału",
+      "publicationType": "Typ publikacji",
+      "publications": "Publikacje",
+      "readingStatus": "Status czytania",
+      "titleInfo": "Informacje o tytule",
+      "titles": "Tytuły",
+      "titlesAlreadyExist": "Tytuły już istnieją w bazie danych",
+      "trackProgress": "Śledzić postęp?",
+      "translatedChapters": "Przetłumaczone rozdziały",
+      "translatedVolumes": "Przetłumaczone tomy",
+      "volumeCount": "Liczba tomów"
+    },
+    "publicationLanguage": {
+      "chinese": "Chiński",
+      "japanese": "Japoński",
+      "korean": "Koreański"
+    },
+    "publicationType": {
+      "lightNovel": "Light Novel",
+      "manga": "Manga",
+      "manhua": "Manhua",
+      "manhwa": "Manhwa",
+      "publishedNovel": "Published Novel",
+      "webNovel": "Web Novel",
+      "webtoon": "Webtoon"
+    },
+    "readingStatus": {
+      "completed": "Ukończone",
+      "notReading": "Nie czytam",
+      "reading": "Czytam",
+      "toRead": "Do przeczytania"
+    },
+    "report": {
+      "newTitle": "Nowy tytuł",
+      "title": "Azjatyckie media"
+    }
+  }
+}

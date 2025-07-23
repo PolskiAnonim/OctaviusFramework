@@ -30,13 +30,13 @@ enum class NumberFilterDataType: EnumWithFormatter<NumberFilterDataType> {
 
     override fun toDisplayString(): String {
         return when(this) {
-            Equals -> Translations.get("filter.string.equals")
-            NotEquals -> Translations.get("filter.string.notEquals")
-            LessThan -> Translations.get("filter.string.lessThan")
-            LessEquals -> Translations.get("filter.string.lessEqual")
-            GreaterThan -> Translations.get("filter.string.greaterThan")
-            GreaterEquals -> Translations.get("filter.string.greaterEqual")
-            Range -> Translations.get("filter.string.range")
+            Equals -> Translations.get("filter.number.equals")
+            NotEquals -> Translations.get("filter.number.notEquals")
+            LessThan -> Translations.get("filter.number.lessThan")
+            LessEquals -> Translations.get("filter.number.lessEqual")
+            GreaterThan -> Translations.get("filter.number.greaterThan")
+            GreaterEquals -> Translations.get("filter.number.greaterEqual")
+            Range -> Translations.get("filter.number.range")
         }
     }
 }
