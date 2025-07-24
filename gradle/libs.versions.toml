@@ -5,19 +5,26 @@ kotlin = "2.2.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.8.1"
 kotlinx-datetime = "0.7.0"
+# core
 postgres = "42.7.7"
 hikari = "6.3.0"
 spring-jdbc = "7.0.0-M6"
+# api-server
+ktor = "3.2.2"
 [libraries]
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+# core
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
 postgres = { group = "org.postgresql", name = "postgresql", version.ref = "postgres" }
 spring-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "spring-jdbc" }
+#api server
+ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 [plugins]
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

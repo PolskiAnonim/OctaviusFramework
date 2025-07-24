@@ -40,6 +40,7 @@ kotlin {
             implementation(project(":feature-games"))
             implementation(project(":feature-settings"))
             implementation(project(":feature-asian-media"))
+            implementation(project(":api-server"))
             implementation(compose.desktop.currentOs)
         }
     }

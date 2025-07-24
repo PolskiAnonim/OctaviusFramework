@@ -21,4 +21,16 @@ interface FeatureModule {
      * @return Obiekt `Tab` lub `null`, jeśli moduł nie ma reprezentacji w głównym menu.
      */
     fun getTab(): Tab?
+
+    /**
+     * Zwraca listę modułów API, które ten feature chce zarejestrować w serwerze Ktor.
+     * @return Lista obiektów `ApiModule` lub `null`, jeśli moduł nie udostępnia API.
+     */
+    fun getApiModules(): List<ApiModule>?
+
+    /**
+     * Zwraca listę fabryk ekranów, które mogą być tworzone na żądanie (np. przez API).
+     * @return Lista obiektów `ScreenFactory` lub `null`, jeśli moduł nie ma ekranów dostępnych z zewnątrz.
+     */
+    fun getScreenFactories(): List<ScreenFactory>?
 }

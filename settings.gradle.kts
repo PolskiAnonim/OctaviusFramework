@@ -35,6 +35,7 @@ include(
     ":feature-games",
     ":form-engine",
     ":report-engine",
+    ":api-server",
     ":navigation",
     ":ui-kit",
     ":core"

@@ -36,6 +36,9 @@ kotlin {
             implementation(libs.postgres)
             implementation(libs.hikari)
             implementation(libs.spring.jdbc)
+
+            implementation(libs.ktor.server.core)
+            implementation(libs.ktor.server.netty)
         }
     }
 }
