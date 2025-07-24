@@ -1,4 +1,8 @@
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import java.nio.charset.StandardCharsets
+import java.util.jar.JarFile
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -53,6 +57,73 @@ compose.desktop {
 //            windows {
 //                iconFile.set(project.file("icon.ico"))
 //            }
+        }
+    }
+}
+
+// Rekursywna funkcja do głębokiego łączenia obiektów JSON
+fun mergeJsonMaps(target: MutableMap<String, Any?>, source: Map<String, Any?>) {
+    for ((key, sourceValue) in source) {
+        val targetValue = target[key]
+        if (sourceValue is Map<*, *> && targetValue is Map<*, *>) {
+            @Suppress("UNCHECKED_CAST")
+            val newTarget = (targetValue as Map<String, Any?>).toMutableMap()
+            @Suppress("UNCHECKED_CAST")
+            mergeJsonMaps(newTarget, sourceValue as Map<String, Any?>)
+            target[key] = newTarget
+        } else {
+            target[key] = sourceValue
+        }
+    }
+}
+
+val mergeTranslations by tasks.registering {
+    val outputDir = project.layout.buildDirectory.dir("generated/translations")
+    outputs.dir(outputDir)
+
+    doLast {
+        val gson = Gson()
+        val mapType = object : TypeToken<Map<String, Any?>>() {}.type
+        val mergedByLang = mutableMapOf<String, MutableMap<String, Any?>>()
+        val runtimeClasspath = project.configurations.getByName("desktopRuntimeClasspath")
+
+        runtimeClasspath.forEach { file ->
+            if (file.isFile && file.extension == "jar") {
+                JarFile(file).use { jar ->
+                    jar.entries().asSequence().forEach { entry ->
+                        if (!entry.isDirectory && entry.name.startsWith("translations_") && entry.name.endsWith(".json")) {
+                            val lang = entry.name.substringAfter("translations_").substringBefore(".json")
+                            val content = jar.getInputStream(entry).readBytes().toString(Charsets.UTF_8)
+                            if (content.isNotBlank()) {
+                                val sourceMap: Map<String, Any?> = gson.fromJson(content, mapType)
+                                val targetMap = mergedByLang.getOrPut(lang) { mutableMapOf() }
+                                mergeJsonMaps(targetMap, sourceMap)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        outputDir.get().asFile.deleteRecursively()
+        outputDir.get().asFile.mkdirs()
+
+        mergedByLang.forEach { (lang, mergedMap) ->
+            val finalJsonString = gson.toJson(mergedMap)
+            val outputFile = outputDir.get().file("translations_$lang.json").asFile
+            outputFile.writeText(finalJsonString, StandardCharsets.UTF_8)
+        }
+    }
+}
+
+tasks.withType<Jar>().configureEach {
+    if (name == "desktopJar") {
+        dependsOn(mergeTranslations)
+        // Po prostu dodajemy nasze scalone pliki do JAR-a.
+        // Ponieważ ta akcja jest dodawana na końcu, powinna nadpisać pliki
+        // o tych samych nazwach, które zostały dodane wcześniej z modułów.
+        from(mergeTranslations.map { it.outputs.files }) {
+            into("/")
         }
     }
 }
