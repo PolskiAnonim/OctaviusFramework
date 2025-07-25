@@ -1,9 +1,9 @@
 package org.octavius.report.configuration
 
 import org.octavius.database.DatabaseManager
+import org.octavius.database.SaveOperation
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
-import org.octavius.database.SaveOperation
 
 class ReportConfigurationManager {
 

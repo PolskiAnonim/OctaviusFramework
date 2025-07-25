@@ -3,6 +3,8 @@ package org.octavius.navigation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import org.octavius.contract.Screen
+import org.octavius.contract.Tab
 
 /**
  * Stan całej nawigacji w aplikacji.

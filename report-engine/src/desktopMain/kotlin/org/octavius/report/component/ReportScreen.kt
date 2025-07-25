@@ -10,7 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
-import org.octavius.navigation.Screen
+import org.octavius.contract.Screen
 import org.octavius.report.ReportEvent
 import org.octavius.report.configuration.ReportConfigurationDialog
 import org.octavius.report.management.ColumnManagementPanel

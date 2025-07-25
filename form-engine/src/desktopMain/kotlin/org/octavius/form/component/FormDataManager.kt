@@ -1,10 +1,10 @@
 package org.octavius.form.component
 
-import org.octavius.database.DatabaseManager
 import org.octavius.database.ColumnInfo
-import org.octavius.form.ControlResultData
+import org.octavius.database.DatabaseManager
 import org.octavius.database.SaveOperation
 import org.octavius.database.TableRelation
+import org.octavius.form.ControlResultData
 
 /**
  * Abstrakcyjna klasa zarządzająca przepływem danych w formularzach.

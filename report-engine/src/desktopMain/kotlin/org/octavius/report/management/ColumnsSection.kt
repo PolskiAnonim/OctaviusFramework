@@ -16,11 +16,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.octavius.draganddrop.ChipConstants
+import org.octavius.draganddrop.DraggableChip
 import org.octavius.localization.Translations
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
-import org.octavius.draganddrop.ChipConstants
-import org.octavius.draganddrop.DraggableChip
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

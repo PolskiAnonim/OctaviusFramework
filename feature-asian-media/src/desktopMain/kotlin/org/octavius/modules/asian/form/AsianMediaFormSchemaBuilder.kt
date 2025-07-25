@@ -1,9 +1,9 @@
 package org.octavius.modules.asian.form
 
+import org.octavius.database.ColumnInfo
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
-import org.octavius.database.ColumnInfo
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*

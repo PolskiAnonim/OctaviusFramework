@@ -10,19 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import org.octavius.modules.asian.ui.AsianMediaTab
-import org.octavius.modules.games.ui.GameTab
+import org.octavius.contract.Tab
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.AppTabBar
 import org.octavius.navigation.ScreenContent
 import org.octavius.notifier.LocalNotifier
-import org.octavius.modules.settings.ui.SettingsTab
 import org.octavius.ui.component.SnackbarManager
 
 /**
@@ -41,15 +35,6 @@ import org.octavius.ui.component.SnackbarManager
  */
 object MainScreen {
 
-    /** Lista wszystkich dostępnych zakładek w aplikacji */
-    private val tabs = listOf(
-        AsianMediaTab(), GameTab(), SettingsTab()
-    )
-
-    init {
-        AppRouter.initialize(tabs)
-    }
-
     /** Globalny menedżer powiadomień snackbar */
     val snackbarManager = SnackbarManager()
 
@@ -62,7 +47,7 @@ object MainScreen {
      * - Wyświetlanie aktywnej zakładki
      */
     @Composable
-    fun Content() {
+    fun Content(tabs: List<Tab>) {
         val navState by AppRouter.state.collectAsState()
 
         if (navState == null) return
