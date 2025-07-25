@@ -19,5 +19,5 @@ class AsianMediaTab : Tab {
 
     override val index: UShort = 0u
 
-    override fun getInitialScreen(): Screen = AsianMediaReportScreen()
+    override fun getInitialScreen(): Screen = AsianMediaReportScreen.create()
 }

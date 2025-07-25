@@ -1,10 +1,14 @@
 package org.octavius.modules.games
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import org.octavius.domain.game.GameStatus
 import org.octavius.localization.Translations
 import org.octavius.modules.games.ui.GameFormScreen
+import org.octavius.modules.games.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
+import org.octavius.report.ReportAddAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.EnumColumn
@@ -44,8 +48,21 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
                         onCancel = { AppRouter.goBack() }
                     ))
             }
-        }
-    )
+        })
 
-
+    override fun buildAddActions(): List<ReportAddAction> = listOf(
+        ReportAddAction(Translations.get("games.report.newGame"), Icons.Default.Add) {
+            AppRouter.navigateTo(
+                GameFormScreen.create(
+                    onSaveSuccess = { AppRouter.goBack() },
+                    onCancel = { AppRouter.goBack() })
+            )
+        },
+        ReportAddAction(Translations.get("games.report.newSeries"), Icons.Default.Add) {
+            AppRouter.navigateTo(
+                GameSeriesFormScreen.create(
+                    onSaveSuccess = { AppRouter.goBack() },
+                    onCancel = { AppRouter.goBack() }
+                ))
+        })
 }

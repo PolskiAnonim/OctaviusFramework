@@ -52,7 +52,7 @@ class SettingsScreen() : Screen {
                 description = Translations.get("settings.api.description"),
                 icon = Icons.Default.Api,
                 onClick = {
-                    AppRouter.navigateTo(ApiIntegrationsReportScreen())
+                    AppRouter.navigateTo(ApiIntegrationsReportScreen.create())
                 }
             )
         )

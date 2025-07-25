@@ -1,11 +1,13 @@
 package org.octavius.report.component
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,16 +20,14 @@ import org.octavius.report.ui.PaginationComponent
 import org.octavius.report.ui.ReportSearchBar
 import org.octavius.report.ui.table.ReportTable
 
-abstract class ReportScreen : Screen {
-    abstract override val title: String
-
-    abstract fun createReportStructure(): ReportStructureBuilder
-
-
+class ReportScreen(
+    override val title: String,
+    private val structureBuilder: ReportStructureBuilder
+) : Screen {
     @Composable
     private fun rememberReportHandler(): ReportHandler {
         val scope = rememberCoroutineScope()
-        val reportStructure = remember { createReportStructure().build() }
+        val reportStructure = remember { structureBuilder.build() }
 
         return remember(scope, reportStructure) {
             ReportHandler(
@@ -71,7 +71,22 @@ abstract class ReportScreen : Screen {
                         onAddMenuClick = { uiState.addMenuExpanded.value = !uiState.addMenuExpanded.value },
                         addMenuExpanded = uiState.addMenuExpanded.value,
                         onAddMenuDismiss = { uiState.addMenuExpanded.value = false },
-                        addMenuContent = { AddMenu() },
+                        addMenuContent = {
+                            val addActions = reportHandler.reportStructure.addActions
+                            addActions.forEach { action ->
+                                DropdownMenuItem(
+                                    text = { Text(action.label) },
+                                    onClick = {
+                                        action.action.invoke()
+                                        uiState.addMenuExpanded.value = false // Zamknij menu po kliknięciu
+                                    },
+                                    leadingIcon = action.icon?.let {
+                                        { Icon(it, contentDescription = action.label) }
+                                    }
+
+                                )
+                            }
+                        },
                         onConfigurationClick = { uiState.configurationDialogVisible.value = true }
                     )
                     ReportTable(state, uiState.lazyListState)
@@ -106,9 +121,4 @@ abstract class ReportScreen : Screen {
         val addMenuExpanded: MutableState<Boolean>,
         val configurationDialogVisible: MutableState<Boolean>
     )
-
-    @Composable
-    protected open fun AddMenu() {
-        Box {}
-    }
 }

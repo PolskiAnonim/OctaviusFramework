@@ -1,5 +1,8 @@
 package org.octavius.modules.asian
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Text
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
@@ -7,6 +10,7 @@ import org.octavius.localization.Translations
 import org.octavius.modules.asian.ui.AsianMediaFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
+import org.octavius.report.ReportAddAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.EnumColumn
@@ -76,6 +80,16 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
                     )
                 )
             }
+        }
+    )
+
+    override fun buildAddActions(): List<ReportAddAction> = listOf(
+        ReportAddAction(Translations.get("asianMedia.report.newTitle"), Icons.Default.Add) {
+            AppRouter.navigateTo(
+                AsianMediaFormScreen.create(
+                    onSaveSuccess = { AppRouter.goBack() },
+                    onCancel = { AppRouter.goBack() }
+                ))
         }
     )
 }

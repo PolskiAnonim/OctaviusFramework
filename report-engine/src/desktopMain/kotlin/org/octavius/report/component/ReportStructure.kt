@@ -1,6 +1,7 @@
 package org.octavius.report.component
 
 import org.octavius.report.Query
+import org.octavius.report.ReportAddAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.special.ActionColumn
@@ -16,7 +17,8 @@ class ReportStructure(
     val query: Query,
     private val initColumns: Map<String, ReportColumn>,
     val reportName: String,
-    val rowActions: List<ReportRowAction> = emptyList()
+    val rowActions: List<ReportRowAction> = emptyList(),
+    val addActions: List<ReportAddAction> = emptyList()
 ) {
     lateinit var columns: Map<String, ReportColumn>
 
@@ -76,7 +78,8 @@ abstract class ReportStructureBuilder {
             query = buildQuery(),
             initColumns = buildColumns(),
             reportName = getReportName(),
-            rowActions = buildRowActions()
+            rowActions = buildRowActions(),
+            addActions = buildAddActions()
         )
     }
 
@@ -100,4 +103,10 @@ abstract class ReportStructureBuilder {
      * Domyślnie zwraca pustą listę, ponieważ nie każdy raport ma akcje.
      */
     open fun buildRowActions(): List<ReportRowAction> = emptyList()
+
+    /**
+     * Buduje i zwraca listę akcji dla menu "Dodaj".
+     * Domyślnie zwraca pustą listę.
+     */
+    open fun buildAddActions(): List<ReportAddAction> = emptyList()
 }
