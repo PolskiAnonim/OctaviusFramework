@@ -22,7 +22,7 @@ class GameReportScreen() : ReportScreen() {
             text = { Text(Translations.get("games.report.newGame")) },
             onClick = {
                 AppRouter.navigateTo(
-                    GameFormScreen(
+                    GameFormScreen.create(
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }
                     ))
@@ -38,7 +38,7 @@ class GameReportScreen() : ReportScreen() {
             text = { Text(Translations.get("games.report.newSeries")) },
             onClick = {
                 AppRouter.navigateTo(
-                    GameSeriesFormScreen(
+                    GameSeriesFormScreen.create(
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }
                     ))

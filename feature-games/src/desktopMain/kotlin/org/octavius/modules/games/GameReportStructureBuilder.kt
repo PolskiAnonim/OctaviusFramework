@@ -38,7 +38,7 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
             val id = rowData["id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
-                    GameFormScreen(
+                    GameFormScreen.create(
                         entityId = id,
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }

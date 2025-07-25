@@ -7,18 +7,22 @@ import org.octavius.modules.games.form.series.GameSeriesFormDataManager
 import org.octavius.modules.games.form.series.GameSeriesFormSchemaBuilder
 import org.octavius.modules.games.form.series.GameSeriesFormValidator
 
-class GameSeriesFormScreen(
-    entityId: Int? = null,
-    onSaveSuccess: () -> Unit = {},
-    onCancel: () -> Unit = {}
-) : FormScreen(onSaveSuccess, onCancel) {
-    override val title =
-        if (entityId == null) Translations.get("games.form.newSeries") else Translations.get("games.form.editSeries")
+class GameSeriesFormScreen {
 
-    override val formHandler = FormHandler(
-        entityId = entityId,
-        formSchemaBuilder = GameSeriesFormSchemaBuilder(),
-        formDataManager = GameSeriesFormDataManager(),
-        formValidator = GameSeriesFormValidator()
-    )
+    companion object {
+        fun create(
+            entityId: Int? = null, onSaveSuccess: () -> Unit = {}, onCancel: () -> Unit = {}
+        ): FormScreen {
+            val title =
+                if (entityId == null) Translations.get("games.form.newSeries") else Translations.get("games.form.editSeries")
+
+            val formHandler = FormHandler(
+                entityId = entityId,
+                formSchemaBuilder = GameSeriesFormSchemaBuilder(),
+                formDataManager = GameSeriesFormDataManager(),
+                formValidator = GameSeriesFormValidator()
+            )
+            return FormScreen(title, formHandler, onSaveSuccess, onCancel)
+        }
+    }
 }

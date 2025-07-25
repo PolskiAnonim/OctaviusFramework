@@ -17,13 +17,12 @@ import org.octavius.notifier.LocalNotifier
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę
  */
-abstract class FormScreen(
+class FormScreen(
+    override val title: String,
+    val formHandler: FormHandler,
     private val onSaveSuccess: () -> Unit = {},
     private val onCancel: () -> Unit = {}
 ) : Screen {
-    abstract override val title: String
-    protected abstract val formHandler: FormHandler
-
     /**
      * Tworzenie wyglądu formularza
      */

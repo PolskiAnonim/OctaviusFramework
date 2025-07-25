@@ -22,7 +22,7 @@ class AsianMediaReportScreen() : ReportScreen() {
             text = { Text(Translations.get("asianMedia.report.newTitle")) },
             onClick = {
                 AppRouter.navigateTo(
-                    AsianMediaFormScreen(
+                    AsianMediaFormScreen.create(
                     onSaveSuccess = { AppRouter.goBack() },
                     onCancel = { AppRouter.goBack() }
                 ))
