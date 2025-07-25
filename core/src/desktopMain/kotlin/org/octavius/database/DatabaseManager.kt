@@ -2,7 +2,7 @@ package org.octavius.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.octavius.config.EnvConfig
+import org.octavius.config.Config
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
@@ -81,9 +81,9 @@ object DatabaseManager {
      */
     init {
         val config = HikariConfig().apply {
-            this.jdbcUrl = EnvConfig.dbUrl
-            this.username = EnvConfig.dbUsername
-            this.password = EnvConfig.dbPassword
+            this.jdbcUrl = Config.dbUrl
+            this.username = Config.dbUsername
+            this.password = Config.dbPassword
             maximumPoolSize = 10
             this.connectionInitSql = "SET search_path TO public, asian_media, games"
         }

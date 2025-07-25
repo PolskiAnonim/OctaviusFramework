@@ -1,6 +1,6 @@
 package org.octavius.database
 
-import org.octavius.config.EnvConfig
+import org.octavius.config.Config
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 /**
@@ -92,13 +92,13 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
     /**
      * Skanuje wszystkie klasy w pakiecie domenowym i mapuje je na pełne ścieżki.
      * 
-     * Przeszukuje pakiet zdefiniowany w [EnvConfig.baseDomainPackage] używając ClassLoader
+     * Przeszukuje pakiet zdefiniowany w [Config.baseDomainPackage] używając ClassLoader
      * i tworzy mapowanie nazw klas na ich pełne ścieżki pakietowe.
      * 
      * @throws Exception Jeśli wystąpi błąd podczas skanowania (błąd jest logowany, ale nie przerywa działania)
      */
     private fun scanDomainClasses() {
-        val baseDomainPackage = EnvConfig.baseDomainPackage
+        val baseDomainPackage = Config.baseDomainPackage
         try {
             // Używamy ClassLoader do znalezienia wszystkich klas w pakiecie domain
             val classLoader = Thread.currentThread().contextClassLoader
@@ -200,7 +200,7 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
                 t.typname, e.enumsortorder
         """
 
-        val params = mapOf("schemas" to EnvConfig.dbSchemas.toTypedArray())
+        val params = mapOf("schemas" to Config.dbSchemas.toTypedArray())
         val enumValues = namedParameterJdbcTemplate.query(query, params) { rs, _ ->
             EnumTypeInfo(rs.getString("enum_type"), rs.getString("enum_value"))
         }
@@ -244,7 +244,7 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
                 t.typname, a.attnum
         """
 
-        val params = mapOf("schemas" to EnvConfig.dbSchemas.toTypedArray())
+        val params = mapOf("schemas" to Config.dbSchemas.toTypedArray())
         val attributes = namedParameterJdbcTemplate.query(query, params) { rs, _ ->
             CompositeAttributeInfo(
                 rs.getString("type_name"),
@@ -295,7 +295,7 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
      * @return Pełna ścieżka klasy lub domyślna ścieżka w pakiecie domenowym
      */
     fun findClassPath(className: String): String? {
-        return classPathMap[className] ?: "${EnvConfig.baseDomainPackage}.$className"
+        return classPathMap[className] ?: "${Config.baseDomainPackage}.$className"
     }
 
     /**

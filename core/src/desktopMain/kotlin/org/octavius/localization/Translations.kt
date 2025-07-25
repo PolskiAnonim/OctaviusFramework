@@ -1,7 +1,7 @@
 package org.octavius.localization
 
 import kotlinx.serialization.json.*
-import org.octavius.config.EnvConfig
+import org.octavius.config.Config
 
 /**
  * System lokalizacji aplikacji oparty na plikach JSON.
@@ -66,7 +66,7 @@ object Translations {
     }
 
     private fun loadTranslations(): JsonObject {
-        val languageCode = EnvConfig.language
+        val languageCode = Config.language
         val fileName = "translations_$languageCode.json"
         var combinedJson = JsonObject(emptyMap())
 

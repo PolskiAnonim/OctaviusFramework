@@ -35,19 +35,6 @@ Aplikacja desktopowa w Kotlin Compose Multiplatform do zarządzania i śledzenia
 - **PostgreSQL 17+**
 - **Baza danych** `novels_games` ze schematem z `baza.sql`
 
-### Konfiguracja środowiska
-
-Utwórz plik `desktop-app/.env`:
-```env
-DB_URL=jdbc:postgresql://localhost:5430/novels_games
-DB_USERNAME=postgres
-DB_PASSWORD=1234
-DB_MAX_POOL_SIZE=10
-BASE_DOMAIN_PACKAGE=org.octavius.domain
-DB_SCHEMAS=public,asian_media,games
-LANGUAGE=pl
-```
-
 ### Budowanie i uruchamianie
 
 **WSL/Windows:**
