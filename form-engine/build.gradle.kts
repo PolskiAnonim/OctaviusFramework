@@ -25,7 +25,6 @@ kotlin {
         desktopMain.dependencies {
             implementation(project(":core"))
             implementation(project(":ui-kit"))
-            implementation(project(":navigation"))
         }
     }
 }

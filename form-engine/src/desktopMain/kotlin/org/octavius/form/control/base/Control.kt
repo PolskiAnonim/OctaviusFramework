@@ -174,6 +174,10 @@ abstract class Control<T : Any>(
     protected fun DisplayFieldErrors(controlName: String) {
         val fieldErrors = errorManager.getFieldErrors(controlName)
 
+        val formatError = errorManager.getFormatError(controlName)
+
+        formatError?.let { error -> RenderFieldError(error) }
+
         fieldErrors.forEach { error ->
             RenderFieldError(error)
         }
@@ -192,18 +196,17 @@ abstract class Control<T : Any>(
         val isRequired = validator.isControlRequired(this, controlName)
 
         AnimatedVisibility(visible = isVisible) {
+            @Suppress("UNCHECKED_CAST")
+            val typedState = controlState as ControlState<T>
             if (hasStandardLayout) {
                 Column {
                     RenderNormalLabel(label, isRequired)
-
-                    @Suppress("UNCHECKED_CAST")
-                    Display(controlName, controlState as ControlState<T>, isRequired)
+                    Display(controlName, typedState, isRequired)
 
                     DisplayFieldErrors(controlName)
                 }
             } else {
-                @Suppress("UNCHECKED_CAST")
-                Display(controlName, controlState as ControlState<T>, isRequired)
+                Display(controlName, typedState, isRequired)
             }
         }
     }

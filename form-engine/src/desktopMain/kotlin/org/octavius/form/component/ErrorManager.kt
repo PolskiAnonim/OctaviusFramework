@@ -10,6 +10,9 @@ class ErrorManager {
     private val _fieldErrors = mutableStateMapOf<String, List<String>>()
     val fieldErrors = _fieldErrors
 
+    private val _formatErrors = mutableStateMapOf<String, String>()
+    val formatErrors = _formatErrors
+
     fun addGlobalError(error: String) {
         _globalErrors.value = _globalErrors.value + error
     }
@@ -67,5 +70,21 @@ class ErrorManager {
 
     fun getFieldErrors(fieldName: String): List<String> {
         return _fieldErrors[fieldName] ?: emptyList()
+    }
+
+    fun setFormatError(fieldName: String, error: String?) {
+        if (error.isNullOrBlank()) {
+            _formatErrors.remove(fieldName)
+        } else {
+            _formatErrors[fieldName] = error
+        }
+    }
+
+    fun getFormatError(fieldName: String): String? {
+        return _formatErrors[fieldName]
+    }
+
+    fun hasFormatErrors(): Boolean {
+        return _formatErrors.isNotEmpty()
     }
 }

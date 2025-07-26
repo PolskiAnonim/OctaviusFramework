@@ -36,38 +36,27 @@ class RepeatableValidator(
      *
      * @param controlName nazwa kontrolki (potrzebna do budowania hierarchicznych nazw)
      * @param state stan kontrolki powtarzalnej zawierający listę wierszy
-     * @param control referencja do kontrolki (RepeatableControl)
-     * @param controls mapa wszystkich kontrolek
-     * @param states mapa wszystkich stanów formularza
      */
-    override fun validate(
-        controlName: String,
-        state: ControlState<*>,
-        control: Control<*>
-    ) {
-        val states = formState.getAllStates()
-        formSchema.getAllControls()
-
+    override fun validateSpecific(controlName: String, state: ControlState<*>) {
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
 
-        @Suppress("UNCHECKED_CAST")
-        val repeatableControl = control as RepeatableControl
+        val control = formSchema.getControl(controlName) as? RepeatableControl ?: return
+        val allStates = formState.getAllStates()
 
-        // Najpierw waliduj kontrolki wewnątrz wierszy
+        // 1. Walidacja kontrolek-dzieci
         for (row in rows) {
-            for ((fieldName, fieldControl) in repeatableControl.rowControls) {
+            for ((fieldName, fieldControl) in control.rowControls) {
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldState = states[hierarchicalName]
-                if (fieldState != null) {
-                    fieldControl.validateControl(hierarchicalName, fieldState)
-                }
+                val fieldState = allStates[hierarchicalName]
+
+                fieldControl.validateControl(hierarchicalName, fieldState)
             }
         }
 
+        // 2. Walidacja reguł listy
+        val errors = mutableListOf<String>()
         validationOptions?.let { options ->
-            val errors = mutableListOf<String>()
-
             // Sprawdź minimalną liczbę elementów
             options.minItems?.let { minItems ->
                 if (rows.size < minItems) {
@@ -85,29 +74,29 @@ class RepeatableValidator(
             // Sprawdź unikalność
             if (options.uniqueFields.isNotEmpty()) {
                 val seenValues = mutableSetOf<List<Any?>>()
-
                 for ((index, row) in rows.withIndex()) {
+                    // Bierzemy pod uwagę tylko wiersze, które nie mają błędów w polach unikalności
                     val uniqueKey = options.uniqueFields.map { field ->
                         val hierarchicalName = "$controlName[${row.id}].$field"
-                        states[hierarchicalName]?.value?.value
+                        allStates[hierarchicalName]?.value?.value
+                    }
+
+                    // Sprawdzamy, czy którekolwiek z pól klucza jest puste - takie klucze ignorujemy
+                    if (uniqueKey.any { it == null || (it is String && it.isBlank()) }) {
+                        continue
                     }
 
                     if (!seenValues.add(uniqueKey)) {
                         errors.add(Translations.get("validation.duplicateInRow", index + 1))
+                        // Nie przerywamy, aby znaleźć wszystkie duplikaty, ale możemy dodać błąd tylko raz
+                        // Można to udoskonalić, by wskazywać wszystkie zduplikowane wiersze. Na razie `break` jest OK.
                         break
                     }
                 }
             }
-
-            errorManager.setFieldErrors(controlName, errors)
-            return
         }
 
-        // Wyczyść błąd jeśli walidacja przeszła
-        errorManager.setFieldErrors(controlName, emptyList())
-    }
-
-    override fun validateSpecific(controlName: String, state: ControlState<*>) {
-        // Ta metoda nie jest używana - używamy nadpisanej validate() z dodatkowymi parametrami
+        // Ustawiamy błędy dla GŁÓWNEJ kontrolki
+        errorManager.setFieldErrors(controlName, errors)
     }
 }
