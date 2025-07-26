@@ -6,10 +6,15 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import org.octavius.contract.ApiModule
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 
 class EmbeddedServer(private val apiModules: List<ApiModule>) {
 
     val server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+        install(ContentNegotiation) {
+            json()
+        }
         module(apiModules)
     }
 
