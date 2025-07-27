@@ -14,6 +14,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.contract.Tab
 
+/**
+ * Komponent UI wyświetlający główny pasek zakładek aplikacji.
+ *
+ * Renderuje listę zakładek, podświetlając aktualnie wybraną. Umożliwia nawigację
+ * między głównymi sekcjami aplikacji.
+ *
+ * @param tabs Lista obiektów [Tab], które mają być wyświetlone.
+ * @param currentState Aktualny stan nawigacji, używany do określenia, która zakładka jest aktywna.
+ * @param onTabSelected Funkcja zwrotna wywoływana po kliknięciu zakładki, przekazująca jej indeks.
+ */
 @Composable
 fun AppTabBar(
     tabs: List<Tab>,

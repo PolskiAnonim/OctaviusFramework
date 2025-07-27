@@ -16,6 +16,16 @@ import androidx.compose.ui.unit.dp
 import org.octavius.contract.Screen
 import org.octavius.localization.Translations
 
+/**
+ * Komponent wyświetlający zawartość bieżącego ekranu ze stosu nawigacji.
+ *
+ * Zarządza renderowaniem aktualnego ekranu,
+ * który zawiera tytuł oraz przycisk "wstecz" (widoczny tylko, gdy na stosie
+ * znajduje się więcej niż jeden ekran).
+ *
+ * @param screenStack Aktualny stos ekranów. Ostatni element na liście jest traktowany jako aktywny.
+ * @param onBack Funkcja zwrotna wywoływana po naciśnięciu przycisku "wstecz".
+ */
 @Composable
 fun ScreenContent(
     screenStack: List<Screen>,
