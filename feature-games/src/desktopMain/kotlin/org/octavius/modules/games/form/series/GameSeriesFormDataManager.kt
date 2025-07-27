@@ -1,9 +1,9 @@
 package org.octavius.modules.games.form.series
 
-import org.octavius.database.DatabaseStep
-import org.octavius.database.DatabaseValue
-import org.octavius.database.TableRelation
+import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.DatabaseValue
 import org.octavius.form.ControlResultData
+import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 
 class GameSeriesFormDataManager : FormDataManager() {

@@ -1,6 +1,6 @@
 package org.octavius.form.control.type.primitive
 
-import org.octavius.database.ColumnInfo
+import org.octavius.data.contract.ColumnInfo
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntegerValidation

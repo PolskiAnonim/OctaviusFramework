@@ -2,7 +2,6 @@ package org.octavius.modules.asian
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Text
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType

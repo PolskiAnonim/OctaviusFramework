@@ -1,7 +1,8 @@
 package org.octavius.report.component
 
-import org.octavius.database.DatabaseFetcher
-import org.octavius.database.DatabaseManager
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.octavius.data.contract.DataFetcher
 import org.octavius.domain.SortDirection
 import org.octavius.report.Query
 import org.octavius.report.ReportPaginationState
@@ -10,8 +11,8 @@ import org.octavius.report.filter.data.FilterData
 
 class ReportDataManager(
     val reportStructure: ReportStructure
-) {
-
+): KoinComponent {
+    val fetcher: DataFetcher by inject()
     private fun <T : FilterData> getQueryFragment(
         columnName: String,
         filter: Filter<T>,
@@ -67,7 +68,6 @@ class ReportDataManager(
 
     private fun updatePagination(
         reportState: ReportState,
-        fetcher: DatabaseFetcher,
         sourceSql: String,
         filterClause: String,
         params: MutableMap<String, Any>
@@ -101,10 +101,8 @@ class ReportDataManager(
         val filterClause = buildFilterClause(reportState, params)
         val orderClause = buildOrderClause(reportState)
 
-        val fetcher = DatabaseManager.getFetcher()
-
         // Najpierw zaktualizuj paginację
-        val paginationState = updatePagination(reportState, fetcher, query.sql, filterClause, params)
+        val paginationState = updatePagination(reportState, query.sql, filterClause, params)
 
         // Następnie pobierz dane dla aktualnej strony
         val offset = reportState.pagination.currentPage * reportState.pagination.pageSize

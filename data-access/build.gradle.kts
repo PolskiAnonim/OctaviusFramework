@@ -4,6 +4,11 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":core"))
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.postgres)
+    implementation(libs.hikari)
+    implementation(libs.kotlin.reflect)
+    implementation(libs.spring.jdbc)
 }

@@ -25,10 +25,13 @@ kotlin {
 
         desktopMain.dependencies {
             implementation(project(":core"))
-            implementation(project(":navigation"))
-            implementation(project(":ui-kit"))
+            implementation(project(":ui-core"))
             implementation(project(":form-engine"))
             implementation(project(":report-engine"))
+            implementation(project.dependencies.platform(libs.koin.bom))
+
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
     }
 }

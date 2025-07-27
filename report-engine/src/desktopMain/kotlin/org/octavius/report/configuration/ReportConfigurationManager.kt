@@ -1,18 +1,20 @@
 package org.octavius.report.configuration
 
-import org.octavius.database.DatabaseManager
-import org.octavius.database.DatabaseStep
-import org.octavius.database.DatabaseValue
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.DatabaseValue
+import org.octavius.data.contract.TransactionManager
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
 
-class ReportConfigurationManager {
+class ReportConfigurationManager: KoinComponent {
 
+    val fetcher: DataFetcher by inject()
+    val transactionManager: TransactionManager by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
         return try {
-            val fetcher = DatabaseManager.getFetcher()
-            val transactionManager = DatabaseManager.getTransactionManager()
-
             val existingConfigId = fetcher.fetchField(
                 table = "public.report_configurations",
                 field = "id",
@@ -58,7 +60,6 @@ class ReportConfigurationManager {
 
     fun loadDefaultConfiguration(reportName: String): ReportConfiguration? {
         return try {
-            val fetcher = DatabaseManager.getFetcher()
             val params = mapOf("report_name" to reportName)
 
             val result = fetcher.fetchRowOrNull(
@@ -79,7 +80,6 @@ class ReportConfigurationManager {
 
     fun listConfigurations(reportName: String): List<ReportConfiguration> {
         return try {
-            val fetcher = DatabaseManager.getFetcher()
             val params = mapOf("report_name" to reportName)
 
             val results = fetcher.fetchList(
@@ -99,8 +99,6 @@ class ReportConfigurationManager {
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
         return try {
-            val transactionManager = DatabaseManager.getTransactionManager()
-
             val databaseStep = DatabaseStep.Delete(
                 tableName = "report_configurations",
                 filter = mapOf("name" to DatabaseValue.Value(name), "report_name" to DatabaseValue.Value(reportName))

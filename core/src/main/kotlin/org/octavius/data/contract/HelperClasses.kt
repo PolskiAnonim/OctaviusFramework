@@ -1,4 +1,4 @@
-package org.octavius.database
+package org.octavius.data.contract
 
 /**
  * Abstrakcyjna reprezentacja wartości w operacjach bazodanowych.
@@ -10,7 +10,7 @@ package org.octavius.database
  * Ta abstrakcja umożliwia tworzenie złożonych transakcji z zależnościami między krokami.
  *
  * @see DatabaseStep
- * @see DatabaseTransactionManager
+ * @see TransactionManager
  */
 sealed class DatabaseValue {
     /**
@@ -50,7 +50,7 @@ sealed class DatabaseValue {
  * które mogą być użyte w kolejnych krokach transakcji.
  *
  * @see DatabaseValue
- * @see DatabaseTransactionManager.execute
+ * @see TransactionManager.execute
  */
 sealed class DatabaseStep {
     /**
@@ -121,3 +121,18 @@ sealed class DatabaseStep {
         override val returning: List<String> = emptyList()
     ) : DatabaseStep()
 }
+
+/**
+ * Identyfikator kolumny w bazie danych z pełną ścieżką tabelą.kolumna.
+ *
+ * Data class używana w systemie formularzy do precyzyjnego identyfikowania
+ * kolumn w zapytaniach z JOIN. Pozwala różnić kolumny o tej samej nazwie
+ * pochodzące z różnych tabel.
+ *
+ * @param tableName Nazwa tabeli źródłowej kolumny
+ * @param fieldName Nazwa kolumny w tabeli
+ *
+ * @see RowMappers.ColumnInfoMapper
+ * @see DatabaseFetcher.fetchEntity
+ */
+data class ColumnInfo(val tableName: String, val fieldName: String)

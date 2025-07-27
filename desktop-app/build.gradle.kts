@@ -33,6 +33,7 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(project(":core"))
+            implementation(project(":data-access"))
             implementation(project(":ui-core"))
             implementation(project(":form-engine"))
             implementation(project(":report-engine"))
@@ -41,6 +42,15 @@ kotlin {
             implementation(project(":feature-asian-media"))
             implementation(project(":api-server"))
             implementation(compose.desktop.currentOs)
+
+            implementation(project.dependencies.platform(libs.koin.bom))
+
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.slf4j)
+
+            // Implementacja loggera
+            implementation(libs.slf4j.simple)
         }
     }
 }

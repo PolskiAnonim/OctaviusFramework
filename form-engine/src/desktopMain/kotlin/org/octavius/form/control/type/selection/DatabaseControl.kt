@@ -1,7 +1,9 @@
 package org.octavius.form.control.type.selection
 
-import org.octavius.database.ColumnInfo
-import org.octavius.database.DatabaseManager
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.octavius.data.contract.ColumnInfo
+import org.octavius.data.contract.DataFetcher
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
@@ -25,9 +27,11 @@ class DatabaseControl(
     actions: List<ControlAction<Int>>? = null,
 ) : DropdownControlBase<Int>(
     label, columnInfo, required, dependencies, actions
-) {
+), KoinComponent {
     override val supportSearch = true
     override val supportPagination = true
+
+    private val fetcher: DataFetcher by inject()
 
     private var cachedValue: DropdownOption<Int>? = null
 
@@ -39,8 +43,7 @@ class DatabaseControl(
 
         // Załaduj z bazy danych
         try {
-            val result = DatabaseManager.getFetcher()
-                .fetchField(relatedTable, displayColumn, "id = :id", mapOf("id" to value)) as String?
+            val result = fetcher.fetchField(relatedTable, displayColumn, "id = :id", mapOf("id" to value)) as String?
 
             if (result != null) {
                 cachedValue = DropdownOption(value, result)
@@ -61,7 +64,6 @@ class DatabaseControl(
         }
 
         val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to "%$searchQuery%")
-        val fetcher = DatabaseManager.getFetcher()
         return try {
             val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize
             val results = fetcher.fetchPagedList(table = relatedTable,

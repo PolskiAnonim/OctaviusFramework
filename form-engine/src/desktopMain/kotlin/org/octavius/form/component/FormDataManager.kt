@@ -1,10 +1,12 @@
 package org.octavius.form.component
 
-import org.octavius.database.ColumnInfo
-import org.octavius.database.DatabaseManager
-import org.octavius.database.DatabaseStep
-import org.octavius.database.TableRelation
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.octavius.data.contract.ColumnInfo
+import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DatabaseStep
 import org.octavius.form.ControlResultData
+import org.octavius.form.TableRelation
 
 /**
  * Abstrakcyjna klasa zarządzająca przepływem danych w formularzach.
@@ -18,7 +20,10 @@ import org.octavius.form.ControlResultData
  * Każdy formularz musi implementować własny DataManager dostosowany
  * do specyfiki domeny i struktury bazy danych.
  */
-abstract class FormDataManager {
+abstract class FormDataManager: KoinComponent {
+
+    protected val dataFetcher: DataFetcher by inject()
+
     /**
      * Dostarcza wartości początkowe dla kontrolek formularza.
      *
@@ -70,8 +75,6 @@ abstract class FormDataManager {
             tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
         }
 
-        val databaseFetcher = DatabaseManager.getFetcher()
-
-        return databaseFetcher.fetchEntity(tables.toString(), "$mainTable.id = :id", mapOf("id" to id))
+        return dataFetcher.fetchEntity(tables.toString(), "$mainTable.id = :id", mapOf("id" to id))
     }
 }

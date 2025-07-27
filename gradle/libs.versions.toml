@@ -11,6 +11,9 @@ hikari = "6.3.0"
 spring-jdbc = "7.0.0-M6"
 # api-server
 ktor = "3.2.2"
+# koin
+koin = "4.1.0"
+slf4j = "2.0.17"
 [libraries]
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
@@ -27,6 +30,13 @@ ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "kto
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor"}
+# Koin
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
+koin-core = { module = "io.insert-koin:koin-core" }
+koin-compose = { module = "io.insert-koin:koin-compose" }
+koin-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
+
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 [plugins]
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

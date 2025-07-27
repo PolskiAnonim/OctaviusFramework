@@ -1,10 +1,9 @@
 package org.octavius.modules.asian.form
 
-import org.octavius.database.DatabaseManager
-import org.octavius.database.DatabaseStep
-import org.octavius.database.DatabaseValue
-import org.octavius.database.TableRelation
+import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.DatabaseValue
 import org.octavius.form.ControlResultData
+import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
@@ -24,7 +23,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             )
         } else {
             // Dla istniejącego, załaduj publikacje z bazy
-            val publications = DatabaseManager.getFetcher().fetchList(
+            val publications = dataFetcher.fetchList(
                 "publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id",
                 "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed",
                 "p.title_id = :title", params = mapOf("title" to loadedId),

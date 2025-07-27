@@ -37,5 +37,6 @@ include(
     ":report-engine",
     ":api-server",
     ":ui-core",
+    ":data-access",
     ":core"
 )

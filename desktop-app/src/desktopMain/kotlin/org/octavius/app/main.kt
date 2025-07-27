@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.koin.core.context.startKoin
 import org.octavius.api.server.EmbeddedServer
 import org.octavius.contract.FeatureModule
 import org.octavius.localization.Translations
@@ -20,6 +21,13 @@ import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
 
 fun main() = application {
+
+    // Uruchom Koin
+    startKoin {
+        printLogger()
+        modules(databaseModule)
+    }
+
     // Rejestrujemy wszystkie funkcjonalności aplikacji.
     val features: List<FeatureModule> = listOf(
         AsianMediaFeature,

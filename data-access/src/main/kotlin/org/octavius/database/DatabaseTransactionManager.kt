@@ -1,5 +1,8 @@
 package org.octavius.database
 
+import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.DatabaseValue
+import org.octavius.data.contract.TransactionManager
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -25,7 +28,7 @@ class DatabaseTransactionManager(
     private val transactionManager: DataSourceTransactionManager,
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
     private val parameterExpandHelper: ParameterExpandHelper
-) {
+): TransactionManager {
 
     /**
      * Wykonuje listę kroków bazodanowych w pojedynczej transakcji.
@@ -53,7 +56,7 @@ class DatabaseTransactionManager(
      * val results = DatabaseManager.getTransactionManager().execute(steps)
      * ```
      */
-    fun execute(databaseSteps: List<DatabaseStep>): Map<Int, List<Map<String, Any?>>> {
+    override fun execute(databaseSteps: List<DatabaseStep>): Map<Int, List<Map<String, Any?>>> {
         val transactionTemplate = TransactionTemplate(transactionManager)
         val allResults = mutableMapOf<Int, List<Map<String, Any?>>>()
 

@@ -1,6 +1,6 @@
 package org.octavius.modules.games.form.series
 
-import org.octavius.database.ColumnInfo
+import org.octavius.data.contract.ColumnInfo
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.type.container.SectionControl

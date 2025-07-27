@@ -1,11 +1,10 @@
 package org.octavius.modules.games.form.game
 
-import org.octavius.database.DatabaseManager
-import org.octavius.database.DatabaseStep
-import org.octavius.database.DatabaseValue
-import org.octavius.database.TableRelation
+import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.DatabaseValue
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.ControlResultData
+import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
@@ -30,7 +29,7 @@ class GameFormDataManager : FormDataManager() {
                 "categories" to emptyList<Map<String, Any?>>()
             )
         } else {
-            val dataExists = DatabaseManager.getFetcher().fetchRow(
+            val dataExists = dataFetcher.fetchRow(
                 """games g 
                     LEFT JOIN characters c ON c.game_id = g.id
                     LEFT JOIN play_time pt ON pt.game_id = g.id 
@@ -43,7 +42,7 @@ class GameFormDataManager : FormDataManager() {
             )
 
             // Załaduj kategorie dla tej gry
-            val categories = DatabaseManager.getFetcher().fetchList(
+            val categories = dataFetcher.fetchList(
                 "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id",
                 "ctg.category_id as category",
                 "ctg.game_id = :gameId",

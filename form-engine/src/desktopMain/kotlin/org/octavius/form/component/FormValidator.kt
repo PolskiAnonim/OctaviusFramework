@@ -1,5 +1,8 @@
 package org.octavius.form.component
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.octavius.data.contract.DataFetcher
 import org.octavius.form.ControlResultData
 
 /**
@@ -9,7 +12,9 @@ import org.octavius.form.ControlResultData
  *
  * Klasa może być rozszerzona dla implementacji niestandardowych reguł walidacji.
  */
-open class FormValidator() {
+open class FormValidator(): KoinComponent {
+
+    protected val dataFetcher: DataFetcher by inject()
 
     protected lateinit var formState: FormState
     protected lateinit var formSchema: FormSchema
