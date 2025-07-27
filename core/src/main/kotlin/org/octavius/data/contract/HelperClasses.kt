@@ -10,7 +10,7 @@ package org.octavius.data.contract
  * Ta abstrakcja umożliwia tworzenie złożonych transakcji z zależnościami między krokami.
  *
  * @see DatabaseStep
- * @see TransactionManager
+ * @see BatchExecutor
  */
 sealed class DatabaseValue {
     /**
@@ -50,7 +50,7 @@ sealed class DatabaseValue {
  * które mogą być użyte w kolejnych krokach transakcji.
  *
  * @see DatabaseValue
- * @see TransactionManager.execute
+ * @see BatchExecutor.execute
  */
 sealed class DatabaseStep {
     /**

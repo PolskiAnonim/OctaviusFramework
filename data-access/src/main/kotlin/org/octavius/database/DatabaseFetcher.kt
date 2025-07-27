@@ -31,7 +31,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 class DatabaseFetcher(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val rowMappers: RowMappers,
-    private val parameterExpandHelper: ParameterExpandHelper
+    private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataFetcher {
     /**
      * Formatuje wyrażenie tabelowe dla bezpiecznego użycia w SQL.
@@ -62,7 +62,7 @@ class DatabaseFetcher(
     override fun fetchCount(table: String, filter: String?, params: Map<String, Any?>): Long {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(table)}$whereClause"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, Long::class.java) ?: 0L
     }
@@ -82,7 +82,7 @@ class DatabaseFetcher(
     override fun fetchField(table: String, field: String, filter: String?, params: Map<String, Any?>): Any? {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT $field FROM ${formatTableExpression(table)}$whereClause"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.queryForObject(
             expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper()
@@ -129,7 +129,7 @@ class DatabaseFetcher(
     ): Map<String, Any?>? {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT $columns FROM ${formatTableExpression(table)}$whereClause"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
         val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
 
         return when (results.size) {
@@ -159,7 +159,7 @@ class DatabaseFetcher(
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql = "SELECT $column FROM ${formatTableExpression(table)}$whereClause$orderClause"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
     }
@@ -189,7 +189,7 @@ class DatabaseFetcher(
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql =
             "SELECT $column FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
     }
@@ -214,7 +214,7 @@ class DatabaseFetcher(
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql = "SELECT $columns FROM ${formatTableExpression(table)}$whereClause$orderClause"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
     }
@@ -246,7 +246,7 @@ class DatabaseFetcher(
         val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
         val sql =
             "SELECT $columns FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
     }
@@ -280,7 +280,7 @@ class DatabaseFetcher(
     ): Map<ColumnInfo, Any?> {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT * FROM ${formatTableExpression(tables)}$whereClause"
-        val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
         return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnInfoMapper())
             ?: emptyMap()

@@ -3,7 +3,7 @@ package org.octavius.database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.octavius.data.contract.DataFetcher
-import org.octavius.data.contract.TransactionManager
+import org.octavius.data.contract.BatchExecutor
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
@@ -20,14 +20,14 @@ class DatabaseSystem {
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
     private val datasourceTransactionManager: DataSourceTransactionManager
     private val typeRegistry: TypeRegistry
-    private val typesConverter: DatabaseToKotlinTypesConverter
+    private val typesConverter: PostgresToKotlinConverter
     private val rowMappers: RowMappers
 
-    private val parameterExpandHelper = ParameterExpandHelper()
+    private val kotlinToPostgresConverter = KotlinToPostgresConverter()
 
     // Publiczne API udostępnia INTERFEJSY
     val fetcher: DataFetcher
-    val transactionManager: TransactionManager
+    val batchExecutor: BatchExecutor
 
     init {
         val config = HikariConfig().apply {
@@ -42,13 +42,13 @@ class DatabaseSystem {
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         datasourceTransactionManager = DataSourceTransactionManager(dataSource)
         typeRegistry = TypeRegistry(namedParameterJdbcTemplate)
-        typesConverter = DatabaseToKotlinTypesConverter(typeRegistry)
+        typesConverter = PostgresToKotlinConverter(typeRegistry)
         rowMappers = RowMappers(typesConverter)
 
-        val concreteTransactionManager = DatabaseTransactionManager(datasourceTransactionManager, namedParameterJdbcTemplate, parameterExpandHelper)
-        val concreteFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers, parameterExpandHelper)
+        val concreteTransactionManager = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, kotlinToPostgresConverter)
+        val concreteFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
 
-        transactionManager = concreteTransactionManager
+        batchExecutor = concreteTransactionManager
         fetcher = concreteFetcher
     }
 }

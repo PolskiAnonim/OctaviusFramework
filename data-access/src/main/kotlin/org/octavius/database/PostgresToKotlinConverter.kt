@@ -28,7 +28,7 @@ import kotlin.time.Instant
  * @param typeRegistry Rejestr typów PostgreSQL zawierający metadane o typach
  * @see TypeRegistry
  */
-class DatabaseToKotlinTypesConverter(private val typeRegistry: TypeRegistry) {
+class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
 
 
     /**

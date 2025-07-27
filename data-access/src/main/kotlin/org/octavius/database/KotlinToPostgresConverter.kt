@@ -26,7 +26,7 @@ import kotlin.reflect.full.memberProperties
 /**
  * Wynik ekspansji zapytania SQL z parametrami.
  *
- * Kontener przechowujący wynik przetworzenia zapytania SQL przez [ParameterExpandHelper].
+ * Kontener przechowujący wynik przetworzenia zapytania SQL przez [KotlinToPostgresConverter].
  * Zawiera zmodyfikowane zapytanie SQL oraz mapę parametrów gotowych do użycia
  * w prepared statements.
  *
@@ -65,7 +65,7 @@ data class ExpandedQuery(
  * // Wynik: "SELECT * FROM users WHERE id = ANY(ARRAY[:ids_p1, :ids_p2, :ids_p3]) AND status = :status"
  * ```
  */
-class ParameterExpandHelper {
+class KotlinToPostgresConverter {
 
     /**
      * Główna metoda ekspansji parametrów w zapytaniu SQL.

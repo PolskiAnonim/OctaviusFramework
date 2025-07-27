@@ -6,7 +6,7 @@ package org.octavius.data.contract
  * Abstrakcja nad mechanizmem wykonywania operacji CUD (Create, Update, Delete),
  * pozwalająca na grupowanie wielu kroków w jedną, spójną transakcję.
  */
-interface TransactionManager {
+interface BatchExecutor {
     /**
      * Wykonuje listę kroków bazodanowych w pojedynczej, atomowej transakcji.
      *

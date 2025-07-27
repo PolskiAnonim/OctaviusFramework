@@ -2,7 +2,7 @@ package org.octavius.form.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.TransactionManager
+import org.octavius.data.contract.BatchExecutor
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 
@@ -28,7 +28,7 @@ class FormHandler(
     private val formSchema: FormSchema = formSchemaBuilder.build()
 
     // Wstrzykujemy transaction manager
-    private val transactionManager: TransactionManager by inject()
+    private val batchExecutor: BatchExecutor by inject()
 
     init {
         setupFormReferences()
@@ -115,7 +115,7 @@ class FormHandler(
         val databaseOperations = formDataManager.processFormData(rawFormData, entityId)
 
         return try {
-            transactionManager.execute(databaseOperations)
+            batchExecutor.execute(databaseOperations)
             true
         } catch (e: Exception) {
             errorManager.addGlobalError("Błąd zapisu do bazy danych: ${e.message}")

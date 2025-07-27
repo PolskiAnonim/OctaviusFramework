@@ -5,14 +5,14 @@ import org.koin.core.component.inject
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
-import org.octavius.data.contract.TransactionManager
+import org.octavius.data.contract.BatchExecutor
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
 
 class ReportConfigurationManager: KoinComponent {
 
     val fetcher: DataFetcher by inject()
-    val transactionManager: TransactionManager by inject()
+    val batchExecutor: BatchExecutor by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
         return try {
             val existingConfigId = fetcher.fetchField(
@@ -50,7 +50,7 @@ class ReportConfigurationManager: KoinComponent {
                 )
             }
 
-            transactionManager.execute(listOf(databaseStep))
+            batchExecutor.execute(listOf(databaseStep))
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -104,7 +104,7 @@ class ReportConfigurationManager: KoinComponent {
                 filter = mapOf("name" to DatabaseValue.Value(name), "report_name" to DatabaseValue.Value(reportName))
             )
 
-            transactionManager.execute(listOf(databaseStep))[0]!![0]["rows_affected"] as Int > 0
+            batchExecutor.execute(listOf(databaseStep))[0]!![0]["rows_affected"] as Int > 0
         } catch (e: Exception) {
             e.printStackTrace()
             false

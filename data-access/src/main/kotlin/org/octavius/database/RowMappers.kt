@@ -26,7 +26,7 @@ import org.springframework.jdbc.core.RowMapper
  * val results = jdbcTemplate.query(sql, params, mappers.ColumnNameMapper())
  * ```
  */
-class RowMappers(private val typesConverter: DatabaseToKotlinTypesConverter) {
+class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
 
     /**
      * Mapper do konwersji ResultSet na mapę ColumnInfo.

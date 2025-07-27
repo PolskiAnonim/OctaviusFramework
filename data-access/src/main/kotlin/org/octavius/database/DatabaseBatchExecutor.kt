@@ -2,7 +2,7 @@ package org.octavius.database
 
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
-import org.octavius.data.contract.TransactionManager
+import org.octavius.data.contract.BatchExecutor
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -18,17 +18,17 @@ import org.springframework.transaction.support.TransactionTemplate
  *
  * @param transactionManager Menedżer transakcji Spring do zarządzania transakcjami CUD
  * @param namedParameterJdbcTemplate Template JDBC do wykonywania zapytań z named parameters
- * @param parameterExpandHelper Helper do ekspansji złożonych parametrów PostgreSQL
+ * @param kotlinToPostgresConverter Helper do ekspansji złożonych parametrów PostgreSQL
  *
  * @see DatabaseStep
  * @see DatabaseValue
- * @see ParameterExpandHelper
+ * @see KotlinToPostgresConverter
  */
-class DatabaseTransactionManager(
+class DatabaseBatchExecutor(
     private val transactionManager: DataSourceTransactionManager,
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
-    private val parameterExpandHelper: ParameterExpandHelper
-): TransactionManager {
+    private val kotlinToPostgresConverter: KotlinToPostgresConverter
+): BatchExecutor {
 
     /**
      * Wykonuje listę kroków bazodanowych w pojedynczej transakcji.
@@ -64,7 +64,7 @@ class DatabaseTransactionManager(
             try {
                 for ((index, operation) in databaseSteps.withIndex()) {
                     val (sql, params) = buildQuery(operation, allResults)
-                    val expanded = parameterExpandHelper.expandParametersInQuery(sql, params)
+                    val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
                     val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
                         // Używamy query, bo update z returning w Spring JDBC jest kłopotliwy
