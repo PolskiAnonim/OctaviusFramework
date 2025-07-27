@@ -18,12 +18,14 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(compose.material3)
             implementation(compose.ui)
-            // Zależności do logiki (np. StateFlow w AppRouter)
+
             implementation(libs.kotlinx.coroutines.core)
         }
 
         desktopMain.dependencies {
             implementation(project(":core"))
+            implementation(libs.ktor.server.core)
+            implementation(libs.ktor.server.netty)
         }
     }
 }

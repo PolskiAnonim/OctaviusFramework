@@ -65,8 +65,7 @@ Octavius/
 ├──  core/                  # Fundamenty: database, domain, config
 ├──  form-engine/           # Framework formularzy
 ├──  report-engine/         # Framework raportów  
-├──  navigation/            # System nawigacji
-├──  ui-kit/                # Współdzielone komponenty UI
+├──  ui-core/                # Współdzielone komponenty UI i system nawigacji
 ├──  feature-asian-media/   # Moduł publikacji azjatyckich
 ├──  feature-games/         # Moduł gier
 └──  feature-settings/      # Moduł ustawień

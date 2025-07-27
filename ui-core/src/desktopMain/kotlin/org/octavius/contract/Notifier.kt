@@ -1,4 +1,4 @@
-package org.octavius.notifier
+package org.octavius.contract
 
 import androidx.compose.runtime.staticCompositionLocalOf
 

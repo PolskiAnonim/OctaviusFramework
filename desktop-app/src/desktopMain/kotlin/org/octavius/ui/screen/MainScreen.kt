@@ -16,7 +16,7 @@ import org.octavius.contract.Tab
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.AppTabBar
 import org.octavius.navigation.ScreenContent
-import org.octavius.notifier.LocalNotifier
+import org.octavius.contract.LocalNotifier
 import org.octavius.ui.component.SnackbarManager
 
 /**

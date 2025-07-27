@@ -36,7 +36,6 @@ include(
     ":form-engine",
     ":report-engine",
     ":api-server",
-    ":navigation",
-    ":ui-kit",
+    ":ui-core",
     ":core"
 )

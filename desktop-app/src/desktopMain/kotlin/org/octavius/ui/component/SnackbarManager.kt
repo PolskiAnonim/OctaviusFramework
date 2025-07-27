@@ -3,7 +3,7 @@ package org.octavius.ui.component
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
-import org.octavius.notifier.Notifier
+import org.octavius.contract.Notifier
 
 /**
  * Globalny menedżer powiadomień snackbar używany w całej aplikacji.
