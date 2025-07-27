@@ -111,7 +111,7 @@ class FormHandler(
         val databaseOperations = formDataManager.processFormData(rawFormData, entityId)
 
         return try {
-            DatabaseManager.updateDatabase(databaseOperations)
+            DatabaseManager.getTransactionManager().execute(databaseOperations)
             true
         } catch (e: Exception) {
             errorManager.addGlobalError("Błąd zapisu do bazy danych: ${e.message}")

@@ -1,7 +1,8 @@
 package org.octavius.report.configuration
 
 import org.octavius.database.DatabaseManager
-import org.octavius.database.SaveOperation
+import org.octavius.database.DatabaseStep
+import org.octavius.database.DatabaseValue
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
 
@@ -10,7 +11,7 @@ class ReportConfigurationManager {
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
         return try {
             val fetcher = DatabaseManager.getFetcher()
-            val updater = DatabaseManager.getUpdater()
+            val transactionManager = DatabaseManager.getTransactionManager()
 
             val existingConfigId = fetcher.fetchField(
                 table = "public.report_configurations",
@@ -21,33 +22,33 @@ class ReportConfigurationManager {
 
             val configData = configuration.configuration
 
-            val dataMap: Map<String, Any?> = mapOf(
-                "name" to configuration.name,
-                "report_name" to configuration.reportName,
-                "description" to configuration.description,
-                "sort_order" to configData.sortOrder,
-                "visible_columns" to configData.visibleColumns,
-                "column_order" to configData.columnOrder,
-                "page_size" to configData.pageSize,
-                "is_default" to configuration.isDefault,
-                "filters" to configData.filters
+            val dataMap: Map<String, DatabaseValue> = mapOf(
+                "name" to DatabaseValue.Value(configuration.name),
+                "report_name" to DatabaseValue.Value(configuration.reportName),
+                "description" to DatabaseValue.Value(configuration.description),
+                "sort_order" to DatabaseValue.Value(configData.sortOrder),
+                "visible_columns" to DatabaseValue.Value(configData.visibleColumns),
+                "column_order" to DatabaseValue.Value(configData.columnOrder),
+                "page_size" to DatabaseValue.Value(configData.pageSize),
+                "is_default" to DatabaseValue.Value(configuration.isDefault),
+                "filters" to DatabaseValue.Value(configData.filters)
             )
 
-            val operation = if (existingConfigId != null) {
-                SaveOperation.Update(
-                    tableName = "public.report_configurations",
+            val databaseStep = if (existingConfigId != null) {
+                DatabaseStep.Update(
+                    tableName = "report_configurations",
                     data = dataMap,
-                    id = existingConfigId
+                    filter = mapOf("id" to DatabaseValue.Value(existingConfigId))
                 )
             } else {
-                SaveOperation.Insert(
+                DatabaseStep.Insert(
                     tableName = "public.report_configurations",
                     data = dataMap,
-                    returningId = false
+                    returning = listOf()
                 )
             }
 
-            updater.updateDatabase(listOf(operation))
+            transactionManager.execute(listOf(databaseStep))
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -98,13 +99,14 @@ class ReportConfigurationManager {
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
         return try {
-            val updater = DatabaseManager.getUpdater()
-            val sql = "DELETE FROM public.report_configurations WHERE name = :name AND report_name = :report_name"
-            val params = mapOf(
-                "name" to name,
-                "report_name" to reportName
+            val transactionManager = DatabaseManager.getTransactionManager()
+
+            val databaseStep = DatabaseStep.Delete(
+                tableName = "report_configurations",
+                filter = mapOf("name" to DatabaseValue.Value(name), "report_name" to DatabaseValue.Value(reportName))
             )
-            updater.executeUpdate(sql, params) > 0
+
+            transactionManager.execute(listOf(databaseStep))[0]!![0]["rows_affected"] as Int > 0
         } catch (e: Exception) {
             e.printStackTrace()
             false

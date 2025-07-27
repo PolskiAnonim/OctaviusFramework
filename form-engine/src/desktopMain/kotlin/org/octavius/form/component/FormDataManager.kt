@@ -2,7 +2,7 @@ package org.octavius.form.component
 
 import org.octavius.database.ColumnInfo
 import org.octavius.database.DatabaseManager
-import org.octavius.database.SaveOperation
+import org.octavius.database.DatabaseStep
 import org.octavius.database.TableRelation
 import org.octavius.form.ControlResultData
 
@@ -47,7 +47,7 @@ abstract class FormDataManager {
     abstract fun processFormData(
         formData: Map<String, ControlResultData>,
         loadedId: Int?
-    ): List<SaveOperation>
+    ): List<DatabaseStep>
 
     /**
      * Ładuje kompletne dane encji z bazy danych używając zdefiniowanych relacji.
@@ -57,6 +57,21 @@ abstract class FormDataManager {
      */
     fun loadEntityData(id: Int): Map<ColumnInfo, Any?> {
         val tableRelations = defineTableRelations()
-        return DatabaseManager.getEntityWithRelations(id, tableRelations)
+
+        if (tableRelations.isEmpty()) {
+            throw IllegalArgumentException("Lista relacji tabel nie może być pusta")
+        }
+
+        val mainTable = tableRelations.first().tableName
+        val tables = StringBuilder(mainTable)
+
+        for (i in 1 until tableRelations.size) {
+            val relation = tableRelations[i]
+            tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
+        }
+
+        val databaseFetcher = DatabaseManager.getFetcher()
+
+        return databaseFetcher.fetchEntity(tables.toString(), "$mainTable.id = :id", mapOf("id" to id))
     }
 }

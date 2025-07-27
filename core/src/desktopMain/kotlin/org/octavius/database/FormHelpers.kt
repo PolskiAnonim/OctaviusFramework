@@ -1,88 +1,39 @@
 package org.octavius.database
 
 /**
- * Identyfikuje kolumnę w bazie danych przez tabelę i nazwę pola.
+ * Identyfikator kolumny w bazie danych z pełną ścieżką tabelą.kolumna.
  *
- * @param tableName nazwa tabeli
- * @param fieldName nazwa kolumny
+ * Data class używana w systemie formularzy do precyzyjnego identyfikowania
+ * kolumn w zapytaniach z JOIN. Pozwala różnić kolumny o tej samej nazwie
+ * pochodzące z różnych tabel.
+ *
+ * @param tableName Nazwa tabeli źródłowej kolumny
+ * @param fieldName Nazwa kolumny w tabeli
+ *
+ * @see RowMappers.ColumnInfoMapper
+ * @see DatabaseFetcher.fetchEntity
  */
 data class ColumnInfo(val tableName: String, val fieldName: String)
 
 /**
- * Opisuje relację między tabelami w zapytaniach JOIN.
+ * Definicja relacji między tabelami w zapytaniach JOIN dla formularzy.
  *
- * @param tableName nazwa tabeli
- * @param joinCondition warunek JOIN (pusty dla głównej tabeli)
- * @param primaryKey nazwa kolumny klucza głównego (domyślnie "id")
+ * Data class opisująca jak tabele powinny być połączone w zapytaniach SQL
+ * generowanych przez system formularzy. Umożliwia definiowanie złożonych
+ * relacji między tabelami główną a tabelami powiązanymi.
+ *
+ * @param tableName Nazwa tabeli w relacji
+ * @param joinCondition Warunek JOIN SQL (pusty string dla tabeli głównej)
+ * @param primaryKey Nazwa kolumny klucza głównego (domyślnie "id")
+ *
+ * Przykład:
+ * ```kotlin
+ * TableRelation("users") // Tabela główna
+ * TableRelation("profiles", "LEFT JOIN profiles p ON p.user_id = users.id")
+ * ```
  */
 data class TableRelation(
     val tableName: String,
     val joinCondition: String = "",
     val primaryKey: String = "id"
-)
-
-/**
- * Sealed class reprezentująca operacje zapisu w bazie danych.
- *
- * Wszystkie operacje zawierają nazwę tabeli i mogą używać foreign key
- * do definiowania relacji między rekordami.
- */
-sealed class SaveOperation {
-    abstract val tableName: String
-    abstract val foreignKeys: List<ForeignKey>
-    /**
-     * Operacja wstawienia nowego rekordu.
-     *
-     * @param tableName nazwa tabeli
-     * @param data dane do wstawienia (klucz -> wartość)
-     * @param foreignKeys lista kluczy obcych
-     * @param returningId czy zwrócić ID nowo utworzonego rekordu
-     */
-    data class Insert(
-        override val tableName: String,
-        val data: Map<String, Any?>,
-        override val foreignKeys: List<ForeignKey> = emptyList(),
-        val returningId: Boolean = true
-    ) : SaveOperation()
-
-    /**
-     * Operacja aktualizacji istniejącego rekordu.
-     *
-     * @param tableName nazwa tabeli
-     * @param data dane do zaktualizowania
-     * @param id ID rekordu (może być null jeśli używamy foreign keys)
-     * @param foreignKeys lista kluczy obcych do identyfikacji rekordu
-     */
-    data class Update(
-        override val tableName: String,
-        val data: Map<String, Any?>,
-        val id: Int? = null,
-        override val foreignKeys: List<ForeignKey> = emptyList()
-    ) : SaveOperation()
-
-    /**
-     * Operacja usunięcia rekordu.
-     *
-     * @param tableName nazwa tabeli
-     * @param id ID rekordu do usunięcia (może być null jeśli używamy foreign keys)
-     * @param foreignKeys lista kluczy obcych do identyfikacji rekordu
-     */
-    data class Delete(
-        override val tableName: String,
-        val id: Int? = null,
-        override val foreignKeys: List<ForeignKey> = emptyList()
-    ) : SaveOperation()
-}
-
-/**
- * Reprezentuje klucz obcy w operacjach bazodanowych.
- *
- * @param columnName nazwa kolumny klucza obcego
- * @param referencedTable nazwa tabeli, do której odnosi się klucz
- * @param value wartość klucza (może być ustawiona później)
- */
-data class ForeignKey(
-    val columnName: String,
-    val referencedTable: String,
-    var value: Int? = null
 )

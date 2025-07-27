@@ -63,7 +63,7 @@ object DatabaseManager {
     private var rowMappers: RowMappers
 
     /** Komponent do wykonywania operacji UPDATE/INSERT/DELETE */
-    private var databaseUpdater: DatabaseUpdater
+    private var databaseTransactionManager: DatabaseTransactionManager
 
     /** Komponent do wykonywania operacji SELECT z zaawansowanymi funkcjami */
     private var databaseFetcher: DatabaseFetcher
@@ -103,92 +103,27 @@ object DatabaseManager {
         rowMappers = RowMappers(typesConverter)
 
         // Inicjalizacja managera operacji formularzy
-        databaseUpdater = DatabaseUpdater(transactionManager, namedParameterJdbcTemplate)
+        databaseTransactionManager = DatabaseTransactionManager(transactionManager, namedParameterJdbcTemplate, ParameterExpandHelper())
         databaseFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers)
     }
 
     /**
      * Zwraca instancję DatabaseFetcher do operacji SELECT.
+     * Użyj tego komponentu do wszystkich operacji odczytu danych.
      *
-     * @return Skonfigurowany DatabaseFetcher z pełnym systemem typów
+     * @return Skonfigurowany DatabaseFetcher.
      */
     fun getFetcher(): DatabaseFetcher {
         return databaseFetcher
     }
 
     /**
-     * Zwraca instancję DatabaseUpdater do operacji modyfikujących.
+     * Zwraca instancję DatabaseTransactionManager do operacji modyfikujących.
+     * Użyj tego komponentu do wykonywania atomowych transakcji.
      *
-     * @return Skonfigurowany DatabaseUpdater z obsługą transakcji
+     * @return Skonfigurowany DatabaseTransactionManager.
      */
-    fun getUpdater(): DatabaseUpdater {
-        return databaseUpdater
-    }
-
-    /**
-     * Pobiera encję z automatycznym łączeniem tabel wedlug relacji.
-     *
-     * Buduje złożone zapytanie SQL z LEFT JOIN na podstawie listy TableRelation
-     * i pobiera wynik jako mapę ColumnInfo.
-     *
-     * @param id Identyfikator głównej encji
-     * @param tableRelations Lista relacji tabel do połączenia
-     * @return Mapa obiektów ColumnInfo do wartości z połączonych tabel
-     *
-     * @throws IllegalArgumentException gdy lista relacji jest pusta
-     *
-     * Przykład:
-     * ```kotlin
-     * val relations = listOf(
-     *     TableRelation("users", ""),
-     *     TableRelation("profiles", "users.id = profiles.user_id"),
-     *     TableRelation("addresses", "profiles.id = addresses.profile_id")
-     * )
-     * val entity = getEntityWithRelations(123, relations)
-     * ```
-     */
-    fun getEntityWithRelations(
-        id: Int,
-        tableRelations: List<TableRelation>
-    ): Map<ColumnInfo, Any?> {
-        if (tableRelations.isEmpty()) {
-            throw IllegalArgumentException("Lista relacji tabel nie może być pusta")
-        }
-
-        val mainTable = tableRelations.first().tableName
-        val tables = StringBuilder(mainTable)
-
-        for (i in 1 until tableRelations.size) {
-            val relation = tableRelations[i]
-            tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
-        }
-        return databaseFetcher.fetchEntity(tables.toString(), "$mainTable.id = :id", mapOf("id" to id))
-    }
-
-    /**
-     * Wykonuje listę operacji bazodanowych w pojedynczej transakcji.
-     *
-     * Deleguje do DatabaseUpdater który obsługuje:
-     * - Transakcyjność (wszystkie operacje lub żadna)
-     * - Zarządzanie kluczami obcymi między operacjami
-     * - Rollback przy błędach
-     * - Ekspansję złożonych parametrów PostgreSQL
-     *
-     * @param databaseOperations Lista operacji SaveOperation do wykonania
-     *
-     * @throws Exception gdy którakolwiek operacja się nie powiedzie (z rollback)
-     *
-     * Przykład:
-     * ```kotlin
-     * updateDatabase(listOf(
-     *     SaveOperation.Insert("users", userData, returningId = true),
-     *     SaveOperation.Insert("profiles", profileData, foreignKeys = listOf(
-     *         ForeignKeyReference("user_id", "users", null)
-     *     ))
-     * ))
-     * ```
-     */
-    fun updateDatabase(databaseOperations: List<SaveOperation>) {
-        databaseUpdater.updateDatabase(databaseOperations)
+    fun getTransactionManager(): DatabaseTransactionManager {
+        return databaseTransactionManager
     }
 }

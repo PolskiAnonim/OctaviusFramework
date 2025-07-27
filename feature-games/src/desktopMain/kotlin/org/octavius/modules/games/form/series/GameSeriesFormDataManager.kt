@@ -1,6 +1,7 @@
 package org.octavius.modules.games.form.series
 
-import org.octavius.database.SaveOperation
+import org.octavius.database.DatabaseStep
+import org.octavius.database.DatabaseValue
 import org.octavius.database.TableRelation
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormDataManager
@@ -16,14 +17,14 @@ class GameSeriesFormDataManager : FormDataManager() {
         return emptyMap() // Tylko nazwa, brak domyślnych wartości
     }
 
-    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<SaveOperation> {
-        val seriesData = mutableMapOf<String, Any?>()
-        seriesData["name"] = formData["name"]!!.currentValue
+    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<DatabaseStep> {
+        val seriesData = mutableMapOf<String, DatabaseValue>()
+        seriesData["name"] = DatabaseValue.Value(formData["name"]!!.currentValue)
 
         return if (loadedId != null) {
-            listOf(SaveOperation.Update("series", seriesData, loadedId))
+            listOf(DatabaseStep.Update("series", seriesData, mapOf("id" to DatabaseValue.Value(loadedId))))
         } else {
-            listOf(SaveOperation.Insert("series", seriesData))
+            listOf(DatabaseStep.Insert("series", seriesData, returning = listOf()))
         }
     }
 }

@@ -1,8 +1,8 @@
 package org.octavius.modules.games.form.game
 
 import org.octavius.database.DatabaseManager
-import org.octavius.database.ForeignKey
-import org.octavius.database.SaveOperation
+import org.octavius.database.DatabaseStep
+import org.octavius.database.DatabaseValue
 import org.octavius.database.TableRelation
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.ControlResultData
@@ -61,181 +61,186 @@ class GameFormDataManager : FormDataManager() {
     }
 
 
-    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<SaveOperation> {
-        val result = mutableListOf<SaveOperation>()
-
+    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<DatabaseStep> {
+        val databaseSteps = mutableListOf<DatabaseStep>()
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
-        // Obsługa głównej tabeli games
-        val gameData = mutableMapOf<String, Any?>()
-        gameData["name"] = formData["name"]!!.currentValue
-        gameData["series"] = formData["series"]!!.currentValue
-        gameData["status"] = formData["status"]!!.currentValue
 
+        // =================================================================================
+        val gameIdRef: DatabaseValue
+
+        // Dane dla głównej tabeli 'games'.
+        val gameData = mapOf(
+            "name" to DatabaseValue.Value(formData["name"]!!.currentValue),
+            "series" to DatabaseValue.Value(formData["series"]!!.currentValue),
+            "status" to DatabaseValue.Value(formData["status"]!!.currentValue)
+        )
+
+        // W zależności od tego, czy tworzymy nową grę, czy edytujemy istniejącą,
+        // nasza referencja do ID będzie albo stałą wartością, albo odwołaniem do wyniku przyszłej operacji.
         if (loadedId != null) {
-            result.add(SaveOperation.Update("games", gameData, loadedId))
+            // === TRYB EDYCJI ===
+            // ID gry jest znane, więc używamy stałej wartości.
+            gameIdRef = DatabaseValue.Value(loadedId)
+
+            // Operacja 0: Aktualizuj grę. Nie potrzebujemy niczego zwracać.
+            databaseSteps.add(DatabaseStep.Update(
+                tableName = "games",
+                data = gameData,
+                filter = mapOf("id" to gameIdRef),
+                returning = emptyList()
+            ))
         } else {
-            result.add(SaveOperation.Insert("games", gameData))
+            // === TRYB TWORZENIA ===
+            // ID gry zostanie wygenerowane, więc tworzymy referencję do wyniku operacji o indeksie 0.
+            gameIdRef = DatabaseValue.FromStep(0, "id")
+
+            // Operacja 0: Wstaw nową grę i zwróć jej wygenerowane 'id'.
+            databaseSteps.add(DatabaseStep.Insert(
+                tableName = "games",
+                data = gameData,
+                returning = listOf("id")
+            ))
         }
-        // Play time
+
+        // Od tego momentu wszystkie operacje na tabelach zależnych używają `gameIdRef`,
+
         val status = formData["status"]!!.currentValue as GameStatus
 
-        if (formData["playTimeExists"]!!.currentValue as Boolean) {
-            if (status in statusesWithDetails) {
-                val playTimeData = mutableMapOf<String, Any?>()
-                playTimeData["play_time_hours"] = formData["playTimeHours"]!!.currentValue
-                playTimeData["completion_count"] = formData["completionCount"]!!.currentValue
-                result.add(
-                    SaveOperation.Update(
-                        "play_time",
-                        playTimeData,
-                        foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
-                    )
-                )
-            } else {
-                result.add(
-                    SaveOperation.Delete(
-                        "play_time",
-                        foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
-                    )
-                )
-            }
-        } else if (status in statusesWithDetails) {
-            val playTimeData = mutableMapOf<String, Any?>()
-            playTimeData["play_time_hours"] = formData["playTimeHours"]!!.currentValue
-            playTimeData["completion_count"] = formData["completionCount"]!!.currentValue
-            result.add(
-                SaveOperation.Insert(
-                    "play_time",
-                    playTimeData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
-                    returningId = false
-                )
-            )
-        }
+        // =================================================================================
+        // KROK 2: Obsługa tabel zależnych (1-do-1)
+        // =================================================================================
 
-        if (formData["ratingsExists"]!!.currentValue as Boolean) {
-            if (status in statusesWithDetails) {
-                val ratingsData = mutableMapOf<String, Any?>()
-                ratingsData["story_rating"] = formData["storyRating"]!!.currentValue
-                ratingsData["gameplay_rating"] = formData["gameplayRating"]!!.currentValue
-                ratingsData["atmosphere_rating"] = formData["atmosphereRating"]!!.currentValue
-                result.add(
-                    SaveOperation.Update(
-                        "ratings",
-                        ratingsData,
-                        foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
-                    )
-                )
-            }
-        } else if (status in statusesWithDetails) {
-            val ratingsData = mutableMapOf<String, Any?>()
-            ratingsData["story_rating"] = formData["storyRating"]!!.currentValue
-            ratingsData["gameplay_rating"] = formData["gameplayRating"]!!.currentValue
-            ratingsData["atmosphere_rating"] = formData["atmosphereRating"]!!.currentValue
-            result.add(
-                SaveOperation.Insert(
-                    "ratings",
-                    ratingsData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
-                    returningId = false
-                )
-            )
-        }
+        // --- Obsługa Play Time ---
+        handleDependentTable(
+            databaseSteps = databaseSteps,
+            exists = formData["playTimeExists"]!!.currentValue as Boolean,
+            conditionMet = status in statusesWithDetails,
+            tableName = "play_time",
+            data = mapOf(
+                "play_time_hours" to DatabaseValue.Value(formData["playTimeHours"]!!.currentValue),
+                "completion_count" to DatabaseValue.Value(formData["completionCount"]!!.currentValue)
+            ),
+            gameIdRef = gameIdRef
+        )
 
-        if (formData["charactersExists"]!!.currentValue as Boolean) {
-            if (formData["visibleCharactersSection"]!!.currentValue as Boolean) {
-                val charactersData = mutableMapOf<String, Any?>()
-                charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!.currentValue
-                charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!.currentValue
-                charactersData["has_distinctive_antagonist"] = formData["hasDistinctiveAntagonist"]!!.currentValue
-                result.add(
-                    SaveOperation.Update(
-                        "characters",
-                        charactersData,
-                        foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
-                    )
-                )
-            } else {
-                result.add(
-                    SaveOperation.Delete(
-                        "characters",
-                        foreignKeys = listOf(ForeignKey("game_id", "games", loadedId))
-                    )
-                )
-            }
-        } else if (formData["visibleCharactersSection"]!!.currentValue as Boolean) {
-            val charactersData = mutableMapOf<String, Any?>()
-            charactersData["has_distinctive_character"] = formData["hasDistinctiveCharacter"]!!.currentValue
-            charactersData["has_distinctive_protagonist"] = formData["hasDistinctiveProtagonist"]!!.currentValue
-            charactersData["has_distinctive_antagonist"] = formData["hasDistinctiveAntagonist"]!!.currentValue
-            result.add(
-                SaveOperation.Insert(
-                    "characters",
-                    charactersData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
-                    returningId = false
-                )
-            )
-        }
+        // --- Obsługa Ratings ---
+        handleDependentTable(
+            databaseSteps = databaseSteps,
+            exists = formData["ratingsExists"]!!.currentValue as Boolean,
+            conditionMet = status in statusesWithDetails,
+            tableName = "ratings",
+            data = mapOf(
+                "story_rating" to DatabaseValue.Value(formData["storyRating"]!!.currentValue),
+                "gameplay_rating" to DatabaseValue.Value(formData["gameplayRating"]!!.currentValue),
+                "atmosphere_rating" to DatabaseValue.Value(formData["atmosphereRating"]!!.currentValue)
+            ),
+            gameIdRef = gameIdRef
+        )
 
-        // Obsługa kategorii
+        // --- Obsługa Characters ---
+        handleDependentTable(
+            databaseSteps = databaseSteps,
+            exists = formData["charactersExists"]!!.currentValue as Boolean,
+            conditionMet = formData["visibleCharactersSection"]!!.currentValue as Boolean,
+            tableName = "characters",
+            data = mapOf(
+                "has_distinctive_character" to DatabaseValue.Value(formData["hasDistinctiveCharacter"]!!.currentValue),
+                "has_distinctive_protagonist" to DatabaseValue.Value(formData["hasDistinctiveProtagonist"]!!.currentValue),
+                "has_distinctive_antagonist" to DatabaseValue.Value(formData["hasDistinctiveAntagonist"]!!.currentValue)
+            ),
+            gameIdRef = gameIdRef
+        )
+
+        // =================================================================================
+        // KROK 3: Obsługa tabeli łączącej (many-to-many)
+        // =================================================================================
+
         val categoriesResult = formData["categories"]!!.currentValue as RepeatableResultValue
 
         // Usunięte kategorie
         categoriesResult.deletedRows.forEach { rowData ->
             val categoryId = rowData["category"]!!.initialValue as Int
-            result.add(
-                SaveOperation.Delete(
-                    "categories_to_games",
-                    foreignKeys = listOf(
-                        ForeignKey("game_id", "games", loadedId),
-                        ForeignKey("category_id", "categories", categoryId)
-                    )
+            databaseSteps.add(DatabaseStep.Delete(
+                tableName = "categories_to_games",
+                filter = mapOf(
+                    "game_id" to gameIdRef,
+                    "category_id" to DatabaseValue.Value(categoryId)
                 )
-            )
+            ))
         }
 
-        // Zmodyfikowane kategorie - dla many-to-many DELETE starej + INSERT nowej
+        // Zmodyfikowane kategorie (DELETE + INSERT)
         categoriesResult.modifiedRows.forEach { rowData ->
-            val categoryData = mutableMapOf<String, Any?>()
-            val category = rowData["category"]!!
-            categoryData["category_id"] = category.currentValue
-
-            result.add(
-                SaveOperation.Delete(
-                    "categories_to_games",
-                    foreignKeys = listOf(
-                        ForeignKey("game_id", "games", loadedId),
-                        ForeignKey("category_id", "categories", category.initialValue as Int)
-                    ),
+            val oldCategoryId = rowData["category"]!!.initialValue as Int
+            val newCategoryId = rowData["category"]!!.currentValue
+            // Usuń stare powiązanie
+            databaseSteps.add(DatabaseStep.Delete(
+                tableName = "categories_to_games",
+                filter = mapOf(
+                    "game_id" to gameIdRef,
+                    "category_id" to DatabaseValue.Value(oldCategoryId)
                 )
-            )
-
-            result.add(
-                SaveOperation.Insert(
-                    "categories_to_games",
-                    categoryData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
-                    returningId = false
+            ))
+            // Dodaj nowe powiązanie
+            databaseSteps.add(DatabaseStep.Insert(
+                tableName = "categories_to_games",
+                data = mapOf(
+                    "game_id" to gameIdRef,
+                    "category_id" to DatabaseValue.Value(newCategoryId)
                 )
-            )
+            ))
         }
 
         // Dodane kategorie
         categoriesResult.addedRows.forEach { rowData ->
-            val categoryData = mutableMapOf<String, Any?>()
-            categoryData["category_id"] = rowData["category"]!!.currentValue
-
-            result.add(
-                SaveOperation.Insert(
-                    "categories_to_games",
-                    categoryData,
-                    foreignKeys = listOf(ForeignKey("game_id", "games", loadedId)),
-                    returningId = false
+            val categoryId = rowData["category"]!!.currentValue
+            databaseSteps.add(DatabaseStep.Insert(
+                tableName = "categories_to_games",
+                data = mapOf(
+                    "game_id" to gameIdRef,
+                    "category_id" to DatabaseValue.Value(categoryId)
                 )
-            )
+            ))
         }
 
-        return result
+        return databaseSteps
+    }
+
+    /**
+     * Metoda pomocnicza do obsługi logiki INSERT/UPDATE/DELETE dla tabel zależnych 1-do-1.
+     * Hermetyzuje powtarzalny wzorzec.
+     */
+    private fun handleDependentTable(
+        databaseSteps: MutableList<DatabaseStep>,
+        exists: Boolean,
+        conditionMet: Boolean,
+        tableName: String,
+        data: Map<String, DatabaseValue>,
+        gameIdRef: DatabaseValue
+    ) {
+        if (exists) {
+            if (conditionMet) {
+                // Rekord istnieje i warunek jest spełniony -> UPDATE
+                databaseSteps.add(DatabaseStep.Update(
+                    tableName = tableName,
+                    data = data,
+                    filter = mapOf("game_id" to gameIdRef)
+                ))
+            } else {
+                // Rekord istnieje, ale warunek nie jest spełniony -> DELETE
+                databaseSteps.add(DatabaseStep.Delete(
+                    tableName = tableName,
+                    filter = mapOf("game_id" to gameIdRef)
+                ))
+            }
+        } else if (conditionMet) {
+            // Rekord nie istnieje, ale warunek jest spełniony -> INSERT
+            // Klucz obcy `game_id` jest częścią danych do wstawienia.
+            val dataWithFk = data + mapOf("game_id" to gameIdRef)
+            databaseSteps.add(DatabaseStep.Insert(
+                tableName = tableName,
+                data = dataWithFk
+            ))
+        }
     }
 }
