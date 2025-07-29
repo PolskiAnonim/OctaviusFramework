@@ -4,6 +4,7 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.util.Converters
 import org.postgresql.util.PGobject
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 
 /**
  * Helper do ekspansji złożonych parametrów PostgreSQL w zapytaniach SQL.
@@ -198,19 +199,37 @@ class KotlinToPostgresConverter {
      */
     private fun expandRowParameter(paramName: String, compositeValue: Any): Pair<String, Map<String, Any?>> {
         val kClass = compositeValue::class
-        val properties = kClass.memberProperties
+
+        // 1. Pobierz główny konstruktor klasy (dla zachowania kolejności)
+        val constructor = kClass.primaryConstructor
+            ?: throw IllegalArgumentException("Klasa ${kClass.simpleName} musi posiadać główny konstruktor, aby można ją było rozwinąć.")
+
+        // 2. Stwórz mapę właściwości (KProperty) po nazwie, aby łatwo je odnaleźć.
+        // Dostęp do wartości jest możliwy tylko przez KProperty, nie przez KParameter.
+        val propertiesByName = kClass.memberProperties.associateBy { it.name }
 
         val expandedParams = mutableMapOf<String, Any?>()
-        val placeholders = properties.mapIndexed { index, property ->
+
+        // 3. Iteruj po PARAMETRACH KONSTRUKTORA, a nie po właściwościach.
+        // To gwarantuje prawidłową kolejność.
+        val placeholders = constructor.parameters.mapIndexed { index, param ->
+            // Znajdź właściwość odpowiadającą parametrowi konstruktora po nazwie.
+            val property = propertiesByName[param.name]
+                ?: throw IllegalStateException("Nie można znaleźć właściwości dla parametru konstruktora '${param.name}' w klasie ${kClass.simpleName}.")
+
+            // Pobierz wartość tej właściwości z konkretnej instancji `compositeValue`.
             val value = property.getter.call(compositeValue)
+
             val fieldParamName = "${paramName}_f${index + 1}" // Unikalna nazwa dla każdego pola
             val (placeholder, params) = expandParameter(fieldParamName, value)
             expandedParams.putAll(params)
             placeholder
         }
 
-        val rowPlaceholder =
-            "ROW(${placeholders.joinToString(", ")})::${Converters.camelToSnakeCase(kClass.simpleName ?: "")}"
+        // Nazwa typu w bazie danych, np. z camelCase na snake_case
+        val dbTypeName = kClass.simpleName?.let { Converters.camelToSnakeCase(it) } ?: ""
+        val rowPlaceholder = "ROW(${placeholders.joinToString(", ")})::$dbTypeName"
+
         return rowPlaceholder to expandedParams
     }
 

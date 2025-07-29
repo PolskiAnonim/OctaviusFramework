@@ -4,8 +4,10 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.postgresql.util.PGobject
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KotlinToPostgresConverterTest {
 
     private val converter = KotlinToPostgresConverter()
