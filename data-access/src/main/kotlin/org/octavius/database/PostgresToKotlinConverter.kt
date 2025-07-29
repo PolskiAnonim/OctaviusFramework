@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json.Default.parseToJsonElement
 import org.octavius.util.Converters
 import java.text.ParseException
 import java.util.*
+import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -217,11 +218,12 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         }.toTypedArray()
 
         return try {
+            // Zakładamy iż jest to data class
             val className = Converters.snakeToCamelCase(typeInfo.typeName, true)
             val fullClassName = typeRegistry.findClassPath(className)
-            val clazz = Class.forName(fullClassName)
-            val constructor = clazz.constructors.first() // Używamy pierwszego konstruktora
-            constructor.newInstance(*constructorArgs)
+            val clazz = Class.forName(fullClassName).kotlin
+            val constructor = clazz.primaryConstructor!! // Używamy pierwszego konstruktora
+            constructor.call(*constructorArgs)
         } catch (e: Exception) {
             println(
                 "Nie można utworzyć instancji obiektu dla typu kompozytowego: ${typeInfo.typeName} z wartością $value (próbowano: ${
