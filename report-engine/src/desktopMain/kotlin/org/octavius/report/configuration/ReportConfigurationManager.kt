@@ -45,8 +45,7 @@ class ReportConfigurationManager: KoinComponent {
             } else {
                 DatabaseStep.Insert(
                     tableName = "public.report_configurations",
-                    data = dataMap,
-                    returning = listOf()
+                    data = dataMap
                 )
             }
 

@@ -24,7 +24,7 @@ class GameSeriesFormDataManager : FormDataManager() {
         return if (loadedId != null) {
             listOf(DatabaseStep.Update("series", seriesData, mapOf("id" to DatabaseValue.Value(loadedId))))
         } else {
-            listOf(DatabaseStep.Insert("series", seriesData, returning = listOf()))
+            listOf(DatabaseStep.Insert("series", seriesData))
         }
     }
 }

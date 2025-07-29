@@ -69,12 +69,12 @@ sealed class DatabaseStep {
      *
      * @param tableName Nazwa tabeli docelowej
      * @param data Mapa kolumn do wartości (nazwa kolumny → DatabaseValue)
-     * @param returning Lista kolumn do zwrócenia (domyślnie ["id"])
+     * @param returning Lista kolumn do zwrócenia (domyślnie pusta)
      */
     data class Insert(
         val tableName: String,
         val data: Map<String, DatabaseValue>,
-        override val returning: List<String> = listOf("id")
+        override val returning: List<String> = listOf()
     ) : DatabaseStep()
 
     /**
