@@ -11,4 +11,15 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.kotlin.reflect)
     implementation(libs.spring.jdbc)
+    
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.assertj.core)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
