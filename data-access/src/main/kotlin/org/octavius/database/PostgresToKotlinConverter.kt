@@ -105,7 +105,7 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
             
             // Typy daty i czasu
             "date" -> LocalDate.parse(value)
-            "timestamp" -> LocalDateTime.parse(value)
+            "timestamp" -> LocalDateTime.parse(value.replace(' ', 'T'))
             "timestamptz" -> Instant.parse(value.replace(' ', 'T'))
             
             // Domyślnie wszystkie inne typy (text, varchar, char) jako String
