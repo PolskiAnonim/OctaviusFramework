@@ -86,8 +86,9 @@ class RealPostgresDataTest {
         val project = result["project_data"] as TestProject
         assertThat(project.name).isEqualTo("Complex \"Enterprise\" Project")
         assertThat(project.status).isEqualTo(TestStatus.Active)
-        assertThat(project.teamMembers).hasSize(3)
+        assertThat(project.teamMembers).hasSize(4)
         assertThat(project.teamMembers[0].name).isEqualTo("Project Manager")
+        assertThat(project.teamMembers[3].name).isEqualTo(null)
 
         val firstTask = project.tasks[0]
         assertThat(firstTask.title).isEqualTo("Setup \"Development\" Environment")

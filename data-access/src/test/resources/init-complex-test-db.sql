@@ -107,16 +107,16 @@ INSERT INTO complex_test_data (
     gen_random_uuid(),
     '2024-01-15',
     '2024-01-15 14:30:00',
-    
+
     -- Enumy
     'active',
     ARRAY['active', 'pending', 'not_started']::test_status[],
-    
+
     -- Tablice prostych typów
     ARRAY['first', 'second', 'third with "quotes"', 'fourth with ąćę'],
     ARRAY[1, 2, 3, 4, 5],
     ARRAY[ARRAY['a', 'b'], ARRAY['c', 'd'], ARRAY['e with "quotes"', 'f']],
-    
+
     -- Kompozyty
     ROW(
         'John "The Developer" Doe',
@@ -125,13 +125,13 @@ INSERT INTO complex_test_data (
         true,
         ARRAY['admin', 'developer', 'team-lead']
     )::test_person,
-    
+
     ARRAY[
         ROW('Alice Smith', 25, 'alice@example.com', true, ARRAY['developer', 'frontend']),
         ROW('Bob "Database" Johnson', 35, 'bob@example.com', false, ARRAY['dba', 'backend']),
         ROW('Carol "The Tester" Williams', 28, 'carol@example.com', true, ARRAY['qa', 'automation'])
     ]::test_person[],
-    
+
     -- Mega złożony projekt
     ROW(
         'Complex "Enterprise" Project',
@@ -141,7 +141,8 @@ INSERT INTO complex_test_data (
         ARRAY[
             ROW('Project Manager', 40, 'pm@example.com', true, ARRAY['manager', 'stakeholder']),
             ROW('Senior Dev "The Architect"', 35, 'senior@example.com', true, ARRAY['architect', 'senior-dev']),
-            ROW('Junior Dev', 24, 'junior@example.com', true, ARRAY['junior-dev', 'learner'])
+            ROW('Junior Dev', 24, 'junior@example.com', true, ARRAY['junior-dev', 'learner']),
+            ROW(NULL, 30, '', true, ARRAY['user'])::test_person
         ]::test_person[],
         -- tasks (tablica kompozytów z enumami i innymi kompozytami)
         ARRAY[

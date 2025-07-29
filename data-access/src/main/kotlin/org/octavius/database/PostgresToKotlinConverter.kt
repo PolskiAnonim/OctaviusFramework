@@ -322,24 +322,38 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
     }
 
     /**
-     * Usuwa escape'owanie z wartości PostgreSQL.
+     * Usuwa escape'owanie z wartości PostgreSQL i poprawnie rozróżnia NULL od pustego stringa.
      *
      * Przetwarza surowe wartości z PostgreSQL, obsługując różne przypadki:
-     * - **Wartości NULL**: Rozpoznaje "NULL" (case-insensitive) jako null
-     * - **Cudzysłowy**: Usuwa zewnętrzne cudzysłowy i przetwarza escape'owane znaki
+     * - **Wartości w cudzysłowach**: Usuwa zewnętrzne cudzysłowy i przetwarza escape'owane znaki.
+     *   `""` jest poprawnie interpretowane jako pusty string.
+     * - **Wartości bez cudzysłowów**:
+     *   - Pusty string (reprezentacja `NULL` w kompozytach) jest konwertowany na `null`.
+     *   - Jawny napis "NULL" (case-insensitive) jest konwertowany na `null`.
      * - **Escape'owanie**: Obsługuje "" → ", \" → ", \\ → \
      *
-     * @param raw Surowa wartość do przetworzenia
-     * @return Przetworzona wartość lub null dla NULL
+     * @param raw Surowa, sparsowana wartość z kompozytu lub tablicy.
+     * @return Przetworzona wartość jako String lub null dla wartości NULL.
      */
     private fun unescapeValue(raw: String): String? {
-        if (raw.equals("NULL", ignoreCase = true)) return null
-        if (raw.startsWith('"') && raw.endsWith('"')) {
-            return raw.substring(1, raw.length - 1)
-                .replace("\"\"", "\"")
-                .replace("\\\"", "\"")
+        val trimmed = raw.trim()
+
+        // 1. Sprawdzamy, czy wartość jest w cudzysłowach.
+        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+            // Jeśli tak, to jest to jawny string. Nawet jeśli pusty (""), to jest to pusty string, a nie NULL.
+            return trimmed.substring(1, trimmed.length - 1)
+                .replace("\"\"", "\"") // PostgreSQL escapuje cudzysłów przez podwojenie go
+                .replace("\\\"", "\"") // Obsługa standardowego escape'owania
                 .replace("\\\\", "\\")
         }
-        return raw
+
+        // 2. Jeśli wartość NIE jest w cudzysłowach.
+        // Pusty, nieopakowany w cudzysłowy ciąg znaków w kompozycie oznacza NULL.
+        if (trimmed.isEmpty() || trimmed.equals("NULL", ignoreCase = true)) {
+            return null
+        }
+
+        // 3. W każdym innym przypadku jest to zwykła, nieopakowana w cudzysłowy wartość.
+        return trimmed
     }
 }

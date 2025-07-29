@@ -14,8 +14,10 @@ data class TestMetadata(
     val tags: List<String>
 )
 
+// W Postgresie wszystkie pola są nullable
+// Jednakże tutaj ? dodane jest tylko dla pola które faktycznie będzie nullem
 data class TestPerson(
-    val name: String,
+    val name: String?,
     val age: Int,
     val email: String,
     val active: Boolean,
