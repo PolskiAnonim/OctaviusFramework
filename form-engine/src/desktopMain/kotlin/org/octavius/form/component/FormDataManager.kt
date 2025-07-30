@@ -30,7 +30,7 @@ abstract class FormDataManager: KoinComponent {
      * @param loadedId ID edytowanej encji (null dla nowych rekordów)
      * @return mapa kontrolka->wartość z wartościami domyślnymi lub obliczonymi
      */
-    abstract fun initData(loadedId: Int?): Map<String, Any?>
+    abstract fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?>
 
     /**
      * Definiuje relacje między tabelami potrzebne do załadowania pełnych danych encji.

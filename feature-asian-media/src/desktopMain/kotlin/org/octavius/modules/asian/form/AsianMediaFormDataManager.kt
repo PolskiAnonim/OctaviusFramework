@@ -15,7 +15,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         )
     }
 
-    override fun initData(loadedId: Int?): Map<String, Any?> {
+    override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
         // Dla nowego formularza, załaduj pustą listę publikacji
         return if (loadedId == null) {
             mapOf(

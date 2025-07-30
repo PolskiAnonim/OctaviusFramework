@@ -21,7 +21,8 @@ class FormHandler(
     private val entityId: Int? = null,
     formSchemaBuilder: FormSchemaBuilder,
     val formDataManager: FormDataManager,
-    val formValidator: FormValidator = FormValidator()
+    val formValidator: FormValidator = FormValidator(),
+    private val payload: Map<String, Any?>? = null
 ): KoinComponent {
     val errorManager: ErrorManager = ErrorManager()
     private val formState: FormState = FormState()
@@ -68,7 +69,7 @@ class FormHandler(
      * Ładuje dane dla edytowanej encji z bazy danych i inicjalizuje stan formularza.
      */
     fun loadData() {
-        val initValues = formDataManager.initData(entityId!!)
+        val initValues = formDataManager.initData(entityId!!, payload)
         val databaseData = formDataManager.loadEntityData(entityId)
 
         // Merge danych z priorytetem dla initData
@@ -88,7 +89,7 @@ class FormHandler(
      * Czyści formularz i ustawia wartości domyślne dla nowego rekordu.
      */
     fun clearForm() {
-        val initValues = formDataManager.initData(null)
+        val initValues = formDataManager.initData(null, payload)
         formState.initializeStates(formSchema, initValues, errorManager)
     }
 

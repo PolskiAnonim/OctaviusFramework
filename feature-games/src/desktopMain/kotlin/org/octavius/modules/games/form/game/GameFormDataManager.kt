@@ -18,7 +18,7 @@ class GameFormDataManager : FormDataManager() {
         )
     }
 
-    override fun initData(loadedId: Int?): Map<String, Any?> {
+    override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
         // Domyślne wartości dla nowej gry
         return if (loadedId == null) {
             mapOf(
