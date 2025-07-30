@@ -15,36 +15,46 @@ class AsianMediaFormDataManager : FormDataManager() {
         )
     }
 
-    override fun initData(loadedId: Int?): Map<String, Any?> {
-        // Dla nowego formularza, załaduj pustą listę publikacji
-        return if (loadedId == null) {
-            mapOf(
-                "publications" to listOf<Map<String, Any?>>()
-            )
+    override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
+        val initialData = mutableMapOf<String, Any?>()
+
+        if (loadedId != null) {
+            initialData.putAll(loadPublications(loadedId))
         } else {
-            // Dla istniejącego, załaduj publikacje z bazy
-            val publications = dataFetcher.fetchList(
-                "publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id",
-                "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed",
-                "p.title_id = :title", params = mapOf("title" to loadedId),
-                ).map { row ->
-                val data = mutableMapOf<String, Any?>()
-                data["id"] = row["id"]
-                data["publicationType"] = row["publication_type"]
-                data["status"] = row["status"]
-                data["trackProgress"] = row["track_progress"]
-
-                data["volumes"] = row[ "volumes"]
-                data["translatedVolumes"] = row["translated_volumes"]
-                data["chapters"] = row["chapters"]
-                data["translatedChapters"] = row["translated_chapters"]
-                data["originalCompleted"] = row["original_completed"]
-
-                data
-            }
-
-            mapOf("publications" to publications)
+            initialData["publications"] = emptyList<Map<String, Any?>>()
         }
+
+        return if (payload != null) {
+            initialData + payload
+        } else {
+            initialData
+        }
+    }
+
+    /**
+     * Prywatna metoda pomocnicza do ładowania powiązanych publikacji.
+     * Utrzymuje metodę initData w czystości.
+     */
+    private fun loadPublications(titleId: Int): Map<String, Any?> {
+        val publications = dataFetcher.fetchList(
+            table = "publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id",
+            columns = "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed",
+            filter = "p.title_id = :title",
+            params = mapOf("title" to titleId),
+        ).map { row ->
+            buildMap {
+                put("id", row["id"])
+                put("publicationType", row["publication_type"])
+                put("status", row["status"])
+                put("trackProgress", row["track_progress"])
+                put("volumes", row["volumes"])
+                put("translatedVolumes", row["translated_volumes"])
+                put("chapters", row["chapters"])
+                put("translatedChapters", row["translated_chapters"])
+                put("originalCompleted", row["original_completed"])
+            }
+        }
+        return mapOf("publications" to publications)
     }
 
 
