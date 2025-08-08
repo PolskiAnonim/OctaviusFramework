@@ -1,12 +1,26 @@
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
 }
 
-dependencies {
-    implementation(libs.kotlinx.serialization.json)
-    implementation(project(":core"))
-    
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
+kotlin {
+    // Definiujemy targety dla obu platform
+    jvm("desktop")
+    js(IR) {
+        browser()
+    }
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                // Potrzebujemy zależności do commonMain z core
+                api(project(":core"))
+
+                compileOnly(libs.ktor.server.core)
+                api(libs.ktor.server.core)
+            }
+        }
+        val desktopMain by getting
+        val jsMain by getting
+    }
 }

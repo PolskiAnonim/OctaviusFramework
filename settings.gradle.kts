@@ -39,6 +39,7 @@ include(
     ":ui-core",
     ":data-access",
     ":core",
-    "api-contract",
-    "feature-contract"
+    ":api-contract",
+    ":feature-contract",
+    ":browser-extension"
 )
