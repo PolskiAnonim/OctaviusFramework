@@ -13,6 +13,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.octavius.api.contract.asian.PublicationCheckRequest
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.domain.asian.PublicationStatus
@@ -41,12 +42,12 @@ class AsianMediaApi : ApiModule, KoinComponent {
      * Sprawdza, czy którykolwiek z podanych tytułów istnieje już w bazie.
      */
     private fun Route.checkPublicationExistence() {
-        get("/check") {
-            // Pobieramy listę tytułów z parametrów zapytania (?title=...&title=...)
-            val titles = call.request.queryParameters.getAll("title")
-            if (titles.isNullOrEmpty()) {
+        post("/check") {
+            val request = call.receive<PublicationCheckRequest>()
+            val titles = request.titles
+            if (titles.isEmpty()) {
                 call.respond(PublicationCheckResponse(found = false))
-                return@get
+                return@post
             }
 
             // Używamy operatora && (overlap) z PostgreSQL do sprawdzenia,

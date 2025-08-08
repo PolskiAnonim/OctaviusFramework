@@ -8,3 +8,8 @@ data class PublicationCheckResponse(
     val titleId: Int? = null,
     val matchedTitle: String? = null
 )
+
+@Serializable
+data class PublicationCheckRequest(
+    val titles: List<String>
+)
