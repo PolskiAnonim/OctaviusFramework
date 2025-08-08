@@ -1,5 +1,8 @@
 package org.octavius.contract
 
+import org.octavius.api.contract.ApiModule
+
+
 /**
  * Interfejs reprezentujący kompletny, spójny moduł funkcjonalny ("Feature").
  *

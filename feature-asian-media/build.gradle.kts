@@ -28,10 +28,14 @@ kotlin {
             implementation(project(":ui-core"))
             implementation(project(":form-engine"))
             implementation(project(":report-engine"))
+            implementation(project(":api-contract"))
+            implementation(project(":feature-contract"))
             implementation(project.dependencies.platform(libs.koin.bom))
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+
+            implementation(libs.ktor.server.core)
         }
     }
 }

@@ -7,8 +7,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.octavius.contract.ApiModule
-
+import org.octavius.api.contract.ApiModule
 class EmbeddedServer(private val apiModules: List<ApiModule>) {
 
     val server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {

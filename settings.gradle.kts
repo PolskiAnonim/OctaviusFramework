@@ -38,5 +38,7 @@ include(
     ":api-server",
     ":ui-core",
     ":data-access",
-    ":core"
+    ":core",
+    "api-contract",
+    "feature-contract"
 )
