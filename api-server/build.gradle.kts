@@ -7,14 +7,16 @@ kotlin {
     jvm("desktop")
 
     sourceSets {
-        val commonMain by getting // Pusty
-
-        val desktopMain by getting {
+        val commonMain by getting {
             dependencies {
                 implementation(project(":core"))
                 implementation(project(":api-contract"))
+            }
+        }
 
-                // Twoje zależności do Ktor-a
+        val desktopMain by getting {
+            dependencies {
+                // Zależności do Ktor-a
                 implementation(libs.ktor.server.core)
                 implementation(libs.ktor.server.netty)
                 implementation(libs.ktor.server.content.negotiation)

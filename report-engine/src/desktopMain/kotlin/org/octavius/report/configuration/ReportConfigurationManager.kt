@@ -2,10 +2,10 @@ package org.octavius.report.configuration
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
-import org.octavius.data.contract.BatchExecutor
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
 

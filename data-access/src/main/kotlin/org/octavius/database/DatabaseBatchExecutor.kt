@@ -1,8 +1,8 @@
 package org.octavius.database
 
+import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
-import org.octavius.data.contract.BatchExecutor
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.support.TransactionTemplate

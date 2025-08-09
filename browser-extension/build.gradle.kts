@@ -1,7 +1,6 @@
 @file:OptIn(ExperimentalDistributionDsl::class)
 
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalDistributionDsl
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)

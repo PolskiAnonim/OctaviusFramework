@@ -16,7 +16,6 @@ kotlin {
                 // Potrzebujemy zależności do commonMain z core
                 api(project(":core"))
 
-                compileOnly(libs.ktor.server.core)
                 api(libs.ktor.server.core)
             }
         }

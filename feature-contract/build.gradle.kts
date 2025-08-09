@@ -24,8 +24,6 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
-        }
-        desktopMain.dependencies {
             implementation(project(":ui-core"))
             implementation(project(":api-contract"))
         }

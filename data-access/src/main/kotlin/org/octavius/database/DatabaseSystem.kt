@@ -2,8 +2,8 @@ package org.octavius.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.BatchExecutor
+import org.octavius.data.contract.DataFetcher
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 

@@ -1,6 +1,5 @@
 package org.octavius.database
 
-import org.octavius.database.DatabaseConfig
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.net.JarURLConnection
 import java.net.URL

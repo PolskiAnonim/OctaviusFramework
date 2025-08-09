@@ -1,6 +1,6 @@
 package org.octavius.api.contract
 
-import io.ktor.server.routing.Routing
+import io.ktor.server.routing.*
 
 /**
  * Interfejs dla modułów, które chcą dodać własne ścieżki do głównego serwera Ktor.
