@@ -45,6 +45,7 @@ data class ActionContext<T>(
             @Suppress("UNCHECKED_CAST")
             val typedState = state as org.octavius.form.ControlState<V>
             typedState.value.value = newValue
+            typedState.revision.value++ // ZAWSZE inkrementuj rewizję
         }
     }
 

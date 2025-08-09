@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ValidationOptions
 import org.octavius.ui.theme.FormSpacing
@@ -22,13 +23,15 @@ abstract class PrimitiveNumberControl<T : Number>(
     columnInfo: ColumnInfo?,
     required: Boolean?,
     dependencies: Map<String, ControlDependency<*>>?,
-    validationOptions: ValidationOptions?
+    validationOptions: ValidationOptions?,
+    actions: List<ControlAction<T>>?
 ) : Control<T>(
     label,
     columnInfo,
     required,
     dependencies,
-    validationOptions = validationOptions
+    validationOptions = validationOptions,
+    actions = actions
 ) {
     /**
      * Abstrakcyjna metoda, którą konkretne implementacje muszą dostarczyć,
@@ -40,8 +43,18 @@ abstract class PrimitiveNumberControl<T : Number>(
 
     @Composable
     override fun Display(controlName: String, controlState: ControlState<T>, isRequired: Boolean) {
-        var textValue by remember {
-            mutableStateOf(controlState.value.value?.toString() ?: "")
+        // Stan widoku, który jest synchronizowany z modelem.
+        var textValue by remember { mutableStateOf(controlState.value.value?.toString() ?: "") }
+        val scope = rememberCoroutineScope()
+
+        // EFEKT SYNCHRONIZUJĄCY dla zmian z zewnątrz
+        // Odpali się za każdym razem, gdy akcja wywoła `updateControl`.
+        LaunchedEffect(controlState.revision.value) {
+            // Zawsze, gdy dostajemy sygnał z zewnątrz, bezwarunkowo synchronizujemy stan
+            // widoku (textValue) ze stanem modelu (controlState.value).
+            // To kasuje błędne wpisy użytkownika i czyści błędy.
+            textValue = controlState.value.value?.toString() ?: ""
+            errorManager.setFormatError(controlName, null)
         }
 
         OutlinedTextField(
@@ -50,15 +63,21 @@ abstract class PrimitiveNumberControl<T : Number>(
                 textValue = newText
 
                 if (newText.isEmpty()) {
-                    controlState.value.value = null
-                    errorManager.setFormatError(controlName,null)  // Wyczyść błąd formatu
+                    if (controlState.value.value != null) {
+                        controlState.value.value = null
+                        executeActions(controlName, null, scope)
+                    }
+                    errorManager.setFormatError(controlName, null)
                 } else {
                     val parsed = parseValue(newText)
                     if (parsed != null) {
-                        controlState.value.value = parsed
-                        errorManager.setFormatError(controlName,null) // Wyczyść błąd formatu
+                        if (controlState.value.value != parsed) {
+                            controlState.value.value = parsed
+                            executeActions(controlName, parsed, scope)
+                        }
+                        errorManager.setFormatError(controlName, null)
                     } else {
-                        errorManager.setFormatError(controlName,"Nieprawidłowy format liczby")
+                        errorManager.setFormatError(controlName, "Nieprawidłowy format liczby")
                     }
                 }
             },

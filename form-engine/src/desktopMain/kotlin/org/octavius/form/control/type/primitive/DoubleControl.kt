@@ -1,6 +1,7 @@
 package org.octavius.form.control.type.primitive
 
 import org.octavius.data.contract.ColumnInfo
+import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.DoubleValidation
@@ -15,13 +16,15 @@ class DoubleControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: DoubleValidation? = null
+    validationOptions: DoubleValidation? = null,
+    actions: List<ControlAction<Double>>? = null
 ) : PrimitiveNumberControl<Double>(
     label,
     columnInfo,
     required,
     dependencies,
-    validationOptions = validationOptions
+    validationOptions = validationOptions,
+    actions = actions
 ) {
     override val validator: ControlValidator<Double> = DoubleValidator(validationOptions)
 

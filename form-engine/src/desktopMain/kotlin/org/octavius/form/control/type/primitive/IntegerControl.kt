@@ -1,6 +1,7 @@
 package org.octavius.form.control.type.primitive
 
 import org.octavius.data.contract.ColumnInfo
+import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntegerValidation
@@ -15,13 +16,15 @@ class IntegerControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: IntegerValidation? = null
+    validationOptions: IntegerValidation? = null,
+    actions: List<ControlAction<Int>>? = null
 ) : PrimitiveNumberControl<Int>(
     label,
     columnInfo,
     required,
     dependencies,
-    validationOptions = validationOptions
+    validationOptions = validationOptions,
+    actions = actions
 ) {
     override val validator: ControlValidator<Int> = IntegerValidator(validationOptions)
 

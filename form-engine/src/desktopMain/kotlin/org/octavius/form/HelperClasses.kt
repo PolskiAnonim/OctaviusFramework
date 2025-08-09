@@ -26,10 +26,13 @@ data class ControlResultData(
  * @param T typ danych przechowywanych przez kontrolkę
  * @param value bieżąca wartość kontrolki (edytowana przez użytkownika)
  * @param initValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
+ * @param revision licznik zmian z zewnątrz, służący do wymuszenia synchronizacji UI.
+ * Nie musi być używany w prostych kontrolkach w których parsowanie wartości nie jest potrzebne
  */
 data class ControlState<T>(
     val value: MutableState<T?> = mutableStateOf(null),
     val initValue: MutableState<T?> = mutableStateOf(null),
+    val revision: MutableState<Int> = mutableStateOf(0)
 )
 
 /**
