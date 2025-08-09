@@ -129,13 +129,13 @@ val mergeTranslations by tasks.registering {
 }
 
 tasks.withType<Jar>().configureEach {
-    if (name == "desktopJar") {
-        dependsOn(mergeTranslations)
-        // Po prostu dodajemy nasze scalone pliki do JAR-a.
-        // Ponieważ ta akcja jest dodawana na końcu, powinna nadpisać pliki
-        // o tych samych nazwach, które zostały dodane wcześniej z modułów.
-        from(mergeTranslations.map { it.outputs.files }) {
-            into("/")
-        }
+
+    dependsOn(mergeTranslations)
+    // Po prostu dodajemy nasze scalone pliki do JAR-a.
+    // Ponieważ ta akcja jest dodawana na końcu, powinna nadpisać pliki
+    // o tych samych nazwach, które zostały dodane wcześniej z modułów.
+    from(mergeTranslations.map { it.outputs.files }) {
+        into("/")
     }
+
 }
