@@ -8,17 +8,18 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 
 /**
- * Menedżer transakcji bazodanowych obsługujący atomowe operacje.
+ * Wykonuje serię operacji bazodanowych w pojedynczej, atomowej transakcji.
  *
- * Zapewnia transakcyjne wykonywanie listy operacji bazodanowych z obsługą:
- * - **Atomowość**: Wszystkie operacje wykonują się pomyślnie lub żadna (rollback)
- * - **Zależności**: Możliwość używania wyników poprzednich operacji w kolejnych krokach
- * - **Ekspansja parametrów**: Automatyczne przetwarzanie złożonych typów PostgreSQL
- * - **RETURNING**: Obsługa klauzuli RETURNING dla pobierania wygenerowanych wartości
+ * Główne cechy:
+ * - **Atomowość**: Wszystkie operacje kończą się sukcesem lub żadna (rollback).
+ * - **Zależności**: Wyniki z jednego kroku mogą być użyte jako parametry w kolejnych.
+ * - **Ekspansja parametrów**: Automatyczne przekształcanie złożonych typów Kotlin
+ *   (listy, data class, enumy) na natywne konstrukcje PostgreSQL.
+ * - **Obsługa RETURNING**: Pobiera wartości wygenerowane przez bazę danych.
  *
- * @param transactionManager Menedżer transakcji Spring do zarządzania transakcjami CUD
- * @param namedParameterJdbcTemplate Template JDBC do wykonywania zapytań z named parameters
- * @param kotlinToPostgresConverter Helper do ekspansji złożonych parametrów PostgreSQL
+ * @param transactionManager Menedżer transakcji Spring.
+ * @param namedParameterJdbcTemplate Template do wykonywania zapytań SQL.
+ * @param kotlinToPostgresConverter Konwerter złożonych typów Kotlin na SQL.
  *
  * @see DatabaseStep
  * @see DatabaseValue
@@ -33,27 +34,19 @@ class DatabaseBatchExecutor(
     /**
      * Wykonuje listę kroków bazodanowych w pojedynczej transakcji.
      *
-     * Deleguje do DatabaseTransactionManager, który obsługuje:
-     * - Transakcyjność (wszystkie kroki lub żaden)
-     * - Rozwiązywanie zależności między krokami (użycie wyniku jednego kroku w kolejnym)
-     * - Rollback przy błędach
-     * - Ekspansję złożonych parametrów PostgreSQL
+     * W przypadku błędu w dowolnym kroku, cała transakcja jest wycofywana.
      *
-     * @param databaseSteps Lista kroków do wykonania.
-     * @return Mapa wyników operacji.
-     *
-     * @throws Exception gdy którykolwiek krok się nie powiedzie (z rollback).
+     * @param databaseSteps Lista kroków (Insert, Update, Delete, RawSql) do wykonania.
+     * @return Mapa, gdzie kluczem jest indeks kroku, a wartością lista zwróconych wierszy.
+     * @throws Exception gdy którykolwiek krok się nie powiedzie.
      *
      * Przykład z zależnościami:
      * ```kotlin
      * val steps = listOf(
-     *     DatabaseStep.Insert("users", userData, returning = listOf("id")),
-     *     DatabaseStep.Insert("profiles", mapOf(
-     *         "user_id" to DatabaseValue.FromStep(0, "id"),
-     *         "bio" to DatabaseValue.Value("Hello")
-     *     ))
+     *     DatabaseStep.Insert("users", mapOf("name" to DatabaseValue.Value("John")), returning = listOf("id")),
+     *     DatabaseStep.Insert("profiles", mapOf("user_id" to DatabaseValue.FromStep(0, "id")))
      * )
-     * val results = DatabaseManager.getTransactionManager().execute(steps)
+     * val results = batchExecutor.execute(steps)
      * ```
      */
     override fun execute(databaseSteps: List<DatabaseStep>): Map<Int, List<Map<String, Any?>>> {
@@ -87,17 +80,15 @@ class DatabaseBatchExecutor(
     }
 
     /**
-     * Rozwiązuje referencje DatabaseValue na konkretne wartości.
+     * Rozwiązuje referencję `DatabaseValue` na konkretną wartość.
      *
-     * Konwertuje abstrakcyjne referencje na wartości gotowe do użycia w zapytaniach SQL.
-     * Obsługuje dwa typy referencji:
-     * - **DatabaseValue.Value**: Zwraca bezpośrednią wartość
-     * - **DatabaseValue.FromStep**: Pobiera wartość z wyniku poprzedniej operacji
+     * - `DatabaseValue.Value`: Zwraca przechowywaną wartość.
+     * - `DatabaseValue.FromStep`: Pobiera wartość z wyniku poprzedniego kroku.
      *
-     * @param ref Referencja do rozwiązania
-     * @param resultsContext Kontekst wyników poprzednich operacji (indeks operacji → lista wyników)
-     * @return Rozwiązana wartość
-     * @throws IllegalStateException jeśli referencja wskazuje na nieistniejący wynik
+     * @param ref Referencja do rozwiązania.
+     * @param resultsContext Wyniki z poprzednich kroków transakcji.
+     * @return Rozwiązana wartość.
+     * @throws IllegalStateException, jeśli referencja jest nieprawidłowa.
      */
     private fun resolveReference(ref: DatabaseValue, resultsContext: Map<Int, List<Map<String, Any?>>>): Any? {
         return when (ref) {
@@ -116,15 +107,11 @@ class DatabaseBatchExecutor(
     }
 
     /**
-     * Buduje zapytanie SQL i mapę parametrów dla operacji bazodanowej.
+     * Buduje zapytanie SQL i mapę parametrów na podstawie operacji `DatabaseStep`.
      *
-     * Konwertuje abstrakcyjną operację DatabaseStep na konkretne zapytanie SQL
-     * z odpowiednimi placeholderami i mapą parametrów. Obsługuje wszystkie
-     * typy operacji: INSERT, UPDATE, DELETE, RawSql.
-     *
-     * @param op Operacja bazodanowa do przekształcenia
-     * @param resultsContext Kontekst wyników do rozwiązywania referencji
-     * @return Para zawierająca zapytanie SQL i mapę parametrów
+     * @param op Operacja do przekształcenia.
+     * @param resultsContext Kontekst wyników do rozwiązywania referencji.
+     * @return Para zawierająca zapytanie SQL i mapę parametrów.
      */
     private fun buildQuery(op: DatabaseStep, resultsContext: Map<Int, List<Map<String, Any?>>>): Pair<String, Map<String, Any?>> {
         when (op) {

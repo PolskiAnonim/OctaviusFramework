@@ -8,15 +8,14 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
 /**
- * Centralny komponent inicjalizujący i dostarczający usługi bazodanowe.
+ * Inicjalizuje i udostępnia podstawowe usługi bazodanowe.
  *
- * Odpowiedzialny za konfigurację i tworzenie instancji usług, ale udostępnia je
- * przez interfejsy, umożliwiając luźne powiązania w aplikacji (Dependency Injection).
+ * Konfiguruje pulę połączeń, menedżery transakcji i usługi dostępu do danych,
+ * udostępniając je przez publiczne interfejsy `DataFetcher` i `BatchExecutor`.
  */
 class DatabaseSystem {
     /** Pula połączeń HikariCP z konfiguracją dla PostgreSQL */
     private val dataSource: HikariDataSource
-    /** Template Spring JDBC z obsługą named parameters */
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
     private val datasourceTransactionManager: DataSourceTransactionManager
     private val typeRegistry: TypeRegistry
@@ -25,8 +24,9 @@ class DatabaseSystem {
 
     private val kotlinToPostgresConverter = KotlinToPostgresConverter()
 
-    // Publiczne API udostępnia INTERFEJSY
+    /** Usługa do wykonywania zapytań odczytujących (SELECT). */
     val fetcher: DataFetcher
+    /** Usługa do wykonywania transakcyjnych operacji zapisu (CUD). */
     val batchExecutor: BatchExecutor
 
     init {

@@ -5,60 +5,29 @@ import org.octavius.data.contract.DataFetcher
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 /**
- * Klasa odpowiedzialna za pobieranie danych z bazy PostgreSQL.
+ * Implementacja `DataFetcher` do pobierania danych z bazy PostgreSQL.
  *
- * Zapewnia zaawansowane metody do wykonywania zapytań SELECT z obsługą:
- * - Filtrowania, sortowania i paginacji
- * - Złożonych wyrażeń tabelowych (JOIN, subqueries)
- * - Automatycznej ekspansji parametrów (array, enum, composite types)
- * - Konwersji typów PostgreSQL na typy Kotlin
- * - Mapowania kolumn na obiekty ColumnInfo
- */
-
-/**
- * Główna klasa do pobierania danych z bazy z zaawansowaną obsługą typów.
+ * Zapewnia metody do wykonywania zapytań SELECT, automatycznie obsługując
+ * filtrowanie, paginację oraz **ekspansję złożonych parametrów** (np. `List` -> `ARRAY`,
+ * `data class` -> `ROW`).
  *
- * @param jdbcTemplate Template Spring JDBC do wykonywania zapytań
- * @param rowMappers Fabryka mapperów do konwersji wyników na obiekty Kotlin
- *
- * Przykład użycia:
- * ```kotlin
- * val fetcher = DatabaseFetcher(jdbcTemplate, rowMappers)
- * val count = fetcher.fetchCount("users", "age > :age", mapOf("age" to 18))
- * val users = fetcher.fetchPagedList("users", "*", 0, 10, "active = true")
- * ```
+ * @param jdbcTemplate Template Spring JDBC do wykonywania zapytań.
+ * @param rowMappers Fabryka mapperów do konwersji wyników na obiekty Kotlin.
+ * @param kotlinToPostgresConverter Helper do ekspansji złożonych parametrów (list, enumów,
+ *   data class) na składnię SQL.
  */
 class DatabaseFetcher(
     val jdbcTemplate: NamedParameterJdbcTemplate,
     val rowMappers: RowMappers,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataFetcher {
-    /**
-     * Formatuje wyrażenie tabelowe dla bezpiecznego użycia w SQL.
-     *
-     * Automatycznie dodaje nawiasy dla złożonych wyrażeń (JOIN, subqueries).
-     *
-     * @param table Nazwa tabeli lub złożone wyrażenie SQL
-     * @return Sformatowane wyrażenie gotowe do użycia w zapytaniu
-     */
+
+    /** Formatuje wyrażenie tabelowe, dodając nawiasy dla zapytań z JOIN lub subquery. */
     private fun formatTableExpression(table: String): String {
         return if (table.trim().uppercase().contains(" ")) "($table)" else table
     }
 
-    /**
-     * Pobiera liczbę wierszy z tabeli z opcjonalnym filtrowaniem.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param filter Opcjonalne wyrażenie WHERE (bez słowa kluczowego WHERE)
-     * @param params Parametry do podstawienia w zapytaniu
-     * @return Liczba wierszy spełniających warunki
-     *
-     * Przykład:
-     * ```kotlin
-     * val count = fetchCount("users", "age > :minAge AND status = :status",
-     *                       mapOf("minAge" to 18, "status" to "active"))
-     * ```
-     */
+    /** Pobiera liczbę wierszy spełniających podane kryteria. */
     override fun fetchCount(table: String, filter: String?, params: Map<String, Any?>): Long {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(table)}$whereClause"
@@ -68,17 +37,7 @@ class DatabaseFetcher(
     }
 
 
-    /**
-     * Pobiera wartość pojedynczego pola z pierwszego wiersza.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param field Nazwa pola do pobrania
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param params Parametry do podstawienia
-     * @return Wartość pola
-     *
-     * @throws DataAccessException gdy zapytanie nie zwróci wyników lub zwróci ponad jeden wiersz
-     */
+    /** Pobiera wartość pojedynczego pola z pierwszego pasującego wiersza. */
     override fun fetchField(table: String, field: String, filter: String?, params: Map<String, Any?>): Any? {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT $field FROM ${formatTableExpression(table)}$whereClause"
@@ -90,16 +49,9 @@ class DatabaseFetcher(
     }
 
     /**
-     * Pobiera pojedynczy wiersz z bazy danych.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param columns Lista pól do pobrania (np. "id, name, email")
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param params Parametry do podstawienia
-     * @return Mapa kolumn do wartości
-     *
-     * @throws IllegalStateException gdy zapytanie zwróci więcej niż 1 wiersz
-     * @throws NullPointerException gdy nie znaleziono wiersza
+     * Pobiera pojedynczy wiersz jako mapę.
+     * @throws NullPointerException gdy nie znaleziono wiersza.
+     * @throws IllegalStateException gdy zapytanie zwróci więcej niż 1 wiersz.
      */
     override fun fetchRow(
         table: String,
@@ -112,17 +64,8 @@ class DatabaseFetcher(
     }
 
     /**
-     * Pobiera pojedynczy wiersz lub null jeśli nie znaleziono.
-     *
-     * Wersja fetchRow która zwraca null w przypadku braku dopasowania.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param columns Lista pól do pobrania
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param params Parametry do podstawienia
-     * @return Mapa kolumn do wartości lub null jeśli nie znaleziono
-     *
-     * @throws IllegalStateException gdy zapytanie zwróci więcej niż 1 wiersz
+     * Pobiera pojedynczy wiersz jako mapę lub null, jeśli nie znaleziono.
+     * @throws IllegalStateException gdy zapytanie zwróci więcej niż 1 wiersz.
      */
     override fun fetchRowOrNull(
         table: String, columns: String, filter: String?, params: Map<String, Any?>
@@ -139,16 +82,7 @@ class DatabaseFetcher(
         }
     }
 
-    /**
-     * Pobiera wartości z pojedynczej kolumny.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param column Nazwa kolumny do pobrania
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param orderBy Opcjonalne wyrażenie ORDER BY (bez słowa kluczowego)
-     * @param params Parametry do podstawienia
-     * @return Lista wartości z kolumny
-     */
+    /** Pobiera listę wartości z pojedynczej kolumny. */
     override fun fetchColumn(
         table: String,
         column: String,
@@ -164,18 +98,7 @@ class DatabaseFetcher(
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
     }
 
-    /**
-     * Pobiera wartości z kolumny z paginacją.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param column Nazwa kolumny do pobrania
-     * @param offset Liczba wierszy do pominięcia
-     * @param limit Maksymalna liczba wierszy do pobrania
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param orderBy Opcjonalne wyrażenie ORDER BY
-     * @param params Parametry do podstawienia
-     * @return Lista wartości z kolumny (maksymalnie `limit` elementów)
-     */
+    /** Pobiera paginowaną listę wartości z pojedynczej kolumny. */
     override fun fetchPagedColumn(
         table: String,
         column: String,
@@ -194,16 +117,7 @@ class DatabaseFetcher(
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
     }
 
-    /**
-     * Pobiera listę wierszy z bazy danych.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param columns Lista pól do pobrania (np. "id, name, email")
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param orderBy Opcjonalne wyrażenie ORDER BY
-     * @param params Parametry do podstawienia
-     * @return Lista map reprezentujących wiersze
-     */
+    /** Pobiera listę wierszy jako listę map. */
     override fun fetchList(
         table: String,
         columns: String,
@@ -219,20 +133,7 @@ class DatabaseFetcher(
         return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
     }
 
-    /**
-     * Pobiera listę wierszy z paginacją.
-     *
-     * Główna metoda do pobierania danych dla tabel z raportami.
-     *
-     * @param table Nazwa tabeli lub wyrażenie tabelowe
-     * @param columns Lista pól do pobrania
-     * @param offset Liczba wierszy do pominięcia (dla paginacji)
-     * @param limit Maksymalna liczba wierszy do pobrania
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param orderBy Opcjonalne wyrażenie ORDER BY
-     * @param params Parametry do podstawienia
-     * @return Lista map reprezentujących wiersze (maksymalnie `limit` elementów)
-     */
+    /** Pobiera paginowaną listę wierszy. */
     override fun fetchPagedList(
         table: String,
         columns: String,
@@ -252,26 +153,13 @@ class DatabaseFetcher(
     }
 
     /**
-     * Pobiera encję z pełnymi informacjami o kolumnach.
+     * Pobiera pojedynczy wiersz, mapując go na obiekty `ColumnInfo`.
      *
-     * Używa ColumnInfoMapper do mapowania wyników na obiekty ColumnInfo
-     * zawierające nazwę kolumny i tabeli z której pochodzą informacje.
+     * Używane do pobierania danych do formularzy, gdzie ważne jest pochodzenie kolumny (nazwa tabeli).
+     * Wymaga filtra, który zapewni zwrot tylko jednego wiersza.
      *
-     * Używane przede wszystkim w formularzach. Wymaga filtra który wymusi zwrócenie jednego wiersza
-     *
-     * @param tables Wyrażenie tabelowe (może zawierać JOIN)
-     * @param filter Opcjonalne wyrażenie WHERE
-     * @param params Parametry do podstawienia
-     * @return Mapa obiektów ColumnInfo do wartości
-     *
-     * Przykład:
-     * ```kotlin
-     * val entity = fetchEntity(
-     *     "users u LEFT JOIN profiles p ON u.id = p.user_id",
-     *     "u.id = :id",
-     *     mapOf("id" to 123)
-     * )
-     * ```
+     * @param tables Wyrażenie tabelowe, np. "users u JOIN profiles p ON u.id = p.user_id".
+     * @return Mapa `ColumnInfo` do wartości.
      */
     override fun fetchEntity(
         tables: String,

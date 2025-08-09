@@ -1,10 +1,9 @@
 package org.octavius.data.contract
 
 /**
- * Interfejs definiujący kontrakt dla operacji pobierania danych (SELECT).
+ * Kontrakt dla operacji pobierania danych (SELECT).
  *
- * Abstrakcja nad mechanizmem odczytu z bazy danych, umożliwiająca
- * uniezależnienie logiki biznesowej od konkretnej implementacji (np. JDBC, JPA).
+ * Uniezależnia logikę biznesową od konkretnej implementacji dostępu do danych.
  */
 interface DataFetcher {
     fun fetchCount(table: String, filter: String? = null, params: Map<String, Any?> = emptyMap()): Long

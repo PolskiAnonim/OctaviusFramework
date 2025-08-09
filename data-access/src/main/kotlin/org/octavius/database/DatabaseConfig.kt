@@ -2,6 +2,9 @@ package org.octavius.database
 
 import java.util.*
 
+/**
+ * Przechowuje i zarządza konfiguracją połączenia z bazą danych.
+ */
 internal object DatabaseConfig {
     // Domyślne wartości
     var dbUrl = "jdbc:postgresql://localhost:5430/novels_games"
@@ -10,7 +13,10 @@ internal object DatabaseConfig {
     var dbSchemas: List<String>  = listOf("public", "asian_media", "games")
     var baseDomainPackage = "org.octavius.domain"
 
-    // Funkcja do ładowania konfiguracji z pliku
+    /**
+     * Ładuje konfigurację z pliku `properties`.
+     * @param fileName Nazwa pliku w zasobach (np. "database.properties").
+     */
     fun loadFromFile(fileName: String) {
         try {
             val props = Properties()

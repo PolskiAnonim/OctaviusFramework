@@ -1,90 +1,48 @@
 package org.octavius.data.contract
 
 /**
- * Abstrakcyjna reprezentacja wartości w operacjach bazodanowych.
+ * Reprezentuje wartość w kroku bazodanowym.
  *
- * Sealed class umożliwiająca przekazywanie różnych typów wartości w operacjach DatabaseStep:
- * - **Bezpośrednie wartości**: Znane z góry wartości stałe
- * - **Referencje do wyników**: Wartości pochodzące z poprzednich operacji w tej samej transakcji
- *
- * Ta abstrakcja umożliwia tworzenie złożonych transakcji z zależnościami między krokami.
+ * Umożliwia przekazywanie zarówno stałych wartości, jak i dynamicznych referencji
+ * do wyników poprzednich kroków w tej samej transakcji.
  *
  * @see DatabaseStep
- * @see BatchExecutor
  */
 sealed class DatabaseValue {
     /**
-     * Stała wartość znana w momencie definiowania operacji.
-     *
-     * @param value Wartość do przekazania w operacji (może być null)
+     * Stała, predefiniowana wartość.
+     * @param value Wartość do użycia w operacji.
      */
     data class Value(val value: Any?) : DatabaseValue()
 
     /**
-     * Referencja do wyniku poprzedniej operacji w tej samej transakcji.
+     * Referencja do wyniku z poprzedniego kroku w tej samej transakcji.
      *
-     * Umożliwia używanie wyników wcześniejszych kroków (np. wygenerowane ID)
-     * w kolejnych operacjach, tworząc łańcuch zależności.
-     *
-     * @param stepIndex Indeks operacji na liście (0-based), której wynik chcemy użyć
-     * @param resultKey Klucz w mapie wyników tej operacji (np. "id", "slug", "uuid")
-     *
-     * Przykład:
-     * ```kotlin
-     * DatabaseValue.FromStep(0, "id") // Użyj ID z pierwszej operacji
-     * ```
+     * @param stepIndex Indeks (0-based) kroku, którego wynik ma być użyty.
+     * @param resultKey Nazwa kolumny (np. "id") w wyniku tego kroku.
      */
     data class FromStep(val stepIndex: Int, val resultKey: String) : DatabaseValue()
 }
 
 /**
- * Abstrakcyjna reprezentacja operacji bazodanowej w transakcji.
+ * Reprezentuje pojedynczą operację w transakcji bazodanowej.
  *
- * Sealed class definiująca wszystkie obsługiwane typy operacji bazodanowych:
- * - **Insert**: Wstawianie nowych rekordów
- * - **Update**: Aktualizacja istniejących rekordów
- * - **Delete**: Usuwanie rekordów
- * - **RawSql**: Wykonywanie dowolnych zapytań SQL
+ * Każda operacja może opcjonalnie zwracać wartości przez klauzulę `RETURNING`.
  *
- * Każda operacja może opcjonalnie zwrócić wartości poprzez klauzulę RETURNING,
- * które mogą być użyte w kolejnych krokach transakcji.
- *
- * @see DatabaseValue
  * @see BatchExecutor.execute
  */
 sealed class DatabaseStep {
-    /**
-     * Lista kolumn do zwrócenia po wykonaniu operacji (klauzula RETURNING).
-     *
-     * Opcjonalna lista nazw kolumn, które mają być zwrócone po wykonaniu operacji.
-     * Wyniki są dostępne dla kolejnych kroków przez DatabaseValue.FromStep.
-     * - Pusta lista: brak RETURNING
-     * - ["*"]: wszystkie kolumny
-     * - ["id", "uuid"]: konkretne kolumny
-     */
+    /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
     abstract val returning: List<String>
 
-    /**
-     * Operacja INSERT - wstawienie nowego rekordu.
-     *
-     * @param tableName Nazwa tabeli docelowej
-     * @param data Mapa kolumn do wartości (nazwa kolumny → DatabaseValue)
-     * @param returning Lista kolumn do zwrócenia (domyślnie pusta)
-     */
+    /** Operacja `INSERT`. */
     data class Insert(
         val tableName: String,
         val data: Map<String, DatabaseValue>,
         override val returning: List<String> = listOf()
     ) : DatabaseStep()
 
-    /**
-     * Operacja UPDATE - aktualizacja istniejących rekordów.
-     *
-     * @param tableName Nazwa tabeli docelowej
-     * @param data Mapa kolumn do nowych wartości
-     * @param filter Warunki WHERE (nazwa kolumny → DatabaseValue)
-     * @param returning Lista kolumn do zwrócenia (domyślnie pusta)
-     */
+    /** Operacja `UPDATE`. */
     data class Update(
         val tableName: String,
         val data: Map<String, DatabaseValue>,
@@ -92,28 +50,16 @@ sealed class DatabaseStep {
         override val returning: List<String> = emptyList()
     ) : DatabaseStep()
 
-    /**
-     * Operacja DELETE - usunięcie rekordów.
-     *
-     * @param tableName Nazwa tabeli docelowej
-     * @param filter Warunki WHERE określające rekordy do usunięcia
-     * @param returning Lista kolumn do zwrócenia (domyślnie pusta)
-     */
+    /** Operacja `DELETE`. */
     data class Delete(
         val tableName: String,
         val filter: Map<String, DatabaseValue>,
         override val returning: List<String> = emptyList()
     ) : DatabaseStep()
 
-    /**
-     * Operacja RawSql - wykonanie dowolnego zapytania SQL.
-     *
+    /** Dowolna operacja SQL z nazwanymi parametrami.
      * Umożliwia wykonywanie złożonych zapytań, które nie mieszczą się
      * w standardowych operacjach INSERT/UPDATE/DELETE.
-     *
-     * @param sql Zapytanie SQL z named parameters (format :param)
-     * @param params Mapa parametrów do podstawienia
-     * @param returning Lista kolumn do zwrócenia (domyślnie pusta)
      */
     data class RawSql(
         val sql: String,
@@ -123,25 +69,22 @@ sealed class DatabaseStep {
 }
 
 /**
- * Opakowuje wartość parametru z jawną informacją o docelowym typie PostgreSQL.
- * Umożliwia expanderowi dodanie rzutowania (::type) do wygenerowanego fragmentu SQL.
+ * Opakowuje wartość, aby jawnie określić docelowy typ PostgreSQL.
  *
- * @param value Wartość do osadzenia w zapytaniu (może to być wartość prosta, lista, data class etc.).
- * @param pgType Nazwa typu PostgreSQL, na który wartość ma być rzutowana (np. "text[]", "jsonb", "my_custom_type").
+ * Powoduje dodanie rzutowania typu (`::pgType`) do wygenerowanego fragmentu SQL.
+ * Przydatne do obsługi niejednoznaczności typów, np. przy tablicach.
+ *
+ * @param value Wartość do osadzenia w zapytaniu (należy unikać data class gdzie jest to dodawane automatycznie!).
+ * @param pgType Nazwa typu PostgreSQL, na który wartość ma być rzutowana (np. "text[]", "jsonb").
  */
 data class PgTyped(val value: Any?, val pgType: String)
 
 /**
- * Identyfikator kolumny w bazie danych z pełną ścieżką tabelą.kolumna.
+ * Identyfikuje kolumnę w bazie danych, uwzględniając nazwę tabeli.
  *
- * Data class używana w systemie formularzy do precyzyjnego identyfikowania
- * kolumn w zapytaniach z JOIN. Pozwala różnić kolumny o tej samej nazwie
- * pochodzące z różnych tabel.
+ * Używane do rozróżniania kolumn o tych samych nazwach w zapytaniach z `JOIN`.
  *
- * @param tableName Nazwa tabeli źródłowej kolumny
- * @param fieldName Nazwa kolumny w tabeli
- *
- * @see RowMappers.ColumnInfoMapper
- * @see DatabaseFetcher.fetchEntity
+ * @param tableName Nazwa tabeli źródłowej.
+ * @param fieldName Nazwa kolumny.
  */
 data class ColumnInfo(val tableName: String, val fieldName: String)

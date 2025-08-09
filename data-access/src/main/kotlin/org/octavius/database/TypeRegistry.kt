@@ -5,14 +5,13 @@ import java.net.JarURLConnection
 import java.net.URL
 
 /**
- * Centralny rejestr typów PostgreSQL używanych w aplikacji.
- * 
- * Automatycznie skanuje bazę danych i klasy domenowe, tworząc mapowanie między typami PostgreSQL
- * a klasami Kotlin. Obsługuje typy standardowe, wyliczeniowe (enum), kompozytowe i tablicowe.
- * 
- * @param namedParameterJdbcTemplate Template JDBC do wykonywania zapytań do bazy danych
- * 
- * @constructor Inicjalizuje rejestr typów, automatycznie skanując dostępne typy
+ * Skanuje bazę danych i klasy domenowe, tworząc mapowanie między typami PostgreSQL a klasami Kotlina.
+ *
+ * Inicjalizacja polega na odpytaniu katalogów systemowych bazy danych (`pg_type`, `pg_enum`)
+ * oraz przeskanowaniu classpath w poszukiwaniu klas domenowych, aby umożliwić
+ * automatyczną konwersję typów.
+ *
+ * @param namedParameterJdbcTemplate Template JDBC do odpytywania bazy danych.
  */
 class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
     // Przechowuje mapowanie nazw typów PostgreSQL na informacje o typach
