@@ -8,7 +8,7 @@ import org.octavius.localization.Translations
 /**
  * Walidator dla kontrolek list tekstowych z obsługą opcji walidacji.
  */
-class TextListValidator(
+class StringListValidator(
     private val validationOptions: StringListValidation? = null
 ) : ControlValidator<List<String>>() {
 

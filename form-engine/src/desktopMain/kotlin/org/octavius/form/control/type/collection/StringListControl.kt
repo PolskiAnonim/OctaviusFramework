@@ -17,7 +17,7 @@ import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringListValidation
-import org.octavius.form.control.validator.collection.TextListValidator
+import org.octavius.form.control.validator.collection.StringListValidator
 import org.octavius.localization.Translations
 import org.octavius.ui.theme.FormSpacing
 
@@ -37,7 +37,7 @@ class StringListControl(
 ) : Control<List<String>>(
     label, columnInfo, required, dependencies, validationOptions = validationOptions, hasStandardLayout = false
 ) {
-    override val validator: ControlValidator<List<String>> = TextListValidator(validationOptions)
+    override val validator: ControlValidator<List<String>> = StringListValidator(validationOptions)
 
     override fun copyInitToValue(value: List<String>): List<String> {
         @Suppress("UNCHECKED_CAST") return value.map { it }.toList()
