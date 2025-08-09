@@ -10,9 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.octavius.contract.LocalNotifier
 import org.octavius.contract.Screen
 import org.octavius.localization.Translations
-import org.octavius.contract.LocalNotifier
 
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę

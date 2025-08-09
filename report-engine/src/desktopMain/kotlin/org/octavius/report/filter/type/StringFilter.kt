@@ -123,8 +123,19 @@ class StringFilter: Filter<StringFilterData>() {
 
         return when (filterType) {
             StringFilterDataType.Exact -> {
-                val operator = if (isAllMode) "@>" else "&&"
-                Query("$columnName $operator :$columnName", mapOf(columnName to listOf(valueParam)))
+                if (caseSensitive) {
+                    // TODO sprawdzić czy da się pozbyć rzutowania - problem z porównywaniem character varying[] i text[]
+                    val operator = if (isAllMode) "@>" else "&&"
+                    Query("$columnName $operator :$columnName::text[]", mapOf(columnName to listOf(valueParam)))
+                } else {
+                    // Jeśli wielkość liter NIE ma znaczenia, musimy użyć UNNEST
+                    val paramMap = mapOf(columnName to valueParam)
+                    if (isAllMode) {
+                        Query("NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE LOWER(elem) <> :$columnName)", paramMap)
+                    } else {
+                        Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE LOWER(elem) = :$columnName)", paramMap)
+                    }
+                }
             }
             StringFilterDataType.StartsWith -> {
                 val condition = if (caseSensitive) "elem" else "LOWER(elem)"

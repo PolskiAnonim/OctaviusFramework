@@ -1,14 +1,28 @@
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
 }
 
-dependencies {
-    implementation(project(":core"))
-    implementation(project(":ui-core"))
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.ktor.serialization.kotlinx.json)
+kotlin {
+    jvm("desktop")
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(project(":core"))
+                implementation(project(":api-contract"))
+            }
+        }
+
+        val desktopMain by getting {
+            dependencies {
+                // Zależności do Ktor-a
+                implementation(libs.ktor.server.core)
+                implementation(libs.ktor.server.netty)
+                implementation(libs.ktor.server.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.kotlinx.serialization.json)
+            }
+        }
+    }
 }

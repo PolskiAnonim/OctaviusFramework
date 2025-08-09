@@ -1,6 +1,6 @@
 package org.octavius.database
 
-import java.util.Properties
+import java.util.*
 
 internal object DatabaseConfig {
     // Domyślne wartości

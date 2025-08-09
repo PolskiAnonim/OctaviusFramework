@@ -35,12 +35,14 @@ kotlin {
             implementation(project(":core"))
             implementation(project(":data-access"))
             implementation(project(":ui-core"))
+            implementation(project(":feature-contract"))
             implementation(project(":form-engine"))
             implementation(project(":report-engine"))
             implementation(project(":feature-games"))
             implementation(project(":feature-settings"))
             implementation(project(":feature-asian-media"))
             implementation(project(":api-server"))
+            implementation(project(":api-contract"))
             implementation(compose.desktop.currentOs)
 
             implementation(project.dependencies.platform(libs.koin.bom))
@@ -127,13 +129,13 @@ val mergeTranslations by tasks.registering {
 }
 
 tasks.withType<Jar>().configureEach {
-    if (name == "desktopJar") {
-        dependsOn(mergeTranslations)
-        // Po prostu dodajemy nasze scalone pliki do JAR-a.
-        // Ponieważ ta akcja jest dodawana na końcu, powinna nadpisać pliki
-        // o tych samych nazwach, które zostały dodane wcześniej z modułów.
-        from(mergeTranslations.map { it.outputs.files }) {
-            into("/")
-        }
+
+    dependsOn(mergeTranslations)
+    // Po prostu dodajemy nasze scalone pliki do JAR-a.
+    // Ponieważ ta akcja jest dodawana na końcu, powinna nadpisać pliki
+    // o tych samych nazwach, które zostały dodane wcześniej z modułów.
+    from(mergeTranslations.map { it.outputs.files }) {
+        into("/")
     }
+
 }

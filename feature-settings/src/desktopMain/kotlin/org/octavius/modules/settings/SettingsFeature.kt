@@ -1,10 +1,10 @@
 package org.octavius.modules.settings
 
-import org.octavius.contract.ApiModule
+import org.octavius.api.contract.ApiModule
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
 import org.octavius.contract.Tab
-import org.octavius.modules.settings.ui.SettingsTab
+import org.octavius.modules.settings.navigation.SettingsTab
 
 object SettingsFeature : FeatureModule {
     override val name: String = "settings"
