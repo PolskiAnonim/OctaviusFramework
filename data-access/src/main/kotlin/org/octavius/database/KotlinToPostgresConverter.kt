@@ -1,6 +1,7 @@
 package org.octavius.database
 
 import kotlinx.serialization.json.JsonObject
+import org.octavius.data.contract.PgTyped
 import org.octavius.util.Converters
 import org.postgresql.util.PGobject
 import kotlin.reflect.full.memberProperties
@@ -111,6 +112,12 @@ class KotlinToPostgresConverter {
      */
     private fun expandParameter(paramName: String, paramValue: Any?): Pair<String, Map<String, Any?>> {
         return when {
+            paramValue is PgTyped -> {
+                val (innerPlaceholder, innerParams) = expandParameter(paramName, paramValue.value)
+                // 2. Do wyniku (który może być już np. "ARRAY[:p1, :p2]") doklej rzutowanie.
+                val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
+                finalPlaceholder to innerParams
+            }
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
             isDataClass(paramValue) -> expandRowParameter(paramName, paramValue!!)
             paramValue is JsonObject -> createJsonParameter(paramName, paramValue)

@@ -14,6 +14,7 @@ import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
+import org.octavius.data.contract.PgTyped
 import org.octavius.domain.asian.PublicationStatus
 
 /**
@@ -53,8 +54,8 @@ class AsianMediaApi : ApiModule, KoinComponent {
             val result = fetcher.fetchRowOrNull(
                 table = "titles",
                 columns = "id, titles",
-                filter = "titles && :titles::text[]", // TODO lepsze rozwiązanie rzutowania na text[]
-                params = mapOf("titles" to titles)
+                filter = "titles && :titles",
+                params = mapOf("titles" to PgTyped(titles, "text[]"))
             )
 
             if (result != null) {

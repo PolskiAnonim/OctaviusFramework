@@ -123,6 +123,15 @@ sealed class DatabaseStep {
 }
 
 /**
+ * Opakowuje wartość parametru z jawną informacją o docelowym typie PostgreSQL.
+ * Umożliwia expanderowi dodanie rzutowania (::type) do wygenerowanego fragmentu SQL.
+ *
+ * @param value Wartość do osadzenia w zapytaniu (może to być wartość prosta, lista, data class etc.).
+ * @param pgType Nazwa typu PostgreSQL, na który wartość ma być rzutowana (np. "text[]", "jsonb", "my_custom_type").
+ */
+data class PgTyped(val value: Any?, val pgType: String)
+
+/**
  * Identyfikator kolumny w bazie danych z pełną ścieżką tabelą.kolumna.
  *
  * Data class używana w systemie formularzy do precyzyjnego identyfikowania

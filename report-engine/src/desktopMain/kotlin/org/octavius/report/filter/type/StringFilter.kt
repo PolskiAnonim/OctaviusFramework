@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
+import org.octavius.data.contract.PgTyped
 import org.octavius.localization.Translations
 import org.octavius.report.FilterMode
 import org.octavius.report.Query
@@ -124,9 +125,11 @@ class StringFilter: Filter<StringFilterData>() {
         return when (filterType) {
             StringFilterDataType.Exact -> {
                 if (caseSensitive) {
-                    // TODO sprawdzić czy da się pozbyć rzutowania - problem z porównywaniem character varying[] i text[]
                     val operator = if (isAllMode) "@>" else "&&"
-                    Query("$columnName $operator :$columnName::text[]", mapOf(columnName to listOf(valueParam)))
+                    Query(
+                        "$columnName $operator :$columnName",
+                        mapOf(columnName to PgTyped(listOf(valueParam), "text[]"))
+                    )
                 } else {
                     // Jeśli wielkość liter NIE ma znaczenia, musimy użyć UNNEST
                     val paramMap = mapOf(columnName to valueParam)
