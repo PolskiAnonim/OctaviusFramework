@@ -15,11 +15,11 @@ kotlin {
         // Wszystko, co ma być współdzielone, idzie do commonMain
         commonMain.dependencies {
             // Zależności Compose, które działają wszędzie
-            api(compose.runtime)    // 'api' zamiast 'implementation', żeby moduły zależne też je widziały
+            api(compose.runtime)
             api(compose.foundation)
             api(compose.material3)
             api(compose.ui)
-
+            api(compose.materialIconsExtended)
             // Inne współdzielone biblioteki
             implementation(libs.kotlinx.coroutines.core)
             implementation(project(":core")) // ui-core może zależeć od core

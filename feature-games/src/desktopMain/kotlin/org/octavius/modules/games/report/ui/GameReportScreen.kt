@@ -1,7 +1,7 @@
-package org.octavius.modules.games.ui
+package org.octavius.modules.games.report.ui
 
 import org.octavius.localization.Translations
-import org.octavius.modules.games.GameReportStructureBuilder
+import org.octavius.modules.games.report.GameReportStructureBuilder
 import org.octavius.report.component.ReportScreen
 
 class GameReportScreen {

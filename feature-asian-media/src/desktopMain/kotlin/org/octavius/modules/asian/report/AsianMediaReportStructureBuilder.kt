@@ -1,4 +1,4 @@
-package org.octavius.modules.asian
+package org.octavius.modules.asian.report
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -6,7 +6,7 @@ import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
 import org.octavius.localization.Translations
-import org.octavius.modules.asian.ui.AsianMediaFormScreen
+import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
 import org.octavius.report.ReportAddAction
@@ -72,7 +72,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
             val id = rowData["title_id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
-                    AsianMediaFormScreen.create(
+                    AsianMediaFormScreen.Companion.create(
                         entityId = id,
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }
@@ -85,7 +85,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
     override fun buildAddActions(): List<ReportAddAction> = listOf(
         ReportAddAction(Translations.get("asianMedia.report.newTitle"), Icons.Default.Add) {
             AppRouter.navigateTo(
-                AsianMediaFormScreen.create(
+                AsianMediaFormScreen.Companion.create(
                     onSaveSuccess = { AppRouter.goBack() },
                     onCancel = { AppRouter.goBack() }
                 ))

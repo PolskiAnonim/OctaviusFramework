@@ -1,4 +1,4 @@
-package org.octavius.modules.settings.ui
+package org.octavius.modules.settings.navigation
 
 import androidx.compose.runtime.Composable
 import octavius.feature_settings.generated.resources.Res

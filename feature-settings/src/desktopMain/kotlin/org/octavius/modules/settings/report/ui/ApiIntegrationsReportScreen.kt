@@ -1,7 +1,7 @@
-package org.octavius.modules.settings.ui
+package org.octavius.modules.settings.report.ui
 
 import org.octavius.localization.Translations
-import org.octavius.modules.settings.ApiIntegrationsReportStructureBuilder
+import org.octavius.modules.settings.report.ApiIntegrationsReportStructureBuilder
 import org.octavius.report.component.ReportScreen
 
 class ApiIntegrationsReportScreen {

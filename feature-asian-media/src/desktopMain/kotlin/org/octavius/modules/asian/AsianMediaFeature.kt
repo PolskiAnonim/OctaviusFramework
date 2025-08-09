@@ -5,7 +5,7 @@ import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
 import org.octavius.contract.Tab
 import org.octavius.modules.asian.api.AsianMediaApi
-import org.octavius.modules.asian.ui.AsianMediaTab
+import org.octavius.modules.asian.navigation.AsianMediaTab
 
 object AsianMediaFeature : FeatureModule {
     override val name: String = "settings"

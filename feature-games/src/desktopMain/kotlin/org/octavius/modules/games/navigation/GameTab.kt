@@ -1,4 +1,4 @@
-package org.octavius.modules.games.ui
+package org.octavius.modules.games.navigation
 
 import androidx.compose.runtime.Composable
 import octavius.feature_games.generated.resources.Res
@@ -8,6 +8,7 @@ import org.octavius.contract.Screen
 import org.octavius.contract.Tab
 import org.octavius.contract.TabOptions
 import org.octavius.localization.Translations
+import org.octavius.modules.games.report.ui.GameReportScreen
 
 class GameTab : Tab {
     override val options: TabOptions
@@ -19,5 +20,5 @@ class GameTab : Tab {
 
     override val index: UShort = 1u
 
-    override fun getInitialScreen(): Screen = GameReportScreen.create()
+    override fun getInitialScreen(): Screen = GameReportScreen.Companion.create()
 }

@@ -1,4 +1,4 @@
-package org.octavius.modules.settings.ui
+package org.octavius.modules.settings.navigation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import org.octavius.contract.Screen
 import org.octavius.localization.Translations
+import org.octavius.modules.settings.report.ui.ApiIntegrationsReportScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.ui.theme.FormSpacing
 

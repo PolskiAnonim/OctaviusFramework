@@ -1,4 +1,4 @@
-package org.octavius.modules.settings
+package org.octavius.modules.settings.report
 
 import org.octavius.localization.Translations
 import org.octavius.report.Query

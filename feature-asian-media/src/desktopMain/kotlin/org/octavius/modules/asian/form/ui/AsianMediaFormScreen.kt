@@ -1,4 +1,4 @@
-package org.octavius.modules.asian.ui
+package org.octavius.modules.asian.form.ui
 
 import org.octavius.form.component.FormHandler
 import org.octavius.form.component.FormScreen

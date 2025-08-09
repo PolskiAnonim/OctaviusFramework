@@ -1,4 +1,4 @@
-package org.octavius.modules.asian.ui
+package org.octavius.modules.asian.navigation
 
 import androidx.compose.runtime.Composable
 import octavius.feature_asian_media.generated.resources.Res
@@ -8,6 +8,7 @@ import org.octavius.contract.Screen
 import org.octavius.contract.Tab
 import org.octavius.contract.TabOptions
 import org.octavius.localization.Translations
+import org.octavius.modules.asian.report.ui.AsianMediaReportScreen
 
 class AsianMediaTab : Tab {
     override val options: TabOptions
@@ -19,5 +20,5 @@ class AsianMediaTab : Tab {
 
     override val index: UShort = 0u
 
-    override fun getInitialScreen(): Screen = AsianMediaReportScreen.create()
+    override fun getInitialScreen(): Screen = AsianMediaReportScreen.Companion.create()
 }

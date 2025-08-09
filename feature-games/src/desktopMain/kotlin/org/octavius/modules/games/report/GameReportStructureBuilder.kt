@@ -1,11 +1,11 @@
-package org.octavius.modules.games
+package org.octavius.modules.games.report
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import org.octavius.domain.game.GameStatus
 import org.octavius.localization.Translations
-import org.octavius.modules.games.ui.GameFormScreen
-import org.octavius.modules.games.ui.GameSeriesFormScreen
+import org.octavius.modules.games.form.game.ui.GameFormScreen
+import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
 import org.octavius.report.ReportAddAction
@@ -42,7 +42,7 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
             val id = rowData["id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
-                    GameFormScreen.create(
+                    GameFormScreen.Companion.create(
                         entityId = id,
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }
@@ -53,14 +53,14 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
     override fun buildAddActions(): List<ReportAddAction> = listOf(
         ReportAddAction(Translations.get("games.report.newGame"), Icons.Default.Add) {
             AppRouter.navigateTo(
-                GameFormScreen.create(
+                GameFormScreen.Companion.create(
                     onSaveSuccess = { AppRouter.goBack() },
                     onCancel = { AppRouter.goBack() })
             )
         },
         ReportAddAction(Translations.get("games.report.newSeries"), Icons.Default.Add) {
             AppRouter.navigateTo(
-                GameSeriesFormScreen.create(
+                GameSeriesFormScreen.Companion.create(
                     onSaveSuccess = { AppRouter.goBack() },
                     onCancel = { AppRouter.goBack() }
                 ))

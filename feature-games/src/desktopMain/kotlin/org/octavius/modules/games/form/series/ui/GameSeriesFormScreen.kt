@@ -1,4 +1,4 @@
-package org.octavius.modules.games.ui
+package org.octavius.modules.games.form.series.ui
 
 import org.octavius.form.component.FormHandler
 import org.octavius.form.component.FormScreen
