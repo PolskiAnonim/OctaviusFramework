@@ -13,17 +13,17 @@ kotlin {
     js(IR) {
         browser {
             commonWebpackConfig {
-                outputFileName = "browser-extension.js" // Nazwa wyjściowego pliku JS
+                outputFileName = "browser-extension.js"
+
+                devServer = (devServer ?: org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.DevServer()).apply {
+                    static = (static ?: mutableListOf()).apply {
+                        add("src/jsMain/resources")
+                    }
+                }
             }
 
-            // Konfiguracja dla zadania uruchamiającego serwer deweloperski (niepotrzebne dla wtyczki)
-            runTask {
-                // ...
-            }
-
-            // Konfiguracja dla zadania budującego dystrybucję wtyczki
             distribution {
-                outputDirectory.set(project.buildDir.resolve("dist"))
+                outputDirectory = project.buildDir.resolve("dist")
             }
         }
         binaries.executable()
@@ -53,22 +53,10 @@ kotlin {
                 // Coroutines
                 implementation(libs.kotlinx.coroutines.core)
 
+                implementation(project(":ui-core"))
                 // Wrapper do API przeglądarek
                 // implementation("org.jetbrains.kotlin-wrappers:kotlin-browser:...")
             }
         }
     }
-}
-
-// Skopiuj plik manifest.json do katalogu dystrybucyjnego po zbudowaniu
-tasks.withType<Copy> {
-    from("src/jsMain/resources") {
-        include("manifest.json", "popup.html") // Dodaj tu wszystkie statyczne pliki
-    }
-    into(project.buildDir.resolve("dist"))
-}
-
-// Upewnij się, że kopiowanie manifestu dzieje się po zbudowaniu JS
-tasks.named("jsBrowserDistribution") {
-    finalizedBy(tasks.withType<Copy>())
 }

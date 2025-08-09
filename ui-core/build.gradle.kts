@@ -5,25 +5,28 @@ plugins {
 }
 
 kotlin {
-    // Definiujemy, że ten moduł jest tylko dla desktopa
     jvm("desktop")
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
 
     sourceSets {
-        val desktopMain by getting
-
+        // Wszystko, co ma być współdzielone, idzie do commonMain
         commonMain.dependencies {
-            // Zależności Compose
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.material3)
-            implementation(compose.ui)
+            // Zależności Compose, które działają wszędzie
+            api(compose.runtime)    // 'api' zamiast 'implementation', żeby moduły zależne też je widziały
+            api(compose.foundation)
+            api(compose.material3)
+            api(compose.ui)
 
+            // Inne współdzielone biblioteki
             implementation(libs.kotlinx.coroutines.core)
+            implementation(project(":core")) // ui-core może zależeć od core
         }
 
-        desktopMain.dependencies {
-            implementation(project(":core"))
-        }
+        // Zależności tylko dla desktopu (jeśli jakieś są)
+        val desktopMain by getting
+        val jsMain by getting
     }
 }
