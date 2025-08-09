@@ -11,6 +11,7 @@ import org.octavius.domain.test.TestPriority
 import org.octavius.domain.test.TestProject
 import org.octavius.domain.test.TestStatus
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -25,6 +26,20 @@ class RealPostgresDataTest {
     fun setup() {
         // 1. Ładujemy konfigurację
         DatabaseConfig.loadFromFile("test-database.properties")
+
+        // 2. KRYTYCZNE ZABEZPIECZENIE (ASSERTION GUARD)
+        val connectionUrl = DatabaseConfig.dbUrl
+        val dbName = connectionUrl.substringAfterLast("/") // Wyciągamy nazwę bazy z URL-a
+
+        // Sprawdzamy zarówno URL, jak i nazwę bazy, aby być podwójnie pewnym.
+        // Można też sprawdzić hosta, port etc.
+        if (!connectionUrl.contains("localhost:5430") || dbName != "octavius_test") {
+            throw IllegalStateException(
+                "ABORTING TEST! Attempting to run destructive tests on a non-test database. " +
+                        "Connection URL: '$connectionUrl'. This is a safety guard to prevent data loss."
+            )
+        }
+        println("Safety guard passed. Connected to the correct test database: $dbName")
 
         // 2. Tworzymy DataSource i JdbcTemplate
         val hikariConfig = HikariConfig().apply {
