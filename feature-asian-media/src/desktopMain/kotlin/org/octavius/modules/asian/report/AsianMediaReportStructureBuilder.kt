@@ -72,7 +72,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
             val id = rowData["title_id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
-                    AsianMediaFormScreen.Companion.create(
+                    AsianMediaFormScreen.create(
                         entityId = id,
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }

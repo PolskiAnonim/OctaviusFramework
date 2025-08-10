@@ -16,6 +16,9 @@ import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.PgTyped
 import org.octavius.domain.asian.PublicationStatus
+import org.octavius.modules.asian.AsianMediaFeature
+import org.octavius.navigation.NavigationEvent
+import org.octavius.navigation.NavigationEventBus
 
 /**
  * Implementacja ApiModule dla funkcjonalności "Asian Media".
@@ -73,6 +76,8 @@ class AsianMediaApi : ApiModule, KoinComponent {
             } else {
                 call.respond(PublicationCheckResponse(found = false))
             }
+
+
         }
     }
 
@@ -110,6 +115,20 @@ class AsianMediaApi : ApiModule, KoinComponent {
                 val newId = result[0]?.first()?.get("id") as? Int
 
                 if (newId != null) {
+                    // === NOWA LOGIKA - WYSYŁANIE ZDARZENIA ===
+                    println("API: Pomyślnie dodano tytuł z ID: $newId. Wysyłanie zdarzenia nawigacyjnego...")
+
+                    // Przygotuj payload dla formularza
+                    val payload = mapOf("entityId" to newId)
+
+                    // Wyślij zdarzenie do magistrali
+                    NavigationEventBus.post(
+                        NavigationEvent.NavigateToScreen(
+                            screenId = AsianMediaFeature.ASIAN_MEDIA_FORM_SCREEN_ID, // Użyjemy stałej
+                            payload = payload
+                        )
+                    )
+
                     call.respond(
                         PublicationAddResponse(
                             success = true,

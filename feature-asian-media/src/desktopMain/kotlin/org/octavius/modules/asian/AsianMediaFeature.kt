@@ -5,11 +5,32 @@ import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
 import org.octavius.contract.Tab
 import org.octavius.modules.asian.api.AsianMediaApi
+import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.modules.asian.navigation.AsianMediaTab
+import org.octavius.navigation.AppRouter
 
 object AsianMediaFeature : FeatureModule {
+
+    const val ASIAN_MEDIA_FORM_SCREEN_ID = "asianMediaForm"
+
     override val name: String = "settings"
     override fun getTab(): Tab? = AsianMediaTab()
     override fun getApiModules(): List<ApiModule>? = listOf(AsianMediaApi())
-    override fun getScreenFactories(): List<ScreenFactory>? = null
+    override fun getScreenFactories(): List<ScreenFactory>? = listOf(
+        object : ScreenFactory {
+            override val screenId: String = ASIAN_MEDIA_FORM_SCREEN_ID
+
+            override fun create(payload: Map<String, Any>?): org.octavius.contract.Screen {
+                // Wyciągamy ID z payloadu
+                val entityId = payload?.get("entityId") as? Int
+                require(entityId != null) { "Payload musi zawierać 'entityId' dla tego ekranu." }
+
+                return AsianMediaFormScreen.create(
+                    entityId = entityId,
+                    onSaveSuccess = { AppRouter.goBack() },
+                    onCancel = { AppRouter.goBack() }
+                )
+            }
+        }
+    )
 }
