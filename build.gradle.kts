@@ -130,3 +130,28 @@ tasks.register("validateTranslations") {
         }
     }
 }
+
+tasks.register<Copy>("assembleBrowserExtension") {
+    group = "Octavius Extension"
+    description = "Assembles the final browser extension into build/extension"
+
+    // Krok 1: Wyczyść stary katalog
+    delete(project.buildDir.resolve("extension"))
+
+    // Krok 2: Skopiuj wszystkie pliki z modułu popup
+    from(project(":extension-popup").buildDir.resolve("dist/js/productionExecutable"))
+
+    // Krok 3: Skopiuj tylko plik JS z modułu content-script
+    from(project(":extension-content-script").buildDir.resolve("dist/js/productionExecutable")) {
+        include("extension-content-script.js") // Kopiujemy tylko to, co potrzebne
+    }
+
+    // Krok 4: Zależności - upewnij się, że oba moduły są zbudowane przed kopiowaniem
+    dependsOn(
+        project(":extension-popup").tasks.named("jsBrowserDistribution"),
+        project(":extension-content-script").tasks.named("jsBrowserDistribution")
+    )
+
+    // Krok 5: Określ katalog docelowy
+    into(project.buildDir.resolve("extension"))
+}
