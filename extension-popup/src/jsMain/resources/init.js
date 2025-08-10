@@ -4,7 +4,7 @@ Module.onRuntimeInitialized = () => {
     // Teraz mamy pewność, że wszystkie funkcje typu ..._1nMake istnieją.
     // Ładujemy główny skrypt aplikacji.
     const appScript = document.createElement('script');
-    appScript.src = 'browser-extension.js';
+    appScript.src = 'extension-popup.js';
     document.body.appendChild(appScript);
 };
 
