@@ -112,9 +112,15 @@ class EnumFilter<E>(private val enumClass: KClass<E>): Filter<EnumFilterData<E>>
             }
             FilterMode.ListAll -> {
                 if (include) {
-                    Query("$columnName @> :$columnName", mapOf(columnName to values))
+                    Query(
+                        "($columnName @> :$columnName AND $columnName <@ :$columnName)",
+                        mapOf(columnName to values)
+                    )
                 } else {
-                    Query("NOT ($columnName @> :$columnName)", mapOf(columnName to values))
+                    Query(
+                        "NOT ($columnName @> :$columnName AND $columnName <@ :$columnName)",
+                        mapOf(columnName to values)
+                    )
                 }
             }
         }

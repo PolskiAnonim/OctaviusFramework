@@ -70,7 +70,6 @@ abstract class Filter<T : FilterData> {
             // Renderujemy unikalną część dla danego typu filtra
             RenderFilterUI(onEvent, columnKey, data)
 
-            // Renderujemy wspólne elementy, które były w FilterRenderer.txt
             FilterSpacer()
             FilterModePanel(onEvent, columnKey, data)
             FilterSpacer()
