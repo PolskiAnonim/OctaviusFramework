@@ -1,8 +1,10 @@
 package org.octavius.domain.game
 
+import org.octavius.data.contract.PgType
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Translations
 
+@PgType
 enum class GameStatus : EnumWithFormatter<GameStatus> {
     NotPlaying,
     WithoutTheEnd,

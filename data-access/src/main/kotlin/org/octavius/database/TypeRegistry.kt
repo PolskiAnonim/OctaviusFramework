@@ -1,8 +1,10 @@
 package org.octavius.database
 
+import io.github.classgraph.ClassGraph
+import org.octavius.data.contract.PgType
+import org.octavius.util.Converters
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import java.net.JarURLConnection
-import java.net.URL
+import kotlin.reflect.KClass
 
 /**
  * Skanuje bazę danych i klasy domenowe, tworząc mapowanie między typami PostgreSQL a klasami Kotlina.
@@ -16,9 +18,15 @@ import java.net.URL
 class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
     // Przechowuje mapowanie nazw typów PostgreSQL na informacje o typach
     private val postgresTypeMap = mutableMapOf<String, PostgresTypeInfo>()
-    
-    // Mapa mapująca nazwy klas na ich pełne ścieżki
-    private val classPathMap = mutableMapOf<String, String>()
+
+    // Mapa: Prosta nazwa klasy -> Pełna ścieżka klasy
+    private val classSimpleNameToFullPathMap = mutableMapOf<String, String>()
+
+    // Mapa: Pełna ścieżka klasy -> Nazwa typu w PostgreSQL
+    private val classFullPathToPgTypeNameMap = mutableMapOf<String, String>()
+
+    // Mapa: Nazwa typu w PostgreSQL -> Pełna ścieżka klasy
+    private val pgTypeNameToClassFullPathMap = mutableMapOf<String, String>()
 
     /**
      * Klasa pomocnicza do mapowania informacji o typach enum z bazy danych.
@@ -99,83 +107,41 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
      */
     private fun scanDomainClasses() {
         val baseDomainPackage = DatabaseConfig.baseDomainPackage
-        try {
-            // Używamy ClassLoader do znalezienia wszystkich klas w pakiecie domain
-            val classLoader = Thread.currentThread().contextClassLoader
-            val packagePath = baseDomainPackage.replace('.', '/')
-            
-            val resources = classLoader.getResources(packagePath)
-            
-            while (resources.hasMoreElements()) {
-                val resource = resources.nextElement()
-                
-                if (resource.protocol == "jar") {
-                    scanJarResources(resource, packagePath, baseDomainPackage)
-                }
-            }
-            
-        } catch (e: Exception) {
-            println("Błąd podczas skanowania klas domain: ${e.message}")
-            e.printStackTrace()
-        }
-    }
+        val annotationName = "org.octavius.data.contract.PgType"
 
-
-    /**
-     * Skanuje zasobów w archiwum JAR w poszukiwaniu plików .class.
-     * 
-     * @param resource Zasób JAR do przeskanowania
-     * @param packagePath Ścieżka pakietu (z ukośnikami)
-     * @param baseDomainPackage Nazwa bazowego pakietu domenowego
-     */
-    private fun scanJarResources(resource: URL, packagePath: String, baseDomainPackage: String) {
         try {
-            val jarUrlConnection = resource.openConnection() as JarURLConnection
-            val jarFile = jarUrlConnection.jarFile
-            
-            val entries = jarFile.entries()
-            
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                val entryName = entry.name
-                
-                // Sprawdzamy, czy entry jest w naszym pakiecie lub podpakiecie
-                if (entryName.startsWith(packagePath) && entryName.endsWith(".class")) {
-                    // Usuwamy ścieżkę pakietu na początku i .class na końcu
-                    val relativePath = entryName.substring(packagePath.length)
-                    if (relativePath.startsWith("/")) {
-                        val classPath = relativePath.substring(1) // Usuwamy początkowy /
-                        
-                        // Sprawdzamy czy to jest klasa bezpośrednio w pakiecie lub podpakiecie
-                        val className = classPath.removeSuffix(".class")
-                        val packageName = if (classPath.contains("/")) {
-                            // Klasa w podpakiecie
-                            val subPackagePath = classPath.substring(0, classPath.lastIndexOf("/"))
-                            baseDomainPackage + "." + subPackagePath.replace("/", ".")
-                        } else {
-                            // Klasa bezpośrednio w pakiecie głównym
-                            baseDomainPackage
+            // Użycie ClassGraph jest o wiele prostsze i bardziej niezawodne
+            ClassGraph()
+                .enableAllInfo() // Potrzebujemy informacji o adnotacjach
+                .acceptPackages(baseDomainPackage) // Ogranicz skanowanie dla wydajności
+                .scan().use { scanResult -> // .use { } automatycznie zamyka zasoby
+
+                    scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->
+                        val simpleName = classInfo.simpleName
+                        val fullPath = classInfo.name
+
+                        // Zapełnij mapę prostych nazw
+                        classSimpleNameToFullPathMap[simpleName] = fullPath
+
+                        // Odczytaj adnotację, żeby poznać nazwę w PG
+                        val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
+                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
+
+                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank {
+                            Converters.camelToSnakeCase(simpleName) // Użyj konwencji
                         }
-                        
-                        val simpleClassName = if (className.contains("/")) {
-                            className.substring(className.lastIndexOf("/") + 1)
-                        } else {
-                            className
-                        }
-                        
-                        val fullClassName = "$packageName.$simpleClassName"
-                        classPathMap[simpleClassName] = fullClassName
+
+                        // Zapełnij nowe, dwukierunkowe mapy
+                        classFullPathToPgTypeNameMap[fullPath] = pgTypeName
+                        pgTypeNameToClassFullPathMap[pgTypeName] = fullPath
                     }
                 }
-            }
-            
-            jarFile.close()
-            
         } catch (e: Exception) {
-            println("Błąd podczas skanowania zasobów JAR: ${e.message}")
+            println("Błąd podczas skanowania klas z adnotacją @PgType: ${e.message}")
             e.printStackTrace()
         }
     }
+
 
     /**
      * Ładuje definicje typów wyliczeniowych (enum) z bazy danych.
@@ -288,14 +254,13 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         return postgresTypeMap[pgTypeName]
     }
 
-    /**
-     * Znajduje pełną ścieżkę klasy na podstawie nazwy.
-     * 
-     * @param className Nazwa klasy
-     * @return Pełna ścieżka klasy lub domyślna ścieżka w pakiecie domenowym
-     */
-    fun findClassPath(className: String): String? {
-        return classPathMap[className] ?: "${DatabaseConfig.baseDomainPackage}.$className"
+    // Nowe, publiczne metody dostępu
+    fun getPgTypeNameForClass(clazz: KClass<*>): String? {
+        return classFullPathToPgTypeNameMap[clazz.qualifiedName]
+    }
+
+    fun getClassFullPathForPgTypeName(pgTypeName: String): String? {
+        return pgTypeNameToClassFullPathMap[pgTypeName]
     }
 
     /**
@@ -305,15 +270,6 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
      */
     fun getAllRegisteredTypes(): Map<String, PostgresTypeInfo> {
         return postgresTypeMap.toMap()
-    }
-
-    /**
-     * Zwraca mapowanie nazw klas na ich pełne ścieżki.
-     * 
-     * @return Niemodyfikowalna mapa nazw klas na ścieżki pakietowe
-     */
-    fun getClassMappings(): Map<String, String> {
-        return classPathMap.toMap()
     }
 }
 

@@ -1,4 +1,5 @@
 [versions]
+classgraph = "4.8.181"
 androidx-lifecycle = "2.9.1"
 compose-multiplatform = "1.8.2"
 kotlin = "2.2.0"
@@ -17,12 +18,17 @@ koin = "4.1.0"
 slf4j = "2.0.17"
 junit-jupiter = "5.10.0"
 assertj-core = "3.27.3"
+mockito-kotlin = "6.0.0"
+mockito-core = "5.18.0"
 [libraries]
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+classgraph = { group = "io.github.classgraph", name = "classgraph", version.ref = "classgraph" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
 # core
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }

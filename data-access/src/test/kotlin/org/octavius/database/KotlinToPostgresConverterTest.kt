@@ -3,20 +3,39 @@ package org.octavius.database
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.postgresql.util.PGobject
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KotlinToPostgresConverterTest {
 
-    private val converter = KotlinToPostgresConverter()
+    private lateinit var mockTypeRegistry: TypeRegistry
+
+    private lateinit var converter: KotlinToPostgresConverter
 
     enum class TestStatus {
         Active, Inactive, Pending
     }
 
     data class TestPerson(val name: String, val age: Int, val active: Boolean)
+
+    @BeforeAll // KotlinToPostgresConverter nie ma wewnętrznego stanu
+    fun setup() {
+        // Stwórz mocka
+        mockTypeRegistry = mock()
+
+        whenever(mockTypeRegistry.getPgTypeNameForClass(TestStatus::class)).doReturn("test_status")
+
+        whenever(mockTypeRegistry.getPgTypeNameForClass(TestPerson::class)).doReturn("test_person")
+
+        converter = KotlinToPostgresConverter(mockTypeRegistry)
+    }
 
     @Test
     fun `expandParametersInQuery should handle simple parameters`() {

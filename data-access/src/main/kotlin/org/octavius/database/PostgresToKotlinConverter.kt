@@ -87,8 +87,8 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
 
     /** Konwertuje enum PostgreSQL na enum Kotlina, mapując `snake_case` na `CamelCase`. */
     private fun convertEnum(value: String, typeInfo: PostgresTypeInfo): Any? {
-        val className = Converters.snakeToCamelCase(typeInfo.typeName, true)
-        val enumClassName = typeRegistry.findClassPath(className)
+        val enumClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
+            ?: throw IllegalStateException("Nie znaleziono klasy enum dla typu PostgreSQL '${typeInfo.typeName}'.")
 
         return try {
             val enumClass = Class.forName(enumClassName)
@@ -149,18 +149,14 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         return try {
             // Zakładamy iż jest to data class
             val className = Converters.snakeToCamelCase(typeInfo.typeName, true)
-            val fullClassName = typeRegistry.findClassPath(className)
+            val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
+                ?: throw IllegalStateException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
+
             val clazz = Class.forName(fullClassName).kotlin
             val constructor = clazz.primaryConstructor!! // Używamy pierwszego konstruktora
             constructor.call(*constructorArgs)
         } catch (e: Exception) {
-            println(
-                "Nie można utworzyć instancji obiektu dla typu kompozytowego: ${typeInfo.typeName} z wartością $value (próbowano: ${
-                    typeRegistry.findClassPath(
-                        Converters.snakeToCamelCase(typeInfo.typeName, true)
-                    )
-                })"
-            )
+            println("Nie można utworzyć instancji obiektu dla typu kompozytowego: ${typeInfo.typeName} z wartością $value")
             e.printStackTrace()
             null
         }

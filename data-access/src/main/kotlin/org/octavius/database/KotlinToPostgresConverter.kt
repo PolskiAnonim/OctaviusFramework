@@ -28,7 +28,7 @@ data class ExpandedQuery(
  * - `JsonObject` -> `JSONB`
  * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
  */
-class KotlinToPostgresConverter {
+class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
 
     /**
      * Przetwarza zapytanie SQL, rozszerzając parametry złożone.
@@ -84,9 +84,12 @@ class KotlinToPostgresConverter {
 
     /** Tworzy parametr dla enuma, mapując `CamelCase` na `snake_case` dla typu i wartości. */
     private fun createEnumParameter(paramName: String, enumValue: Enum<*>): Pair<String, Map<String, Any?>> {
+        val enumKClass = enumValue::class
+        val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
+            ?: throw IllegalStateException("Enum ${enumKClass.simpleName} nie jest zarejestrowanym typem. Czy ma adnotację @PgType?")
         val pgObject = PGobject().apply {
             value = Converters.camelToSnakeCase(enumValue.name).uppercase()
-            type = Converters.camelToSnakeCase(enumValue::class.simpleName ?: "")
+            type = dbTypeName
         }
         return ":$paramName" to mapOf(paramName to pgObject)
     }
@@ -139,8 +142,10 @@ class KotlinToPostgresConverter {
             placeholder
         }
 
-        // Nazwa typu w bazie danych, np. z camelCase na snake_case
-        val dbTypeName = kClass.simpleName?.let { Converters.camelToSnakeCase(it) } ?: ""
+        // Nazwa typu w bazie danych
+        val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
+            ?: throw IllegalStateException("Klasa ${kClass.simpleName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgType?")
+
         val rowPlaceholder = "ROW(${placeholders.joinToString(", ")})::$dbTypeName"
 
         return rowPlaceholder to expandedParams

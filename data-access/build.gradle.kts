@@ -11,7 +11,10 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.kotlin.reflect)
     implementation(libs.spring.jdbc)
-    
+    implementation(libs.classgraph)
+
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.assertj.core)
 }

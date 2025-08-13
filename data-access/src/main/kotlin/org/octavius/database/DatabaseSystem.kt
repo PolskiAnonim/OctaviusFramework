@@ -21,8 +21,7 @@ class DatabaseSystem {
     private val typeRegistry: TypeRegistry
     private val typesConverter: PostgresToKotlinConverter
     private val rowMappers: RowMappers
-
-    private val kotlinToPostgresConverter = KotlinToPostgresConverter()
+    private val kotlinToPostgresConverter: KotlinToPostgresConverter
 
     /** Usługa do wykonywania zapytań odczytujących (SELECT). */
     val fetcher: DataFetcher
@@ -43,12 +42,13 @@ class DatabaseSystem {
         datasourceTransactionManager = DataSourceTransactionManager(dataSource)
         typeRegistry = TypeRegistry(namedParameterJdbcTemplate)
         typesConverter = PostgresToKotlinConverter(typeRegistry)
+        kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         rowMappers = RowMappers(typesConverter)
 
-        val concreteTransactionManager = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, kotlinToPostgresConverter)
+        val concreteExecutor = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, kotlinToPostgresConverter)
         val concreteFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
 
-        batchExecutor = concreteTransactionManager
+        batchExecutor = concreteExecutor
         fetcher = concreteFetcher
     }
 }

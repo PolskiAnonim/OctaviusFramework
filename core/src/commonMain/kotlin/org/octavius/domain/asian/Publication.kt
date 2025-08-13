@@ -1,8 +1,10 @@
 package org.octavius.domain.asian
 
+import org.octavius.data.contract.PgType
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Translations
 
+@PgType
 enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
     NotReading,
     Reading,
@@ -19,6 +21,7 @@ enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
     }
 }
 
+@PgType
 enum class PublicationLanguage : EnumWithFormatter<PublicationLanguage> {
     Korean,
     Chinese,
@@ -33,6 +36,7 @@ enum class PublicationLanguage : EnumWithFormatter<PublicationLanguage> {
     }
 }
 
+@PgType
 enum class PublicationType : EnumWithFormatter<PublicationType> {
     Manga,
     LightNovel,
