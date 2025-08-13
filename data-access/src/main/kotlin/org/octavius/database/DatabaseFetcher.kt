@@ -43,9 +43,11 @@ class DatabaseFetcher(
         val sql = "SELECT $field FROM ${formatTableExpression(table)}$whereClause"
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.queryForObject(
+        val result = jdbcTemplate.query(
             expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper()
         )
+        // Pierwsze pole lub null
+        return result.firstOrNull()
     }
 
     /**
