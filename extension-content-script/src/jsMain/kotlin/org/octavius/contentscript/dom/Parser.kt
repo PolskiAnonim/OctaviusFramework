@@ -54,7 +54,7 @@ object MangaUpdatesParser {
             else -> PublicationLanguage.Japanese
         }
 
-        return PageData(allTitles, detectedType, language)
+        return PageData(allTitles, PublicationType.Webtoon, language)
     }
 
     /**
