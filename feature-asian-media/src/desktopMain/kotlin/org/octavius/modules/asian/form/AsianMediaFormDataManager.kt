@@ -2,6 +2,7 @@ package org.octavius.modules.asian.form
 
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
+import org.octavius.data.contract.toDatabaseValue
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
@@ -67,13 +68,13 @@ class AsianMediaFormDataManager : FormDataManager() {
         val titleIdRef: DatabaseValue
 
         val titleData = mapOf(
-            "titles" to DatabaseValue.Value(formData["titles"]!!.currentValue),
-            "language" to DatabaseValue.Value(formData["language"]!!.currentValue)
+            "titles" to formData["titles"]!!.currentValue.toDatabaseValue(),
+            "language" to formData["language"]!!.currentValue.toDatabaseValue()
         )
 
         if (loadedId != null) {
             // TRYB EDYCJI: ID jest znane.
-            titleIdRef = DatabaseValue.Value(loadedId)
+            titleIdRef = loadedId.toDatabaseValue()
             databaseSteps.add(DatabaseStep.Update(
                 tableName = "titles",
                 data = titleData,
@@ -100,19 +101,19 @@ class AsianMediaFormDataManager : FormDataManager() {
             // Usuwamy publikację. Tabela 'publication_volumes' zostanie usunięta kaskadowo przez DB.
             databaseSteps.add(DatabaseStep.Delete(
                 tableName = "publications",
-                filter = mapOf("id" to DatabaseValue.Value(pubId))
+                filter = mapOf("id" to pubId.toDatabaseValue())
             ))
         }
 
         // --- Zmodyfikowane publikacje ---
         publicationsResult.modifiedRows.forEach { rowData ->
             val pubId = rowData["id"]!!.initialValue as Int
-            val publicationIdRef = DatabaseValue.Value(pubId) // ID tej publikacji jest znane.
+            val publicationIdRef = pubId.toDatabaseValue() // ID tej publikacji jest znane.
 
             val publicationData = mapOf(
-                "publication_type" to DatabaseValue.Value(rowData["publicationType"]!!.currentValue),
-                "status" to DatabaseValue.Value(rowData["status"]!!.currentValue),
-                "track_progress" to DatabaseValue.Value(rowData["trackProgress"]!!.currentValue)
+                "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
+                "status" to rowData["status"]!!.currentValue.toDatabaseValue(),
+                "track_progress" to rowData["trackProgress"]!!.currentValue.toDatabaseValue()
             )
 
             // Zaktualizuj samą publikację
@@ -132,9 +133,9 @@ class AsianMediaFormDataManager : FormDataManager() {
             val publicationInsertOpIndex = databaseSteps.size
 
             val publicationData = mapOf(
-                "publication_type" to DatabaseValue.Value(rowData["publicationType"]!!.currentValue),
-                "status" to DatabaseValue.Value(rowData["status"]!!.currentValue),
-                "track_progress" to DatabaseValue.Value(rowData["trackProgress"]!!.currentValue),
+                "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
+                "status" to rowData["status"]!!.currentValue.toDatabaseValue(),
+                "track_progress" to rowData["trackProgress"]!!.currentValue.toDatabaseValue(),
                 // Używamy referencji do ID głównego tytułu (czy to nowego, czy edytowanego)
                 "title_id" to titleIdRef
             )
@@ -171,11 +172,11 @@ class AsianMediaFormDataManager : FormDataManager() {
     ) {
         if (rowData["trackProgress"]!!.currentValue == true) {
             val volumesData = mapOf(
-                "volumes" to DatabaseValue.Value(rowData["volumes"]!!.currentValue),
-                "translated_volumes" to DatabaseValue.Value(rowData["translatedVolumes"]!!.currentValue),
-                "chapters" to DatabaseValue.Value(rowData["chapters"]!!.currentValue),
-                "translated_chapters" to DatabaseValue.Value(rowData["translatedChapters"]!!.currentValue),
-                "original_completed" to DatabaseValue.Value(rowData["originalCompleted"]!!.currentValue)
+                "volumes" to rowData["volumes"]!!.currentValue.toDatabaseValue(),
+                "translated_volumes" to rowData["translatedVolumes"]!!.currentValue.toDatabaseValue(),
+                "chapters" to rowData["chapters"]!!.currentValue.toDatabaseValue(),
+                "translated_chapters" to rowData["translatedChapters"]!!.currentValue.toDatabaseValue(),
+                "original_completed" to rowData["originalCompleted"]!!.currentValue.toDatabaseValue()
             )
 
             databaseSteps.add(DatabaseStep.Update(

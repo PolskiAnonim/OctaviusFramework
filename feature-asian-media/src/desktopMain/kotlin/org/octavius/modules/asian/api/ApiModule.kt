@@ -15,6 +15,7 @@ import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.PgTyped
+import org.octavius.data.contract.toDatabaseValue
 import org.octavius.domain.asian.PublicationStatus
 
 /**
@@ -87,14 +88,14 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
                 // Przygotuj operacje bazodanowe w jednej transakcji
                 val newTitle = mapOf(
-                    "titles" to DatabaseValue.Value(request.titles),
-                    "language" to DatabaseValue.Value(request.language)
+                    "titles" to request.titles.toDatabaseValue(),
+                    "language" to request.language.toDatabaseValue()
                 )
                 // Domyślnie dodajemy publikację ze statusem NotReading
                 val newPublication = mapOf(
-                    "publication_type" to DatabaseValue.Value(request.type),
-                    "status" to DatabaseValue.Value(PublicationStatus.NotReading),
-                    "track_progress" to DatabaseValue.Value(false)
+                    "publication_type" to request.type.toDatabaseValue(),
+                    "status" to PublicationStatus.NotReading.toDatabaseValue(),
+                    "track_progress" to false.toDatabaseValue()
                 )
 
                 val steps = listOf(

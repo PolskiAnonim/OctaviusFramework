@@ -43,7 +43,7 @@ class DatabaseBatchExecutor(
      * Przykład z zależnościami:
      * ```kotlin
      * val steps = listOf(
-     *     DatabaseStep.Insert("users", mapOf("name" to DatabaseValue.Value("John")), returning = listOf("id")),
+     *     DatabaseStep.Insert("users", mapOf("name" to "John".toDatabaseValue()), returning = listOf("id")),
      *     DatabaseStep.Insert("profiles", mapOf("user_id" to DatabaseValue.FromStep(0, "id")))
      * )
      * val results = batchExecutor.execute(steps)

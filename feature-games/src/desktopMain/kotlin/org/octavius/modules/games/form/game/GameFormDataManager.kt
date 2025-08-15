@@ -2,6 +2,7 @@ package org.octavius.modules.games.form.game
 
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
+import org.octavius.data.contract.toDatabaseValue
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
@@ -69,9 +70,9 @@ class GameFormDataManager : FormDataManager() {
 
         // Dane dla głównej tabeli 'games'.
         val gameData = mapOf(
-            "name" to DatabaseValue.Value(formData["name"]!!.currentValue),
-            "series" to DatabaseValue.Value(formData["series"]!!.currentValue),
-            "status" to DatabaseValue.Value(formData["status"]!!.currentValue)
+            "name" to formData["name"]!!.currentValue.toDatabaseValue(),
+            "series" to formData["series"]!!.currentValue.toDatabaseValue(),
+            "status" to formData["status"]!!.currentValue.toDatabaseValue()
         )
 
         // W zależności od tego, czy tworzymy nową grę, czy edytujemy istniejącą,
@@ -79,7 +80,7 @@ class GameFormDataManager : FormDataManager() {
         if (loadedId != null) {
             // === TRYB EDYCJI ===
             // ID gry jest znane, więc używamy stałej wartości.
-            gameIdRef = DatabaseValue.Value(loadedId)
+            gameIdRef = loadedId.toDatabaseValue()
 
             // Operacja 0: Aktualizuj grę. Nie potrzebujemy niczego zwracać.
             databaseSteps.add(DatabaseStep.Update(
@@ -116,8 +117,8 @@ class GameFormDataManager : FormDataManager() {
             conditionMet = status in statusesWithDetails,
             tableName = "play_time",
             data = mapOf(
-                "play_time_hours" to DatabaseValue.Value(formData["playTimeHours"]!!.currentValue),
-                "completion_count" to DatabaseValue.Value(formData["completionCount"]!!.currentValue)
+                "play_time_hours" to formData["playTimeHours"]!!.currentValue.toDatabaseValue(),
+                "completion_count" to formData["completionCount"]!!.currentValue.toDatabaseValue()
             ),
             gameIdRef = gameIdRef
         )
@@ -129,9 +130,9 @@ class GameFormDataManager : FormDataManager() {
             conditionMet = status in statusesWithDetails,
             tableName = "ratings",
             data = mapOf(
-                "story_rating" to DatabaseValue.Value(formData["storyRating"]!!.currentValue),
-                "gameplay_rating" to DatabaseValue.Value(formData["gameplayRating"]!!.currentValue),
-                "atmosphere_rating" to DatabaseValue.Value(formData["atmosphereRating"]!!.currentValue)
+                "story_rating" to formData["storyRating"]!!.currentValue.toDatabaseValue(),
+                "gameplay_rating" to formData["gameplayRating"]!!.currentValue.toDatabaseValue(),
+                "atmosphere_rating" to formData["atmosphereRating"]!!.currentValue.toDatabaseValue()
             ),
             gameIdRef = gameIdRef
         )
@@ -143,9 +144,9 @@ class GameFormDataManager : FormDataManager() {
             conditionMet = formData["visibleCharactersSection"]!!.currentValue as Boolean,
             tableName = "characters",
             data = mapOf(
-                "has_distinctive_character" to DatabaseValue.Value(formData["hasDistinctiveCharacter"]!!.currentValue),
-                "has_distinctive_protagonist" to DatabaseValue.Value(formData["hasDistinctiveProtagonist"]!!.currentValue),
-                "has_distinctive_antagonist" to DatabaseValue.Value(formData["hasDistinctiveAntagonist"]!!.currentValue)
+                "has_distinctive_character" to formData["hasDistinctiveCharacter"]!!.currentValue.toDatabaseValue(),
+                "has_distinctive_protagonist" to formData["hasDistinctiveProtagonist"]!!.currentValue.toDatabaseValue(),
+                "has_distinctive_antagonist" to formData["hasDistinctiveAntagonist"]!!.currentValue.toDatabaseValue()
             ),
             gameIdRef = gameIdRef
         )
@@ -163,7 +164,7 @@ class GameFormDataManager : FormDataManager() {
                 tableName = "categories_to_games",
                 filter = mapOf(
                     "game_id" to gameIdRef,
-                    "category_id" to DatabaseValue.Value(categoryId)
+                    "category_id" to categoryId.toDatabaseValue()
                 )
             ))
         }
@@ -177,7 +178,7 @@ class GameFormDataManager : FormDataManager() {
                 tableName = "categories_to_games",
                 filter = mapOf(
                     "game_id" to gameIdRef,
-                    "category_id" to DatabaseValue.Value(oldCategoryId)
+                    "category_id" to oldCategoryId.toDatabaseValue()
                 )
             ))
             // Dodaj nowe powiązanie
@@ -185,7 +186,7 @@ class GameFormDataManager : FormDataManager() {
                 tableName = "categories_to_games",
                 data = mapOf(
                     "game_id" to gameIdRef,
-                    "category_id" to DatabaseValue.Value(newCategoryId)
+                    "category_id" to newCategoryId.toDatabaseValue()
                 )
             ))
         }
@@ -197,7 +198,7 @@ class GameFormDataManager : FormDataManager() {
                 tableName = "categories_to_games",
                 data = mapOf(
                     "game_id" to gameIdRef,
-                    "category_id" to DatabaseValue.Value(categoryId)
+                    "category_id" to categoryId.toDatabaseValue()
                 )
             ))
         }

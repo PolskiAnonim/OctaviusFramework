@@ -6,6 +6,7 @@ import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
+import org.octavius.data.contract.toDatabaseValue
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
 
@@ -25,22 +26,22 @@ class ReportConfigurationManager: KoinComponent {
             val configData = configuration.configuration
 
             val dataMap: Map<String, DatabaseValue> = mapOf(
-                "name" to DatabaseValue.Value(configuration.name),
-                "report_name" to DatabaseValue.Value(configuration.reportName),
-                "description" to DatabaseValue.Value(configuration.description),
-                "sort_order" to DatabaseValue.Value(configData.sortOrder),
-                "visible_columns" to DatabaseValue.Value(configData.visibleColumns),
-                "column_order" to DatabaseValue.Value(configData.columnOrder),
-                "page_size" to DatabaseValue.Value(configData.pageSize),
-                "is_default" to DatabaseValue.Value(configuration.isDefault),
-                "filters" to DatabaseValue.Value(configData.filters)
+                "name" to configuration.name.toDatabaseValue(),
+                "report_name" to configuration.reportName.toDatabaseValue(),
+                "description" to configuration.description.toDatabaseValue(),
+                "sort_order" to configData.sortOrder.toDatabaseValue(),
+                "visible_columns" to configData.visibleColumns.toDatabaseValue(),
+                "column_order" to configData.columnOrder.toDatabaseValue(),
+                "page_size" to configData.pageSize.toDatabaseValue(),
+                "is_default" to configuration.isDefault.toDatabaseValue(),
+                "filters" to configData.filters.toDatabaseValue()
             )
 
             val databaseStep = if (existingConfigId != null) {
                 DatabaseStep.Update(
                     tableName = "report_configurations",
                     data = dataMap,
-                    filter = mapOf("id" to DatabaseValue.Value(existingConfigId))
+                    filter = mapOf("id" to existingConfigId.toDatabaseValue())
                 )
             } else {
                 DatabaseStep.Insert(
@@ -100,7 +101,7 @@ class ReportConfigurationManager: KoinComponent {
         return try {
             val databaseStep = DatabaseStep.Delete(
                 tableName = "report_configurations",
-                filter = mapOf("name" to DatabaseValue.Value(name), "report_name" to DatabaseValue.Value(reportName))
+                filter = mapOf("name" to name.toDatabaseValue(), "report_name" to reportName.toDatabaseValue())
             )
 
             batchExecutor.execute(listOf(databaseStep))[0]!![0]["rows_affected"] as Int > 0

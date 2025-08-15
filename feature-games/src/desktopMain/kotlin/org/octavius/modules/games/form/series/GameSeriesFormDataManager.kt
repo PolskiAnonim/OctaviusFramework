@@ -2,6 +2,7 @@ package org.octavius.modules.games.form.series
 
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
+import org.octavius.data.contract.toDatabaseValue
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
@@ -19,10 +20,10 @@ class GameSeriesFormDataManager : FormDataManager() {
 
     override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<DatabaseStep> {
         val seriesData = mutableMapOf<String, DatabaseValue>()
-        seriesData["name"] = DatabaseValue.Value(formData["name"]!!.currentValue)
+        seriesData["name"] = formData["name"]!!.currentValue.toDatabaseValue()
 
         return if (loadedId != null) {
-            listOf(DatabaseStep.Update("series", seriesData, mapOf("id" to DatabaseValue.Value(loadedId))))
+            listOf(DatabaseStep.Update("series", seriesData, mapOf("id" to loadedId.toDatabaseValue())))
         } else {
             listOf(DatabaseStep.Insert("series", seriesData))
         }

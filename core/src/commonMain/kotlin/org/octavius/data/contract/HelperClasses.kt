@@ -25,6 +25,22 @@ sealed class DatabaseValue {
 }
 
 /**
+ * Konwertuje dowolną  wartość (także null) na instancję [DatabaseValue.Value].
+ *
+ * Stanowi zwięzłą alternatywę dla jawnego wywołania konstruktora,
+ * poprawiając czytelność operacji budujących kroki transakcji.
+ *
+ * Przykład użycia:
+ * `val idRef = 123.toDatabaseValue()` zamiast `val idRef = DatabaseValue.Value(123)`
+ *
+ * @return Instancja [DatabaseValue.Value] opakowująca tę wartość.
+ * @see DatabaseValue
+ */
+fun Any?.toDatabaseValue(): DatabaseValue {
+    return DatabaseValue.Value(this)
+}
+
+/**
  * Reprezentuje pojedynczą operację w transakcji bazodanowej.
  *
  * Każda operacja może opcjonalnie zwracać wartości przez klauzulę `RETURNING`.
