@@ -59,7 +59,7 @@ class SettingsScreen() : Screen {
         )
 
         LazyColumn(
-            modifier = Modifier.Companion.fillMaxSize().padding(FormSpacing.cardPadding),
+            modifier = Modifier.fillMaxSize().padding(FormSpacing.cardPadding),
             verticalArrangement = Arrangement.spacedBy(FormSpacing.controlSpacing)
         ) {
             items(settingOptions) { option ->
@@ -71,24 +71,24 @@ class SettingsScreen() : Screen {
     @Composable
     private fun SettingOptionCard(option: SettingOption) {
         Card(
-            modifier = Modifier.Companion.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             onClick = option.onClick
         ) {
             Row(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(FormSpacing.cardPadding),
-                verticalAlignment = Alignment.Companion.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = option.icon,
                     contentDescription = null,
-                    modifier = Modifier.Companion.size(24.dp)
+                    modifier = Modifier.size(24.dp)
                 )
 
-                Spacer(modifier = Modifier.Companion.width(FormSpacing.cardPadding))
+                Spacer(modifier = Modifier.width(FormSpacing.cardPadding))
 
-                Column(modifier = Modifier.Companion.weight(1f)) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = option.title,
                         style = MaterialTheme.typography.titleMedium

@@ -72,7 +72,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
             val id = rowData["title_id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
-                    AsianMediaFormScreen.Companion.create(
+                    AsianMediaFormScreen.create(
                         entityId = id,
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }
@@ -85,7 +85,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
     override fun buildAddActions(): List<ReportAddAction> = listOf(
         ReportAddAction(Translations.get("asianMedia.report.newTitle"), Icons.Default.Add) {
             AppRouter.navigateTo(
-                AsianMediaFormScreen.Companion.create(
+                AsianMediaFormScreen.create(
                     onSaveSuccess = { AppRouter.goBack() },
                     onCancel = { AppRouter.goBack() }
                 ))

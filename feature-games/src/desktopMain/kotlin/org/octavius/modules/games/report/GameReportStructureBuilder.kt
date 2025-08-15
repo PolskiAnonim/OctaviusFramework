@@ -42,7 +42,7 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
             val id = rowData["id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
-                    GameFormScreen.Companion.create(
+                    GameFormScreen.create(
                         entityId = id,
                         onSaveSuccess = { AppRouter.goBack() },
                         onCancel = { AppRouter.goBack() }
@@ -53,14 +53,14 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
     override fun buildAddActions(): List<ReportAddAction> = listOf(
         ReportAddAction(Translations.get("games.report.newGame"), Icons.Default.Add) {
             AppRouter.navigateTo(
-                GameFormScreen.Companion.create(
+                GameFormScreen.create(
                     onSaveSuccess = { AppRouter.goBack() },
                     onCancel = { AppRouter.goBack() })
             )
         },
         ReportAddAction(Translations.get("games.report.newSeries"), Icons.Default.Add) {
             AppRouter.navigateTo(
-                GameSeriesFormScreen.Companion.create(
+                GameSeriesFormScreen.create(
                     onSaveSuccess = { AppRouter.goBack() },
                     onCancel = { AppRouter.goBack() }
                 ))

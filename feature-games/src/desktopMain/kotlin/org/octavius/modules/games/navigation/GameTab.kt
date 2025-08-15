@@ -20,5 +20,5 @@ class GameTab : Tab {
 
     override val index: UShort = 1u
 
-    override fun getInitialScreen(): Screen = GameReportScreen.Companion.create()
+    override fun getInitialScreen(): Screen = GameReportScreen.create()
 }

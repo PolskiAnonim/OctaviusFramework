@@ -105,7 +105,7 @@ abstract class ReportColumn(
                 Text(
                     text = header,
                     style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Companion.Center
+                    textAlign = TextAlign.Center
                 )
 
                 // Wskaźnik aktywnego filtra
@@ -114,7 +114,7 @@ abstract class ReportColumn(
                         imageVector = Icons.Default.FilterAlt,
                         contentDescription = Translations.get("filter.general.active"),
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.Companion.size(16.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
@@ -126,12 +126,12 @@ abstract class ReportColumn(
                     onDismissRequest = { showColumnMenu = false }
                 ) {
                     Column(
-                        modifier = Modifier.Companion.padding(16.dp)
+                        modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
                             text = Translations.get("filter.general.label") + " $header",
                             style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.Companion.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
 
                         RenderFilter(onEvent, columnKey, filter!!, filterData)
@@ -139,7 +139,7 @@ abstract class ReportColumn(
                         // Przycisk wyczyść filtr
                         if (filterData.isActive()) {
                             Row(
-                                modifier = Modifier.Companion.padding(top = 8.dp),
+                                modifier = Modifier.padding(top = 8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 OutlinedButton(
