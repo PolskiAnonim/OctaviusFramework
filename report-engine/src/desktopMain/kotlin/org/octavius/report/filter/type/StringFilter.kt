@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.PgTyped
+import org.octavius.data.contract.withPgType
 import org.octavius.localization.Translations
 import org.octavius.report.FilterMode
 import org.octavius.report.Query
@@ -128,7 +129,7 @@ class StringFilter: Filter<StringFilterData>() {
                     val operator = if (isAllMode) "@>" else "&&"
                     Query(
                         "$columnName $operator :$columnName",
-                        mapOf(columnName to PgTyped(listOf(valueParam), "text[]"))
+                        mapOf(columnName to listOf(valueParam).withPgType("text[]"))
                     )
                 } else {
                     // Jeśli wielkość liter NIE ma znaczenia, musimy użyć UNNEST
