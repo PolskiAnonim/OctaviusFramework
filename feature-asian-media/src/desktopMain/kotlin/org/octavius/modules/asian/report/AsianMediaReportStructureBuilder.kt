@@ -13,8 +13,8 @@ import org.octavius.report.ReportAddAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.EnumColumn
-import org.octavius.report.column.type.MultiRowColumn
 import org.octavius.report.column.type.StringColumn
+import org.octavius.report.column.type.asList
 import org.octavius.report.component.ReportStructureBuilder
 
 class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
@@ -36,34 +36,25 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
     )
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
-        "titles" to MultiRowColumn(
-            wrappedColumn = StringColumn(
-                header = Translations.get("games.general.titles"),
-                width = 2f
-            ),
-            maxVisibleItems = 5
-        ),
+        "titles" to StringColumn(
+            header = Translations.get("games.general.titles"),
+            width = 2f
+        ).asList(5),
         "language" to EnumColumn(
             header = Translations.get("games.general.language"),
             enumClass = PublicationLanguage::class,
             width = 1f
         ),
-        "publication_type" to MultiRowColumn(
-            wrappedColumn = EnumColumn(
-                header = Translations.get("games.general.publicationType"),
-                enumClass = PublicationType::class,
-                width = 1.5f
-            ),
-            maxVisibleItems = 9
-        ),
-        "status" to MultiRowColumn(
-            wrappedColumn = EnumColumn(
-                header = Translations.get("games.general.status"),
-                enumClass = PublicationStatus::class,
-                width = 1.5f
-            ),
-            maxVisibleItems = 9
-        )
+        "publication_type" to EnumColumn(
+            header = Translations.get("games.general.publicationType"),
+            enumClass = PublicationType::class,
+            width = 1.5f
+        ).asList(9),
+        "status" to EnumColumn(
+            header = Translations.get("games.general.status"),
+            enumClass = PublicationStatus::class,
+            width = 1.5f
+        ).asList(9)
     )
 
 

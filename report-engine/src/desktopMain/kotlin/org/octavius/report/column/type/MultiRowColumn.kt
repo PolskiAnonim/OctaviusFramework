@@ -83,3 +83,8 @@ class MultiRowColumn(
         }
     }
 }
+
+/** Przekształca dowolną kolumnę w kolumnę wyświetlającą listę wartości. */
+fun ReportColumn.asList(maxVisibleItems: Int = 3): MultiRowColumn {
+    return MultiRowColumn(this, maxVisibleItems)
+}
