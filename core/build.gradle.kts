@@ -11,14 +11,18 @@ kotlin {
     }
 
     sourceSets {
-        // Wszystkie zależności idą do commonMain, bo są wieloplatformowe
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
+
             }
         }
-        val desktopMain by getting
+        val desktopMain by getting {
+            dependencies {
+                implementation(libs.kotlin.reflect)
+            }
+        }
         val jsMain by getting
     }
 }

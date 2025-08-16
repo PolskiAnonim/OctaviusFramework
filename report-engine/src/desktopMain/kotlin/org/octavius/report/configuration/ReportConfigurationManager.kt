@@ -7,8 +7,8 @@ import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
-import org.octavius.domain.FilterConfig
-import org.octavius.domain.SortConfiguration
+import org.octavius.util.toDataObject
+import org.octavius.util.toFlatValueMap
 
 class ReportConfigurationManager: KoinComponent {
 
@@ -23,19 +23,10 @@ class ReportConfigurationManager: KoinComponent {
                 params = mapOf("name" to configuration.name, "report_name" to configuration.reportName)
             ) as? Int
 
-            val configData = configuration.configuration
 
-            val dataMap: Map<String, DatabaseValue> = mapOf(
-                "name" to configuration.name.toDatabaseValue(),
-                "report_name" to configuration.reportName.toDatabaseValue(),
-                "description" to configuration.description.toDatabaseValue(),
-                "sort_order" to configData.sortOrder.toDatabaseValue(),
-                "visible_columns" to configData.visibleColumns.toDatabaseValue(),
-                "column_order" to configData.columnOrder.toDatabaseValue(),
-                "page_size" to configData.pageSize.toDatabaseValue(),
-                "is_default" to configuration.isDefault.toDatabaseValue(),
-                "filters" to configData.filters.toDatabaseValue()
-            )
+            val flatValueMap = configuration.toFlatValueMap()
+
+            val dataMap = flatValueMap.mapValues { (_, value) -> value.toDatabaseValue() }
 
             val databaseStep = if (existingConfigId != null) {
                 DatabaseStep.Update(
@@ -69,9 +60,7 @@ class ReportConfigurationManager: KoinComponent {
                 params = params
             )
 
-            result?.let { row ->
-                parseConfigurationFromNewRow(row)
-            }
+            result?.toDataObject()
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -90,7 +79,7 @@ class ReportConfigurationManager: KoinComponent {
                 params = params
             )
 
-            results.map { row -> parseConfigurationFromNewRow(row) }
+            results.map { it.toDataObject() }
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -109,30 +98,5 @@ class ReportConfigurationManager: KoinComponent {
             e.printStackTrace()
             false
         }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun parseConfigurationFromNewRow(row: Map<String, Any?>): ReportConfiguration {
-        val sortOrder = row["sort_order"] as List<SortConfiguration>
-        val visibleColumns = row["visible_columns"] as List<String>
-        val columnOrder = row["column_order"] as List<String>
-        val filters = row["filters"] as List<FilterConfig>
-
-        val configData = ReportConfigurationData(
-            visibleColumns = visibleColumns,
-            columnOrder = columnOrder,
-            sortOrder = sortOrder,
-            filters = filters,
-            pageSize = row["page_size"] as Int
-        )
-
-        return ReportConfiguration(
-            id = row["id"] as Int,
-            name = row["name"] as String,
-            reportName = row["report_name"] as String,
-            description = row["description"] as String?,
-            configuration = configData,
-            isDefault = row["is_default"] as Boolean
-        )
     }
 }
