@@ -1,5 +1,13 @@
 package org.octavius.data.contract
 
+enum class EnumCaseConvention {
+    SNAKE_CASE_UPPER,  // MOJA_WARTOSC
+    SNAKE_CASE_LOWER,  // moja_wartosc
+    PASCAL_CASE,       // MojaWartosc
+    CAMEL_CASE,        // mojaWartosc
+    AS_IS              // MojaWartosc -> MojaWartosc
+}
+
 /**
  * Oznacza klasę `data class` lub `enum` jako typ danych, który może być mapowany
  * na niestandardowy typ w bazie danych PostgreSQL (np. typ kompozytowy lub enum).
@@ -40,5 +48,6 @@ package org.octavius.data.contract
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class PgType(
-    val name: String = ""
+    val name: String = "",
+    val enumConvention: EnumCaseConvention = EnumCaseConvention.SNAKE_CASE_UPPER
 )

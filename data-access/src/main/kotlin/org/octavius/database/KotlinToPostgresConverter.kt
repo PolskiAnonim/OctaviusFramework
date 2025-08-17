@@ -1,6 +1,7 @@
 package org.octavius.database
 
 import kotlinx.serialization.json.JsonObject
+import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgTyped
 import org.octavius.util.Converters
 import org.postgresql.util.PGobject
@@ -85,10 +86,24 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
     /** Tworzy parametr dla enuma, mapując `CamelCase` na `snake_case` dla typu i wartości. */
     private fun createEnumParameter(paramName: String, enumValue: Enum<*>): Pair<String, Map<String, Any?>> {
         val enumKClass = enumValue::class
+
+
         val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
             ?: throw IllegalStateException("Enum ${enumKClass.simpleName} nie jest zarejestrowanym typem. Czy ma adnotację @PgType?")
+
+        val typeInfo = typeRegistry.getTypeInfo(dbTypeName) ?: throw IllegalStateException("Nie znaleziono typu w bazie")
+        val convention = typeInfo.enumConvention
+
+        val finalValue = when (convention) {
+            EnumCaseConvention.SNAKE_CASE_LOWER -> Converters.toSnakeCase(enumValue.name).lowercase()
+            EnumCaseConvention.SNAKE_CASE_UPPER -> Converters.toSnakeCase(enumValue.name).uppercase()
+            EnumCaseConvention.PASCAL_CASE -> enumValue.name
+            EnumCaseConvention.CAMEL_CASE -> Converters.toCamelCase(enumValue.name, true)
+            EnumCaseConvention.AS_IS -> enumValue.name
+        }
+
         val pgObject = PGobject().apply {
-            value = Converters.camelToSnakeCase(enumValue.name).uppercase()
+            value = finalValue
             type = dbTypeName
         }
         return ":$paramName" to mapOf(paramName to pgObject)

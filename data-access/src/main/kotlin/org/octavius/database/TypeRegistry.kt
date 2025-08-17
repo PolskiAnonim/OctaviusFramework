@@ -1,6 +1,7 @@
 package org.octavius.database
 
 import io.github.classgraph.ClassGraph
+import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgType
 import org.octavius.util.Converters
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -48,6 +49,8 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
         val attributeName: String,
         val attributeType: String
     )
+
+    private val pgNameToEnumConventionMap = mutableMapOf<String, EnumCaseConvention>()
 
     init {
         scanDomainClasses()
@@ -128,12 +131,19 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
                         val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
 
                         val pgTypeName = pgTypeNameFromAnnotation.ifBlank {
-                            Converters.camelToSnakeCase(simpleName) // Użyj konwencji
+                            Converters.toSnakeCase(simpleName) // Użyj konwencji
                         }
 
                         // Zapełnij nowe, dwukierunkowe mapy
                         classFullPathToPgTypeNameMap[fullPath] = pgTypeName
                         pgTypeNameToClassFullPathMap[pgTypeName] = fullPath
+
+                        if (classInfo.isEnum) {
+                            val conventionEnumValue = annotationInfo.parameterValues.getValue("enumConvention") as? io.github.classgraph.AnnotationEnumValue
+                            if (conventionEnumValue != null) {
+                                pgNameToEnumConventionMap[pgTypeName] = conventionEnumValue.loadClassAndReturnEnumValue() as EnumCaseConvention
+                            }
+                        }
                     }
                 }
         } catch (e: Exception) {
@@ -173,10 +183,15 @@ class TypeRegistry(private val namedParameterJdbcTemplate: NamedParameterJdbcTem
 
         // Grupowanie wartości enum według nazwy typu
         enumValues.groupBy { it.typeName }.forEach { (typeName, values) ->
+
+            val convention = pgNameToEnumConventionMap[typeName]
+                ?: EnumCaseConvention.SNAKE_CASE_UPPER
+
             postgresTypeMap[typeName] = PostgresTypeInfo(
                 typeName = typeName,
                 typeCategory = TypeCategory.ENUM,
-                enumValues = values.map { it.value }
+                enumValues = values.map { it.value },
+                enumConvention = convention
             )
         }
     }
@@ -293,6 +308,7 @@ enum class TypeCategory {
  * @param typeName Nazwa typu w PostgreSQL
  * @param typeCategory Kategoria typu
  * @param enumValues Lista wartości dla typów enum (pusta dla innych typów)
+ * @param enumConvention Konwencja konwersji nazw enum
  * @param elementType Typ elementu dla typów tablicowych (null dla innych typów)
  * @param attributes Mapa atrybutów dla typów kompozytowych (pusta dla innych typów)
  */
@@ -300,6 +316,7 @@ data class PostgresTypeInfo(
     val typeName: String,
     val typeCategory: TypeCategory,
     val enumValues: List<String> = emptyList(),
+    val enumConvention: EnumCaseConvention = EnumCaseConvention.SNAKE_CASE_LOWER,
     val elementType: String? = null,
     val attributes: Map<String, String> = emptyMap()
 )

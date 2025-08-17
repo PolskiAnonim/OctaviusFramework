@@ -3,7 +3,7 @@ package org.octavius.util
 import java.util.*
 
 object Converters {
-    fun snakeToCamelCase(snakeStr: String, firstLarge: Boolean = false): String {
+    fun toCamelCase(snakeStr: String, firstLarge: Boolean = false): String {
         return snakeStr.split('_')
             .mapIndexed { index, word ->
                 if (index == 0 && !firstLarge) {
@@ -16,7 +16,7 @@ object Converters {
             .joinToString("")
     }
 
-    fun camelToSnakeCase(camelStr: String): String {
+    fun toSnakeCase(camelStr: String): String {
         return camelStr.fold(StringBuilder()) { acc, char ->
             if (char.isUpperCase()) {
                 if (acc.isNotEmpty()) acc.append('_')

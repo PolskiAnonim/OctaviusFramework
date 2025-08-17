@@ -3,8 +3,8 @@ package org.octavius.database
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json.Default.parseToJsonElement
+import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.util.Converters
-import java.math.BigDecimal
 import java.text.ParseException
 import java.util.*
 import kotlin.reflect.full.primaryConstructor
@@ -94,7 +94,15 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
 
         return try {
             val enumClass = Class.forName(enumClassName)
-            val enumValueName = Converters.snakeToCamelCase(value, true)
+
+            val enumValueName = when (typeInfo.enumConvention) {
+                EnumCaseConvention.SNAKE_CASE_LOWER -> Converters.toCamelCase(value, true)
+                EnumCaseConvention.SNAKE_CASE_UPPER -> Converters.toCamelCase(value, true)
+                EnumCaseConvention.PASCAL_CASE -> value
+                EnumCaseConvention.CAMEL_CASE -> Converters.toCamelCase(value, true)
+                EnumCaseConvention.AS_IS -> value
+            }
+
             val method = enumClass.getMethod("valueOf", String::class.java)
             method.invoke(null, enumValueName)
         } catch (e: Exception) {
@@ -150,7 +158,7 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
 
         return try {
             // Zakładamy iż jest to data class
-            val className = Converters.snakeToCamelCase(typeInfo.typeName, true)
+            val className = Converters.toCamelCase(typeInfo.typeName, true)
             val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
                 ?: throw IllegalStateException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
 
