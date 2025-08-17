@@ -1,11 +1,12 @@
-package org.octavius.form.control.type.primitive
+package org.octavius.form.control.type.number
 
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.DoubleValidation
-import org.octavius.form.control.validator.primitive.DoubleValidator
+import org.octavius.form.control.type.number.primitive.PrimitiveNumberControl
+import org.octavius.form.control.validator.number.DoubleValidator
 
 /**
  * Kontrolka do wprowadzania liczb rzeczywistych (zmiennoprzecinkowych).

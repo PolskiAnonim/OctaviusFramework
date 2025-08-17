@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json.Default.parseToJsonElement
 import org.octavius.util.Converters
+import java.math.BigDecimal
 import java.text.ParseException
 import java.util.*
 import kotlin.reflect.full.primaryConstructor
@@ -51,12 +52,13 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
     private fun convertStandardType(value: String, pgTypeName: String): Any? {
         return when (pgTypeName) {
             // Typy numeryczne całkowite
-            "int4", "serial", "int2" -> value.toIntOrNull()
-            "int8" -> value.toLongOrNull()
+            "int4", "serial", "int2" -> value.toInt()
+            "int8" -> value.toLong()
             
             // Typy zmiennoprzecinkowe
-            "float4" -> value.toFloatOrNull()
-            "float8", "numeric" -> value.toDoubleOrNull()
+            "float4" -> value.toFloat()
+            "float8" -> value.toDouble()
+            "numeric" -> value.toBigDecimal()
             
             // Wartości logiczne (PostgreSQL używa 't'/'f')
             "bool" -> value == "t"
@@ -67,7 +69,7 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
             // UUID
             "uuid" -> UUID.fromString(value)
             
-            // Interwały czasowe (format HH:MM:SS)
+            // Interwały czasowe (format HH:MM:SS) TODO format z dniami
             "interval" -> {
                 val parts = value.split(":")
                 parts[0].toLong().hours +

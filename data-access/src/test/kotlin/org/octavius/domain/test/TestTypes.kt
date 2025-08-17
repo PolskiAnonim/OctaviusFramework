@@ -2,8 +2,7 @@ package org.octavius.domain.test
 
 import kotlinx.datetime.LocalDateTime
 import org.octavius.data.contract.PgType
-
-//import java.math.BigDecimal
+import java.math.BigDecimal
 
 @PgType
 enum class TestStatus { Active, Inactive, Pending, NotStarted }
@@ -41,7 +40,7 @@ data class TestTask(
     val assignee: TestPerson,
     val metadata: TestMetadata,
     val subtasks: List<String>,
-    val estimatedHours: Double//BigDecimal - numeric konwerter traktuje jak Double
+    val estimatedHours: BigDecimal
 )
 
 @PgType
@@ -52,5 +51,5 @@ data class TestProject(
     val teamMembers: List<TestPerson>,
     val tasks: List<TestTask>,
     val metadata: TestMetadata,
-    val budget: Double//BigDecimal - numeric konwerter traktuje jak Double
+    val budget: BigDecimal
 )

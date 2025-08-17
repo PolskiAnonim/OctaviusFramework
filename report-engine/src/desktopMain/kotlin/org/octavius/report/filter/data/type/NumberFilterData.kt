@@ -5,6 +5,7 @@ import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.NumberFilterDataType
 import org.octavius.report.filter.data.FilterData
+import java.math.BigDecimal
 import kotlin.reflect.KClass
 
 data class NumberFilterData<T : Number>(
@@ -39,6 +40,7 @@ data class NumberFilterData<T : Number>(
                     Long::class -> jsonPrimitive.longOrNull as T?
                     Float::class -> jsonPrimitive.floatOrNull as T?
                     Double::class -> jsonPrimitive.doubleOrNull as T?
+                    BigDecimal::class -> jsonPrimitive.content.toBigDecimalOrNull() as T?
                     else -> null
                 }
             }

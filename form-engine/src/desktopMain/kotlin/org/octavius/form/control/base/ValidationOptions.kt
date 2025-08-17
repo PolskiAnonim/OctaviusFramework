@@ -1,5 +1,7 @@
 package org.octavius.form.control.base
 
+import java.math.BigDecimal
+
 /**
  * Opcje walidacji dla kontrolek formularza.
  * Definiuje reguły walidacji które można zastosować do różnych typów kontrolek.
@@ -32,6 +34,16 @@ data class DoubleValidation(
     val min: Double? = null,
     val max: Double? = null,
     val step: Double? = null,
+    val decimalPlaces: Int? = null
+) : ValidationOptions()
+
+/**
+ * Opcje walidacji dla liczb o wysokiej precyzji (BigDecimal).
+ */
+data class BigDecimalValidation(
+    val min: BigDecimal? = null,
+    val max: BigDecimal? = null,
+    val step: BigDecimal? = null,
     val decimalPlaces: Int? = null
 ) : ValidationOptions()
 
