@@ -47,8 +47,13 @@ inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
  * Wewnętrzna implementacja konwersji mapy na obiekt, operująca na [KClass].
  *
  * Ta funkcja wykonuje główną logikę mapowania i obsługuje rekurencję dla
- * zagnieżdżonych data class. Jest to mniej wygodna wersja, przeznaczona
- * do użytku wewnętrznego przez jej odpowiednik `reified`.
+ * zagnieżdżonych data class.
+ *
+ * **UWAGA:** Ta funkcja jest przeznaczona do pracy z **płaską mapą** i zakłada,
+ * że nazwy kluczy (właściwości) są unikalne w całej hierarchii zagnieżdżonych
+ * obiektów. W przypadku konfliktu nazw (np. `User(id: Int, address: Address)`
+ * i `Address(id: Int, ...)`), zagnieżdżony obiekt (`Address`) może otrzymać
+ * nieprawidłową wartość `id` z mapy głównej. Należy używać z rozwagą.
  *
  * @param kClass Klasa docelowego obiektu.
  * @return Nowa instancja klasy [T] wypełniona danymi z mapy.
