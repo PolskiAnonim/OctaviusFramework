@@ -1,12 +1,12 @@
-package org.octavius.database
+package org.octavius.database.type
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.serialization.json.Json.Default.parseToJsonElement
+import kotlinx.serialization.json.Json
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.util.Converters
 import java.text.ParseException
-import java.util.*
+import java.util.UUID
 import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -54,21 +54,21 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
             // Typy numeryczne całkowite
             "int4", "serial", "int2" -> value.toInt()
             "int8" -> value.toLong()
-            
+
             // Typy zmiennoprzecinkowe
             "float4" -> value.toFloat()
             "float8" -> value.toDouble()
             "numeric" -> value.toBigDecimal()
-            
+
             // Wartości logiczne (PostgreSQL używa 't'/'f')
             "bool" -> value == "t"
-            
+
             // Typy JSON
-            "json", "jsonb" -> parseToJsonElement(value)
-            
+            "json", "jsonb" -> Json.parseToJsonElement(value)
+
             // UUID
             "uuid" -> UUID.fromString(value)
-            
+
             // Interwały czasowe (format HH:MM:SS) TODO format z dniami
             "interval" -> {
                 val parts = value.split(":")
@@ -76,12 +76,12 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
                         parts[1].toLong().minutes +
                         parts[2].toLong().seconds
             }
-            
+
             // Typy daty i czasu
-            "date" -> LocalDate.parse(value)
-            "timestamp" -> LocalDateTime.parse(value.replace(' ', 'T'))
-            "timestamptz" -> Instant.parse(value.replace(' ', 'T'))
-            
+            "date" -> LocalDate.Companion.parse(value)
+            "timestamp" -> LocalDateTime.Companion.parse(value.replace(' ', 'T'))
+            "timestamptz" -> Instant.Companion.parse(value.replace(' ', 'T'))
+
             // Domyślnie wszystkie inne typy (text, varchar, char) jako String
             else -> value
         }

@@ -4,6 +4,10 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataFetcher
+import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.database.type.TypeRegistry
+import org.octavius.database.type.TypeRegistryLoader
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
@@ -40,7 +44,10 @@ class DatabaseSystem {
 
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         datasourceTransactionManager = DataSourceTransactionManager(dataSource)
-        typeRegistry = TypeRegistry(namedParameterJdbcTemplate)
+        val loader = TypeRegistryLoader(namedParameterJdbcTemplate)
+
+        typeRegistry = loader.load()
+
         typesConverter = PostgresToKotlinConverter(typeRegistry)
         kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         rowMappers = RowMappers(typesConverter)

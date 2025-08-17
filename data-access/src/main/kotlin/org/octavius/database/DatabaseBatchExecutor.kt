@@ -3,6 +3,7 @@ package org.octavius.database
 import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
+import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -23,7 +24,7 @@ import org.springframework.transaction.support.TransactionTemplate
  *
  * @see DatabaseStep
  * @see DatabaseValue
- * @see KotlinToPostgresConverter
+ * @see org.octavius.database.type.KotlinToPostgresConverter
  */
 class DatabaseBatchExecutor(
     private val transactionManager: DataSourceTransactionManager,

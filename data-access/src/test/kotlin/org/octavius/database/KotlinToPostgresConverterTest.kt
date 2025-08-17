@@ -4,12 +4,13 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.database.type.TypeRegistry
 import org.postgresql.util.PGobject
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -1,10 +1,11 @@
-package org.octavius.database
+package org.octavius.database.type
 
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgTyped
 import org.octavius.util.Converters
 import org.postgresql.util.PGobject
+import kotlin.collections.get
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 

@@ -2,6 +2,7 @@ package org.octavius.database
 
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
+import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 /**

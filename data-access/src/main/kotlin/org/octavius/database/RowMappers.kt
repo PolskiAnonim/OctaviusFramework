@@ -1,6 +1,7 @@
 package org.octavius.database
 
 import org.octavius.data.contract.ColumnInfo
+import org.octavius.database.type.PostgresToKotlinConverter
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
 
