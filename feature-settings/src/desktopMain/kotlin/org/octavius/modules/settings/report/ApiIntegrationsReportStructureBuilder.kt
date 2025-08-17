@@ -4,7 +4,7 @@ import org.octavius.localization.Translations
 import org.octavius.report.Query
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.BooleanColumn
-import org.octavius.report.column.type.IntegerColumn
+import org.octavius.report.column.type.number.IntegerColumn
 import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportStructureBuilder
 
