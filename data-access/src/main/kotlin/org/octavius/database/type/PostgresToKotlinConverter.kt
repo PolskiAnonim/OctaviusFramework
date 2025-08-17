@@ -158,7 +158,6 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
 
         return try {
             // Zakładamy iż jest to data class
-            val className = Converters.toCamelCase(typeInfo.typeName, true)
             val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
                 ?: throw IllegalStateException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
 
