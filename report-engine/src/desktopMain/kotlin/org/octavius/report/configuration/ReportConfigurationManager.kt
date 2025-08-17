@@ -26,7 +26,8 @@ class ReportConfigurationManager: KoinComponent {
 
             val flatValueMap = configuration.toFlatValueMap()
 
-            val dataMap = flatValueMap.mapValues { (_, value) -> value.toDatabaseValue() }
+            val dataMap =
+                flatValueMap.filter { (key, _) -> key != "id" }.mapValues { (_, value) -> value.toDatabaseValue() }
 
             val databaseStep = if (existingConfigId != null) {
                 DatabaseStep.Update(
