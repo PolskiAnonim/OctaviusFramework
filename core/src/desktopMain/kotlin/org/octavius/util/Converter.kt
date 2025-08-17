@@ -23,26 +23,22 @@ import kotlin.reflect.full.primaryConstructor
 annotation class MapKey(val name: String)
 
 /**
- * Konwertuje płaską mapę `Map<String, Any?>` na obiekt typu [T].
+ * Adnotacja określająca, że zagnieżdżona data class nie powinna być spłaszczana
+ * podczas tworzenia mapy kompozytowej.
  *
- * Ta funkcja wykorzystuje refleksję do zmapowania kluczy z mapy na parametry
- * głównego konstruktora klasy [T]. Obsługuje również zagnieżdżone data classy,
- * rekonstruując całą hierarchię obiektów z jednej, płaskiej mapy.
+ * Zamiast tego, cała instancja obiektu zostanie wstawiona jako wartość do mapy,
+ * co jest przydatne przy współpracy z warstwami persystencji obsługującymi
+ * typy złożone (Composite User Types).
  *
- * Właściwości w klasie docelowej mogą być oznaczone adnotacją [MapKey],
- * aby określić niestandardową nazwę klucza w mapie.
- *
- * Przykład użycia:
- * ```
- * val map = mapOf("id" to 1, "user_name" to "John", "city" to "New York")
- * val user: User = map.toDataObject()
- * ```
- *
- * @receiver Mapa, z której tworzony jest obiekt.
- * @return Nowa instancja klasy [T] wypełniona danymi z mapy.
- * @throws IllegalArgumentException jeśli klasa [T] nie ma głównego konstruktora.
- * @throws IllegalStateException jeśli nie można znaleźć właściwości dla parametru konstruktora.
+ * @see toCompositeValueMap
  */
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class NonFlattenable()
+
+
+// --- Konwersja Z MAPY do OBIEKTU  ---
+
 inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
     return toDataObject(T::class)
 }
@@ -65,21 +61,27 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
     val propertiesByName = kClass.memberProperties.associateBy { it.name }
 
     val args = constructor.parameters.associateWith { param ->
+        val property = propertiesByName[param.name]
+            ?: throw IllegalStateException("Nie znaleziono właściwości dla parametru konstruktora: ${param.name}")
+
+        // Użyj nazwy z adnotacji @MapKey, jeśli istnieje, w przeciwnym razie użyj nazwy parametru.
+        val keyName = property.findAnnotation<MapKey>()?.name ?: param.name
+        val value = this[keyName] // Pobierz wartość z mapy
+
         val paramClass = param.type.classifier as? KClass<*>
 
         // Sprawdzenie, czy parametr konstruktora jest zagnieżdżoną data classą
         if (paramClass?.isData == true) {
-            // Jeśli tak, wywołaj rekurencyjnie konwersję dla tego typu,
-            // przekazując całą, płaską mapę.
-            this.toDataObject(paramClass)
+            // 1. Sprawdź, czy wartość jest już gotowym obiektem właściwego typu
+            if (paramClass.isInstance(value)) {
+                value // Jeśli tak, po prostu go użyj
+            } else {
+                // 2. Jeśli nie, zbuduj go z płaskiej mapy
+                this.toDataObject(paramClass)
+            }
         } else {
-            // W przeciwnym razie, to proste pole. Znajdź jego wartość w mapie.
-            val property = propertiesByName[param.name]
-                ?: throw IllegalStateException("Nie znaleziono właściwości dla parametru konstruktora: ${param.name}")
-
-            // Użyj nazwy z adnotacji @MapKey, jeśli istnieje, w przeciwnym razie użyj nazwy parametru.
-            val keyName = property.findAnnotation<MapKey>()?.name ?: param.name
-            this[keyName]
+            // Dla typów prostych nic się nie zmienia
+            value
         }
     }
 
@@ -87,25 +89,25 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
     return constructor.callBy(args)
 }
 
+
+// --- Konwersja Z OBIEKTU do MAPY (dwie oddzielne funkcje) ---
+
 /**
- * Konwertuje obiekt (potencjalnie zagnieżdżony) na **płaską** mapę `Map<String, Any?>`.
+ * Konwertuje obiekt na **PŁASKĄ** mapę `Map<String, Any?>`.
  *
- * Funkcja przechodzi przez wszystkie właściwości obiektu. Jeśli właściwość jest
- * zagnieżdżoną data classą, jej zawartość jest rekurencyjnie "wciągana"
- * do mapy nadrzędnej. Dzięki temu cała hierarchia obiektu jest reprezentowana
- * jako jedna, płaska struktura klucz-wartość.
+ * Ta funkcja zawsze spłaszcza całą hierarchię zagnieżdżonych data class,
+ * tworząc jedną mapę z kluczami i wartościami prostymi.
+ * Adnotacja @NonFlattenable jest ignorowana.
  *
- * Właściwości mogą być oznaczone adnotacją [MapKey] w celu zdefiniowania
- * niestandardowych kluczy w wynikowej mapie.
+ * Idealna do serializacji obiektu do formatu, który nie rozumie zagnieżdżeń.
  *
- * Przykład użycia:
+ * Przykład:
  * ```
  * data class Address(val city: String)
- * data class User(val id: Int, @MapKey("user_name") val name: String, val address: Address)
+ * data class User(val id: Int, val address: Address)
  *
- * val user = User(1, "John", Address("New York"))
- * val map = user.toFlatValueMap()
- * // Wynik: mapOf("id" to 1, "user_name" to "John", "city" to "New York")
+ * val user = User(1, Address("New York"))
+ * user.toFlatValueMap() // Wynik: mapOf("id" to 1, "city" to "New York")
  * ```
  *
  * @receiver Obiekt do skonwertowania.
@@ -114,17 +116,59 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
 fun <T : Any> T.toFlatValueMap(): Map<String, Any?> {
     return this::class.memberProperties.fold(mutableMapOf<String, Any?>()) { accumulator, property ->
         val value = property.getter.call(this)
-        val valueClass = property.returnType.classifier as? KClass<*>
 
-        // Sprawdzenie, czy właściwość jest zagnieżdżoną data classą
-        if (value != null && valueClass?.isData == true) {
-            // Jeśli tak, dołącz jej spłaszczoną mapę do akumulatora.
+        // Jeśli wartość to data class i nie jest nullem, spłaszcz ją rekurencyjnie
+        if (value != null && (property.returnType.classifier as? KClass<*>)?.isData == true) {
             accumulator.putAll(value.toFlatValueMap())
         } else {
-            // W przeciwnym razie, to proste pole. Dodaj je bezpośrednio do mapy.
+            // W przeciwnym razie dodaj jako prostą wartość
             val keyName = property.findAnnotation<MapKey>()?.name ?: property.name
             accumulator[keyName] = value
         }
         accumulator
-    }.toMap() // Zwróć jako niemutowalną mapę.
+    }.toMap()
+}
+
+/**
+ * Konwertuje obiekt na mapę `Map<String, Any?>`.
+ *
+ * Ta funkcja domyślnie spłaszcza zagnieżdżone data classy, ale jeśli właściwość
+ * jest oznaczona adnotacją [@NonFlattenable], to zagnieżdżony obiekt
+ * zostanie wstawiony do mapy **jako instancja**, a nie zmapowany.
+ *
+ * Idealna do przygotowania obiektu do zapisu w systemie, który obsługuje
+ * typy złożone (Composite Types).
+ *
+ * Przykład:
+ * ```
+ * data class Address(val city: String)
+ * data class User(val id: Int, @NonFlattenable val address: Address)
+ *
+ * val user = User(1, Address("New York"))
+ * user.toCompositeValueMap() // Wynik: mapOf("id" to 1, "address" to Address("New York"))
+ * ```
+ *
+ * @receiver Obiekt do skonwertowania.
+ * @return Niemutowalna mapa z wartościami prostymi lub zagnieżdżonymi obiektami.
+ */
+fun <T : Any> T.toCompositeValueMap(): Map<String, Any?> {
+    return this::class.memberProperties.fold(mutableMapOf<String, Any?>()) { accumulator, property ->
+        val value = property.getter.call(this)
+        val keyName = property.findAnnotation<MapKey>()?.name ?: property.name
+
+        // Sprawdź, czy to data class i czy ma adnotację @NonFlattenable
+        if (value != null && (property.returnType.classifier as? KClass<*>)?.isData == true) {
+            if (property.findAnnotation<NonFlattenable>() != null) {
+                // Adnotacja jest -> wstaw obiekt bezpośrednio do mapy
+                accumulator[keyName] = value
+            } else {
+                // Adnotacji nie ma -> spłaszcz rekurencyjnie
+                accumulator.putAll(value.toCompositeValueMap())
+            }
+        } else {
+            // To prosta wartość lub null, wstaw ją bezpośrednio
+            accumulator[keyName] = value
+        }
+        accumulator
+    }.toMap()
 }
