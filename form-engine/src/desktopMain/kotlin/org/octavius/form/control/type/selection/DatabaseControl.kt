@@ -67,8 +67,10 @@ class DatabaseControl(
         val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to "%$searchQuery%")
         return try {
             val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize
-            val results = fetcher.select("id, $displayColumn", from = relatedTable).where(filter).orderBy(displayColumn)
-                .page(page, pageSize).toList(params = params)
+            val results =
+                fetcher.select("id, $displayColumn", from = relatedTable).where(filter.takeIf { it.isNotBlank() })
+                    .orderBy(displayColumn)
+                    .page(page, pageSize).toList(params = params)
 
             val mappedResults = results.map { DropdownOption(it["id"] as Int,it[displayColumn] as String) }
             Pair(mappedResults, totalPages)
