@@ -189,19 +189,16 @@ fun SaveConfigurationDialog(
                                 return@Button
                             }
 
-                            val configData = ReportConfigurationData(
+                            val newConfiguration = ReportConfiguration(
+                                name = name.trim(),
+                                reportName = reportName,
+                                description = description.trim().takeIf { it.isNotEmpty() },
+                                isDefault = isDefault,
                                 visibleColumns = reportState.visibleColumns.toList(),
                                 columnOrder = reportState.columnKeysOrder,
                                 sortOrder = reportState.sortOrder.map { (col, dir) -> SortConfiguration(col, dir) },
                                 pageSize = reportState.pagination.pageSize,
                                 filters = reportState.filterData.map { (col, data) -> FilterConfig(col, data.serialize()) }
-                            )
-                            val newConfiguration = ReportConfiguration(
-                                name = name.trim(),
-                                reportName = reportName,
-                                description = description.trim().takeIf { it.isNotEmpty() },
-                                configuration = configData,
-                                isDefault = isDefault
                             )
 
                             if (configManager.saveConfiguration(newConfiguration)) {

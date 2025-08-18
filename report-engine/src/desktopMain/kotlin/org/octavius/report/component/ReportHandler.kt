@@ -105,11 +105,10 @@ class ReportHandler(
     //-------------------------------------------Configuration----------------------------------------------------------
 
     private fun applyConfiguration(state: ReportState, configuration: ReportConfiguration): ReportState {
-        val configData = configuration.configuration
 
         // Deserializuj filtry, tworząc nową mapę stanów filtrów
         val newFilterDataMap = state.filterData.toMutableMap()
-        configData.filters.forEach { filterConfig ->
+        configuration.filters.forEach { filterConfig ->
             val columnKey = filterConfig.columnName
             val column = reportStructure.getColumn(columnKey)
 
@@ -121,10 +120,10 @@ class ReportHandler(
         }
 
         return state.copy(
-            pagination = state.pagination.copy(currentPage = 0, pageSize = configData.pageSize),
-            visibleColumns = configData.visibleColumns.toSet(),
-            columnKeysOrder = configData.columnOrder,
-            sortOrder = configData.sortOrder.map { (columnName, sortDirection) -> columnName to sortDirection },
+            pagination = state.pagination.copy(currentPage = 0, pageSize = configuration.pageSize),
+            visibleColumns = configuration.visibleColumns.toSet(),
+            columnKeysOrder = configuration.columnOrder,
+            sortOrder = configuration.sortOrder.map { (columnName, sortDirection) -> columnName to sortDirection },
             filterData = newFilterDataMap
         )
     }
