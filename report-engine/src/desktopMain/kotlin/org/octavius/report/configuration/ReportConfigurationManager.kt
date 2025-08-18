@@ -8,7 +8,7 @@ import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.data.contract.toListOf
 import org.octavius.data.contract.toSingleOf
-import org.octavius.util.toFlatValueMap
+import org.octavius.util.toMap
 
 class ReportConfigurationManager : KoinComponent {
 
@@ -19,7 +19,7 @@ class ReportConfigurationManager : KoinComponent {
             val existingConfigId = fetcher.select("id", from = "public.report_configurations").where("name = :name AND report_name = :report_name")
                 .toField<Int>(mapOf("name" to configuration.name, "report_name" to configuration.reportName))
 
-            val flatValueMap = configuration.toFlatValueMap()
+            val flatValueMap = configuration.toMap()
 
             val dataMap =
                 flatValueMap.filter { (key, _) -> key != "id" }.mapValues { (_, value) -> value.toDatabaseValue() }
