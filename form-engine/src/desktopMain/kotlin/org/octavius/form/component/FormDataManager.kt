@@ -7,6 +7,7 @@ import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
+import java.lang.IllegalStateException
 
 /**
  * Abstrakcyjna klasa zarządzająca przepływem danych w formularzach.
@@ -75,6 +76,6 @@ abstract class FormDataManager: KoinComponent {
             tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
         }
 
-        return dataFetcher.fetchEntity(tables.toString(), "$mainTable.id = :id", mapOf("id" to id))
+        return dataFetcher.fetchRowWithColumnInfo(tables.toString(), "$mainTable.id = :id", mapOf("id" to id)) ?: emptyMap()
     }
 }

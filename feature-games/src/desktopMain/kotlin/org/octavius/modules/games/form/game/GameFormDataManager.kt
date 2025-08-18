@@ -30,25 +30,22 @@ class GameFormDataManager : FormDataManager() {
                 "categories" to emptyList<Map<String, Any?>>()
             )
         } else {
-            val dataExists = dataFetcher.fetchRow(
-                """games g 
-                    LEFT JOIN characters c ON c.game_id = g.id
-                    LEFT JOIN play_time pt ON pt.game_id = g.id 
-                    LEFT JOIN ratings r ON r.game_id = g.id""",
+            val dataExists = dataFetcher.select(
                 """CASE WHEN pt.game_id IS NULL THEN FALSE ELSE TRUE END AS play_time_exists,
                 CASE WHEN c.game_id IS NULL THEN FALSE ELSE TRUE END AS characters_exists,
                 CASE WHEN r.game_id IS NULL THEN FALSE ELSE TRUE END AS ratings_exists
                 """,
-                "g.id = :id", mapOf("id" to loadedId)
-            )
+                """games g 
+                    LEFT JOIN characters c ON c.game_id = g.id
+                    LEFT JOIN play_time pt ON pt.game_id = g.id 
+                    LEFT JOIN ratings r ON r.game_id = g.id""",
+            ).where("g.id = :id").toSingle(mapOf("id" to loadedId)) ?: throw IllegalArgumentException("Game not found")
 
             // Załaduj kategorie dla tej gry
-            val categories = dataFetcher.fetchList(
-                "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id",
+            val categories = dataFetcher.select(
                 "ctg.category_id as category",
-                "ctg.game_id = :gameId",
-                params = mapOf("gameId" to loadedId)
-            )
+                "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id"
+            ).where("ctg.game_id = :gameId").toList(mapOf("gameId" to loadedId))
 
             mapOf(
                 "visibleCharactersSection" to dataExists["characters_exists"]!!,

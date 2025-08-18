@@ -108,15 +108,12 @@ class ReportDataManager(
         val offset = reportState.pagination.currentPage * reportState.pagination.pageSize
         val limit = reportState.pagination.pageSize
 
-        val data = fetcher.fetchPagedList(
-            table = query.sql,
-            columns = "*",
-            offset = offset.toInt(),
-            limit = limit,
-            filter = filterClause,
-            orderBy = orderClause,
-            params = params
-        )
+        val data = fetcher.select(from = query.sql)
+            .where(filterClause.takeIf { it.isNotBlank() })
+            .orderBy(orderClause.takeIf { it.isNotBlank() })
+            .limit(limit)
+            .offset(offset.toInt())
+            .toList(params)
 
         return Pair(data, paginationState)
     }

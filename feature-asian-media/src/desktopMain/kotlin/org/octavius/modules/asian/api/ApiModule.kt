@@ -16,6 +16,7 @@ import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.PgTyped
 import org.octavius.data.contract.toDatabaseValue
+import org.octavius.data.contract.withPgType
 import org.octavius.domain.asian.PublicationStatus
 
 /**
@@ -52,12 +53,9 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             // Używamy operatora && (overlap) z PostgreSQL do sprawdzenia,
             // czy tablica tytułów w bazie ma jakikolwiek wspólny element z listą z zapytania.
-            val result = fetcher.fetchRowOrNull(
-                table = "titles",
-                columns = "id, titles",
-                filter = "titles && :titles",
-                params = mapOf("titles" to PgTyped(titles, "text[]"))
-            )
+            val result = fetcher.select("id, titles", from = "titles").where("titles && :titles")
+                .toSingle(mapOf("titles" to titles.withPgType("text[]")))
+
 
             if (result != null) {
                 val titleId = result["id"] as Int

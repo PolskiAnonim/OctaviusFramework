@@ -2,8 +2,11 @@ package org.octavius.database
 
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.QueryBuilder
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import kotlin.reflect.KClass
 
 /**
  * Implementacja `DataFetcher` do pobierania danych z bazy PostgreSQL.
@@ -23,12 +26,14 @@ class DatabaseFetcher(
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataFetcher {
 
-    /** Formatuje wyrażenie tabelowe, dodając nawiasy dla zapytań z JOIN lub subquery. */
     private fun formatTableExpression(table: String): String {
         return if (table.trim().uppercase().contains(" ")) "($table)" else table
     }
 
-    /** Pobiera liczbę wierszy spełniających podane kryteria. */
+    override fun select(columns: String, from: String): QueryBuilder {
+        return DatabaseQueryBuilder(columns, from)
+    }
+
     override fun fetchCount(table: String, filter: String?, params: Map<String, Any?>): Long {
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(table)}$whereClause"
@@ -37,47 +42,12 @@ class DatabaseFetcher(
         return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, Long::class.java) ?: 0L
     }
 
-
-    /** Pobiera wartość pojedynczego pola z pierwszego pasującego wiersza. */
-    override fun fetchField(table: String, field: String, filter: String?, params: Map<String, Any?>): Any? {
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val sql = "SELECT $field FROM ${formatTableExpression(table)}$whereClause"
+    override fun fetchRowWithColumnInfo(tables: String, filter: String, params: Map<String, Any?>): Map<ColumnInfo, Any?>? {
+        val whereClause = " WHERE $filter"
+        val sql = "SELECT * FROM ${formatTableExpression(tables)}$whereClause"
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
-        val result = jdbcTemplate.query(
-            expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper()
-        )
-        // Pierwsze pole lub null
-        return result.firstOrNull()
-    }
-
-    /**
-     * Pobiera pojedynczy wiersz jako mapę.
-     * @throws NullPointerException gdy nie znaleziono wiersza.
-     * @throws IllegalStateException gdy zapytanie zwróci więcej niż 1 wiersz.
-     */
-    override fun fetchRow(
-        table: String,
-        columns: String,
-        filter: String?,
-        params: Map<String, Any?>
-    ): Map<String, Any?> {
-        val results = fetchRowOrNull(table, columns, filter, params)
-        return results!!
-    }
-
-    /**
-     * Pobiera pojedynczy wiersz jako mapę lub null, jeśli nie znaleziono.
-     * @throws IllegalStateException gdy zapytanie zwróci więcej niż 1 wiersz.
-     */
-    override fun fetchRowOrNull(
-        table: String, columns: String, filter: String?, params: Map<String, Any?>
-    ): Map<String, Any?>? {
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val sql = "SELECT $columns FROM ${formatTableExpression(table)}$whereClause"
-        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-        val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
-
+        val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnInfoMapper())
         return when (results.size) {
             0 -> null
             1 -> results[0]
@@ -85,95 +55,71 @@ class DatabaseFetcher(
         }
     }
 
-    /** Pobiera listę wartości z pojedynczej kolumny. */
-    override fun fetchColumn(
-        table: String,
-        column: String,
-        filter: String?,
-        orderBy: String?,
-        params: Map<String, Any?>
-    ): List<Any?> {
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
-        val sql = "SELECT $column FROM ${formatTableExpression(table)}$whereClause$orderClause"
+    /**
+     * Centralna, prywatna metoda do wykonywania wszystkich zapytań zbudowanych przez QueryBuilder.
+     * Eliminuje powtarzanie kodu.
+     */
+    private fun <T : Any> executeQuery(builder: DatabaseQueryBuilder, params: Map<String, Any?>, rowMapper: RowMapper<T>): List<T> {
+        val sqlBuilder = StringBuilder("SELECT ${builder.columns} FROM ${formatTableExpression(builder.table)}")
+        builder.filter?.let { sqlBuilder.append(" WHERE $it") }
+        builder.orderBy?.let { sqlBuilder.append(" ORDER BY $it") }
+        builder.limit?.let { sqlBuilder.append(" LIMIT $it") }
+        if (builder.offset > 0) sqlBuilder.append(" OFFSET ${builder.offset}")
+
+        val sql = sqlBuilder.toString()
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
-        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
-    }
-
-    /** Pobiera paginowaną listę wartości z pojedynczej kolumny. */
-    override fun fetchPagedColumn(
-        table: String,
-        column: String,
-        offset: Int,
-        limit: Int,
-        filter: String?,
-        orderBy: String?,
-        params: Map<String, Any?>
-    ): List<Any?> {
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
-        val sql =
-            "SELECT $column FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
-        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-
-        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.SingleValueMapper())
-    }
-
-    /** Pobiera listę wierszy jako listę map. */
-    override fun fetchList(
-        table: String,
-        columns: String,
-        filter: String?,
-        orderBy: String?,
-        params: Map<String, Any?>
-    ): List<Map<String, Any?>> {
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
-        val sql = "SELECT $columns FROM ${formatTableExpression(table)}$whereClause$orderClause"
-        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-
-        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
-    }
-
-    /** Pobiera paginowaną listę wierszy. */
-    override fun fetchPagedList(
-        table: String,
-        columns: String,
-        offset: Int,
-        limit: Int,
-        filter: String?,
-        orderBy: String?,
-        params: Map<String, Any?>
-    ): List<Map<String, Any?>> {
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val orderClause = if (!orderBy.isNullOrBlank()) " ORDER BY $orderBy" else ""
-        val sql =
-            "SELECT $columns FROM ${formatTableExpression(table)}$whereClause$orderClause LIMIT $limit OFFSET $offset"
-        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-
-        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnNameMapper())
+        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMapper)
     }
 
     /**
-     * Pobiera pojedynczy wiersz, mapując go na obiekty `ColumnInfo`.
-     *
-     * Używane do pobierania danych do formularzy, gdzie ważne jest pochodzenie kolumny (nazwa tabeli).
-     * Wymaga filtra, który zapewni zwrot tylko jednego wiersza.
-     *
-     * @param tables Wyrażenie tabelowe, np. "users u JOIN profiles p ON u.id = p.user_id".
-     * @return Mapa `ColumnInfo` do wartości.
+     * Prywatna, wewnętrzna klasa implementująca interfejs `QueryBuilder`.
+     * Jako `inner class` ma dostęp do pól i metod zewnętrznej klasy `DatabaseFetcher`.
      */
-    override fun fetchEntity(
-        tables: String,
-        filter: String?,
-        params: Map<String, Any?>
-    ): Map<ColumnInfo, Any?> {
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val sql = "SELECT * FROM ${formatTableExpression(tables)}$whereClause"
-        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+    private inner class DatabaseQueryBuilder(
+        val columns: String,
+        val table: String
+    ) : QueryBuilder {
 
-        return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnInfoMapper())
-            ?: emptyMap()
+        var filter: String? = null
+        var orderBy: String? = null
+        var limit: Int? = null
+        var offset: Int = 0
+
+        override fun where(condition: String?) = apply { this.filter = condition }
+        override fun orderBy(ordering: String?) = apply { this.orderBy = ordering }
+        override fun limit(count: Int?) = apply { this.limit = count }
+        override fun offset(position: Int) = apply { this.offset = position }
+
+        override fun toList(params: Map<String, Any?>): List<Map<String, Any?>> {
+            return executeQuery(this, params, rowMappers.ColumnNameMapper())
+        }
+
+        override fun toSingle(params: Map<String, Any?>): Map<String, Any?>? {
+            return limit(1).toList(params).firstOrNull()
+        }
+
+        override fun <T> toField(params: Map<String, Any?>): T? {
+            val result = executeQuery(limit(1), params, rowMappers.SingleValueMapper())
+            @Suppress("UNCHECKED_CAST")
+            return result.firstOrNull() as T?
+        }
+
+        override fun <T> toColumn(params: Map<String, Any?>): List<T> {
+            val result = executeQuery(this, params, rowMappers.SingleValueMapper())
+
+            @Suppress("UNCHECKED_CAST")
+            return result as List<T>
+        }
+
+        override fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?>): List<T> {
+            return executeQuery(this, params, rowMappers.DataObjectMapper(kClass))
+        }
+
+        override fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?>): T? {
+            val result = executeQuery(limit(1), params, rowMappers.DataObjectMapper(kClass))
+            @Suppress("UNCHECKED_CAST")
+            return result.firstOrNull() as T?
+        }
     }
 }

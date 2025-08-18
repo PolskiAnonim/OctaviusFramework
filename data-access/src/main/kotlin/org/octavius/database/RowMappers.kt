@@ -2,8 +2,10 @@ package org.octavius.database
 
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.util.toDataObject
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
+import kotlin.reflect.KClass
 
 /**
  * Fabryka dostarczająca różne implementacje `RowMapper` do konwersji `ResultSet`.
@@ -60,5 +62,22 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
         val columnType = (rs.metaData as PgResultSetMetaData).getColumnTypeName(1)
         val rawValue = rs.getString(1)
         typesConverter.convertToDomainType(rawValue, columnType)
+    }
+
+    /**
+     * Generyczny mapper, który konwertuje wiersz na obiekt data class.
+     * Najpierw mapuje wiersz na Map<String, Any?> za pomocą ColumnNameMapper,
+     * a następnie używa refleksji (przez `toDataObject`), aby utworzyć instancję klasy.
+     * @param kClass Klasa docelowego obiektu.
+     */
+    fun <T : Any> DataObjectMapper(kClass: KClass<T>): RowMapper<T> {
+        val baseMapper = ColumnNameMapper()
+        return RowMapper { rs, rowNum ->
+            val map = baseMapper.mapRow(rs, rowNum)
+                ?: throw IllegalStateException("ColumnNameMapper zwrócił null, co nie powinno się zdarzyć.")
+
+            // Używamy istniejącej logiki do konwersji mapy na obiekt
+            map.toDataObject(kClass)
+        }
     }
 }

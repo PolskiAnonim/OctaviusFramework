@@ -43,7 +43,8 @@ class DatabaseControl(
 
         // Załaduj z bazy danych
         try {
-            val result = fetcher.fetchField(relatedTable, displayColumn, "id = :id", mapOf("id" to value)) as String?
+            val result = fetcher.select(displayColumn, from = relatedTable).where("id = :id")
+                .toField<String>(mapOf("id" to value))
 
             if (result != null) {
                 cachedValue = DropdownOption(value, result)
@@ -66,13 +67,8 @@ class DatabaseControl(
         val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to "%$searchQuery%")
         return try {
             val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize
-            val results = fetcher.fetchPagedList(table = relatedTable,
-                columns = "id, $displayColumn",
-                offset = page * pageSize,
-                limit = pageSize,
-                filter = filter,
-                orderBy = displayColumn,
-                params = params)
+            val results = fetcher.select("id, $displayColumn", from = relatedTable).where(filter).orderBy(displayColumn)
+                .offset(page * pageSize).limit(pageSize).toList(params = params)
 
             val mappedResults = results.map { DropdownOption(it["id"] as Int,it[displayColumn] as String) }
             Pair(mappedResults, totalPages.toInt())
