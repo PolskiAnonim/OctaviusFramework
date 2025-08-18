@@ -175,14 +175,14 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
     // --- PARSERY STRUKTUR POSTGRESQL ---
     // =================================================================
 
-    private fun parsePostgresArray(pgArrayString: String): List<String?> = _parseNestedStructure(pgArrayString, '{', '}')
-    private fun parsePostgresComposite(pgCompositeString: String): List<String?> = _parseNestedStructure(pgCompositeString, '(', ')')
+    private fun parsePostgresArray(pgArrayString: String): List<String?> = parseNestedStructure(pgArrayString, '{', '}')
+    private fun parsePostgresComposite(pgCompositeString: String): List<String?> = parseNestedStructure(pgCompositeString, '(', ')')
 
     /**
      * Uniwersalny parser dla zagnieżdżonych struktur (tablic i kompozytów).
      * Obsługuje cudzysłowy, escapowanie, wartości `NULL` i zagnieżdżenia.
      */
-    private fun _parseNestedStructure(input: String, startChar: Char, endChar: Char): List<String?> {
+    private fun parseNestedStructure(input: String, startChar: Char, endChar: Char): List<String?> {
         val trimmed = input.trim()
         if (!trimmed.startsWith(startChar) || !trimmed.endsWith(endChar)) {
             throw ParseException("Nieprawidłowy format: Oczekiwano '$startChar...$endChar'", 0)
