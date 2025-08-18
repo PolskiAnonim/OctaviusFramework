@@ -40,8 +40,18 @@ interface DataFetcher {
 interface QueryBuilder {
     fun where(condition: String?): QueryBuilder
     fun orderBy(ordering: String?): QueryBuilder
-    fun limit(count: Int?): QueryBuilder
-    fun offset(position: Int): QueryBuilder
+    fun limit(count: Long?): QueryBuilder
+    fun offset(position: Long): QueryBuilder
+
+    /**
+     * Ustawia paginację w zapytaniu, automatycznie obliczając offset.
+     * Jest to standardowy i wygodny sposób na stronicowanie wyników.
+     *
+     * @param page Numer strony (zaczynając od 0).
+     * @param size Liczba wyników na stronie (page size).
+     * @return Ten sam obiekt QueryBuilder do dalszej konfiguracji.
+     */
+    fun page(page: Long, size: Long): QueryBuilder
 
     // --- Metody Terminalne (wykonujące zapytanie) ---
 
@@ -78,3 +88,4 @@ inline fun <reified T : Any> QueryBuilder.toListOf(params: Map<String, Any?> = e
 inline fun <reified T : Any> QueryBuilder.toSingleOf(params: Map<String, Any?> = emptyMap()): T? {
     return this.toSingleOf(T::class, params)
 }
+

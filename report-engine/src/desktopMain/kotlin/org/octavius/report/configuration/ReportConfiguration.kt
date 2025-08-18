@@ -13,6 +13,6 @@ data class ReportConfiguration(
     @MapKey("visible_columns") val visibleColumns: List<String>,
     @MapKey("column_order") val columnOrder: List<String>,
     @MapKey("sort_order") val sortOrder: List<SortConfiguration>,
-    @MapKey("page_size") val pageSize: Int,
+    @MapKey("page_size") val pageSize: Long,
     val filters: List<FilterConfig>
 )

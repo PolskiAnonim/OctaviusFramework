@@ -21,7 +21,7 @@ class DatabaseControl(
     label: String?,
     private val relatedTable: String,
     private val displayColumn: String,
-    private val pageSize: Int = 10,
+    private val pageSize: Long = 10,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     actions: List<ControlAction<Int>>? = null,
@@ -57,7 +57,7 @@ class DatabaseControl(
         return value.toString()
     }
 
-    override fun loadOptions(searchQuery: String, page: Int): Pair<List<DropdownOption<Int>>, Int> {
+    override fun loadOptions(searchQuery: String, page: Long): Pair<List<DropdownOption<Int>>, Long> {
         val filter = if (searchQuery.isEmpty()) {
             ""
         } else {
@@ -68,10 +68,10 @@ class DatabaseControl(
         return try {
             val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize
             val results = fetcher.select("id, $displayColumn", from = relatedTable).where(filter).orderBy(displayColumn)
-                .offset(page * pageSize).limit(pageSize).toList(params = params)
+                .page(page, pageSize).toList(params = params)
 
             val mappedResults = results.map { DropdownOption(it["id"] as Int,it[displayColumn] as String) }
-            Pair(mappedResults, totalPages.toInt())
+            Pair(mappedResults, totalPages)
         } catch (e: Exception) {
             println("Błąd podczas wyszukiwania elementów: ${e.message}")
             Pair(emptyList(), 1)

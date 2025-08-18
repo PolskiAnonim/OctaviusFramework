@@ -25,7 +25,7 @@ sealed interface ReportEvent {
 
     // Paginacja
     data class PageChanged(val newPage: Long) : ReportEvent
-    data class PageSizeChanged(val newSize: Int) : ReportEvent
+    data class PageSizeChanged(val newSize: Long) : ReportEvent
 
     // Sortowanie
     data class SortOrderChanged(val newSortOrder: List<Pair<String, SortDirection>>) : ReportEvent

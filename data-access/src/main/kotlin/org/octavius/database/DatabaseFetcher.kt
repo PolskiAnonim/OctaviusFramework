@@ -83,13 +83,22 @@ class DatabaseFetcher(
 
         var filter: String? = null
         var orderBy: String? = null
-        var limit: Int? = null
-        var offset: Int = 0
+        var limit: Long? = null
+        var offset: Long = 0
 
         override fun where(condition: String?) = apply { this.filter = condition }
         override fun orderBy(ordering: String?) = apply { this.orderBy = ordering }
-        override fun limit(count: Int?) = apply { this.limit = count }
-        override fun offset(position: Int) = apply { this.offset = position }
+        override fun limit(count: Long?) = apply { this.limit = count }
+        override fun offset(position: Long) = apply { this.offset = position }
+
+        override fun page(page: Long, size: Long): QueryBuilder = apply {
+            require(page >= 0) { "Numer strony (page) musi być większy lub równy 0." }
+            require(size >= 1) { "Rozmiar strony (size) musi być większy lub równy 1." }
+
+            val calculatedOffset = page * size
+            this.limit(size)
+            this.offset(calculatedOffset)
+        }
 
         override fun toList(params: Map<String, Any?>): List<Map<String, Any?>> {
             return executeQuery(this, params, rowMappers.ColumnNameMapper())

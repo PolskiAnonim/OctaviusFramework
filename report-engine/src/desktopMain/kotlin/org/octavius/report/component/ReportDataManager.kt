@@ -111,8 +111,7 @@ class ReportDataManager(
         val data = fetcher.select(from = query.sql)
             .where(filterClause.takeIf { it.isNotBlank() })
             .orderBy(orderClause.takeIf { it.isNotBlank() })
-            .limit(limit)
-            .offset(offset.toInt())
+            .page(reportState.pagination.currentPage, reportState.pagination.pageSize)
             .toList(params)
 
         return Pair(data, paginationState)

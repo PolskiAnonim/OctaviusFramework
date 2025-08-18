@@ -60,7 +60,7 @@ abstract class DropdownControlBase<T : Any>(
 
     // Metody abstrakcyjne, które muszą być zaimplementowane w podklasach
     protected abstract fun getDisplayText(value: T?): String?
-    protected abstract fun loadOptions(searchQuery: String, page: Int): Pair<List<DropdownOption<T>>, Int>
+    protected abstract fun loadOptions(searchQuery: String, page: Long): Pair<List<DropdownOption<T>>, Long>
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -69,8 +69,8 @@ abstract class DropdownControlBase<T : Any>(
         var searchQuery by remember { mutableStateOf("") }
         var options by remember { mutableStateOf<List<DropdownOption<T>>>(emptyList()) }
         var isLoading by remember { mutableStateOf(false) }
-        var currentPage by remember { mutableStateOf(0) }
-        var totalPages by remember { mutableStateOf(1) }
+        var currentPage by remember { mutableStateOf(0L) }
+        var totalPages by remember { mutableStateOf(1L) }
         val scope = rememberCoroutineScope()
 
         // Efekt pobierający opcje gdy menu jest otwarte

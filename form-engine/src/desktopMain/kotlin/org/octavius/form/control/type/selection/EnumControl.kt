@@ -30,7 +30,7 @@ class EnumControl<T>(
         return value?.toDisplayString()
     }
 
-    override fun loadOptions(searchQuery: String, page: Int): Pair<List<DropdownOption<T>>, Int> {
+    override fun loadOptions(searchQuery: String, page: Long): Pair<List<DropdownOption<T>>, Long> {
         val options = enumClass.java.enumConstants
             .filter {
                 searchQuery.isEmpty() ||
@@ -38,6 +38,6 @@ class EnumControl<T>(
             }
             .map { DropdownOption(it, it.toDisplayString()) }
 
-        return Pair(options, 1) // Enumy zawsze mają jedną stronę
+        return Pair(options, 1L) // Enumy zawsze mają jedną stronę
     }
 }

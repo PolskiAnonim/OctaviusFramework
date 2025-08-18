@@ -99,7 +99,7 @@ fun PageSize(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit) 
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
 
-        val pageSizeOptions = listOf(10, 20, 50, 100)
+        val pageSizeOptions = listOf<Long>(10, 20, 50, 100)
         var expanded by remember { mutableStateOf(false) }
 
         Box {
