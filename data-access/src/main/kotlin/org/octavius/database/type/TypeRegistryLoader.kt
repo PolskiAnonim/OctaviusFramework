@@ -22,6 +22,8 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
     private data class EnumTypeInfo(val typeName: String, val value: String)
     private data class CompositeAttributeInfo(val typeName: String, val attributeName: String, val attributeType: String)
 
+    private data class DomainTypeInfo(val domainName: String, val baseTypeName: String)
+
     // Klasa pomocnicza do przechowywania zmapowanych informacji o klasach Kotlina.
     private data class KotlinPgTypeMapping(
         val classFullPath: String,
@@ -54,6 +56,7 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
             putAll(loadStandardTypes())
             putAll(loadEnumTypes(pgNameToEnumConventionMap))
             putAll(loadCompositeTypes())
+            putAll(loadDomainTypes())
 
             // Array types muszą być dodane na końcu, na podstawie już istniejących typów
             val existingKeys = keys.toList()
@@ -156,6 +159,24 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
         }
     }
 
+    private fun loadDomainTypes(): Map<String, PostgresTypeInfo> {
+        val params = mapOf("schemas" to DatabaseConfig.dbSchemas.toTypedArray())
+        val domains = namedParameterJdbcTemplate.query(SQL_QUERY_DOMAIN_TYPES, params) { rs, _ ->
+            DomainTypeInfo(
+                rs.getString("domain_name"),
+                rs.getString("base_type_name")
+            )
+        }
+
+        return domains.associate { domainInfo ->
+            domainInfo.domainName to PostgresTypeInfo(
+                typeName = domainInfo.domainName,
+                baseTypeName = domainInfo.baseTypeName,
+                typeCategory = TypeCategory.DOMAIN
+            )
+        }
+    }
+
     companion object {
         private const val SQL_QUERY_ENUM_TYPES = """
             SELECT 
@@ -189,6 +210,19 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
                 AND n.nspname = ANY(:schemas)
             ORDER BY 
                 t.typname, a.attnum
+        """
+
+        private const val SQL_QUERY_DOMAIN_TYPES = """
+            SELECT
+                t.typname as domain_name,
+                bt.typname as base_type_name
+            FROM
+                pg_type t
+                JOIN pg_namespace n ON n.oid = t.typnamespace
+                JOIN pg_type bt ON t.typbasetype = bt.oid
+            WHERE
+                t.typtype = 'd' -- 'd' for domain
+                AND n.nspname = ANY(:schemas)
         """
     }
 }

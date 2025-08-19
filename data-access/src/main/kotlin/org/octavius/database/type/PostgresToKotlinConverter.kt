@@ -44,6 +44,12 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
             TypeCategory.ARRAY -> convertArray(value, typeInfo)
             TypeCategory.COMPOSITE -> convertCompositeType(value, typeInfo)
             TypeCategory.STANDARD -> convertStandardType(value, pgTypeName)
+            TypeCategory.DOMAIN -> {
+                val baseTypeName = typeInfo.baseTypeName
+                    ?: throw IllegalStateException("Domena '${typeInfo.typeName}' nie ma zdefiniowanego typu bazowego w TypeRegistry.")
+                // Wywołujemy tę samą funkcję, ale już dla typu bazowego (np. 'int4', 'bool').
+                convertToDomainType(value, baseTypeName)
+            }
         }
     }
 

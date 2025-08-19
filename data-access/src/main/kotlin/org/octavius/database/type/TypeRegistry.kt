@@ -71,7 +71,9 @@ enum class TypeCategory {
     /** Typ kompozytowy (CREATE TYPE ... AS) */
     COMPOSITE,
     /** Standardowy typ PostgreSQL (int4, text, bool, itp.) */
-    STANDARD
+    STANDARD,
+    /** Typ domenowy, obsługiwany podobnie jak standardowy typ ale jest potrzebna informacja o nim */
+    DOMAIN
 }
 
 /**
@@ -83,6 +85,7 @@ enum class TypeCategory {
  * @param enumConvention Konwencja konwersji nazw enum
  * @param elementType Typ elementu dla typów tablicowych (null dla innych typów)
  * @param attributes Mapa atrybutów dla typów kompozytowych (pusta dla innych typów)
+ * @param baseTypeName podstawowy typ dla typu DOMAIN (null dla innych typów)
  */
 data class PostgresTypeInfo(
     val typeName: String,
@@ -90,5 +93,6 @@ data class PostgresTypeInfo(
     val enumValues: List<String> = emptyList(),
     val enumConvention: EnumCaseConvention = EnumCaseConvention.SNAKE_CASE_LOWER,
     val elementType: String? = null,
-    val attributes: Map<String, String> = emptyMap()
+    val attributes: Map<String, String> = emptyMap(),
+    val baseTypeName: String? = null
 )
