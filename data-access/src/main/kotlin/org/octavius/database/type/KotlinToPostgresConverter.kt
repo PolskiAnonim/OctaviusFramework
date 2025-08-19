@@ -4,6 +4,7 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgTyped
 import org.octavius.util.Converters
+import org.octavius.util.toMap
 import org.postgresql.util.PGobject
 import kotlin.collections.get
 import kotlin.reflect.full.memberProperties
@@ -67,6 +68,7 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
                 val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
                 finalPlaceholder to innerParams
             }
+
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
             isDataClass(paramValue) -> expandRowParameter(paramName, paramValue!!)
             paramValue is JsonObject -> createJsonParameter(paramName, paramValue)
@@ -92,7 +94,8 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
             ?: throw IllegalStateException("Enum ${enumKClass.simpleName} nie jest zarejestrowanym typem. Czy ma adnotację @PgType?")
 
-        val typeInfo = typeRegistry.getTypeInfo(dbTypeName) ?: throw IllegalStateException("Nie znaleziono typu w bazie")
+        val typeInfo =
+            typeRegistry.getTypeInfo(dbTypeName) ?: throw IllegalStateException("Nie znaleziono typu w bazie")
         val convention = typeInfo.enumConvention
 
         val finalValue = when (convention) {
@@ -132,35 +135,28 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
     private fun expandRowParameter(paramName: String, compositeValue: Any): Pair<String, Map<String, Any?>> {
         val kClass = compositeValue::class
 
-        // 1. Pobierz główny konstruktor klasy (dla zachowania kolejności)
-        val constructor = kClass.primaryConstructor
-            ?: throw IllegalArgumentException("Klasa ${kClass.simpleName} musi posiadać główny konstruktor, aby można ją było rozwinąć.")
+        // 1. Pobierz informacje o typie z rejestru (bez zmian)
+        val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
+            ?: throw IllegalStateException("Klasa ${kClass.simpleName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgType?")
+        val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
+            ?: throw IllegalStateException("Nie znaleziono danych typu PostgreSQL.")
 
-        // 2. Stwórz mapę właściwości (KProperty) po nazwie, aby łatwo je odnaleźć.
-        // Dostęp do wartości jest możliwy tylko przez KProperty, nie przez KParameter.
-        val propertiesByName = kClass.memberProperties.associateBy { it.name }
+        val valueMap = compositeValue.toMap()
 
         val expandedParams = mutableMapOf<String, Any?>()
 
-        // 3. Iteruj po PARAMETRACH KONSTRUKTORA, a nie po właściwościach.
-        // To gwarantuje prawidłową kolejność.
-        val placeholders = constructor.parameters.mapIndexed { index, param ->
-            // Znajdź właściwość odpowiadającą parametrowi konstruktora po nazwie.
-            val property = propertiesByName[param.name]
-                ?: throw IllegalStateException("Nie można znaleźć właściwości dla parametru konstruktora '${param.name}' w klasie ${kClass.simpleName}.")
+        // 3. Iteruj po ATRYBUTACH Z BAZY DANYCH, aby ZAGWARANTOWAĆ poprawną kolejność
+        val placeholders = typeInfo.attributes.keys.mapIndexed { index, dbAttributeName ->
 
-            // Pobierz wartość tej właściwości z konkretnej instancji `compositeValue`.
-            val value = property.getter.call(compositeValue)
+            val value = valueMap[dbAttributeName]
+                ?: throw IllegalStateException("Nie znaleziono wartości dla atrybutu '$dbAttributeName' w zmapowanym obiekcie '${kClass.simpleName}'.")
 
-            val fieldParamName = "${paramName}_f${index + 1}" // Unikalna nazwa dla każdego pola
+
+            val fieldParamName = "${paramName}_f${index + 1}"
             val (placeholder, params) = expandParameter(fieldParamName, value)
             expandedParams.putAll(params)
             placeholder
         }
-
-        // Nazwa typu w bazie danych
-        val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
-            ?: throw IllegalStateException("Klasa ${kClass.simpleName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgType?")
 
         val rowPlaceholder = "ROW(${placeholders.joinToString(", ")})::$dbTypeName"
 

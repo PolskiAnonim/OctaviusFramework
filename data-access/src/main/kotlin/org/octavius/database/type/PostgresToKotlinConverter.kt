@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.util.Converters
+import org.octavius.util.toDataObject
 import java.text.ParseException
 import java.util.UUID
 import kotlin.reflect.full.primaryConstructor
@@ -139,41 +140,34 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         }
     }
 
-    /** Konwertuje typ kompozytowy PostgreSQL na `data class` Kotlina. */
+    /**
+     * Konwertuje typ kompozytowy PostgreSQL na `data class` Kotlina.
+     * Odpowiada za parsowanie stringa z PG i przetłumaczenie nazw atrybutów
+     * z konwencji snake_case na camelCase, tworząc mapę gotową dla `toDataObject`.
+     */
     private fun convertCompositeType(value: String, typeInfo: PostgresTypeInfo): Any? {
-        val attributes = typeInfo.attributes
-        if (attributes.isEmpty()) {
-            throw IllegalStateException("Brak zdefiniowanych atrybutów dla typu kompozytowego ${typeInfo.typeName}")
+        val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
+            ?: throw IllegalStateException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
+
+        // 1. Parsowanie stringa na listę surowych wartości
+        val fieldValues = parsePostgresComposite(value)
+        val dbAttributes = typeInfo.attributes.toList()
+
+        if (fieldValues.size != dbAttributes.size) {
+            throw IllegalArgumentException("Zła ilość pól (${fieldValues.size}) dla typu: ${typeInfo.typeName}, oczekiwano ${dbAttributes.size}")
         }
 
-        val fields = parsePostgresComposite(value)
-
-        if (fields.size != attributes.size) {
-            println("Ostrzeżenie: liczba pól (${fields.size}) nie zgadza się z liczbą atrybutów (${attributes.size}) dla typu ${typeInfo.typeName}")
-            throw IllegalArgumentException("Zła ilość pól dla typu: ${typeInfo.typeName}")
-        }
-
-        val attributeTypes = attributes.values.toList()
-
-        // Przekształć każde pole na docelowy typ, wywołując rekurencyjnie główną funkcję konwersji
-        val constructorArgs = fields.mapIndexed { index, fieldValue ->
-            val attributeType = attributeTypes.getOrNull(index)
-                ?: throw IllegalStateException("Brak typu dla atrybutu o indeksie $index w ${typeInfo.typeName}")
-            convertToDomainType(fieldValue, attributeType)
-        }.toTypedArray()
+        val constructorArgsMap = dbAttributes.mapIndexed { index, (dbAttributeName, dbAttributeType) ->
+            val convertedValue = convertToDomainType(fieldValues[index], dbAttributeType)
+            dbAttributeName to convertedValue
+        }.toMap()
 
         return try {
-            // Zakładamy iż jest to data class
-            val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
-                ?: throw IllegalStateException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
-
             val clazz = Class.forName(fullClassName).kotlin
-            val constructor = clazz.primaryConstructor!! // Używamy pierwszego konstruktora
-            constructor.call(*constructorArgs)
+            // 3. Przekazanie idealnie przygotowanej mapy do uniwersalnego konstruktora
+            constructorArgsMap.toDataObject(clazz)
         } catch (e: Exception) {
-            println("Nie można utworzyć instancji obiektu dla typu kompozytowego: ${typeInfo.typeName} z wartością $value")
-            e.printStackTrace()
-            null
+            throw IllegalStateException("Nie można utworzyć instancji dla typu: ${typeInfo.typeName}", e)
         }
     }
 

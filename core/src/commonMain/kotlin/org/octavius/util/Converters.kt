@@ -1,7 +1,5 @@
 package org.octavius.util
 
-import java.util.*
-
 object Converters {
     fun toCamelCase(snakeStr: String, firstLarge: Boolean = false): String {
         return snakeStr.split('_')
@@ -10,7 +8,7 @@ object Converters {
                     word.lowercase()
                 } else {
                     word.lowercase()
-                        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                 }
             }
             .joinToString("")
