@@ -25,8 +25,10 @@ import kotlin.time.Instant
  * @param typeRegistry Rejestr zawierający metadane o typach PostgreSQL.
  */
 class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
+    companion object {
+        private val logger = KotlinLogging.logger {}
+    }
 
-    private val logger = KotlinLogging.logger {}
 
 
     /**

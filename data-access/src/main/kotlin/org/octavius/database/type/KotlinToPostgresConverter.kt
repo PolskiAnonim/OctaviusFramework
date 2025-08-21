@@ -33,8 +33,10 @@ data class ExpandedQuery(
  * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
  */
 class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
+    companion object {
+        private val logger = KotlinLogging.logger {}
+    }
 
-    private val logger = KotlinLogging.logger {}
 
     /**
      * Przetwarza zapytanie SQL, rozszerzając parametry złożone.

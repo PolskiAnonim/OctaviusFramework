@@ -72,7 +72,7 @@ class ReportDataManager(
         filterClause: String,
         params: MutableMap<String, Any>
     ): ReportPaginationState {
-        val totalItems = fetcher.fetchCount(sourceSql, filterClause, params)
+        val totalItems = fetcher.fetchCount(sourceSql, filterClause.takeIf { filterClause.isNotBlank() }, params)
         val pageSize = reportState.pagination.pageSize
         val totalPages = if (totalItems == 0L) 0 else (totalItems + pageSize - 1) / pageSize
 

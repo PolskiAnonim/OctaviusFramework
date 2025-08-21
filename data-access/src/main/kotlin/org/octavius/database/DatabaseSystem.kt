@@ -11,6 +11,7 @@ import org.octavius.database.type.TypeRegistry
 import org.octavius.database.type.TypeRegistryLoader
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import kotlin.time.measureTime
 
 /**
  * Inicjalizuje i udostępnia podstawowe usługi bazodanowe.
@@ -19,7 +20,10 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager
  * udostępniając je przez publiczne interfejsy `DataFetcher` i `BatchExecutor`.
  */
 class DatabaseSystem {
-    private val logger = KotlinLogging.logger {}
+    companion object {
+        private val logger = KotlinLogging.logger {}
+    }
+
     
     /** Pula połączeń HikariCP z konfiguracją dla PostgreSQL */
     private val dataSource: HikariDataSource
@@ -51,11 +55,13 @@ class DatabaseSystem {
 
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         datasourceTransactionManager = DataSourceTransactionManager(dataSource)
-        
+
         logger.debug { "Loading type registry from database" }
-        val loader = TypeRegistryLoader(namedParameterJdbcTemplate)
-        typeRegistry = loader.load()
-        logger.debug { "Type registry loaded successfully" }
+        val typeRegistryLoadTime = measureTime {
+            val loader = TypeRegistryLoader(namedParameterJdbcTemplate)
+            typeRegistry = loader.load()
+        }
+        logger.debug { "Type registry loaded successfully in ${typeRegistryLoadTime.inWholeMilliseconds}ms" } // Dodany czas
 
         logger.debug { "Initializing converters and mappers" }
         typesConverter = PostgresToKotlinConverter(typeRegistry)

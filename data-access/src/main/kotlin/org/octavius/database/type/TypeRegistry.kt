@@ -20,8 +20,10 @@ class TypeRegistry internal constructor(
     private val classFullPathToPgTypeNameMap: Map<String, String>,
     private val pgTypeNameToClassFullPathMap: Map<String, String>
 ) {
+    companion object {
+        private val logger = KotlinLogging.logger {}
+    }
 
-    private val logger = KotlinLogging.logger {}
 
     /**
      * Zwraca informacje o typie PostgreSQL.

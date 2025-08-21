@@ -32,7 +32,10 @@ class DatabaseBatchExecutor(
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ): BatchExecutor {
-    private val logger = KotlinLogging.logger {}
+    companion object {
+        private val logger = KotlinLogging.logger {}
+    }
+
     /**
      * Wykonuje listę kroków bazodanowych w pojedynczej transakcji.
      *

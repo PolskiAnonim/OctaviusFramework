@@ -19,7 +19,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
  */
 class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
 
-    private val logger = KotlinLogging.logger {}
     // Klasy pomocnicze
     private data class EnumTypeInfo(val typeName: String, val value: String)
     private data class CompositeAttributeInfo(val typeName: String, val attributeName: String, val attributeType: String)
@@ -106,8 +105,7 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
                     }
                 }
         } catch (e: Exception) {
-            println("Błąd podczas skanowania klas z adnotacją @PgType: ${e.message}")
-            e.printStackTrace()
+            logger.error(e) { "Błąd podczas skanowania klas z adnotacją @PgType" }
         }
         return mappings
     }
@@ -235,5 +233,7 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
                 t.typtype = 'd' -- 'd' for domain
                 AND n.nspname = ANY(:schemas)
         """
+
+        private val logger = KotlinLogging.logger {}
     }
 }

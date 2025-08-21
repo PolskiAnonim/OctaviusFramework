@@ -26,8 +26,10 @@ class DatabaseFetcher(
     val rowMappers: RowMappers,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataFetcher {
+    companion object {
+        private val logger = KotlinLogging.logger {}
+    }
 
-    private val logger = KotlinLogging.logger {}
 
     private fun formatTableExpression(table: String): String {
         return if (table.trim().uppercase().contains(" ")) "($table)" else table
@@ -42,7 +44,15 @@ class DatabaseFetcher(
     }
 
     override fun fetchCount(from: String, filter: String?, params: Map<String, Any?>): Long {
-        logger.debug { "Fetching count from: $from with filter: $filter" }
+        val isSubquery = from.trim().uppercase().startsWith("SELECT")
+
+        if (isSubquery) {
+            logger.debug { "Fetching count from a subquery with filter: $filter" }
+            logger.trace { "Subquery used for counting: $from" }
+        } else {
+            logger.debug { "Fetching count from table/view: '$from' with filter: $filter" }
+        }
+
         val result = select("COUNT(*)", from)
             .where(filter)
             .toField<Long>(params) ?: 0L

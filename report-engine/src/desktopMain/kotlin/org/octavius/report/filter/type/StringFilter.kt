@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
-import org.octavius.data.contract.PgTyped
 import org.octavius.data.contract.withPgType
 import org.octavius.localization.Translations
 import org.octavius.report.FilterMode

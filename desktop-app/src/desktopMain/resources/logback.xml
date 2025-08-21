@@ -8,9 +8,15 @@
         </encoder>
     </appender>
 
-    <!-- Appender 2: Logowanie do pliku (dla produkcji i diagnostyki) -->
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>logs/octavius.log</file> <!-- Nazwa i ścieżka do pliku z logami -->
+    <!-- Appender 2: Logowanie do pliku -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/octavius.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Twórz nowy plik logu każdego dnia -->
+            <fileNamePattern>logs/octavius.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <!-- Przechowuj logi przez 10 dni -->
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
         <encoder>
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
