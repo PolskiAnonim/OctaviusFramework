@@ -40,7 +40,6 @@ class ReportConfigurationManager : KoinComponent {
             batchExecutor.execute(listOf(databaseStep))
             true
         } catch (e: Exception) {
-            e.printStackTrace()
             false
         }
     }
@@ -54,7 +53,6 @@ class ReportConfigurationManager : KoinComponent {
                 from = "public.report_configurations"
             ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
@@ -68,7 +66,6 @@ class ReportConfigurationManager : KoinComponent {
                 from = "public.report_configurations"
             ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
         } catch (e: Exception) {
-            e.printStackTrace()
             emptyList()
         }
     }
@@ -82,7 +79,6 @@ class ReportConfigurationManager : KoinComponent {
 
             batchExecutor.execute(listOf(databaseStep))[0]!![0]["rows_affected"] as Int > 0
         } catch (e: Exception) {
-            e.printStackTrace()
             false
         }
     }

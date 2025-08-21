@@ -2,6 +2,7 @@ package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.EnumCaseConvention
+import org.octavius.exception.TypeRegistryException
 import kotlin.reflect.KClass
 
 /**
@@ -31,10 +32,10 @@ class TypeRegistry internal constructor(
      * @param pgTypeName Nazwa typu w PostgreSQL.
      * @return Informacje o typie lub null, jeśli typ nie został znaleziony.
      */
-    fun getTypeInfo(pgTypeName: String): PostgresTypeInfo? {
+    fun getTypeInfo(pgTypeName: String): PostgresTypeInfo {
         val typeInfo = postgresTypeMap[pgTypeName]
         logger.trace { "Looking up type info for '$pgTypeName': ${if (typeInfo != null) "found" else "not found"}" }
-        return typeInfo
+        return typeInfo ?: throw TypeRegistryException("Nie znaleziono danych typu PostgreSQL.")
     }
 
     /**
@@ -43,10 +44,10 @@ class TypeRegistry internal constructor(
      * @param clazz Klasa Kotlina (KClass).
      * @return Nazwa typu w PostgreSQL lub null, jeśli nie znaleziono mapowania.
      */
-    fun getPgTypeNameForClass(clazz: KClass<*>): String? {
+    fun getPgTypeNameForClass(clazz: KClass<*>): String {
         val pgTypeName = classFullPathToPgTypeNameMap[clazz.qualifiedName]
         logger.trace { "Looking up PostgreSQL type for class '${clazz.qualifiedName}': ${pgTypeName ?: "not found"}" }
-        return pgTypeName
+        return pgTypeName ?: throw TypeRegistryException("Klasa ${clazz.qualifiedName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgType?")
     }
 
     /**

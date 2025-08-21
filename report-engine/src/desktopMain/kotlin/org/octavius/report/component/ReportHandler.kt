@@ -96,7 +96,6 @@ class ReportHandler(
                 val (newData, newPagination) = dataManager.fetchData(state)
                 _state.value = _state.value.copy(isLoading = false, data = newData, pagination = newPagination)
             } catch (e: Exception) {
-                e.printStackTrace()
                 _state.value = _state.value.copy(isLoading = false, error = "Błąd pobierania danych: ${e.message}")
             }
         }

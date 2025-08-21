@@ -1,14 +1,15 @@
 package org.octavius.domain.test
 
 import kotlinx.datetime.LocalDateTime
+import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgType
 import java.math.BigDecimal
 
-@PgType
+@PgType(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
 enum class TestStatus { Active, Inactive, Pending, NotStarted }
-@PgType
+@PgType(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
 enum class TestPriority { Low, Medium, High, Critical }
-@PgType
+@PgType(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
 enum class TestCategory { BugFix, Feature, Enhancement, Documentation }
 @PgType
 data class TestMetadata(

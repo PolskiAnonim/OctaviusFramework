@@ -3,6 +3,7 @@ package org.octavius.database
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.exception.DataMappingException
 import org.octavius.util.toDataObject
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
@@ -82,8 +83,7 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
         val baseMapper = ColumnNameMapper()
         return RowMapper { rs, rowNum ->
             logger.trace { "Mapping row to ${kClass.simpleName} using DataObjectMapper" }
-            val map = baseMapper.mapRow(rs, rowNum)
-                ?: throw IllegalStateException("ColumnNameMapper zwrócił null, co nie powinno się zdarzyć.")
+            val map = baseMapper.mapRow(rs, rowNum)!!
 
             try {
                 // Używamy istniejącej logiki do konwersji mapy na obiekt
@@ -91,8 +91,17 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
                 logger.trace { "Successfully mapped row to ${kClass.simpleName}" }
                 result
             } catch (e: Exception) {
-                logger.error(e) { "Failed to map row to ${kClass.simpleName}" }
-                throw e
+                // Najbogatszy kontekst: co, na co i z czego próbowaliśmy mapować.
+                val mappingEx = DataMappingException(
+                    message = "Failed to map row to ${kClass.simpleName}",
+                    targetClass = kClass.qualifiedName ?: kClass.simpleName ?: "unknown class",
+                    rowData = map,
+                    cause = e
+                )
+                logger.error(mappingEx) {
+                    "Failed to map row to ${mappingEx.targetClass}. Problematic row data: ${mappingEx.rowData}"
+                }
+                throw mappingEx
             }
         }
     }

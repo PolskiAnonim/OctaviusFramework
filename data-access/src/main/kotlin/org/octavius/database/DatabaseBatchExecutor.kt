@@ -5,6 +5,9 @@ import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.exception.QueryExecutionException
+import org.octavius.exception.StepDependencyException
+import org.octavius.exception.TypeRegistryException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -62,28 +65,42 @@ class DatabaseBatchExecutor(
         transactionTemplate.execute { status ->
             try {
                 for ((index, operation) in databaseSteps.withIndex()) {
-                    val (sql, params) = buildQuery(operation, allResults)
-                    val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+                    var expandedSql: String? = null
+                    var expandedParams: Map<String, Any?>? = null
+                    try {
+                        val (sql, params) = buildQuery(operation, allResults)
+                        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+                        expandedSql = expanded.expandedSql
+                        expandedParams = expanded.expandedParams
 
-                    logger.debug { "Executing step $index: ${operation::class.simpleName}" }
-                    logger.trace { "--> SQL: ${expanded.expandedSql}" }
-                    logger.trace { "--> Params: ${expanded.expandedParams}" }
+                        logger.debug { "Executing step $index: ${operation::class.simpleName}" }
+                        logger.trace { "--> SQL: ${expanded.expandedSql}" }
+                        logger.trace { "--> Params: ${expanded.expandedParams}" }
 
-                    val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
-                        // Używamy query, bo update z returning w Spring JDBC jest kłopotliwy
-                        // To jest standardowy sposób na obejście tego problemu
-                        namedParameterJdbcTemplate.queryForList(expanded.expandedSql, expanded.expandedParams)
-                    } else {
-                        val rowsAffected = namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
-                        listOf(mapOf("rows_affected" to rowsAffected)) // Zwracamy info o zmienionych wierszach
+                        val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
+                            // Używamy query, bo update z returning w Spring JDBC jest kłopotliwy
+                            // To jest standardowy sposób na obejście tego problemu
+                            namedParameterJdbcTemplate.queryForList(expanded.expandedSql, expanded.expandedParams)
+                        } else {
+                            val rowsAffected = namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
+                            listOf(mapOf("rows_affected" to rowsAffected)) // Zwracamy info o zmienionych wierszach
+                        }
+
+                        allResults[index] = result
+                    } catch (e: Exception) {
+                        // CATCH dla pojedynczego kroku!
+                        throw QueryExecutionException(
+                            message = "Failed to execute step $index: ${operation::class.simpleName}",
+                            sql = expandedSql ?: "SQL not generated",
+                            params = expandedParams ?: emptyMap(),
+                            cause = e
+                        )
                     }
-
-                    allResults[index] = result
                 }
             } catch (e: Exception) {
                 status.setRollbackOnly()
-                logger.error(e) { "Error executing transaction. Rolling back transaction." }
-                throw e
+                logger.error(e) { "Error executing transaction. Rolling back." }
+                throw e // Rzucamy dalej oryginalny wyjątek
             }
         }
         logger.info { "Batch execution completed successfully." }
@@ -99,20 +116,35 @@ class DatabaseBatchExecutor(
      * @param ref Referencja do rozwiązania.
      * @param resultsContext Wyniki z poprzednich kroków transakcji.
      * @return Rozwiązana wartość.
-     * @throws IllegalStateException, jeśli referencja jest nieprawidłowa.
+     * @throws StepDependencyException, jeśli referencja jest nieprawidłowa.
      */
     private fun resolveReference(ref: DatabaseValue, resultsContext: Map<Int, List<Map<String, Any?>>>): Any? {
         return when (ref) {
             is DatabaseValue.Value -> ref.value
             is DatabaseValue.FromStep -> {
                 val previousResultList = resultsContext[ref.stepIndex]
-                    ?: throw IllegalStateException("Nie znaleziono wyniku dla kroku o indeksie ${ref.stepIndex}")
+                    ?: throw StepDependencyException(
+                        message = "Nie znaleziono wyniku dla kroku o indeksie ${ref.stepIndex}.",
+                        referencedStepIndex = ref.stepIndex
+                    )
+
                 if (previousResultList.isEmpty()) {
-                    throw IllegalStateException("Krok ${ref.stepIndex} nie zwrócił żadnych wierszy.")
+                    throw StepDependencyException(
+                        message = "Krok ${ref.stepIndex} nie zwrócił żadnych wierszy, więc nie można pobrać z niego wartości.",
+                        referencedStepIndex = ref.stepIndex
+                    )
                 }
-                // Domyślnie bierzemy wartość z pierwszego zwróconego wiersza
+
+                if (!previousResultList.first().containsKey(ref.resultKey)) {
+                    throw StepDependencyException(
+                        message = "Klucz '${ref.resultKey}' nie został znaleziony w wyniku kroku ${ref.stepIndex}.",
+                        referencedStepIndex = ref.stepIndex,
+                        missingKey = ref.resultKey
+                    )
+                }
+
+                // Teraz, gdy wiemy, że klucz istnieje, możemy go bezpiecznie pobrać
                 previousResultList.first()[ref.resultKey]
-                    ?: throw IllegalStateException("Klucz '${ref.resultKey}' nie został znaleziony w wyniku operacji ${ref.stepIndex}")
             }
         }
     }

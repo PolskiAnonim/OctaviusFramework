@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgTyped
+import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.octavius.util.toMap
 import org.postgresql.util.PGobject
@@ -48,24 +49,30 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
     fun expandParametersInQuery(sql: String, params: Map<String, Any?>): ExpandedQuery {
         logger.debug { "Expanding parameters in query. Original params count: ${params.size}" }
         logger.trace { "Original SQL: $sql" }
-        
+
         var expandedSql = sql
         val expandedParams = mutableMapOf<String, Any?>()
 
         params.forEach { (paramName, paramValue) ->
-            val placeholder = ":$paramName"
-            if (expandedSql.contains(placeholder)) {
-                logger.trace { "Expanding parameter '$paramName' of type ${paramValue?.javaClass?.simpleName}" }
+            val paramValue = params[paramName]
+
+            val placeholderRegex = Regex(":$paramName\\b")
+
+            // Sprawdzamy, czy placeholder w ogóle istnieje w SQL
+            if (placeholderRegex.containsMatchIn(expandedSql)) {
+                logger.trace { "Expanding parameter ':$paramName' of type ${paramValue?.javaClass?.simpleName}" }
                 // Ekspanduj parametr na odpowiednią konstrukcję SQL
                 val (newPlaceholder, newParams) = expandParameter(paramName, paramValue)
-                expandedSql = expandedSql.replace(placeholder, newPlaceholder)
+
+                expandedSql = placeholderRegex.replace(expandedSql, newPlaceholder)
+
                 expandedParams.putAll(newParams)
-                logger.trace { "Parameter '$paramName' expanded to: $newPlaceholder" }
+                logger.trace { "Parameter ':$paramName' expanded to: $newPlaceholder" }
             } else {
                 expandedParams[paramName] = paramValue
             }
         }
-        
+
         logger.debug { "Parameter expansion completed. Expanded params count: ${expandedParams.size}" }
         logger.trace { "Expanded SQL: $expandedSql" }
         return ExpandedQuery(expandedSql, expandedParams)
@@ -104,10 +111,8 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         logger.trace { "Creating enum parameter for ${enumKClass.simpleName}.${enumValue.name}" }
 
         val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
-            ?: throw IllegalStateException("Enum ${enumKClass.simpleName} nie jest zarejestrowanym typem. Czy ma adnotację @PgType?")
 
-        val typeInfo =
-            typeRegistry.getTypeInfo(dbTypeName) ?: throw IllegalStateException("Nie znaleziono typu w bazie")
+        val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
         val convention = typeInfo.enumConvention
         
         logger.trace { "Converting enum value '${enumValue.name}' using convention: $convention" }
@@ -156,9 +161,7 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
 
         // 1. Pobierz informacje o typie z rejestru (bez zmian)
         val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
-            ?: throw IllegalStateException("Klasa ${kClass.simpleName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgType?")
         val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
-            ?: throw IllegalStateException("Nie znaleziono danych typu PostgreSQL.")
         
         logger.trace { "Found database type '$dbTypeName' with ${typeInfo.attributes.size} attributes" }
 
@@ -170,7 +173,7 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         val placeholders = typeInfo.attributes.keys.mapIndexed { index, dbAttributeName ->
 
             val value = valueMap[dbAttributeName]
-                ?: throw IllegalStateException("Nie znaleziono wartości dla atrybutu '$dbAttributeName' w zmapowanym obiekcie '${kClass.simpleName}'.")
+                ?: throw TypeRegistryException("Nie znaleziono wartości dla atrybutu '$dbAttributeName' w zmapowanym obiekcie '${kClass.simpleName}'.")
 
             val fieldParamName = "${paramName}_f${index + 1}"
             val (placeholder, params) = expandParameter(fieldParamName, value)

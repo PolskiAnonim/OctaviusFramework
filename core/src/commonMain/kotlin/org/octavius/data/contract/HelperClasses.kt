@@ -60,6 +60,9 @@ sealed class DatabaseStep {
     /** Dowolna operacja SQL z nazwanymi parametrami.
      * Umożliwia wykonywanie złożonych zapytań, które nie mieszczą się
      * w standardowych operacjach INSERT/UPDATE/DELETE.
+     *
+     * UWAGA: Jeżeli operacja powinna coś zwracać, oprócz listy returning
+     * należy też zapisać faktyczniego SQLa: RETURNING...
      */
     data class RawSql(
         val sql: String,

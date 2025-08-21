@@ -5,6 +5,7 @@ import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.QueryBuilder
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.exception.DatabaseException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass

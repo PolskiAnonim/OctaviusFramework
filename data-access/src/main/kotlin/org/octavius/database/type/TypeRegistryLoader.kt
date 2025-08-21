@@ -5,6 +5,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgType
 import org.octavius.database.DatabaseConfig
+import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
@@ -53,7 +54,7 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
             )
         } catch (e: Exception) {
             logger.error(e) { "FATAL: Failed to load TypeRegistry. Application state is inconsistent!" }
-            throw IllegalStateException("Failed to initialize TypeRegistry", e)
+            throw TypeRegistryException("Failed to initialize TypeRegistry", e)
         }
     }
 
@@ -105,7 +106,9 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
                     }
                 }
         } catch (e: Exception) {
-            logger.error(e) { "Błąd podczas skanowania klas z adnotacją @PgType" }
+            val ex = TypeRegistryException("FATAL: Failed to load TypeRegistry. Application state is inconsistent!", e)
+            logger.error(ex) { "Błąd podczas skanowania klas z adnotacją @PgType" }
+            throw ex
         }
         return mappings
     }
