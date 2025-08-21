@@ -1,5 +1,6 @@
 package org.octavius.database
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.QueryBuilder
@@ -26,6 +27,8 @@ class DatabaseFetcher(
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataFetcher {
 
+    private val logger = KotlinLogging.logger {}
+
     private fun formatTableExpression(table: String): String {
         return if (table.trim().uppercase().contains(" ")) "($table)" else table
     }
@@ -35,23 +38,39 @@ class DatabaseFetcher(
     }
 
     override fun fetchCount(table: String, filter: String?, params: Map<String, Any?>): Long {
+        logger.debug { "Fetching count from: $from with filter: $filter" }
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
         val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(table)}$whereClause"
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-
-        return jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, Long::class.java) ?: 0L
+        
+        logger.trace { "Executing count query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
+        val result = jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, Long::class.java) ?: 0L
+        logger.debug { "Count result: $result" }
+        return result
     }
 
     override fun fetchRowWithColumnInfo(tables: String, filter: String, params: Map<String, Any?>): Map<ColumnInfo, Any?>? {
+        logger.debug { "Fetching row with column info from tables: $tables with filter: $filter" }
         val whereClause = " WHERE $filter"
         val sql = "SELECT * FROM ${formatTableExpression(tables)}$whereClause"
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
+        logger.trace { "Executing row query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
         val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnInfoMapper())
+        
         return when (results.size) {
-            0 -> null
-            1 -> results[0]
-            else -> throw IllegalStateException("Query returned ${results.size} rows, expected 0 or 1")
+            0 -> {
+                logger.debug { "No row found for filter: $filter" }
+                null
+            }
+            1 -> {
+                logger.debug { "Found single row for filter: $filter" }
+                results[0]
+            }
+            else -> {
+                logger.error { "Query returned ${results.size} rows for filter: $filter, expected 0 or 1" }
+                throw IllegalStateException("Query returned ${results.size} rows, expected 0 or 1")
+            }
         }
     }
 
@@ -68,8 +87,11 @@ class DatabaseFetcher(
 
         val sql = sqlBuilder.toString()
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-
-        return jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMapper)
+        
+        logger.trace { "Executing query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
+        val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMapper)
+        logger.debug { "Query returned ${results.size} rows" }
+        return results
     }
 
     /**

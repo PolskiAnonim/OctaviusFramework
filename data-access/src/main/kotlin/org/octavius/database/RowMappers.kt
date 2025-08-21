@@ -1,5 +1,6 @@
 package org.octavius.database
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.util.toDataObject
@@ -14,6 +15,8 @@ import kotlin.reflect.KClass
  */
 class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
 
+    private val logger = KotlinLogging.logger {}
+
     /**
      * Mapper mapujący na `Map<ColumnInfo, Any?>`.
      * Przechowuje nazwę tabeli i kolumny. Używany głównie w formularzach,
@@ -23,6 +26,7 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
         val data = mutableMapOf<ColumnInfo, Any?>()
         val metaData = rs.metaData as PgResultSetMetaData
 
+        logger.trace { "Mapping row with ${metaData.columnCount} columns using ColumnInfoMapper" }
         for (i in 1..metaData.columnCount) {
             val columnName = metaData.getColumnName(i)
             val tableName = metaData.getTableName(i)
@@ -44,6 +48,8 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
     fun ColumnNameMapper(): RowMapper<Map<String, Any?>> = RowMapper { rs, _ ->
         val data = mutableMapOf<String, Any?>()
         val metaData = rs.metaData as PgResultSetMetaData
+        
+        logger.trace { "Mapping row with ${metaData.columnCount} columns using ColumnNameMapper" }
         for (i in 1..metaData.columnCount) {
             val columnName = metaData.getColumnName(i)
             val columnType = metaData.getColumnTypeName(i)
@@ -73,11 +79,19 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
     fun <T : Any> DataObjectMapper(kClass: KClass<T>): RowMapper<T> {
         val baseMapper = ColumnNameMapper()
         return RowMapper { rs, rowNum ->
+            logger.trace { "Mapping row to ${kClass.simpleName} using DataObjectMapper" }
             val map = baseMapper.mapRow(rs, rowNum)
                 ?: throw IllegalStateException("ColumnNameMapper zwrócił null, co nie powinno się zdarzyć.")
 
-            // Używamy istniejącej logiki do konwersji mapy na obiekt
-            map.toDataObject(kClass)
+            try {
+                // Używamy istniejącej logiki do konwersji mapy na obiekt
+                val result = map.toDataObject(kClass)
+                logger.trace { "Successfully mapped row to ${kClass.simpleName}" }
+                result
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to map row to ${kClass.simpleName}" }
+                throw e
+            }
         }
     }
 }

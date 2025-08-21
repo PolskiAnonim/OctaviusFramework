@@ -1,5 +1,6 @@
 package org.octavius.database.type
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgTyped
@@ -33,6 +34,8 @@ data class ExpandedQuery(
  */
 class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
 
+    private val logger = KotlinLogging.logger {}
+
     /**
      * Przetwarza zapytanie SQL, rozszerzając parametry złożone.
      *
@@ -41,21 +44,28 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
      * @return `ExpandedQuery` z przetworzonym SQL i parametrami.
      */
     fun expandParametersInQuery(sql: String, params: Map<String, Any?>): ExpandedQuery {
+        logger.debug { "Expanding parameters in query. Original params count: ${params.size}" }
+        logger.trace { "Original SQL: $sql" }
+        
         var expandedSql = sql
         val expandedParams = mutableMapOf<String, Any?>()
 
         params.forEach { (paramName, paramValue) ->
             val placeholder = ":$paramName"
             if (expandedSql.contains(placeholder)) {
+                logger.trace { "Expanding parameter '$paramName' of type ${paramValue?.javaClass?.simpleName}" }
                 // Ekspanduj parametr na odpowiednią konstrukcję SQL
                 val (newPlaceholder, newParams) = expandParameter(paramName, paramValue)
                 expandedSql = expandedSql.replace(placeholder, newPlaceholder)
                 expandedParams.putAll(newParams)
+                logger.trace { "Parameter '$paramName' expanded to: $newPlaceholder" }
             } else {
                 expandedParams[paramName] = paramValue
             }
         }
-
+        
+        logger.debug { "Parameter expansion completed. Expanded params count: ${expandedParams.size}" }
+        logger.trace { "Expanded SQL: $expandedSql" }
         return ExpandedQuery(expandedSql, expandedParams)
     }
 
@@ -89,7 +99,7 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
     /** Tworzy parametr dla enuma, mapując `CamelCase` na `snake_case` dla typu i wartości. */
     private fun createEnumParameter(paramName: String, enumValue: Enum<*>): Pair<String, Map<String, Any?>> {
         val enumKClass = enumValue::class
-
+        logger.trace { "Creating enum parameter for ${enumKClass.simpleName}.${enumValue.name}" }
 
         val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
             ?: throw IllegalStateException("Enum ${enumKClass.simpleName} nie jest zarejestrowanym typem. Czy ma adnotację @PgType?")
@@ -97,7 +107,8 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         val typeInfo =
             typeRegistry.getTypeInfo(dbTypeName) ?: throw IllegalStateException("Nie znaleziono typu w bazie")
         val convention = typeInfo.enumConvention
-
+        
+        logger.trace { "Converting enum value '${enumValue.name}' using convention: $convention" }
         val finalValue = when (convention) {
             EnumCaseConvention.SNAKE_CASE_LOWER -> Converters.toSnakeCase(enumValue.name).lowercase()
             EnumCaseConvention.SNAKE_CASE_UPPER -> Converters.toSnakeCase(enumValue.name).uppercase()
@@ -105,7 +116,8 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
             EnumCaseConvention.CAMEL_CASE -> Converters.toCamelCase(enumValue.name, true)
             EnumCaseConvention.AS_IS -> enumValue.name
         }
-
+        
+        logger.trace { "Enum value converted to: '$finalValue' with type: $dbTypeName" }
         val pgObject = PGobject().apply {
             value = finalValue
             type = dbTypeName
@@ -115,7 +127,10 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
 
     /** Rozszerza listę na konstrukcję `ARRAY[...]`, rekurencyjnie przetwarzając elementy. */
     private fun expandArrayParameter(paramName: String, arrayValue: List<*>): Pair<String, Map<String, Any?>> {
+        logger.trace { "Expanding array parameter '$paramName' with ${arrayValue.size} elements" }
+        
         if (arrayValue.isEmpty()) {
+            logger.trace { "Array parameter '$paramName' is empty, using empty array literal" }
             return "'{}'" to emptyMap() // Pusta tablica PostgreSQL
         }
 
@@ -128,18 +143,22 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         }
 
         val arrayPlaceholder = "ARRAY[${placeholders.joinToString(", ")}]"
+        logger.trace { "Array parameter '$paramName' expanded to: $arrayPlaceholder" }
         return arrayPlaceholder to expandedParams
     }
 
     /** Rozszerza `data class` na konstrukcję `ROW(...)::type_name`, rekurencyjnie przetwarzając pola. */
     private fun expandRowParameter(paramName: String, compositeValue: Any): Pair<String, Map<String, Any?>> {
         val kClass = compositeValue::class
+        logger.trace { "Expanding row parameter '$paramName' for class ${kClass.simpleName}" }
 
         // 1. Pobierz informacje o typie z rejestru (bez zmian)
         val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
             ?: throw IllegalStateException("Klasa ${kClass.simpleName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgType?")
         val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
             ?: throw IllegalStateException("Nie znaleziono danych typu PostgreSQL.")
+        
+        logger.trace { "Found database type '$dbTypeName' with ${typeInfo.attributes.size} attributes" }
 
         val valueMap = compositeValue.toMap()
 
@@ -151,7 +170,6 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
             val value = valueMap[dbAttributeName]
                 ?: throw IllegalStateException("Nie znaleziono wartości dla atrybutu '$dbAttributeName' w zmapowanym obiekcie '${kClass.simpleName}'.")
 
-
             val fieldParamName = "${paramName}_f${index + 1}"
             val (placeholder, params) = expandParameter(fieldParamName, value)
             expandedParams.putAll(params)
@@ -159,6 +177,7 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         }
 
         val rowPlaceholder = "ROW(${placeholders.joinToString(", ")})::$dbTypeName"
+        logger.trace { "Row parameter '$paramName' expanded to: $rowPlaceholder" }
 
         return rowPlaceholder to expandedParams
     }

@@ -2,6 +2,7 @@ package org.octavius.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataFetcher
 import org.octavius.database.type.KotlinToPostgresConverter
@@ -18,6 +19,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager
  * udostępniając je przez publiczne interfejsy `DataFetcher` i `BatchExecutor`.
  */
 class DatabaseSystem {
+    private val logger = KotlinLogging.logger {}
+    
     /** Pula połączeń HikariCP z konfiguracją dla PostgreSQL */
     private val dataSource: HikariDataSource
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
@@ -33,6 +36,9 @@ class DatabaseSystem {
     val batchExecutor: BatchExecutor
 
     init {
+        logger.info { "Initializing DatabaseSystem" }
+        
+        logger.debug { "Configuring HikariCP datasource with URL: ${DatabaseConfig.dbUrl}" }
         val config = HikariConfig().apply {
             jdbcUrl = DatabaseConfig.dbUrl
             username = DatabaseConfig.dbUsername
@@ -41,21 +47,28 @@ class DatabaseSystem {
             connectionInitSql = "SET search_path TO public, asian_media, games"
         }
         dataSource = HikariDataSource(config)
+        logger.debug { "HikariCP datasource initialized with pool size: ${config.maximumPoolSize}" }
 
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         datasourceTransactionManager = DataSourceTransactionManager(dataSource)
+        
+        logger.debug { "Loading type registry from database" }
         val loader = TypeRegistryLoader(namedParameterJdbcTemplate)
-
         typeRegistry = loader.load()
+        logger.debug { "Type registry loaded successfully" }
 
+        logger.debug { "Initializing converters and mappers" }
         typesConverter = PostgresToKotlinConverter(typeRegistry)
         kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         rowMappers = RowMappers(typesConverter)
 
+        logger.debug { "Initializing database services" }
         val concreteExecutor = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, kotlinToPostgresConverter)
         val concreteFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
 
         batchExecutor = concreteExecutor
         fetcher = concreteFetcher
+        
+        logger.info { "DatabaseSystem initialization completed" }
     }
 }

@@ -52,7 +52,7 @@ kotlin {
             implementation(libs.koin.slf4j)
 
             // Implementacja loggera
-            implementation(libs.slf4j.simple)
+            implementation(libs.logback.classic)
         }
     }
 }

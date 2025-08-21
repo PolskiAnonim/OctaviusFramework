@@ -1,5 +1,6 @@
 package org.octavius.database.type
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.EnumCaseConvention
 import kotlin.reflect.KClass
 
@@ -20,6 +21,8 @@ class TypeRegistry internal constructor(
     private val pgTypeNameToClassFullPathMap: Map<String, String>
 ) {
 
+    private val logger = KotlinLogging.logger {}
+
     /**
      * Zwraca informacje o typie PostgreSQL.
      *
@@ -27,7 +30,9 @@ class TypeRegistry internal constructor(
      * @return Informacje o typie lub null, jeśli typ nie został znaleziony.
      */
     fun getTypeInfo(pgTypeName: String): PostgresTypeInfo? {
-        return postgresTypeMap[pgTypeName]
+        val typeInfo = postgresTypeMap[pgTypeName]
+        logger.trace { "Looking up type info for '$pgTypeName': ${if (typeInfo != null) "found" else "not found"}" }
+        return typeInfo
     }
 
     /**
@@ -37,7 +42,9 @@ class TypeRegistry internal constructor(
      * @return Nazwa typu w PostgreSQL lub null, jeśli nie znaleziono mapowania.
      */
     fun getPgTypeNameForClass(clazz: KClass<*>): String? {
-        return classFullPathToPgTypeNameMap[clazz.qualifiedName]
+        val pgTypeName = classFullPathToPgTypeNameMap[clazz.qualifiedName]
+        logger.trace { "Looking up PostgreSQL type for class '${clazz.qualifiedName}': ${pgTypeName ?: "not found"}" }
+        return pgTypeName
     }
 
     /**
@@ -47,7 +54,9 @@ class TypeRegistry internal constructor(
      * @return Pełna ścieżka klasy (np. "org.example.MyEnum") lub null.
      */
     fun getClassFullPathForPgTypeName(pgTypeName: String): String? {
-        return pgTypeNameToClassFullPathMap[pgTypeName]
+        val classPath = pgTypeNameToClassFullPathMap[pgTypeName]
+        logger.trace { "Looking up class for PostgreSQL type '$pgTypeName': ${classPath ?: "not found"}" }
+        return classPath
     }
 
     /**
@@ -56,6 +65,7 @@ class TypeRegistry internal constructor(
      * @return Niemodyfikowalna mapa nazw typów na informacje o typach.
      */
     fun getAllRegisteredTypes(): Map<String, PostgresTypeInfo> {
+        logger.debug { "Returning ${postgresTypeMap.size} registered PostgreSQL types" }
         return postgresTypeMap
     }
 }

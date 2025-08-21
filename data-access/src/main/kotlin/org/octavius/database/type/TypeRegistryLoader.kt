@@ -1,6 +1,7 @@
 package org.octavius.database.type
 
 import io.github.classgraph.ClassGraph
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgType
 import org.octavius.database.DatabaseConfig
@@ -18,6 +19,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
  */
 class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
 
+    private val logger = KotlinLogging.logger {}
     // Klasy pomocnicze
     private data class EnumTypeInfo(val typeName: String, val value: String)
     private data class CompositeAttributeInfo(val typeName: String, val attributeName: String, val attributeType: String)
@@ -36,15 +38,24 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
      * w pełni skonfigurowany [TypeRegistry].
      */
     fun load(): TypeRegistry {
-        val kotlinTypeMappings = scanDomainClasses()
-        val postgresTypeMap = buildPostgresTypeMap(kotlinTypeMappings)
-        val (classToPgMap, pgToClassMap) = buildBidirectionalClassMaps(kotlinTypeMappings)
+        try {
+            logger.info { "Starting TypeRegistry loading..." }
+            val kotlinTypeMappings = scanDomainClasses()
+            val postgresTypeMap = buildPostgresTypeMap(kotlinTypeMappings)
+            val (classToPgMap, pgToClassMap) = buildBidirectionalClassMaps(kotlinTypeMappings)
 
-        return TypeRegistry(
-            postgresTypeMap = postgresTypeMap,
-            classFullPathToPgTypeNameMap = classToPgMap,
-            pgTypeNameToClassFullPathMap = pgToClassMap
-        )
+            logger.info { "TypeRegistry loaded successfully. Found ${postgresTypeMap.size} total PG types." }
+            logger.debug { "Kotlin class mappings found: ${kotlinTypeMappings.size}" }
+
+            return TypeRegistry(
+                postgresTypeMap = postgresTypeMap,
+                classFullPathToPgTypeNameMap = classToPgMap,
+                pgTypeNameToClassFullPathMap = pgToClassMap
+            )
+        } catch (e: Exception) {
+            logger.error(e) { "FATAL: Failed to load TypeRegistry. Application state is inconsistent!" }
+            throw IllegalStateException("Failed to initialize TypeRegistry", e)
+        }
     }
 
     private fun buildPostgresTypeMap(kotlinMappings: List<KotlinPgTypeMapping>): Map<String, PostgresTypeInfo> {

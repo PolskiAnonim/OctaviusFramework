@@ -1,5 +1,6 @@
 package org.octavius.database
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
@@ -31,7 +32,7 @@ class DatabaseBatchExecutor(
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ): BatchExecutor {
-
+    private val logger = KotlinLogging.logger {}
     /**
      * Wykonuje listę kroków bazodanowych w pojedynczej transakcji.
      *
@@ -51,6 +52,7 @@ class DatabaseBatchExecutor(
      * ```
      */
     override fun execute(databaseSteps: List<DatabaseStep>): Map<Int, List<Map<String, Any?>>> {
+        logger.info { "Executing batch of ${databaseSteps.size} steps in a single transaction." }
         val transactionTemplate = TransactionTemplate(transactionManager)
         val allResults = mutableMapOf<Int, List<Map<String, Any?>>>()
 
@@ -59,6 +61,10 @@ class DatabaseBatchExecutor(
                 for ((index, operation) in databaseSteps.withIndex()) {
                     val (sql, params) = buildQuery(operation, allResults)
                     val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+
+                    logger.debug { "Executing step $index: ${operation::class.simpleName}" }
+                    logger.trace { "--> SQL: ${expanded.expandedSql}" }
+                    logger.trace { "--> Params: ${expanded.expandedParams}" }
 
                     val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
                         // Używamy query, bo update z returning w Spring JDBC jest kłopotliwy
@@ -73,10 +79,11 @@ class DatabaseBatchExecutor(
                 }
             } catch (e: Exception) {
                 status.setRollbackOnly()
-                println("Błąd operacji bazodanowej: ${e.message}")
+                logger.error(e) { "Error executing transaction. Rolling back transaction." }
                 throw e
             }
         }
+        logger.info { "Batch execution completed successfully." }
         return allResults
     }
 

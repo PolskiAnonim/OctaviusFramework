@@ -1,0 +1,33 @@
+<configuration>
+
+    <!-- Appender 1: Logowanie do konsoli (dla developmentu) -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Format logu: data, wątek, poziom, logger, wiadomość, nowa linia -->
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Appender 2: Logowanie do pliku (dla produkcji i diagnostyki) -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/octavius.log</file> <!-- Nazwa i ścieżka do pliku z logami -->
+        <encoder>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Ustawienia logowania dla KONKRETNYCH PAKIETÓW -->
+    <!-- Ustaw poziom DEBUG dla swojego kodu, żeby widzieć szczegółowe logi z Twojego systemu -->
+    <logger name="org.octavius" level="DEBUG"/>
+
+    <!-- Ucisz gadatliwe biblioteki, żeby nie zaśmiecały logów -->
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+    <logger name="org.springframework" level="INFO"/>
+
+    <!-- Główny (root) logger: Domyślny poziom i appender dla wszystkiego innego -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>

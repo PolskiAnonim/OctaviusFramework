@@ -13,6 +13,9 @@ dependencies {
     implementation(libs.spring.jdbc)
     implementation(libs.classgraph)
 
+    implementation(libs.logback.classic)
+    implementation(libs.kotlin.logging.jvm)
+
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.junit.jupiter)

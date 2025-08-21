@@ -1,5 +1,6 @@
 package org.octavius.database.type
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
@@ -25,6 +26,8 @@ import kotlin.time.Instant
  */
 class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
 
+    private val logger = KotlinLogging.logger {}
+
 
     /**
      * Główna funkcja konwertująca, delegująca do specjalistycznych handlerów.
@@ -35,19 +38,36 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
      * @throws IllegalArgumentException jeśli typ jest nieznany.
      */
     fun convertToDomainType(value: String?, pgTypeName: String): Any? {
-        if (value == null) return null
-
+        if (value == null) {
+            logger.trace { "Converting null value for type: $pgTypeName" }
+            return null
+        }
+        
+        logger.trace { "Converting value '$value' from PostgreSQL type: $pgTypeName" }
         val typeInfo = typeRegistry.getTypeInfo(pgTypeName)
             ?: throw IllegalArgumentException("Nieznany typ PostgreSQL: $pgTypeName")
 
         return when (typeInfo.typeCategory) {
-            TypeCategory.ENUM -> convertEnum(value, typeInfo)
-            TypeCategory.ARRAY -> convertArray(value, typeInfo)
-            TypeCategory.COMPOSITE -> convertCompositeType(value, typeInfo)
-            TypeCategory.STANDARD -> convertStandardType(value, pgTypeName)
+            TypeCategory.ENUM -> {
+                logger.trace { "Converting enum value '$value' for type $pgTypeName" }
+                convertEnum(value, typeInfo)
+            }
+            TypeCategory.ARRAY -> {
+                logger.trace { "Converting array value for type $pgTypeName" }
+                convertArray(value, typeInfo)
+            }
+            TypeCategory.COMPOSITE -> {
+                logger.trace { "Converting composite value for type $pgTypeName" }
+                convertCompositeType(value, typeInfo)
+            }
+            TypeCategory.STANDARD -> {
+                logger.trace { "Converting standard value '$value' for type $pgTypeName" }
+                convertStandardType(value, pgTypeName)
+            }
             TypeCategory.DOMAIN -> {
                 val baseTypeName = typeInfo.baseTypeName
                     ?: throw IllegalStateException("Domena '${typeInfo.typeName}' nie ma zdefiniowanego typu bazowego w TypeRegistry.")
+                logger.trace { "Converting domain value '$value' using base type: $baseTypeName" }
                 // Wywołujemy tę samą funkcję, ale już dla typu bazowego (np. 'int4', 'bool').
                 convertToDomainType(value, baseTypeName)
             }
@@ -109,12 +129,14 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
                 EnumCaseConvention.CAMEL_CASE -> Converters.toCamelCase(value, true)
                 EnumCaseConvention.AS_IS -> value
             }
-
+            
+            logger.trace { "Converting enum '$value' to '$enumValueName' using convention: ${typeInfo.enumConvention}" }
             val method = enumClass.getMethod("valueOf", String::class.java)
-            method.invoke(null, enumValueName)
+            val result = method.invoke(null, enumValueName)
+            logger.trace { "Successfully converted enum value to: $result" }
+            result
         } catch (e: Exception) {
-            println("Nie można przekonwertować wartości enum: $value dla typu ${typeInfo.typeName} (próbowano: $enumClassName)")
-            e.printStackTrace()
+            logger.error(e) { "Nie można przekonwertować wartości enum: $value dla typu ${typeInfo.typeName} (próbowano: $enumClassName)" }
             null
         }
     }
@@ -124,7 +146,9 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         val elementType = typeInfo.elementType
             ?: throw IllegalStateException("Typ tablicowy ${typeInfo.typeName} nie ma zdefiniowanego typu elementu.")
 
+        logger.trace { "Parsing PostgreSQL array with element type: $elementType" }
         val elements = parsePostgresArray(value)
+        logger.trace { "Parsed ${elements.size} array elements" }
 
         // Rekurencyjnie konwertujemy każdy element tablicy używając głównej funkcji konwersji
         return elements.map { elementValue ->
@@ -149,14 +173,18 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
             ?: throw IllegalStateException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
 
+        logger.trace { "Converting composite type ${typeInfo.typeName} to class: $fullClassName" }
+        
         // 1. Parsowanie stringa na listę surowych wartości
         val fieldValues = parsePostgresComposite(value)
         val dbAttributes = typeInfo.attributes.toList()
 
         if (fieldValues.size != dbAttributes.size) {
+            logger.error { "Field count mismatch for type ${typeInfo.typeName}: got ${fieldValues.size}, expected ${dbAttributes.size}" }
             throw IllegalArgumentException("Zła ilość pól (${fieldValues.size}) dla typu: ${typeInfo.typeName}, oczekiwano ${dbAttributes.size}")
         }
-
+        
+        logger.trace { "Converting ${dbAttributes.size} composite fields" }
         val constructorArgsMap = dbAttributes.mapIndexed { index, (dbAttributeName, dbAttributeType) ->
             val convertedValue = convertToDomainType(fieldValues[index], dbAttributeType)
             dbAttributeName to convertedValue
@@ -165,8 +193,11 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         return try {
             val clazz = Class.forName(fullClassName).kotlin
             // 3. Przekazanie idealnie przygotowanej mapy do uniwersalnego konstruktora
-            constructorArgsMap.toDataObject(clazz)
+            val result = constructorArgsMap.toDataObject(clazz)
+            logger.trace { "Successfully created instance of ${clazz.simpleName}" }
+            result
         } catch (e: Exception) {
+            logger.error(e) { "Failed to create instance for type: ${typeInfo.typeName}" }
             throw IllegalStateException("Nie można utworzyć instancji dla typu: ${typeInfo.typeName}", e)
         }
     }
