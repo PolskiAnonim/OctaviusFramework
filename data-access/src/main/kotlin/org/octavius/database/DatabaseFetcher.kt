@@ -43,12 +43,9 @@ class DatabaseFetcher(
 
     override fun fetchCount(from: String, filter: String?, params: Map<String, Any?>): Long {
         logger.debug { "Fetching count from: $from with filter: $filter" }
-        val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(from)}$whereClause"
-        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-        
-        logger.trace { "Executing count query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
-        val result = jdbcTemplate.queryForObject(expanded.expandedSql, expanded.expandedParams, Long::class.java) ?: 0L
+        val result = select("COUNT(*)", from)
+            .where(filter)
+            .toField<Long>(params) ?: 0L
         logger.debug { "Count result: $result" }
         return result
     }
