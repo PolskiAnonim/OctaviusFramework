@@ -45,7 +45,14 @@ CREATE TYPE test_project AS (
     budget numeric
 );
 
--- 3. Tworzymy tabelę testową
+--3. Domeny
+CREATE DOMAIN test_email AS text
+    CHECK (value ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+
+CREATE DOMAIN positive_integer AS integer
+    CHECK (value > 0);
+
+-- 4. Tworzymy tabelę testową
 CREATE TABLE complex_test_data (
     id SERIAL PRIMARY KEY,
     
@@ -61,7 +68,9 @@ CREATE TABLE complex_test_data (
     -- Enumy
     single_status test_status,
     status_array test_status[],
-    
+    -- Domeny
+    user_email test_email,
+    item_count positive_integer,
     -- Tablice prostych typów
     text_array text[],
     number_array integer[],
@@ -74,9 +83,10 @@ CREATE TABLE complex_test_data (
     -- Złożone struktury
     project_data test_project,
     project_array test_project[]
+
 );
 
--- 4. Wstawiamy testowe dane z wszystkimi możliwymi kombinacjami
+-- 5. Wstawiamy testowe dane z wszystkimi możliwymi kombinacjami
 INSERT INTO complex_test_data (
     simple_text,
     simple_number,
@@ -88,6 +98,9 @@ INSERT INTO complex_test_data (
     
     single_status,
     status_array,
+
+    user_email,
+    item_count,
     
     text_array,
     number_array,
@@ -111,6 +124,9 @@ INSERT INTO complex_test_data (
     -- Enumy
     'active',
     ARRAY['active', 'pending', 'not_started']::test_status[],
+
+    'valid.email@example.com',
+    150,
 
     -- Tablice prostych typów
     ARRAY['first', 'second', 'third with "quotes"', 'fourth with ąćę'],
@@ -234,76 +250,3 @@ INSERT INTO complex_test_data (
         )
     ]::test_project[]
 );
-
--- 5. Zapytania testowe do wyciągnięcia danych
--- Możesz użyć tych zapytań w testach:
-
--- Proste zapytanie z pojedynczym parametrem enum
--- SELECT * FROM complex_test_data WHERE single_status = 'active';
-
--- Zapytanie z tablicą enumów
--- SELECT * FROM complex_test_data WHERE 'active' = ANY(status_array);
-
--- Zapytanie z kompozytem jako parametr
--- SELECT * FROM complex_test_data WHERE single_person = ROW('John "The Developer" Doe', 30, 'john@example.com', true, ARRAY['admin', 'developer', 'team-lead'])::test_person;
-
--- Złożone zapytanie z tablicą kompozytów
--- SELECT * FROM complex_test_data WHERE ROW('Alice Smith', 25, 'alice@example.com', true, ARRAY['developer', 'frontend'])::test_person = ANY(person_array);
-
--- Mega złożone zapytanie z projektem
--- SELECT * FROM complex_test_data WHERE (project_data).name LIKE '%Complex%';
-
--- 6. Przykładowe dane do kopiowania w testach:
-
-/*
-PRZYKŁADY WARTOŚCI DO UŻYCIA W TESTACH:
-
-1. Enum:
-'active'::test_status
-
-2. Tablica enumów:
-ARRAY['active', 'pending', 'not_started']::test_status[]
-
-3. Kompozyt:
-ROW('John "The Developer" Doe', 30, 'john@example.com', true, ARRAY['admin', 'developer'])::test_person
-
-4. Tablica kompozytów:
-ARRAY[
-    ROW('Alice Smith', 25, 'alice@example.com', true, ARRAY['developer']),
-    ROW('Bob Johnson', 35, 'bob@example.com', false, ARRAY['dba'])
-]::test_person[]
-
-5. Zagnieżdżona tablica tekstowa:
-ARRAY[ARRAY['a', 'b'], ARRAY['c with "quotes"', 'd']]
-
-6. JSON:
-'{"name": "test", "nested": {"key": "value"}, "array": [1, 2, 3]}'::jsonb
-
-7. Mega złożony projekt (do kopiowania):
-ROW(
-    'Test Project',
-    'Description with "quotes"',
-    'active',
-    ARRAY[ROW('Developer', 30, 'dev@test.com', true, ARRAY['dev'])]::test_person[],
-    ARRAY[ROW(1, 'Task', 'Description', 'active', 'high', 'feature', 
-              ROW('Assignee', 25, 'test@test.com', true, ARRAY['role']), 
-              ROW('2024-01-01 00:00:00', '2024-01-01 00:00:00', 1, ARRAY['tag']), 
-              ARRAY['subtask'], 8.0)]::test_task[],
-    ROW('2024-01-01 00:00:00', '2024-01-01 00:00:00', 1, ARRAY['project']),
-    10000.00
-)::test_project
-*/
-
--- 7. Sprawdzenie czy dane zostały poprawnie wstawione
-SELECT 
-    id,
-    simple_text,
-    single_status,
-    array_length(status_array, 1) as status_array_length,
-    (single_person).name as person_name,
-    array_length(person_array, 1) as person_array_length,
-    (project_data).name as project_name,
-    array_length((project_data).team_members, 1) as team_size,
-    array_length((project_data).tasks, 1) as task_count,
-    array_length(project_array, 1) as project_array_length
-FROM complex_test_data;

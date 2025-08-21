@@ -59,6 +59,18 @@ fun createFakeTypeRegistry(): TypeRegistry {
             "tasks" to "_test_task", "metadata" to "test_metadata", "budget" to "numeric"
         )))
         put("_test_project", PostgresTypeInfo("_test_project", TypeCategory.ARRAY, elementType = "test_project"))
+
+        // Domeny
+        put("test_email", PostgresTypeInfo(
+            typeName = "test_email",
+            typeCategory = TypeCategory.DOMAIN,
+            baseTypeName = "text"
+        ))
+        put("positive_integer", PostgresTypeInfo(
+            typeName = "positive_integer",
+            typeCategory = TypeCategory.DOMAIN,
+            baseTypeName = "int4" // lub "integer"
+        ))
     }
 
     // Mapa 2: Pełna ścieżka klasy -> Nazwa typu PG

@@ -30,11 +30,13 @@ class PostgresToKotlinConverterUnitTest {
         const val GOLDEN_STRING_SIMPLE_NUMBER = "42"
         const val GOLDEN_STRING_SIMPLE_BOOL = "t"
         const val GOLDEN_STRING_SIMPLE_JSON = "{\"name\": \"test\", \"array\": [1, 2, 3], \"value\": 123, \"nested\": {\"key\": \"value\"}}"
-        const val GOLDEN_STRING_SIMPLE_UUID = "1d6e4e5b-c011-403f-87a1-a5c57ac29a2e"
+        const val GOLDEN_STRING_SIMPLE_UUID = "8ffe335a-e1a2-4f73-86af-ffd5e1522a2d"
         const val GOLDEN_STRING_SIMPLE_DATE = "2024-01-15"
         const val GOLDEN_STRING_SIMPLE_TIMESTAMP = "2024-01-15 14:30:00"
         const val GOLDEN_STRING_SINGLE_STATUS = "active"
         const val GOLDEN_STRING_STATUS_ARRAY = "{active,pending,not_started}"
+        const val GOLDEN_STRING_USER_EMAIL = "valid.email@example.com"
+        const val GOLDEN_STRING_ITEM_COUNT = "150"
         const val GOLDEN_STRING_TEXT_ARRAY = "{first,second,\"third with \\\"quotes\\\"\",\"fourth with ąćę\"}"
         const val GOLDEN_STRING_NUMBER_ARRAY = "{1,2,3,4,5}"
         const val GOLDEN_STRING_NESTED_TEXT_ARRAY = "{{a,b},{c,d},{\"e with \\\"quotes\\\"\",f}}"
@@ -52,7 +54,7 @@ class PostgresToKotlinConverterUnitTest {
         assertThat(converter.convertToDomainType(GOLDEN_STRING_SIMPLE_NUMBER, "int4")).isEqualTo(42)
         assertThat(converter.convertToDomainType(GOLDEN_STRING_SIMPLE_BOOL, "bool")).isEqualTo(true)
         assertThat(converter.convertToDomainType(GOLDEN_STRING_SIMPLE_JSON, "jsonb")).isEqualTo(Json.parseToJsonElement(GOLDEN_STRING_SIMPLE_JSON) as JsonObject)
-        assertThat(converter.convertToDomainType(GOLDEN_STRING_SIMPLE_UUID, "uuid")).isEqualTo(UUID.fromString("1d6e4e5b-c011-403f-87a1-a5c57ac29a2e"))
+        assertThat(converter.convertToDomainType(GOLDEN_STRING_SIMPLE_UUID, "uuid")).isEqualTo(UUID.fromString("8ffe335a-e1a2-4f73-86af-ffd5e1522a2d"))
         assertThat(converter.convertToDomainType(GOLDEN_STRING_SIMPLE_DATE, "date")).isEqualTo(LocalDate.parse("2024-01-15"))
         assertThat(converter.convertToDomainType(GOLDEN_STRING_SIMPLE_TIMESTAMP, "timestamp")).isEqualTo(LocalDateTime.parse("2024-01-15T14:30:00"))
     }
@@ -190,6 +192,18 @@ class PostgresToKotlinConverterUnitTest {
         // Sprawdźmy kluczowe pole w drugim projekcie
         assertThat(result[1].name).isEqualTo("Research \"Innovation\" Project")
         assertThat(result[1].teamMembers[0].name).isEqualTo("Researcher \"The Innovator\"")
+    }
+
+    @Test
+    fun `should convert domain types by delegating to their base type`() {
+        // Domena 'test_email' oparta na 'text'
+        val emailResult = converter.convertToDomainType(GOLDEN_STRING_USER_EMAIL, "test_email")
+        assertThat(emailResult).isInstanceOf(String::class.java)
+        assertThat(emailResult).isEqualTo("valid.email@example.com")
+
+        // Domena 'positive_integer' oparta na 'int4'
+        val countResult = converter.convertToDomainType(GOLDEN_STRING_ITEM_COUNT, "positive_integer")
+        assertThat(countResult).isEqualTo(150)
     }
 
 }

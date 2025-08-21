@@ -4,15 +4,10 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.octavius.util.Converters // Załóżmy, że masz to w projekcie
 import org.postgresql.jdbc.PgResultSetMetaData
-import org.springframework.jdbc.core.ResultSetExtractor
-import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.sql.ResultSet
 
 /**
  * JEDNORAZOWE NARZĘDZIE DO GENEROWANIA "ZŁOTYCH" STRINGÓW TESTOWYCH.
@@ -22,9 +17,8 @@ import java.sql.ResultSet
  *
  */
 class GoldenStringExporterTest {
-
     @Test
-    //@Disabled("Użyj tylko do jednorazowego wygenerowania danych testowych!")
+    @Disabled("Użyj tylko do jednorazowego wygenerowania danych testowych!")
     fun exportAllGoldenStrings() {
         // --- 1. Konfiguracja połączenia ---
         DatabaseConfig.loadFromFile("test-database.properties")
@@ -67,6 +61,8 @@ class GoldenStringExporterTest {
             "simple_timestamp",
             "single_status",
             "status_array",
+            "user_email",
+            "item_count",
             "text_array",
             "number_array",
             "nested_text_array",
@@ -97,7 +93,7 @@ class GoldenStringExporterTest {
             val constName = "GOLDEN_STRING_${columnName.uppercase()}"
 
             // Tworzymy string bezpieczny dla standardowego literału Kotlina ("...")
-            val escapedForKotlin = stringValue.toString()
+            val escapedForKotlin = stringValue
                 .replace("\\", "\\\\") // 1. Najpierw backslashe
                 .replace("\"", "\\\"")  // 2. Potem cudzysłowy
                 .replace("$", "\\$")    // 3. Na koniec dolary (na wszelki wypadek)
