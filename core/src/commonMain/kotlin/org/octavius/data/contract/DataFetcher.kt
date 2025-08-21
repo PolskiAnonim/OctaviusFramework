@@ -10,20 +10,28 @@ import kotlin.reflect.KClass
  */
 interface DataFetcher {
     /**
-     * Rozpoczyna proces budowania zapytania SELECT. Jest to główny punkt wejścia
-     * do pobierania danych w formie list i pojedynczych wierszy.
+     * Rozpoczyna proces budowania zapytania, zwracając pusty QueryBuilder.
+     * Jest to najbardziej elastyczny punkt wejścia, pozwalający na definiowanie
+     * klauzul WITH przed głównym SELECT.
      *
-     * @param columns Lista kolumn do pobrania, np. "id, name, email". Domyślnie "*".
-     * @param from Tabela lub wyrażenie tabelowe (z JOIN), np. "users u JOIN profiles p ON u.id = p.user_id".
-     * @return Obiekt QueryBuilder do dalszej konfiguracji i wykonania zapytania.
+     * @return Pusty obiekt QueryBuilder gotowy do konfiguracji.
+     */
+    fun query(): QueryBuilder
+
+    /**
+     * Wygodny skrót do rozpoczynania budowy prostego zapytania SELECT.
+     * Równoważne z wywołaniem `query().select(columns, from)`.
+     *
+     * @param columns Lista kolumn do pobrania. Domyślnie "*".
+     * @param from Tabela lub wyrażenie tabelowe.
+     * @return Obiekt QueryBuilder z już zdefiniowaną klauzulą SELECT.
      */
     fun select(columns: String = "*", from: String): QueryBuilder
 
     /**
      * Pobiera liczbę wierszy spełniających podane kryteria.
-     * Ta metoda pozostaje, ponieważ jej cel jest bardzo specyficzny.
      */
-    fun fetchCount(table: String, filter: String? = null, params: Map<String, Any?> = emptyMap()): Long
+    fun fetchCount(from: String, filter: String? = null, params: Map<String, Any?> = emptyMap()): Long
 
     /**
      * Pobiera pojedynczy wiersz z pełnymi informacjami o pochodzeniu kolumn (nazwa tabeli i kolumny).
@@ -38,6 +46,35 @@ interface DataFetcher {
  * Jest częścią publicznego kontraktu `DataFetcher`.
  */
 interface QueryBuilder {
+    /**
+     * Dodaje Wspólne Wyrażenie Tabelaryczne (Common Table Expression - CTE) do zapytania.
+     * Jest to główny sposób na rozpoczęcie budowy złożonego zapytania.
+     * Można wywoływać wielokrotnie w celu dodania kolejnych CTE.
+     *
+     * @param name Nazwa CTE (np. "regional_sales").
+     * @param query Zapytanie SELECT definiujące CTE. Traktowane jako literał.
+     * @return Ten sam obiekt QueryBuilder do dalszej konfiguracji.
+     */
+    fun with(name: String, query: String): QueryBuilder
+
+    /**
+     * Oznacza klauzulę WITH jako rekurencyjną.
+     *
+     * @param recursive Flaga, czy klauzula ma być rekurencyjna. Domyślnie true.
+     * @return Ten sam obiekt QueryBuilder do dalszej konfiguracji.
+     */
+    fun recursive(recursive: Boolean = true): QueryBuilder
+
+    /**
+     * Definiuje główną część zapytania SELECT.
+     * Ta metoda MUSI być wywołana, aby zapytanie było kompletne.
+     *
+     * @param columns Lista kolumn do pobrania, np. "id, name, email". Domyślnie "*".
+     * @param from Tabela lub wyrażenie tabelowe (z JOIN) bądź podzapytanie, np. "users u JOIN profiles p ON u.id = p.user_id".
+     * @return Ten sam obiekt QueryBuilder do dalszej konfiguracji.
+     */
+    fun select(columns: String = "*", from: String): QueryBuilder
+
     fun where(condition: String?): QueryBuilder
     fun orderBy(ordering: String?): QueryBuilder
     fun limit(count: Long?): QueryBuilder

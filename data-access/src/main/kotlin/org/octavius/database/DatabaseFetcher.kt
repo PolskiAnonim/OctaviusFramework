@@ -33,14 +33,18 @@ class DatabaseFetcher(
         return if (table.trim().uppercase().contains(" ")) "($table)" else table
     }
 
-    override fun select(columns: String, from: String): QueryBuilder {
-        return DatabaseQueryBuilder(columns, from)
+    override fun query(): QueryBuilder {
+        return DatabaseQueryBuilder() // Tworzy pusty builder
     }
 
-    override fun fetchCount(table: String, filter: String?, params: Map<String, Any?>): Long {
+    override fun select(columns: String, from: String): QueryBuilder {
+        return query().select(columns, from) // Używa nowego punktu wejścia
+    }
+
+    override fun fetchCount(from: String, filter: String?, params: Map<String, Any?>): Long {
         logger.debug { "Fetching count from: $from with filter: $filter" }
         val whereClause = if (!filter.isNullOrBlank()) " WHERE $filter" else ""
-        val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(table)}$whereClause"
+        val sql = "SELECT COUNT(*) AS count FROM ${formatTableExpression(from)}$whereClause"
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
         
         logger.trace { "Executing count query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
@@ -79,7 +83,24 @@ class DatabaseFetcher(
      * Eliminuje powtarzanie kodu.
      */
     private fun <T : Any> executeQuery(builder: DatabaseQueryBuilder, params: Map<String, Any?>, rowMapper: RowMapper<T>): List<T> {
-        val sqlBuilder = StringBuilder("SELECT ${builder.columns} FROM ${formatTableExpression(builder.table)}")
+        require(!builder.columns.isNullOrBlank() && !builder.table.isNullOrBlank()) {
+            "Zapytanie jest niekompletne. Należy wywołać metodę .select(columns, from) na QueryBuilderze."
+        }
+
+        val sqlBuilder = StringBuilder()
+
+        if (builder.ctes.isNotEmpty()) {
+            sqlBuilder.append("WITH ")
+            if (builder.isRecursive) {
+                sqlBuilder.append("RECURSIVE ")
+            }
+            // Łączymy wszystkie zdefiniowane CTE przecinkami
+            val cteDefinitions = builder.ctes.joinToString(separator = ", \n") { (name, query) ->
+                "$name AS ($query)"
+            }
+            sqlBuilder.append(cteDefinitions).append("\n")
+        }
+        sqlBuilder.append("SELECT ${builder.columns!!} FROM ${formatTableExpression(builder.table!!)}")
         builder.filter?.let { sqlBuilder.append(" WHERE $it") }
         builder.orderBy?.let { sqlBuilder.append(" ORDER BY $it") }
         builder.limit?.let { sqlBuilder.append(" LIMIT $it") }
@@ -98,15 +119,30 @@ class DatabaseFetcher(
      * Prywatna, wewnętrzna klasa implementująca interfejs `QueryBuilder`.
      * Jako `inner class` ma dostęp do pól i metod zewnętrznej klasy `DatabaseFetcher`.
      */
-    private inner class DatabaseQueryBuilder(
-        val columns: String,
-        val table: String
-    ) : QueryBuilder {
+    private inner class DatabaseQueryBuilder : QueryBuilder {
+        var columns: String? = null
+        var table: String? = null
+
+        val ctes = mutableListOf<Pair<String, String>>()
+        var isRecursive: Boolean = false
 
         var filter: String? = null
         var orderBy: String? = null
         var limit: Long? = null
         var offset: Long = 0
+
+        override fun with(name: String, query: String) = apply {
+            ctes.add(name to query)
+        }
+
+        override fun recursive(recursive: Boolean) = apply {
+            this.isRecursive = recursive
+        }
+
+        override fun select(columns: String, from: String) = apply {
+            this.columns = columns
+            this.table = from
+        }
 
         override fun where(condition: String?) = apply { this.filter = condition }
         override fun orderBy(ordering: String?) = apply { this.orderBy = ordering }
