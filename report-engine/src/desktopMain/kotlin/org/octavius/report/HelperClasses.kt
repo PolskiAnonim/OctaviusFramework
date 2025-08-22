@@ -2,6 +2,7 @@ package org.octavius.report
 
 import androidx.compose.ui.unit.Dp
 import org.octavius.domain.EnumWithFormatter
+import org.octavius.exception.DatabaseException
 import org.octavius.localization.Translations
 
 
@@ -96,4 +97,15 @@ sealed class ColumnWidth {
      * Używana dla kolumn z danymi.
      */
     data class Flexible(val weight: Float) : ColumnWidth()
+}
+
+sealed class ReportDataResult {
+    /** Sukces - zawiera dane i stan paginacji */
+    data class Success(
+        val data: List<Map<String, Any?>>,
+        val paginationState: ReportPaginationState
+    ) : ReportDataResult()
+
+    /** Porażka - zawiera błąd */
+    data class Failure(val error: DatabaseException) : ReportDataResult()
 }

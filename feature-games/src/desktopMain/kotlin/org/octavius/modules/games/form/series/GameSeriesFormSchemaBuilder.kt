@@ -3,6 +3,7 @@ package org.octavius.modules.games.form.series
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
+import org.octavius.form.control.base.StringValidation
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.localization.Translations

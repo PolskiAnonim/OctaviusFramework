@@ -1,5 +1,6 @@
 package org.octavius.modules.asian.form
 
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
@@ -37,23 +38,34 @@ class AsianMediaFormDataManager : FormDataManager() {
      * Utrzymuje metodę initData w czystości.
      */
     private fun loadPublications(titleId: Int): Map<String, Any?> {
-        val publications = dataFetcher.select(
+
+        val result = dataFetcher.select(
             "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed",
             from = "publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id"
-        ).where("p.title_id = :title").toList(mapOf("title" to titleId)).map { row ->
-            buildMap {
-                put("id", row["id"])
-                put("publicationType", row["publication_type"])
-                put("status", row["status"])
-                put("trackProgress", row["track_progress"])
-                put("volumes", row["volumes"])
-                put("translatedVolumes", row["translated_volumes"])
-                put("chapters", row["chapters"])
-                put("translatedChapters", row["translated_chapters"])
-                put("originalCompleted", row["original_completed"])
+        ).where("p.title_id = :title").toList(mapOf("title" to titleId))
+
+        return when (result) {
+            is DataResult.Success -> {
+                val publications = result.value.map { row ->
+                    buildMap {
+                        put("id", row["id"])
+                        put("publicationType", row["publication_type"])
+                        put("status", row["status"])
+                        put("trackProgress", row["track_progress"])
+                        put("volumes", row["volumes"])
+                        put("translatedVolumes", row["translated_volumes"])
+                        put("chapters", row["chapters"])
+                        put("translatedChapters", row["translated_chapters"])
+                        put("originalCompleted", row["original_completed"])
+                    }
+                }
+
+                mapOf("publications" to publications)
+            }
+            is DataResult.Failure -> {
+                mapOf("publications" to emptyList<Map<String, Any?>>()) // TODO błąd w UI
             }
         }
-        return mapOf("publications" to publications)
     }
 
 

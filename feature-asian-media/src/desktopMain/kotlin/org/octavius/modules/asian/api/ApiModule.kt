@@ -11,10 +11,11 @@ import org.octavius.api.contract.asian.PublicationAddResponse
 import org.octavius.api.contract.asian.PublicationCheckRequest
 import org.octavius.api.contract.asian.PublicationCheckResponse
 import org.octavius.data.contract.BatchExecutor
+import org.octavius.data.contract.BatchStepResults
 import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
-import org.octavius.data.contract.PgTyped
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.data.contract.withPgType
 import org.octavius.domain.asian.PublicationStatus
@@ -57,20 +58,26 @@ class AsianMediaApi : ApiModule, KoinComponent {
                 .toSingle(mapOf("titles" to titles.withPgType("text[]")))
 
 
-            if (result != null) {
-                val titleId = result["id"] as Int
-                @Suppress("UNCHECKED_CAST")
-                val dbTitles = result["titles"] as List<String>
-                // Znajdź, który konkretnie tytuł pasował
-                val matchedTitle = titles.firstOrNull { it in dbTitles }
+            when (result) {
+                is DataResult.Failure -> call.respond(PublicationCheckResponse(found = false)) // TODO error
+                is DataResult.Success< Map<String, Any?>?> -> {
+                    val value = result.value
+                    if (value != null) {
+                        val titleId = value["id"] as Int
+                        @Suppress("UNCHECKED_CAST")
+                        val dbTitles = value["titles"] as List<String>
+                        // Znajdź, który konkretnie tytuł pasował
+                        val matchedTitle = titles.firstOrNull { it in dbTitles }
 
-                call.respond(PublicationCheckResponse(
-                    found = true,
-                    titleId = titleId,
-                    matchedTitle = matchedTitle
-                ))
-            } else {
-                call.respond(PublicationCheckResponse(found = false))
+                        call.respond(PublicationCheckResponse(
+                            found = true,
+                            titleId = titleId,
+                            matchedTitle = matchedTitle
+                        ))
+                    } else {
+                        call.respond(PublicationCheckResponse(found = false))
+                    }
+                }
             }
         }
     }
@@ -81,7 +88,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
      */
     private fun Route.addNewPublication() {
         post("/add") {
-            try {
+
                 val request = call.receive<PublicationAddRequest>()
 
                 // Przygotuj operacje bazodanowe w jednej transakcji
@@ -106,26 +113,33 @@ class AsianMediaApi : ApiModule, KoinComponent {
                 )
 
                 val result = batchExecutor.execute(steps)
-                val newId = result[0]?.first()?.get("id") as? Int
 
-                if (newId != null) {
-                    call.respond(
-                        PublicationAddResponse(
-                            success = true,
-                            newTitleId = newId,
-                            message = "Pomyślnie dodano nowy tytuł do bazy."
-                        )
-                    )
-                } else {
-                    throw IllegalStateException("Nie udało się uzyskać ID nowo wstawionego tytułu.")
+            when (result) {
+                is DataResult.Failure -> {
+                    call.respond(PublicationAddResponse(
+                        success = false,
+                        message = "Wystąpił błąd: ${result.error.message}"
+                    ))
                 }
+                is DataResult.Success<BatchStepResults> -> {
+                    val newId = result.value[0]?.first()?.get("id") as? Int
 
-            } catch (e: Exception) {
-                // Obsłuż błędy, np. błąd deserializacji, błąd bazy danych
-                call.respond(PublicationAddResponse(
-                    success = false,
-                    message = "Wystąpił błąd: ${e.message}"
-                ))
+                    if (newId != null) {
+                        call.respond(
+                            PublicationAddResponse(
+                                success = true,
+                                newTitleId = newId,
+                                message = "Pomyślnie dodano nowy tytuł do bazy."
+                            )
+                        )
+                    } else {
+                        call.respond(PublicationAddResponse(
+                            success = false,
+                            message = "Wystąpił błąd: Nie udało się uzyskać ID nowo wstawionego tytułu."
+                        ))
+                    }
+
+                }
             }
         }
     }

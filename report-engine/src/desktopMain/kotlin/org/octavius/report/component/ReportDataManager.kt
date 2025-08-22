@@ -3,15 +3,17 @@ package org.octavius.report.component
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataResult
 import org.octavius.domain.SortDirection
 import org.octavius.report.Query
+import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportPaginationState
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 
 class ReportDataManager(
     val reportStructure: ReportStructure
-): KoinComponent {
+) : KoinComponent {
     val fetcher: DataFetcher by inject()
     private fun <T : FilterData> getQueryFragment(
         columnName: String,
@@ -42,7 +44,7 @@ class ReportDataManager(
         return combineConditions(filterConditions, searchConditions)
     }
 
-    private fun buildSearchConditions(reportState: ReportState,params: MutableMap<String, Any>): List<String> {
+    private fun buildSearchConditions(reportState: ReportState, params: MutableMap<String, Any>): List<String> {
         if (reportState.searchQuery.isBlank()) return emptyList()
 
         params["searchQuery"] = "%${reportState.searchQuery}%"
@@ -70,13 +72,25 @@ class ReportDataManager(
         reportState: ReportState,
         sourceSql: String,
         filterClause: String,
-        params: MutableMap<String, Any>
-    ): ReportPaginationState {
-        val totalItems = fetcher.fetchCount(sourceSql, filterClause.takeIf { filterClause.isNotBlank() }, params)
-        val pageSize = reportState.pagination.pageSize
-        val totalPages = if (totalItems == 0L) 0 else (totalItems + pageSize - 1) / pageSize
+        params: Map<String, Any>
+    ): DataResult<ReportPaginationState> {
 
-        return reportState.pagination.copy(totalItems = totalItems, totalPages = totalPages)
+        val countResult = fetcher.fetchCount(sourceSql, filterClause.takeIf { it.isNotBlank() }, params)
+
+        return when (countResult) {
+            is DataResult.Success -> {
+                val totalItems = countResult.value
+                val pageSize = reportState.pagination.pageSize
+                val totalPages = if (totalItems == 0L) 0 else (totalItems + pageSize - 1) / pageSize
+                val newPaginationState = reportState.pagination.copy(totalItems = totalItems, totalPages = totalPages)
+                DataResult.Success(newPaginationState)
+            }
+
+            is DataResult.Failure -> {
+                // Po prostu propagujemy błąd dalej
+                countResult
+            }
+        }
     }
 
     private fun buildOrderClause(reportState: ReportState): String {
@@ -94,26 +108,40 @@ class ReportDataManager(
         return orderFragments.joinToString(", ")
     }
 
-    fun fetchData(reportState: ReportState): Pair<List<Map<String,Any?>>, ReportPaginationState> {
+    fun fetchData(reportState: ReportState): ReportDataResult {
 
         val query = reportStructure.query
         val params = query.params.toMutableMap()
         val filterClause = buildFilterClause(reportState, params)
         val orderClause = buildOrderClause(reportState)
 
-        // Najpierw zaktualizuj paginację
-        val paginationState = updatePagination(reportState, query.sql, filterClause, params)
+        val paginationResult = updatePagination(reportState, query.sql, filterClause, params)
 
-        // Następnie pobierz dane dla aktualnej strony
-        val offset = reportState.pagination.currentPage * reportState.pagination.pageSize
-        val limit = reportState.pagination.pageSize
+        val newPaginationState = when (paginationResult) {
+            is DataResult.Success -> paginationResult.value
+            is DataResult.Failure -> {
+                return ReportDataResult.Failure(paginationResult.error)
+            }
+        }
 
-        val data = fetcher.select(from = query.sql)
+        if (newPaginationState.totalItems == 0L) {
+            return ReportDataResult.Success(emptyList(), newPaginationState)
+        }
+
+        val dataResult = fetcher.select(from = query.sql)
             .where(filterClause.takeIf { it.isNotBlank() })
             .orderBy(orderClause.takeIf { it.isNotBlank() })
             .page(reportState.pagination.currentPage, reportState.pagination.pageSize)
             .toList(params)
 
-        return Pair(data, paginationState)
+        return when (dataResult) {
+            is DataResult.Success -> {
+                ReportDataResult.Success(dataResult.value, newPaginationState)
+            }
+
+            is DataResult.Failure -> {
+                ReportDataResult.Failure(dataResult.error)
+            }
+        }
     }
 }

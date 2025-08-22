@@ -3,7 +3,9 @@ package org.octavius.report.configuration
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.BatchExecutor
+import org.octavius.data.contract.BatchStepResults
 import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.data.contract.toListOf
@@ -15,71 +17,83 @@ class ReportConfigurationManager : KoinComponent {
     val fetcher: DataFetcher by inject()
     val batchExecutor: BatchExecutor by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
-        return try {
-            val existingConfigId = fetcher.select("id", from = "public.report_configurations").where("name = :name AND report_name = :report_name")
-                .toField<Int>(mapOf("name" to configuration.name, "report_name" to configuration.reportName))
+        val configResult = fetcher.select("id", from = "public.report_configurations")
+            .where("name = :name AND report_name = :report_name")
+            .toField<Int>(mapOf("name" to configuration.name, "report_name" to configuration.reportName))
 
-            val flatValueMap = configuration.toMap()
+        val configId = when (configResult) {
+            is DataResult.Failure -> null
+            is DataResult.Success<*> -> configResult.value
+        }
 
-            val dataMap =
-                flatValueMap.filter { (key, _) -> key != "id" }.mapValues { (_, value) -> value.toDatabaseValue() }
+        val flatValueMap = configuration.toMap()
 
-            val databaseStep = if (existingConfigId != null) {
-                DatabaseStep.Update(
-                    tableName = "report_configurations",
-                    data = dataMap,
-                    filter = mapOf("id" to existingConfigId.toDatabaseValue())
-                )
-            } else {
-                DatabaseStep.Insert(
-                    tableName = "public.report_configurations",
-                    data = dataMap
-                )
-            }
+        val dataMap =
+            flatValueMap.filter { (key, _) -> key != "id" }.mapValues { (_, value) -> value.toDatabaseValue() }
 
-            batchExecutor.execute(listOf(databaseStep))
-            true
-        } catch (e: Exception) {
-            false
+        val databaseStep = if (configId != null) {
+            DatabaseStep.Update(
+                tableName = "report_configurations",
+                data = dataMap,
+                filter = mapOf("id" to configId.toDatabaseValue())
+            )
+        } else {
+            DatabaseStep.Insert(
+                tableName = "public.report_configurations",
+                data = dataMap
+            )
+        }
+        val result = batchExecutor.execute(listOf(databaseStep))
+        return when (result) {
+            is DataResult.Failure -> false
+            is DataResult.Success<BatchStepResults> -> true
         }
     }
 
     fun loadDefaultConfiguration(reportName: String): ReportConfiguration? {
-        return try {
-            val params = mapOf("report_name" to reportName)
 
-            fetcher.select(
-                "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
-                from = "public.report_configurations"
-            ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
-        } catch (e: Exception) {
-            null
+        val params = mapOf("report_name" to reportName)
+
+        val result: DataResult<ReportConfiguration?> = fetcher.select(
+            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
+            from = "public.report_configurations"
+        ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
+
+        return when (result) {
+            is DataResult.Failure -> null // TODO błąd w UI
+            is DataResult.Success<ReportConfiguration?> -> result.value
         }
     }
 
     fun listConfigurations(reportName: String): List<ReportConfiguration> {
-        return try {
-            val params = mapOf("report_name" to reportName)
+        val params = mapOf("report_name" to reportName)
 
-            fetcher.select(
-                "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
-                from = "public.report_configurations"
-            ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
-        } catch (e: Exception) {
-            emptyList()
+        val result: DataResult<List<ReportConfiguration>> = fetcher.select(
+            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
+            from = "public.report_configurations"
+        ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
+
+        return when (result) {
+            is DataResult.Failure -> emptyList() // TODO błąd w UI
+            is DataResult.Success<List<ReportConfiguration>> -> result.value
         }
     }
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
-        return try {
-            val databaseStep = DatabaseStep.Delete(
-                tableName = "report_configurations",
-                filter = mapOf("name" to name.toDatabaseValue(), "report_name" to reportName.toDatabaseValue())
-            )
+        val databaseStep = DatabaseStep.Delete(
+            tableName = "report_configurations",
+            filter = mapOf("name" to name.toDatabaseValue(), "report_name" to reportName.toDatabaseValue())
+        )
 
-            batchExecutor.execute(listOf(databaseStep))[0]!![0]["rows_affected"] as Int > 0
-        } catch (e: Exception) {
-            false
+        val result = batchExecutor.execute(listOf(databaseStep))
+
+        when(result) {
+            is DataResult.Failure -> return false
+            is DataResult.Success -> {
+                val firstStepResult = result.value[0]!!
+                val firstStepFirstResult = firstStepResult.first()
+                return firstStepFirstResult["rows_affected"] as Int > 0
+            }
         }
     }
 }

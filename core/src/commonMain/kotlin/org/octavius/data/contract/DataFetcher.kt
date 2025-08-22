@@ -31,13 +31,13 @@ interface DataFetcher {
     /**
      * Pobiera liczbę wierszy spełniających podane kryteria.
      */
-    fun fetchCount(from: String, filter: String? = null, params: Map<String, Any?> = emptyMap()): Long
+    fun fetchCount(from: String, filter: String? = null, params: Map<String, Any?> = emptyMap()): DataResult<Long>
 
     /**
      * Pobiera pojedynczy wiersz z pełnymi informacjami o pochodzeniu kolumn (nazwa tabeli i kolumny).
      * Używane w specyficznych przypadkach, np. do dynamicznych formularzy.
      */
-    fun fetchRowWithColumnInfo(tables: String, filter: String, params: Map<String, Any?> = emptyMap()): Map<ColumnInfo, Any?>?
+    fun fetchRowWithColumnInfo(tables: String, filter: String, params: Map<String, Any?> = emptyMap()): DataResult<Map<ColumnInfo, Any?>?>
 }
 
 /**
@@ -93,36 +93,32 @@ interface QueryBuilder {
     // --- Metody Terminalne (wykonujące zapytanie) ---
 
     /** Wykonuje zapytanie i zwraca listę map [String, Any?]. To jest domyślny sposób pobierania wielu wierszy. */
-    fun toList(params: Map<String, Any?> = emptyMap()): List<Map<String, Any?>>
+    fun toList(params: Map<String, Any?> = emptyMap()): DataResult<List<Map<String, Any?>>>
 
     /** Wykonuje zapytanie, ustawiając automatycznie LIMIT 1, i zwraca pojedynczą mapę lub null. */
-    fun toSingle(params: Map<String, Any?> = emptyMap()): Map<String, Any?>?
+    fun toSingle(params: Map<String, Any?> = emptyMap()): DataResult<Map<String, Any?>?>
 
     /** Wykonuje zapytanie, ustawiając LIMIT 1, i zwraca wartość z pierwszej kolumny pierwszego wiersza. */
-    fun <T> toField(params: Map<String, Any?> = emptyMap()): T?
+    fun <T> toField(params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
     /** Wykonuje zapytanie i zwraca listę wartości z pierwszej kolumny. */
-    fun <T> toColumn(params: Map<String, Any?> = emptyMap()): List<T>
+    fun <T> toColumn(params: Map<String, Any?> = emptyMap()): DataResult<List<T>>
 
     /**
      * Wykonuje zapytanie i mapuje wyniki na listę obiektów podanego typu (data class).
      * Wersja dla interfejsu, która przyjmuje KClass jako argument.
      */
-    fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): List<T>
+    fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<List<T>>
 
-    fun <T: Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): T?
+    fun <T: Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
 }
 
-/**
- * Wygodna funkcja rozszerzająca, która pozwala na użycie składni `toListOf<User>()`.
- * Jest to czysty "syntactic sugar", który ułatwia pracę z API.
- */
-inline fun <reified T : Any> QueryBuilder.toListOf(params: Map<String, Any?> = emptyMap()): List<T> {
+inline fun <reified T : Any> QueryBuilder.toListOf(params: Map<String, Any?> = emptyMap()): DataResult<List<T>> {
     return this.toListOf(T::class, params)
 }
 
-inline fun <reified T : Any> QueryBuilder.toSingleOf(params: Map<String, Any?> = emptyMap()): T? {
+inline fun <reified T : Any> QueryBuilder.toSingleOf(params: Map<String, Any?> = emptyMap()): DataResult<T?> {
     return this.toSingleOf(T::class, params)
 }
 

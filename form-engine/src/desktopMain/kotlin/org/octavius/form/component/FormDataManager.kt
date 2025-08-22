@@ -4,6 +4,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
@@ -76,6 +77,11 @@ abstract class FormDataManager: KoinComponent {
             tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
         }
 
-        return dataFetcher.fetchRowWithColumnInfo(tables.toString(), "$mainTable.id = :id", mapOf("id" to id)) ?: emptyMap()
+        val entity = dataFetcher.fetchRowWithColumnInfo(tables.toString(), "$mainTable.id = :id", mapOf("id" to id))
+
+        return when (entity) {
+            is DataResult.Failure -> mapOf() // TODO wypisanie błędu w UI
+            is DataResult.Success<Map<ColumnInfo, Any?>?> -> entity.value ?: mapOf()
+        }
     }
 }

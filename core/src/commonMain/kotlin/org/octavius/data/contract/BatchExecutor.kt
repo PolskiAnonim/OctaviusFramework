@@ -1,5 +1,7 @@
 package org.octavius.data.contract
 
+typealias BatchStepResults = Map<Int, List<Map<String, Any?>>>
+
 /**
  * Kontrakt dla wykonywania operacji CUD (Create, Update, Delete) w atomowych transakcjach.
  */
@@ -11,5 +13,5 @@ interface BatchExecutor {
      * @return Mapa, gdzie kluczem jest indeks operacji, a wartością lista zwróconych wierszy.
      * @throws Exception w przypadku niepowodzenia (transakcja jest wycofywana).
      */
-    fun execute(databaseSteps: List<DatabaseStep>): Map<Int, List<Map<String, Any?>>>
+    fun execute(databaseSteps: List<DatabaseStep>): DataResult<BatchStepResults>
 }

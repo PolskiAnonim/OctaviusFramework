@@ -4,6 +4,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataResult
+import org.octavius.data.contract.map
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
@@ -41,42 +43,65 @@ class DatabaseControl(
         // Próbuj użyć cache
         if (cachedValue?.value == value) return cachedValue!!.displayText
 
-        // Załaduj z bazy danych
-        try {
-            val result = fetcher.select(displayColumn, from = relatedTable).where("id = :id")
-                .toField<String>(mapOf("id" to value))
+        val result = fetcher.select(displayColumn, from = relatedTable).where("id = :id")
+            .toField<String>(mapOf("id" to value))
 
-            if (result != null) {
-                cachedValue = DropdownOption(value, result)
-                return result
+        return when (result) {
+            is DataResult.Failure -> null // TODO błąd w UI
+            is DataResult.Success<String?> -> {
+                when (result.value) {
+                    null -> null
+                    else -> {
+                        cachedValue = DropdownOption(value, result.value!!)
+                        result.value
+                    }
+                }
             }
-        } catch (e: Exception) {
-            println("Błąd podczas pobierania tekstu wyświetlania: ${e.message}")
         }
-
-        return value.toString()
     }
 
     override fun loadOptions(searchQuery: String, page: Long): Pair<List<DropdownOption<Int>>, Long> {
-        val filter = if (searchQuery.isEmpty()) {
-            ""
-        } else {
-            "$displayColumn ILIKE :search"
+        // Krok 1: Przygotuj filtr i parametry
+        val filter = if (searchQuery.isNotBlank()) "$displayColumn ILIKE :search" else null
+        val params = if (searchQuery.isNotBlank()) mapOf("search" to "%$searchQuery%") else emptyMap()
+
+        // Krok 2: Pobierz całkowitą liczbę pasujących rekordów
+        val countResult = fetcher.fetchCount(relatedTable, filter, params)
+
+        val totalCount = when (countResult) {
+            is DataResult.Success -> countResult.value
+            is DataResult.Failure -> {
+                // TODO błąd w UI
+                return Pair(emptyList(), 0L)
+            }
         }
 
-        val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to "%$searchQuery%")
-        return try {
-            val totalPages = fetcher.fetchCount(relatedTable, filter.takeIf { filter.isNotBlank() }, params) / pageSize
-            val results =
-                fetcher.select("id, $displayColumn", from = relatedTable).where(filter.takeIf { it.isNotBlank() })
-                    .orderBy(displayColumn)
-                    .page(page, pageSize).toList(params = params)
+        if (totalCount == 0L) {
+            return Pair(emptyList(), 0L)
+        }
 
-            val mappedResults = results.map { DropdownOption(it["id"] as Int,it[displayColumn] as String) }
-            Pair(mappedResults, totalPages)
-        } catch (e: Exception) {
-            println("Błąd podczas wyszukiwania elementów: ${e.message}")
-            Pair(emptyList(), 1)
+        val totalPages = (totalCount + pageSize - 1) / pageSize
+
+
+        val optionsResult = fetcher.select("id, $displayColumn", from = relatedTable)
+            .where(filter)
+            .orderBy(displayColumn)
+            .page(page, pageSize)
+            .toList(params = params)
+
+        return when (optionsResult) {
+            is DataResult.Success -> {
+                val mappedOptions = optionsResult.value.map { row ->
+                    val id = row["id"] as Int
+                    val text = row[displayColumn] as String
+                    DropdownOption(id, text)
+                }
+                Pair(mappedOptions, totalPages)
+            }
+            is DataResult.Failure -> {
+                // TODO Błąd w UI
+                Pair(emptyList(), 0L)
+            }
         }
     }
 }

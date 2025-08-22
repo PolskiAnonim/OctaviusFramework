@@ -1,5 +1,6 @@
 package org.octavius.modules.asian.form
 
+import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormValidator
 import org.octavius.localization.Translations
@@ -29,13 +30,22 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
 
         val params = if (entityId != null) mapOf("titles" to titles, "id" to entityId) else mapOf("titles" to titles)
-        val count = dataFetcher.fetchCount("SELECT id, UNNEST(titles) AS title FROM titles",
+        val result = dataFetcher.fetchCount("SELECT id, UNNEST(titles) AS title FROM titles",
             "title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}", params)
 
-        if (count > 0L) {
-            errorManager.addGlobalError(Translations.get("asianMedia.form.titlesAlreadyExist"))
+        when (result) {
+            is DataResult.Failure -> {
+                errorManager.addGlobalError("Błąd walidacji")
+                return false
+            }
+            is DataResult.Success<Long> -> {
+                if (result.value > 0L) {
+                    errorManager.addGlobalError(Translations.get("asianMedia.form.titlesAlreadyExist"))
+                    return false
+                } else {
+                    return true
+                }
+            }
         }
-
-        return count == 0L
     }
 }

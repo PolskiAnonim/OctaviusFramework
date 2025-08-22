@@ -3,9 +3,12 @@ package org.octavius.database
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.QueryBuilder
+import org.octavius.data.contract.map
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.exception.DatabaseException
+import org.octavius.exception.QueryExecutionException
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
@@ -31,6 +34,24 @@ class DatabaseFetcher(
         private val logger = KotlinLogging.logger {}
     }
 
+    /**
+     * Wykonuje zapytanie za pomocą executeQuery i opakowuje wynik lub błąd w DataResult.
+     * Centralizuje logikę try-catch dla wszystkich operacji odczytu.
+     */
+    private fun <T> executeAndWrap(block: () -> T): DataResult<T> {
+        return try {
+            DataResult.Success(block())
+        } catch (e: DatabaseException) {
+            logger.error(e) { "Query error: $e" }
+            // Łapiemy nasze niestandardowe, już wzbogacone wyjątki
+            DataResult.Failure(e)
+        } catch (e: Exception) {
+            // Zabezpieczenie na wypadek innych, nieoczekiwanych błędów (np. z `require`)
+            DataResult.Failure(
+                QueryExecutionException("An unexpected error occurred before query execution.", "N/A", emptyMap(), e)
+            )
+        }
+    }
 
     private fun formatTableExpression(table: String): String {
         return if (table.trim().uppercase().contains(" ")) "($table)" else table
@@ -44,44 +65,45 @@ class DatabaseFetcher(
         return query().select(columns, from) // Używa nowego punktu wejścia
     }
 
-    override fun fetchCount(from: String, filter: String?, params: Map<String, Any?>): Long {
-        val isSubquery = from.trim().uppercase().startsWith("SELECT")
+    override fun fetchCount(from: String, filter: String?, params: Map<String, Any?>): DataResult<Long> {
+        return executeAndWrap {
+            val isSubquery = from.trim().uppercase().startsWith("SELECT")
 
-        if (isSubquery) {
-            logger.debug { "Fetching count from a subquery with filter: $filter" }
-            logger.trace { "Subquery used for counting: $from" }
-        } else {
-            logger.debug { "Fetching count from table/view: '$from' with filter: $filter" }
+            if (isSubquery) {
+                logger.debug { "Fetching count from a subquery with filter: $filter" }
+                logger.trace { "Subquery used for counting: $from" }
+            } else {
+                logger.debug { "Fetching count from table/view: '$from' with filter: $filter" }
+            }
+
+            val result = select("COUNT(*)", from)
+                .where(filter)
+                .toField<Long>(params)
+
+            // Musimy obsłużyć wewnętrzny DataResult
+            when (result) {
+                is DataResult.Success -> result.value ?: 0L
+                is DataResult.Failure -> throw result.error // Rzucamy błąd, aby zewnętrzny wrapper go złapał
+            }
         }
-
-        val result = select("COUNT(*)", from)
-            .where(filter)
-            .toField<Long>(params) ?: 0L
-        logger.debug { "Count result: $result" }
-        return result
     }
 
-    override fun fetchRowWithColumnInfo(tables: String, filter: String, params: Map<String, Any?>): Map<ColumnInfo, Any?>? {
+    override fun fetchRowWithColumnInfo(
+        tables: String,
+        filter: String,
+        params: Map<String, Any?>
+    ): DataResult<Map<ColumnInfo, Any?>?> {
         logger.debug { "Fetching row with column info from tables: $tables with filter: $filter" }
-        val whereClause = " WHERE $filter"
-        val sql = "SELECT * FROM ${formatTableExpression(tables)}$whereClause"
-        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+        return executeAndWrap {
+            val results = executeQuery(
+                query().select("*", tables).where(filter) as DatabaseQueryBuilder,
+                params,
+                rowMappers.ColumnInfoMapper()
+            )
 
-        logger.trace { "Executing row query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
-        val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMappers.ColumnInfoMapper())
-        
-        return when (results.size) {
-            0 -> {
-                logger.debug { "No row found for filter: $filter" }
-                null
-            }
-            1 -> {
-                logger.debug { "Found single row for filter: $filter" }
-                results[0]
-            }
-            else -> {
-                logger.error { "Query returned ${results.size} rows for filter: $filter, expected 0 or 1" }
-                throw IllegalStateException("Query returned ${results.size} rows, expected 0 or 1")
+            when {
+                results.size > 1 -> throw IllegalStateException("Query returned ${results.size} rows, expected 0 or 1")
+                else -> results.firstOrNull()
             }
         }
     }
@@ -90,7 +112,11 @@ class DatabaseFetcher(
      * Centralna, prywatna metoda do wykonywania wszystkich zapytań zbudowanych przez QueryBuilder.
      * Eliminuje powtarzanie kodu.
      */
-    private fun <T : Any> executeQuery(builder: DatabaseQueryBuilder, params: Map<String, Any?>, rowMapper: RowMapper<T>): List<T> {
+    private fun <T : Any> executeQuery(
+        builder: DatabaseQueryBuilder,
+        params: Map<String, Any?>,
+        rowMapper: RowMapper<T>
+    ): List<T> {
         require(!builder.columns.isNullOrBlank() && !builder.table.isNullOrBlank()) {
             "Zapytanie jest niekompletne. Należy wywołać metodę .select(columns, from) na QueryBuilderze."
         }
@@ -116,7 +142,7 @@ class DatabaseFetcher(
 
         val sql = sqlBuilder.toString()
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-        
+
         logger.trace { "Executing query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
         val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMapper)
         logger.debug { "Query returned ${results.size} rows" }
@@ -166,35 +192,54 @@ class DatabaseFetcher(
             this.offset(calculatedOffset)
         }
 
-        override fun toList(params: Map<String, Any?>): List<Map<String, Any?>> {
-            return executeQuery(this, params, rowMappers.ColumnNameMapper())
+        override fun toList(params: Map<String, Any?>): DataResult<List<Map<String, Any?>>> {
+            return executeAndWrap { executeQuery(this, params, rowMappers.ColumnNameMapper()) }
         }
 
-        override fun toSingle(params: Map<String, Any?>): Map<String, Any?>? {
-            return limit(1).toList(params).firstOrNull()
+        override fun toSingle(params: Map<String, Any?>): DataResult<Map<String, Any?>?> {
+            // 1. Zmodyfikuj builder, dodając LIMIT 1
+            this.limit(1)
+
+            // 2. Wykonaj zapytanie i weź pierwszy element
+            return executeAndWrap {
+                executeQuery(this, params, rowMappers.ColumnNameMapper()).firstOrNull()
+            }
         }
 
-        override fun <T> toField(params: Map<String, Any?>): T? {
-            val result = executeQuery(limit(1), params, rowMappers.SingleValueMapper())
-            @Suppress("UNCHECKED_CAST")
-            return result.firstOrNull() as T?
+        override fun <T> toField(params: Map<String, Any?>): DataResult<T?> {
+            // 1. Zmodyfikuj builder, dodając LIMIT 1
+            this.limit(1)
+
+            // 2. Wykonaj zapytanie i weź pierwszy element
+            return executeAndWrap {
+                val result = executeQuery(this, params, rowMappers.SingleValueMapper()).firstOrNull()
+                @Suppress("UNCHECKED_CAST")
+                result as T?
+            }
         }
 
-        override fun <T> toColumn(params: Map<String, Any?>): List<T> {
-            val result = executeQuery(this, params, rowMappers.SingleValueMapper())
-
-            @Suppress("UNCHECKED_CAST")
-            return result as List<T>
+        override fun <T> toColumn(params: Map<String, Any?>): DataResult<List<T>> {
+            return executeAndWrap {
+                @Suppress("UNCHECKED_CAST")
+                executeQuery(this, params, rowMappers.SingleValueMapper()) as List<T>
+            }
         }
 
-        override fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?>): List<T> {
-            return executeQuery(this, params, rowMappers.DataObjectMapper(kClass))
+        override fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?>): DataResult<List<T>> {
+            return executeAndWrap { executeQuery(this, params, rowMappers.DataObjectMapper(kClass)) }
         }
 
-        override fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?>): T? {
-            val result = executeQuery(limit(1), params, rowMappers.DataObjectMapper(kClass))
-            @Suppress("UNCHECKED_CAST")
-            return result.firstOrNull() as T?
+
+        override fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?>): DataResult<T?> {
+            // 1. Zmodyfikuj builder, dodając LIMIT 1
+            this.limit(1)
+
+            // 2. Wykonaj zapytanie i weź pierwszy element
+            return executeAndWrap {
+                executeQuery(this, params, rowMappers.DataObjectMapper(kClass)).firstOrNull()
+            }
         }
+
+
     }
 }

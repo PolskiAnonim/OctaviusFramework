@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.octavius.domain.SortDirection
+import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportEvent
 import org.octavius.report.configuration.ReportConfiguration
 import org.octavius.report.configuration.ReportConfigurationManager
@@ -91,12 +92,25 @@ class ReportHandler(
         dataFetchJob = coroutineScope.launch {
 
             _state.value = _state.value.copy(isLoading = true, error = null)
-            
-            try {
-                val (newData, newPagination) = dataManager.fetchData(state)
-                _state.value = _state.value.copy(isLoading = false, data = newData, pagination = newPagination)
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = "Błąd pobierania danych: ${e.message}")
+
+            // Wywołujemy naszą nową, bezpieczną metodę. Ona już nie rzuca wyjątków.
+            val result = dataManager.fetchData(state)
+
+            when (result) {
+                is ReportDataResult.Success -> {
+                    // Sukces! Mamy dane i nową paginację.
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        data = result.data,
+                        pagination = result.paginationState
+                    )
+                }
+                is ReportDataResult.Failure -> {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Błąd pobierania danych z bazy."
+                    )
+                }
             }
         }
     }

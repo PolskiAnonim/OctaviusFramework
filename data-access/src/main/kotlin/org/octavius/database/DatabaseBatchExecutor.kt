@@ -2,9 +2,12 @@ package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.BatchExecutor
+import org.octavius.data.contract.BatchStepResults
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.exception.DatabaseException
 import org.octavius.exception.QueryExecutionException
 import org.octavius.exception.StepDependencyException
 import org.octavius.exception.TypeRegistryException
@@ -57,54 +60,72 @@ class DatabaseBatchExecutor(
      * val results = batchExecutor.execute(steps)
      * ```
      */
-    override fun execute(databaseSteps: List<DatabaseStep>): Map<Int, List<Map<String, Any?>>> {
+    override fun execute(databaseSteps: List<DatabaseStep>): DataResult<BatchStepResults> {
         logger.info { "Executing batch of ${databaseSteps.size} steps in a single transaction." }
-        val transactionTemplate = TransactionTemplate(transactionManager)
-        val allResults = mutableMapOf<Int, List<Map<String, Any?>>>()
 
-        transactionTemplate.execute { status ->
-            try {
-                for ((index, operation) in databaseSteps.withIndex()) {
-                    var expandedSql: String? = null
-                    var expandedParams: Map<String, Any?>? = null
-                    try {
-                        val (sql, params) = buildQuery(operation, allResults)
-                        val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-                        expandedSql = expanded.expandedSql
-                        expandedParams = expanded.expandedParams
+        return try {
+            val transactionTemplate = TransactionTemplate(transactionManager)
 
-                        logger.debug { "Executing step $index: ${operation::class.simpleName}" }
-                        logger.trace { "--> SQL: ${expanded.expandedSql}" }
-                        logger.trace { "--> Params: ${expanded.expandedParams}" }
+            val results: BatchStepResults = transactionTemplate.execute { status ->
+                val allResults = mutableMapOf<Int, List<Map<String, Any?>>>()
 
-                        val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
-                            // Używamy query, bo update z returning w Spring JDBC jest kłopotliwy
-                            // To jest standardowy sposób na obejście tego problemu
-                            namedParameterJdbcTemplate.queryForList(expanded.expandedSql, expanded.expandedParams)
-                        } else {
-                            val rowsAffected = namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
-                            listOf(mapOf("rows_affected" to rowsAffected)) // Zwracamy info o zmienionych wierszach
+                try {
+                    for ((index, operation) in databaseSteps.withIndex()) {
+                        var expandedSql: String? = null
+                        var expandedParams: Map<String, Any?>? = null
+                        try {
+                            val (sql, params) = buildQuery(operation, allResults)
+                            val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+                            expandedSql = expanded.expandedSql
+                            expandedParams = expanded.expandedParams
+
+                            logger.debug { "Executing step $index: ${operation::class.simpleName}" }
+                            logger.trace { "--> SQL: ${expanded.expandedSql}" }
+                            logger.trace { "--> Params: ${expanded.expandedParams}" }
+
+                            val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
+                                namedParameterJdbcTemplate.queryForList(expanded.expandedSql, expanded.expandedParams)
+                            } else {
+                                val rowsAffected = namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
+                                listOf(mapOf("rows_affected" to rowsAffected))
+                            }
+
+                            allResults[index] = result
+                        } catch (e: Exception) {
+                            // Opakowujemy wyjątek w bardziej szczegółowy typ i rzucamy dalej
+                            throw QueryExecutionException(
+                                message = "Failed to execute step $index: ${operation::class.simpleName}",
+                                sql = expandedSql ?: "SQL not generated",
+                                params = expandedParams ?: emptyMap(),
+                                cause = e
+                            )
                         }
-
-                        allResults[index] = result
-                    } catch (e: Exception) {
-                        // CATCH dla pojedynczego kroku!
-                        throw QueryExecutionException(
-                            message = "Failed to execute step $index: ${operation::class.simpleName}",
-                            sql = expandedSql ?: "SQL not generated",
-                            params = expandedParams ?: emptyMap(),
-                            cause = e
-                        )
                     }
+                } catch (e: Exception) {
+                    status.setRollbackOnly()
+                    logger.error(e) { "Error executing transaction. Rolling back." }
+                    throw e
                 }
-            } catch (e: Exception) {
-                status.setRollbackOnly()
-                logger.error(e) { "Error executing transaction. Rolling back." }
-                throw e // Rzucamy dalej oryginalny wyjątek
-            }
+
+                allResults
+            }!!
+
+            logger.info { "Batch execution completed successfully." }
+            DataResult.Success(results)
+
+        } catch (e: DatabaseException) {
+            logger.error(e) { "A database exception occurred during the batch execution. The transaction was rolled back." }
+            DataResult.Failure(e)
+        } catch (e: Exception) {
+            // Zabezpieczenie na wypadek innych, nieoczekiwanych błędów.
+            logger.error(e) { "An unexpected exception occurred during the batch execution. The transaction was rolled back." }
+            DataResult.Failure(QueryExecutionException(
+                "An unexpected error occurred during batch execution.",
+                sql = "N/A",
+                params = emptyMap(),
+                cause = e
+            ))
         }
-        logger.info { "Batch execution completed successfully." }
-        return allResults
     }
 
     /**

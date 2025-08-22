@@ -1,5 +1,6 @@
 package org.octavius.modules.games.form.game
 
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
@@ -39,20 +40,38 @@ class GameFormDataManager : FormDataManager() {
                     LEFT JOIN characters c ON c.game_id = g.id
                     LEFT JOIN play_time pt ON pt.game_id = g.id 
                     LEFT JOIN ratings r ON r.game_id = g.id""",
-            ).where("g.id = :id").toSingle(mapOf("id" to loadedId)) ?: throw IllegalArgumentException("Game not found")
+            ).where("g.id = :id").toSingle(mapOf("id" to loadedId))
+
+            val game: Map<String, Any?>
+            when (dataExists) {
+                is DataResult.Failure -> throw IllegalArgumentException("Game not found")
+                is DataResult.Success<Map<String, Any?>?> -> {
+                    game = dataExists.value ?: throw IllegalArgumentException("Game not found")
+                }
+            }
 
             // Załaduj kategorie dla tej gry
-            val categories = dataFetcher.select(
+            val catResult = dataFetcher.select(
                 "ctg.category_id as category",
                 "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id"
             ).where("ctg.game_id = :gameId").toList(mapOf("gameId" to loadedId))
 
+            val categories: List<Map<String, Any?>>
+
+            when (catResult) {
+                is DataResult.Failure -> throw IllegalArgumentException("Game not found")
+                is DataResult.Success<List<Map<String, Any?>>> -> {
+                    categories =
+                        catResult.value.map { it.mapKeys { (key, _) -> if (key == "original_category") "originalCategory" else key } }
+                }
+            }
+
             mapOf(
-                "visibleCharactersSection" to dataExists["characters_exists"]!!,
-                "charactersExists" to dataExists["characters_exists"]!!,
-                "playTimeExists" to dataExists["play_time_exists"]!!,
-                "ratingsExists" to dataExists["ratings_exists"]!!,
-                "categories" to categories.map { it.mapKeys { (key, _) -> if (key == "original_category") "originalCategory" else key } },
+                "visibleCharactersSection" to game["characters_exists"]!!,
+                "charactersExists" to game["characters_exists"]!!,
+                "playTimeExists" to game["play_time_exists"]!!,
+                "ratingsExists" to game["ratings_exists"]!!,
+                "categories" to categories,
             )
         }
     }
@@ -80,23 +99,27 @@ class GameFormDataManager : FormDataManager() {
             gameIdRef = loadedId.toDatabaseValue()
 
             // Operacja 0: Aktualizuj grę. Nie potrzebujemy niczego zwracać.
-            databaseSteps.add(DatabaseStep.Update(
-                tableName = "games",
-                data = gameData,
-                filter = mapOf("id" to gameIdRef),
-                returning = emptyList()
-            ))
+            databaseSteps.add(
+                DatabaseStep.Update(
+                    tableName = "games",
+                    data = gameData,
+                    filter = mapOf("id" to gameIdRef),
+                    returning = emptyList()
+                )
+            )
         } else {
             // === TRYB TWORZENIA ===
             // ID gry zostanie wygenerowane, więc tworzymy referencję do wyniku operacji o indeksie 0.
             gameIdRef = DatabaseValue.FromStep(0, "id")
 
             // Operacja 0: Wstaw nową grę i zwróć jej wygenerowane 'id'.
-            databaseSteps.add(DatabaseStep.Insert(
-                tableName = "games",
-                data = gameData,
-                returning = listOf("id")
-            ))
+            databaseSteps.add(
+                DatabaseStep.Insert(
+                    tableName = "games",
+                    data = gameData,
+                    returning = listOf("id")
+                )
+            )
         }
 
         // Od tego momentu wszystkie operacje na tabelach zależnych używają `gameIdRef`,
@@ -157,13 +180,15 @@ class GameFormDataManager : FormDataManager() {
         // Usunięte kategorie
         categoriesResult.deletedRows.forEach { rowData ->
             val categoryId = rowData["category"]!!.initialValue as Int
-            databaseSteps.add(DatabaseStep.Delete(
-                tableName = "categories_to_games",
-                filter = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to categoryId.toDatabaseValue()
+            databaseSteps.add(
+                DatabaseStep.Delete(
+                    tableName = "categories_to_games",
+                    filter = mapOf(
+                        "game_id" to gameIdRef,
+                        "category_id" to categoryId.toDatabaseValue()
+                    )
                 )
-            ))
+            )
         }
 
         // Zmodyfikowane kategorie (DELETE + INSERT)
@@ -171,33 +196,39 @@ class GameFormDataManager : FormDataManager() {
             val oldCategoryId = rowData["category"]!!.initialValue as Int
             val newCategoryId = rowData["category"]!!.currentValue
             // Usuń stare powiązanie
-            databaseSteps.add(DatabaseStep.Delete(
-                tableName = "categories_to_games",
-                filter = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to oldCategoryId.toDatabaseValue()
+            databaseSteps.add(
+                DatabaseStep.Delete(
+                    tableName = "categories_to_games",
+                    filter = mapOf(
+                        "game_id" to gameIdRef,
+                        "category_id" to oldCategoryId.toDatabaseValue()
+                    )
                 )
-            ))
+            )
             // Dodaj nowe powiązanie
-            databaseSteps.add(DatabaseStep.Insert(
-                tableName = "categories_to_games",
-                data = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to newCategoryId.toDatabaseValue()
+            databaseSteps.add(
+                DatabaseStep.Insert(
+                    tableName = "categories_to_games",
+                    data = mapOf(
+                        "game_id" to gameIdRef,
+                        "category_id" to newCategoryId.toDatabaseValue()
+                    )
                 )
-            ))
+            )
         }
 
         // Dodane kategorie
         categoriesResult.addedRows.forEach { rowData ->
             val categoryId = rowData["category"]!!.currentValue
-            databaseSteps.add(DatabaseStep.Insert(
-                tableName = "categories_to_games",
-                data = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to categoryId.toDatabaseValue()
+            databaseSteps.add(
+                DatabaseStep.Insert(
+                    tableName = "categories_to_games",
+                    data = mapOf(
+                        "game_id" to gameIdRef,
+                        "category_id" to categoryId.toDatabaseValue()
+                    )
                 )
-            ))
+            )
         }
 
         return databaseSteps
@@ -218,26 +249,32 @@ class GameFormDataManager : FormDataManager() {
         if (exists) {
             if (conditionMet) {
                 // Rekord istnieje i warunek jest spełniony -> UPDATE
-                databaseSteps.add(DatabaseStep.Update(
-                    tableName = tableName,
-                    data = data,
-                    filter = mapOf("game_id" to gameIdRef)
-                ))
+                databaseSteps.add(
+                    DatabaseStep.Update(
+                        tableName = tableName,
+                        data = data,
+                        filter = mapOf("game_id" to gameIdRef)
+                    )
+                )
             } else {
                 // Rekord istnieje, ale warunek nie jest spełniony -> DELETE
-                databaseSteps.add(DatabaseStep.Delete(
-                    tableName = tableName,
-                    filter = mapOf("game_id" to gameIdRef)
-                ))
+                databaseSteps.add(
+                    DatabaseStep.Delete(
+                        tableName = tableName,
+                        filter = mapOf("game_id" to gameIdRef)
+                    )
+                )
             }
         } else if (conditionMet) {
             // Rekord nie istnieje, ale warunek jest spełniony -> INSERT
             // Klucz obcy `game_id` jest częścią danych do wstawienia.
             val dataWithFk = data + mapOf("game_id" to gameIdRef)
-            databaseSteps.add(DatabaseStep.Insert(
-                tableName = tableName,
-                data = dataWithFk
-            ))
+            databaseSteps.add(
+                DatabaseStep.Insert(
+                    tableName = tableName,
+                    data = dataWithFk
+                )
+            )
         }
     }
 }
