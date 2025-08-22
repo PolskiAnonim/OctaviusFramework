@@ -66,7 +66,7 @@ class DatabaseControl(
 
         val params = if (searchQuery.isEmpty()) emptyMap<String,Any>() else mapOf("search" to "%$searchQuery%")
         return try {
-            val totalPages = fetcher.fetchCount(relatedTable, filter, params) / pageSize
+            val totalPages = fetcher.fetchCount(relatedTable, filter.takeIf { filter.isNotBlank() }, params) / pageSize
             val results =
                 fetcher.select("id, $displayColumn", from = relatedTable).where(filter.takeIf { it.isNotBlank() })
                     .orderBy(displayColumn)
