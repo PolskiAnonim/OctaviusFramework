@@ -117,7 +117,7 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
 // Mapowanie standardowych typów PostgreSQL
         return listOf(
             // Typy stałoprzecinkowe
-            "serial", "int4", "int8", "int2",
+            "serial", "bigserial", "smallserial", "int4", "int8", "int2",
             // Typy zmiennoprzecinkowe
             "float4", "float8", "numeric",
             // Typy tekstowe

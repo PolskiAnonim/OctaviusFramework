@@ -86,8 +86,8 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         try {
             return when (pgTypeName) {
                 // Typy numeryczne całkowite
-                "int4", "serial", "int2" -> value.toInt()
-                "int8" -> value.toLong()
+                "int4", "serial", "int2", "smallserial" -> value.toInt()
+                "int8", "bigserial" -> value.toLong()
 
                 // Typy zmiennoprzecinkowe
                 "float4" -> value.toFloat()
