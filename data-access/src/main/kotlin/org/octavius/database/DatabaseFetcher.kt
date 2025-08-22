@@ -42,14 +42,14 @@ class DatabaseFetcher(
         return try {
             DataResult.Success(block())
         } catch (e: DatabaseException) {
-            logger.error(e) { "Query error: $e" }
-            // Łapiemy nasze niestandardowe, już wzbogacone wyjątki
+            // Logujemy błąd na poziomie ERROR, ponieważ jest to obsłużony, ale istotny problem z bazą danych.
+            logger.error(e) { "A known database exception occurred: $e" }
             DataResult.Failure(e)
         } catch (e: Exception) {
-            // Zabezpieczenie na wypadek innych, nieoczekiwanych błędów (np. z `require`)
-            DataResult.Failure(
-                QueryExecutionException("An unexpected error occurred before query execution.", "N/A", emptyMap(), e)
-            )
+            // Logujemy błąd na poziomie ERROR, ponieważ jest to nieoczekiwany problem.
+            val ex = QueryExecutionException("An unexpected error occurred before query execution.", "N/A", emptyMap(), e)
+            logger.error(e) { "An unexpected error occurred during data fetching: $ex" }
+            DataResult.Failure(ex)
         }
     }
 
@@ -80,10 +80,13 @@ class DatabaseFetcher(
                 .where(filter)
                 .toField<Long>(params)
 
-            // Musimy obsłużyć wewnętrzny DataResult
             when (result) {
-                is DataResult.Success -> result.value ?: 0L
-                is DataResult.Failure -> throw result.error // Rzucamy błąd, aby zewnętrzny wrapper go złapał
+                is DataResult.Success -> {
+                    val count = result.value ?: 0L
+                    logger.debug { "Count successful. Result: $count" }
+                    count
+                }
+                is DataResult.Failure -> throw result.error
             }
         }
     }
@@ -93,7 +96,7 @@ class DatabaseFetcher(
         filter: String,
         params: Map<String, Any?>
     ): DataResult<Map<ColumnInfo, Any?>?> {
-        logger.debug { "Fetching row with column info from tables: $tables with filter: $filter" }
+        logger.debug { "Fetching single row with column info from '$tables' with filter: $filter" }
         return executeAndWrap {
             val results = executeQuery(
                 query().select("*", tables).where(filter) as DatabaseQueryBuilder,
@@ -102,8 +105,16 @@ class DatabaseFetcher(
             )
 
             when {
-                results.size > 1 -> throw IllegalStateException("Query returned ${results.size} rows, expected 0 or 1")
-                else -> results.firstOrNull()
+                results.size > 1 -> {
+                    // To jest błąd programisty, logujemy jako WARN, bo wyjątek i tak przerwie operację.
+                    logger.warn { "Query expected to return 0 or 1 row, but got ${results.size}. Filter: $filter" }
+                    throw IllegalStateException("Query returned ${results.size} rows, expected 0 or 1")
+                }
+                else -> {
+                    val row = results.firstOrNull()
+                    logger.debug { if (row != null) "Row found." else "No row found." }
+                    row
+                }
             }
         }
     }
@@ -120,6 +131,8 @@ class DatabaseFetcher(
         require(!builder.columns.isNullOrBlank() && !builder.table.isNullOrBlank()) {
             "Zapytanie jest niekompletne. Należy wywołać metodę .select(columns, from) na QueryBuilderze."
         }
+
+        logger.debug { "Preparing to execute query from builder..." }
 
         val sqlBuilder = StringBuilder()
 
@@ -143,9 +156,12 @@ class DatabaseFetcher(
         val sql = sqlBuilder.toString()
         val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
 
-        logger.trace { "Executing query: ${expanded.expandedSql} with params: ${expanded.expandedParams}" }
+        logger.trace { "Final SQL: ${expanded.expandedSql}" }
+        logger.trace { "Final Params: ${expanded.expandedParams}" }
+
+        logger.debug { "Executing query against the database." }
         val results = jdbcTemplate.query(expanded.expandedSql, expanded.expandedParams, rowMapper)
-        logger.debug { "Query returned ${results.size} rows" }
+        logger.debug { "Query executed successfully, returned ${results.size} rows." }
         return results
     }
 
@@ -193,24 +209,21 @@ class DatabaseFetcher(
         }
 
         override fun toList(params: Map<String, Any?>): DataResult<List<Map<String, Any?>>> {
+            logger.debug { "Building query to fetch a list of maps." }
             return executeAndWrap { executeQuery(this, params, rowMappers.ColumnNameMapper()) }
         }
 
         override fun toSingle(params: Map<String, Any?>): DataResult<Map<String, Any?>?> {
-            // 1. Zmodyfikuj builder, dodając LIMIT 1
+            logger.debug { "Building query to fetch a single map." }
             this.limit(1)
-
-            // 2. Wykonaj zapytanie i weź pierwszy element
             return executeAndWrap {
                 executeQuery(this, params, rowMappers.ColumnNameMapper()).firstOrNull()
             }
         }
 
         override fun <T> toField(params: Map<String, Any?>): DataResult<T?> {
-            // 1. Zmodyfikuj builder, dodając LIMIT 1
+            logger.debug { "Building query to fetch a single field." }
             this.limit(1)
-
-            // 2. Wykonaj zapytanie i weź pierwszy element
             return executeAndWrap {
                 val result = executeQuery(this, params, rowMappers.SingleValueMapper()).firstOrNull()
                 @Suppress("UNCHECKED_CAST")
@@ -219,6 +232,7 @@ class DatabaseFetcher(
         }
 
         override fun <T> toColumn(params: Map<String, Any?>): DataResult<List<T>> {
+            logger.debug { "Building query to fetch a single column." }
             return executeAndWrap {
                 @Suppress("UNCHECKED_CAST")
                 executeQuery(this, params, rowMappers.SingleValueMapper()) as List<T>
@@ -226,15 +240,13 @@ class DatabaseFetcher(
         }
 
         override fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?>): DataResult<List<T>> {
+            logger.debug { "Building query to fetch a list of ${kClass.simpleName} objects." }
             return executeAndWrap { executeQuery(this, params, rowMappers.DataObjectMapper(kClass)) }
         }
 
-
         override fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?>): DataResult<T?> {
-            // 1. Zmodyfikuj builder, dodając LIMIT 1
+            logger.debug { "Building query to fetch a single ${kClass.simpleName} object." }
             this.limit(1)
-
-            // 2. Wykonaj zapytanie i weź pierwszy element
             return executeAndWrap {
                 executeQuery(this, params, rowMappers.DataObjectMapper(kClass)).firstOrNull()
             }

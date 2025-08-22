@@ -79,20 +79,24 @@ class DatabaseBatchExecutor(
                             expandedSql = expanded.expandedSql
                             expandedParams = expanded.expandedParams
 
-                            logger.debug { "Executing step $index: ${operation::class.simpleName}" }
+                            logger.debug { "Executing step $index/${databaseSteps.size-1}: ${operation::class.simpleName}" }
+
                             logger.trace { "--> SQL: ${expanded.expandedSql}" }
                             logger.trace { "--> Params: ${expanded.expandedParams}" }
 
                             val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
-                                namedParameterJdbcTemplate.queryForList(expanded.expandedSql, expanded.expandedParams)
+                                val returnedRows = namedParameterJdbcTemplate.queryForList(expanded.expandedSql, expanded.expandedParams)
+                                logger.debug { "Step $index executed, returned ${returnedRows.size} rows." }
+                                returnedRows
                             } else {
                                 val rowsAffected = namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
+                                logger.debug { "Step $index executed, affected $rowsAffected rows." }
                                 listOf(mapOf("rows_affected" to rowsAffected))
                             }
 
                             allResults[index] = result
                         } catch (e: Exception) {
-                            // Opakowujemy wyjątek w bardziej szczegółowy typ i rzucamy dalej
+                            // Ten wyjątek zostanie złapany niżej, ale rzucamy nowy z pełnym kontekstem.
                             throw QueryExecutionException(
                                 message = "Failed to execute step $index: ${operation::class.simpleName}",
                                 sql = expandedSql ?: "SQL not generated",
@@ -103,22 +107,24 @@ class DatabaseBatchExecutor(
                     }
                 } catch (e: Exception) {
                     status.setRollbackOnly()
-                    logger.error(e) { "Error executing transaction. Rolling back." }
-                    throw e
+                    // Krytyczny błąd w transakcji, logujemy z oryginalnym wyjątkiem.
+                    logger.error(e) { "Error during transaction execution, rolling back. Failed step details in exception." }
+                    throw e // Rzucamy dalej, aby transactionTemplate go obsłużył.
                 }
 
                 allResults
             }!!
 
-            logger.info { "Batch execution completed successfully." }
+            logger.info { "Batch execution of ${databaseSteps.size} steps completed successfully." }
             DataResult.Success(results)
 
         } catch (e: DatabaseException) {
-            logger.error(e) { "A database exception occurred during the batch execution. The transaction was rolled back." }
+            // Łapiemy nasze specyficzne wyjątki rzucone z wewnątrz.
+            logger.error(e) { "A database exception occurred during the batch execution. Transaction was rolled back." }
             DataResult.Failure(e)
         } catch (e: Exception) {
-            // Zabezpieczenie na wypadek innych, nieoczekiwanych błędów.
-            logger.error(e) { "An unexpected exception occurred during the batch execution. The transaction was rolled back." }
+            // Łapiemy wszelkie inne, nieoczekiwane błędy.
+            logger.error(e) { "An unexpected exception occurred during batch execution. Transaction was rolled back." }
             DataResult.Failure(QueryExecutionException(
                 "An unexpected error occurred during batch execution.",
                 sql = "N/A",
@@ -128,44 +134,33 @@ class DatabaseBatchExecutor(
         }
     }
 
-    /**
-     * Rozwiązuje referencję `DatabaseValue` na konkretną wartość.
-     *
-     * - `DatabaseValue.Value`: Zwraca przechowywaną wartość.
-     * - `DatabaseValue.FromStep`: Pobiera wartość z wyniku poprzedniego kroku.
-     *
-     * @param ref Referencja do rozwiązania.
-     * @param resultsContext Wyniki z poprzednich kroków transakcji.
-     * @return Rozwiązana wartość.
-     * @throws StepDependencyException, jeśli referencja jest nieprawidłowa.
-     */
     private fun resolveReference(ref: DatabaseValue, resultsContext: Map<Int, List<Map<String, Any?>>>): Any? {
         return when (ref) {
             is DatabaseValue.Value -> ref.value
             is DatabaseValue.FromStep -> {
+                logger.trace { "Resolving reference from step ${ref.stepIndex}, key '${ref.resultKey}'" }
                 val previousResultList = resultsContext[ref.stepIndex]
                     ?: throw StepDependencyException(
-                        message = "Nie znaleziono wyniku dla kroku o indeksie ${ref.stepIndex}.",
+                        message = "Cannot resolve reference: Result for step ${ref.stepIndex} not found.",
                         referencedStepIndex = ref.stepIndex
                     )
 
                 if (previousResultList.isEmpty()) {
                     throw StepDependencyException(
-                        message = "Krok ${ref.stepIndex} nie zwrócił żadnych wierszy, więc nie można pobrać z niego wartości.",
+                        message = "Cannot resolve reference: Step ${ref.stepIndex} returned no rows.",
                         referencedStepIndex = ref.stepIndex
                     )
                 }
-
                 if (!previousResultList.first().containsKey(ref.resultKey)) {
                     throw StepDependencyException(
-                        message = "Klucz '${ref.resultKey}' nie został znaleziony w wyniku kroku ${ref.stepIndex}.",
+                        message = "Cannot resolve reference: Key '${ref.resultKey}' not found in result of step ${ref.stepIndex}.",
                         referencedStepIndex = ref.stepIndex,
                         missingKey = ref.resultKey
                     )
                 }
-
-                // Teraz, gdy wiemy, że klucz istnieje, możemy go bezpiecznie pobrać
-                previousResultList.first()[ref.resultKey]
+                val resolvedValue = previousResultList.first()[ref.resultKey]
+                logger.trace { "Reference resolved to value: $resolvedValue" }
+                resolvedValue
             }
         }
     }
