@@ -52,8 +52,28 @@ class DatabaseFetcher(
         }
     }
 
+    /**
+     * Formatuje wyrażenie tabeli na potrzeby klauzuli FROM.
+     * Opakowuje w nawiasy złożone wyrażenia (podzapytania, złączenia),
+     * a pozostawia bez zmian proste tabele (np. "users" lub "users u").
+     *
+     * @param table Wyrażenie tabeli, np. "users", "users u", "table_a JOIN table_b ON ...", "SELECT ...".
+     * @return Sformatowane wyrażenie tabeli.
+     */
     private fun formatTableExpression(table: String): String {
-        return if (table.trim().uppercase().contains(" ")) "($table)" else table
+        val trimmed = table.trim()
+
+        val upper = trimmed.uppercase()
+
+        if (upper.startsWith("(") && upper.endsWith(")")) {
+            return trimmed
+        }
+
+        if (upper.contains(Regex("\\bSELECT\\b")) || upper.contains(Regex("\\bSELECT\\b"))) {
+            return "($trimmed)"
+        }
+
+        return trimmed
     }
 
     override fun query(): QueryBuilder {
