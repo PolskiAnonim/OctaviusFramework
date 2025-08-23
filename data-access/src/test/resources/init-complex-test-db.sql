@@ -64,7 +64,9 @@ CREATE TABLE complex_test_data (
     simple_uuid uuid,
     simple_date date,
     simple_timestamp timestamp,
-    
+    simple_timestamptz timestamptz,
+    simple_numeric numeric(18, 4),
+    simple_interval interval,
     -- Enumy
     single_status test_status,
     status_array test_status[],
@@ -95,7 +97,9 @@ INSERT INTO complex_test_data (
     simple_uuid,
     simple_date,
     simple_timestamp,
-    
+    simple_timestamptz,
+    simple_numeric,
+    simple_interval,
     single_status,
     status_array,
 
@@ -120,7 +124,9 @@ INSERT INTO complex_test_data (
     gen_random_uuid(),
     '2024-01-15',
     '2024-01-15 14:30:00',
-
+    '2024-01-15 14:30:00 Europe/Warsaw',
+    98765.4321,
+    '03:25:10',
     -- Enumy
     'active',
     ARRAY['active', 'pending', 'not_started']::test_status[],

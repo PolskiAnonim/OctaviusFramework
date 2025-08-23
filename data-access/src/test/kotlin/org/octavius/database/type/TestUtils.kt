@@ -27,7 +27,11 @@ fun createFakeTypeRegistry(): TypeRegistry {
         put("int4", PostgresTypeInfo("int4", TypeCategory.STANDARD))
         put("_int4", PostgresTypeInfo("_int4", TypeCategory.ARRAY, elementType = "int4"))
         put("bool", PostgresTypeInfo("bool", TypeCategory.STANDARD))
+
         put("timestamp", PostgresTypeInfo("timestamp", TypeCategory.STANDARD))
+        put("timestamptz", PostgresTypeInfo("timestamptz", TypeCategory.STANDARD))
+        put("interval", PostgresTypeInfo("interval", TypeCategory.STANDARD))
+
         put("numeric", PostgresTypeInfo("numeric", TypeCategory.STANDARD))
         put("jsonb", PostgresTypeInfo("jsonb", TypeCategory.STANDARD))
         put("uuid", PostgresTypeInfo("uuid", TypeCategory.STANDARD))
