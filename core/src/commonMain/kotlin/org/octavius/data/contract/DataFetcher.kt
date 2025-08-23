@@ -102,7 +102,7 @@ interface QueryBuilder {
     fun <T> toField(params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
     /** Wykonuje zapytanie i zwraca listę wartości z pierwszej kolumny. */
-    fun <T> toColumn(params: Map<String, Any?> = emptyMap()): DataResult<List<T>>
+    fun <T> toColumn(params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
 
     /**
      * Wykonuje zapytanie i mapuje wyniki na listę obiektów podanego typu (data class).

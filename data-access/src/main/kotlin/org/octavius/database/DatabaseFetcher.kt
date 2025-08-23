@@ -5,7 +5,6 @@ import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.QueryBuilder
-import org.octavius.data.contract.map
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.exception.DatabaseException
 import org.octavius.exception.QueryExecutionException
@@ -123,7 +122,7 @@ class DatabaseFetcher(
      * Centralna, prywatna metoda do wykonywania wszystkich zapytań zbudowanych przez QueryBuilder.
      * Eliminuje powtarzanie kodu.
      */
-    private fun <T : Any> executeQuery(
+    private fun <T : Any?> executeQuery(
         builder: DatabaseQueryBuilder,
         params: Map<String, Any?>,
         rowMapper: RowMapper<T>
@@ -231,11 +230,11 @@ class DatabaseFetcher(
             }
         }
 
-        override fun <T> toColumn(params: Map<String, Any?>): DataResult<List<T>> {
+        override fun <T> toColumn(params: Map<String, Any?>): DataResult<List<T?>> {
             logger.debug { "Building query to fetch a single column." }
             return executeAndWrap {
                 @Suppress("UNCHECKED_CAST")
-                executeQuery(this, params, rowMappers.SingleValueMapper()) as List<T>
+                executeQuery(this, params, rowMappers.SingleValueMapper()) as List<T?>
             }
         }
 
@@ -251,7 +250,5 @@ class DatabaseFetcher(
                 executeQuery(this, params, rowMappers.DataObjectMapper(kClass)).firstOrNull()
             }
         }
-
-
     }
 }

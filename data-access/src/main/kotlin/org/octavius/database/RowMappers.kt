@@ -67,7 +67,7 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
      * Mapper mapujący wynik z pojedynczej kolumny na jego wartość.
      * Używany dla zapytań typu `SELECT COUNT(*)`, `SELECT id FROM ...` itp.
      */
-    fun SingleValueMapper(): RowMapper<Any> = RowMapper { rs, _ ->
+    fun SingleValueMapper(): RowMapper<Any?> = RowMapper { rs, _ ->
         val columnType = (rs.metaData as PgResultSetMetaData).getColumnTypeName(1)
         val rawValue = rs.getString(1)
         typesConverter.convertToDomainType(rawValue, columnType)
@@ -83,7 +83,7 @@ class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
         val baseMapper = ColumnNameMapper()
         return RowMapper { rs, rowNum ->
             logger.trace { "Mapping row to ${kClass.simpleName} using DataObjectMapper" }
-            val map = baseMapper.mapRow(rs, rowNum)!!
+            val map = baseMapper.mapRow(rs, rowNum)
 
             try {
                 // Używamy istniejącej logiki do konwersji mapy na obiekt

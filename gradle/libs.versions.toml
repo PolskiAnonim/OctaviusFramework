@@ -1,26 +1,26 @@
 [versions]
 classgraph = "4.8.181"
-androidx-lifecycle = "2.9.1"
+androidx-lifecycle = "2.9.2"
 compose-multiplatform = "1.8.2"
-kotlin = "2.2.0"
+kotlin = "2.2.10"
 kotlinx-coroutines = "1.10.2"
-kotlinx-serialization = "1.8.1"
-kotlinx-datetime = "0.7.0"
+kotlinx-serialization = "1.9.0"
+kotlinx-datetime = "0.7.1"
 # core
 postgres = "42.7.7"
-hikari = "6.3.0"
-spring-jdbc = "7.0.0-M6"
+hikari = "7.0.2"
+spring-jdbc = "7.0.0-M8"
 # api-server
-ktor = "3.2.2"
+ktor = "3.2.3"
 # koin
 koin = "4.1.0"
 #test/log
 junit-jupiter = "5.10.0"
 assertj-core = "3.27.3"
 mockito-kotlin = "6.0.0"
-mockito-core = "5.18.0"
+mockito-core = "5.19.0"
 logback = "1.5.18"
-kotlin-logging = "7.0.12"
+kotlin-logging = "7.0.13"
 [libraries]
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
