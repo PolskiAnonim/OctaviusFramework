@@ -3,6 +3,7 @@ package org.octavius.form.component
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.BatchExecutor
+import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 
@@ -115,12 +116,13 @@ class FormHandler(
         if (!formValidator.validateBusinessRules(rawFormData)) return false
         val databaseOperations = formDataManager.processFormData(rawFormData, entityId)
 
-        return try {
-            batchExecutor.execute(databaseOperations)
-            true
-        } catch (e: Exception) {
-            errorManager.addGlobalError("Błąd zapisu do bazy danych: ${e.message}")
-            false
+        val result = batchExecutor.execute(databaseOperations)
+        return when (result) {
+            is DataResult.Failure -> {
+                errorManager.addGlobalError("Błąd zapisu do bazy danych: ${result.error}")
+                false
+            }
+            is DataResult.Success<*> -> true
         }
     }
 }
