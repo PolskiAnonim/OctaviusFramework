@@ -14,7 +14,6 @@ internal object DatabaseConfig {
     var dbUsername = "postgres"
     var dbPassword = "1234"
     var dbSchemas: List<String>  = listOf("public", "asian_media", "games")
-    var baseDomainPackage = "org.octavius.domain"
 
     /**
      * Ładuje konfigurację z pliku `properties`.
@@ -33,12 +32,10 @@ internal object DatabaseConfig {
                 dbUsername = props.getProperty("db.username")
                 dbPassword = props.getProperty("db.password")
                 dbSchemas = props.getProperty("db.schemas").split(",")
-                baseDomainPackage = props.getProperty("db.baseDomainPackage")
                 
                 logger.info { "Database configuration loaded successfully" }
                 logger.debug { "Database URL changed from '$oldUrl' to '$dbUrl'" }
                 logger.debug { "Database schemas: ${dbSchemas.joinToString(", ")}" }
-                logger.debug { "Base domain package: $baseDomainPackage" }
             } else {
                 logger.warn { "Could not find properties file '$fileName'. Using default configuration" }
                 logger.debug { "Default database URL: $dbUrl" }
