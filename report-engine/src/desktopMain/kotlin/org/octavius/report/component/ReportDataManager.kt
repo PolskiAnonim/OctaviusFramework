@@ -75,7 +75,7 @@ class ReportDataManager(
         params: Map<String, Any>
     ): DataResult<ReportPaginationState> {
 
-        val countResult = fetcher.fetchCount(sourceSql, filterClause.takeIf { it.isNotBlank() }, params)
+        val countResult = fetcher.query().from(sourceSql).where(filterClause).toCount(params)
 
         return when (countResult) {
             is DataResult.Success -> {

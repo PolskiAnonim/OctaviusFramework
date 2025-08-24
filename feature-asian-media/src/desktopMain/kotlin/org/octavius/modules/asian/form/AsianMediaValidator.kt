@@ -30,8 +30,9 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
 
         val params = if (entityId != null) mapOf("titles" to titles, "id" to entityId) else mapOf("titles" to titles)
-        val result = dataFetcher.fetchCount("SELECT id, UNNEST(titles) AS title FROM titles",
-            "title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}", params)
+        val result = dataFetcher.query().from("SELECT id, UNNEST(titles) AS title FROM titles")
+            .where("title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}").toCount(params)
+
 
         when (result) {
             is DataResult.Failure -> {

@@ -8,9 +8,6 @@ import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.octavius.util.toMap
 import org.postgresql.util.PGobject
-import kotlin.collections.get
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.primaryConstructor
 
 /**
  * Wynik ekspansji zapytania.

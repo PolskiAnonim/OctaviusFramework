@@ -10,7 +10,7 @@ class GameSeriesFormValidator : FormValidator() {
         val name = formData["name"]!!.currentValue as String
 
         // Sprawdź unikalność nazwy serii
-        val existingCount = dataFetcher.fetchCount("series", "name = :name", mapOf("name" to name))
+        val existingCount = dataFetcher.query().from("series").where("name = :name").toCount(mapOf("name" to name))
 
         when (existingCount) {
             is DataResult.Failure -> {

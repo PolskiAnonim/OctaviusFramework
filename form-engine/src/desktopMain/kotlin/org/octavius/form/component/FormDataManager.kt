@@ -77,7 +77,8 @@ abstract class FormDataManager: KoinComponent {
             tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
         }
 
-        val entity = dataFetcher.fetchRowWithColumnInfo(tables.toString(), "$mainTable.id = :id", mapOf("id" to id))
+        val entity = dataFetcher.query().from(tables.toString()).where("$mainTable.id = :id")
+            .toSingleWithColumnInfo(mapOf("id" to id))
 
         return when (entity) {
             is DataResult.Failure -> mapOf() // TODO wypisanie błędu w UI

@@ -66,7 +66,7 @@ class DatabaseControl(
         val params = if (searchQuery.isNotBlank()) mapOf("search" to "%$searchQuery%") else emptyMap()
 
         // Krok 2: Pobierz całkowitą liczbę pasujących rekordów
-        val countResult = fetcher.fetchCount(relatedTable, filter, params)
+        val countResult = fetcher.query().from(relatedTable).where(filter).toCount(params)
 
         val totalCount = when (countResult) {
             is DataResult.Success -> countResult.value
