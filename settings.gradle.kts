@@ -42,5 +42,6 @@ include(
     ":api-contract",
     ":feature-contract",
     ":extension-content-script",
-    ":extension-popup"
+    ":extension-popup",
+    ":chrome-ts2kt"
 )
