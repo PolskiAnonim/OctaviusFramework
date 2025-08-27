@@ -18,6 +18,8 @@ import org.octavius.navigation.AppRouter
 import org.octavius.ui.navigation.AppTabBar
 import org.octavius.ui.navigation.ScreenContent
 import org.octavius.ui.component.SnackbarManager
+import org.octavius.ui.error.GlobalErrorDialog
+import org.octavius.ui.error.GlobalErrorHandler
 
 /**
  * Główny ekran aplikacji - punkt wejścia UI zawierający nawigację między zakładkami.
@@ -55,6 +57,14 @@ object MainScreen {
         CompositionLocalProvider(LocalNotifier provides snackbarManager) {
             val snackbarHostState = remember { SnackbarHostState() }
             snackbarManager.HandleSnackbar(snackbarHostState)
+
+            val error by GlobalErrorHandler.errorDetails.collectAsState()
+            error?.let { details ->
+                GlobalErrorDialog(
+                    errorDetails = details,
+                    onDismiss = { GlobalErrorHandler.dismissError() }
+                )
+            }
 
             Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
                 Column(Modifier.fillMaxSize().padding(paddingValues)) {

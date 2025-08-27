@@ -8,6 +8,7 @@ import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
+import org.octavius.ui.error.GlobalErrorHandler
 
 class AsianMediaFormDataManager : FormDataManager() {
 
@@ -63,7 +64,8 @@ class AsianMediaFormDataManager : FormDataManager() {
                 mapOf("publications" to publications)
             }
             is DataResult.Failure -> {
-                mapOf("publications" to emptyList<Map<String, Any?>>()) // TODO błąd w UI
+                GlobalErrorHandler.showError(result.error)
+                mapOf("publications" to emptyList<Map<String, Any?>>())
             }
         }
     }

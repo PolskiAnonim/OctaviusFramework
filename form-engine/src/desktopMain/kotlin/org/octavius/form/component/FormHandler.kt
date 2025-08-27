@@ -6,6 +6,7 @@ import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
+import org.octavius.ui.error.GlobalErrorHandler
 
 /**
  * Klasa obsługująca cykl życia formularza.
@@ -119,7 +120,7 @@ class FormHandler(
         val result = batchExecutor.execute(databaseOperations)
         return when (result) {
             is DataResult.Failure -> {
-                errorManager.addGlobalError("Błąd zapisu do bazy danych: ${result.error}")
+                GlobalErrorHandler.showError(result.error)
                 false
             }
             is DataResult.Success<*> -> true

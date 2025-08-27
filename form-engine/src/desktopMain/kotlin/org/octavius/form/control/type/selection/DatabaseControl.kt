@@ -10,6 +10,7 @@ import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
 import org.octavius.form.control.type.selection.dropdown.DropdownOption
+import org.octavius.ui.error.GlobalErrorHandler
 
 /**
  * Kontrolka do wyboru rekordu z bazy danych z listy rozwijanej.
@@ -47,7 +48,10 @@ class DatabaseControl(
             .toField<String>(mapOf("id" to value))
 
         return when (result) {
-            is DataResult.Failure -> null // TODO błąd w UI
+            is DataResult.Failure -> {
+                GlobalErrorHandler.showError(result.error)
+                null
+            }
             is DataResult.Success<String?> -> {
                 when (result.value) {
                     null -> null
@@ -71,7 +75,7 @@ class DatabaseControl(
         val totalCount = when (countResult) {
             is DataResult.Success -> countResult.value
             is DataResult.Failure -> {
-                // TODO błąd w UI
+                GlobalErrorHandler.showError(countResult.error)
                 return Pair(emptyList(), 0L)
             }
         }
@@ -99,7 +103,7 @@ class DatabaseControl(
                 Pair(mappedOptions, totalPages)
             }
             is DataResult.Failure -> {
-                // TODO Błąd w UI
+                GlobalErrorHandler.showError(optionsResult.error)
                 Pair(emptyList(), 0L)
             }
         }

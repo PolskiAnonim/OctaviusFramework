@@ -11,6 +11,7 @@ import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportEvent
 import org.octavius.report.configuration.ReportConfiguration
 import org.octavius.report.configuration.ReportConfigurationManager
+import org.octavius.ui.error.GlobalErrorHandler
 
 val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHandler provided") }
 
@@ -106,6 +107,7 @@ class ReportHandler(
                     )
                 }
                 is ReportDataResult.Failure -> {
+                    GlobalErrorHandler.showError(result.error)
                     _state.value = _state.value.copy(
                         isLoading = false,
                         error = "Błąd pobierania danych z bazy."

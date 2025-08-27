@@ -30,5 +30,13 @@
     "asianMedia": "Azjatyckie",
     "games": "Gry",
     "settings": "Ustawienia"
+  },
+  "error": {
+    "dialog": {
+      "dismiss": "Odrzuć"
+    },
+    "database": {
+      "title": "Błąd bazy danych"
+    }
   }
 }

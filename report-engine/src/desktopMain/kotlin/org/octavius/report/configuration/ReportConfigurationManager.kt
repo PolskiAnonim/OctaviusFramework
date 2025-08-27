@@ -10,6 +10,7 @@ import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.data.contract.toListOf
 import org.octavius.data.contract.toSingleOf
+import org.octavius.ui.error.GlobalErrorHandler
 import org.octavius.util.toMap
 
 class ReportConfigurationManager : KoinComponent {
@@ -22,7 +23,10 @@ class ReportConfigurationManager : KoinComponent {
             .toField<Int>(mapOf("name" to configuration.name, "report_name" to configuration.reportName))
 
         val configId = when (configResult) {
-            is DataResult.Failure -> null
+            is DataResult.Failure -> {
+                GlobalErrorHandler.showError(configResult.error)
+                null
+            }
             is DataResult.Success<*> -> configResult.value
         }
 
@@ -45,7 +49,10 @@ class ReportConfigurationManager : KoinComponent {
         }
         val result = batchExecutor.execute(listOf(databaseStep))
         return when (result) {
-            is DataResult.Failure -> false
+            is DataResult.Failure -> {
+                GlobalErrorHandler.showError(result.error)
+                false
+            }
             is DataResult.Success<BatchStepResults> -> true
         }
     }
@@ -60,7 +67,10 @@ class ReportConfigurationManager : KoinComponent {
         ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
 
         return when (result) {
-            is DataResult.Failure -> null // TODO błąd w UI
+            is DataResult.Failure -> {
+                GlobalErrorHandler.showError(result.error)
+                null
+            }
             is DataResult.Success<ReportConfiguration?> -> result.value
         }
     }
@@ -74,7 +84,10 @@ class ReportConfigurationManager : KoinComponent {
         ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
 
         return when (result) {
-            is DataResult.Failure -> emptyList() // TODO błąd w UI
+            is DataResult.Failure -> {
+                GlobalErrorHandler.showError(result.error)
+                emptyList()
+            }
             is DataResult.Success<List<ReportConfiguration>> -> result.value
         }
     }
@@ -88,7 +101,10 @@ class ReportConfigurationManager : KoinComponent {
         val result = batchExecutor.execute(listOf(databaseStep))
 
         when(result) {
-            is DataResult.Failure -> return false
+            is DataResult.Failure -> {
+                GlobalErrorHandler.showError(result.error)
+                return false
+            }
             is DataResult.Success -> {
                 val firstStepResult = result.value[0]!!
                 val firstStepFirstResult = firstStepResult.first()

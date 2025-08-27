@@ -8,6 +8,7 @@ import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
+import org.octavius.ui.error.GlobalErrorHandler
 import java.lang.IllegalStateException
 
 /**
@@ -81,7 +82,10 @@ abstract class FormDataManager: KoinComponent {
             .toSingleWithColumnInfo(mapOf("id" to id))
 
         return when (entity) {
-            is DataResult.Failure -> mapOf() // TODO wypisanie błędu w UI
+            is DataResult.Failure -> {
+                GlobalErrorHandler.showError(entity.error)
+                mapOf()
+            }
             is DataResult.Success<Map<ColumnInfo, Any?>?> -> entity.value ?: mapOf()
         }
     }

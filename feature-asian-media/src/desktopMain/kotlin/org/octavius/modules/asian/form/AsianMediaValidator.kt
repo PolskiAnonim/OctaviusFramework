@@ -4,6 +4,7 @@ import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormValidator
 import org.octavius.localization.Translations
+import org.octavius.ui.error.GlobalErrorHandler
 
 class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
@@ -36,7 +37,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
         when (result) {
             is DataResult.Failure -> {
-                errorManager.addGlobalError("Błąd walidacji")
+                GlobalErrorHandler.showError(result.error)
                 return false
             }
             is DataResult.Success<Long> -> {
