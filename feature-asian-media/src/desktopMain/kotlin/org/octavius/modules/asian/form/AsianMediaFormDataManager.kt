@@ -121,7 +121,6 @@ class AsianMediaFormDataManager : FormDataManager() {
         publicationsResult.modifiedRows.forEach { rowData ->
             val pubId = rowData["id"]!!.initialValue as Int
             val publicationIdRef = pubId.toDatabaseValue() // ID tej publikacji jest znane.
-
             val publicationData = mapOf(
                 "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
                 "status" to rowData["status"]!!.currentValue.toDatabaseValue(),

@@ -12,14 +12,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import org.octavius.contract.LocalNotifier
 import org.octavius.contract.Tab
 import org.octavius.navigation.AppRouter
 import org.octavius.ui.navigation.AppTabBar
 import org.octavius.ui.navigation.ScreenContent
-import org.octavius.ui.component.SnackbarManager
 import org.octavius.ui.error.GlobalErrorDialog
 import org.octavius.ui.error.GlobalErrorHandler
+import org.octavius.ui.snackbar.SnackbarManager
 
 /**
  * Główny ekran aplikacji - punkt wejścia UI zawierający nawigację między zakładkami.
@@ -37,9 +36,6 @@ import org.octavius.ui.error.GlobalErrorHandler
  */
 object MainScreen {
 
-    /** Globalny menedżer powiadomień snackbar */
-    val snackbarManager = SnackbarManager()
-
     /**
      * Główny Composable renderujący interfejs aplikacji.
      *
@@ -54,52 +50,52 @@ object MainScreen {
 
         if (navState == null) return
 
-        CompositionLocalProvider(LocalNotifier provides snackbarManager) {
-            val snackbarHostState = remember { SnackbarHostState() }
-            snackbarManager.HandleSnackbar(snackbarHostState)
 
-            val error by GlobalErrorHandler.errorDetails.collectAsState()
-            error?.let { details ->
-                GlobalErrorDialog(
-                    errorDetails = details,
-                    onDismiss = { GlobalErrorHandler.dismissError() }
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        SnackbarManager.HandleSnackbar(snackbarHostState)
+
+        val error by GlobalErrorHandler.errorDetails.collectAsState()
+        error?.let { details ->
+            GlobalErrorDialog(
+                errorDetails = details,
+                onDismiss = { GlobalErrorHandler.dismissError() }
+            )
+        }
+
+        Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
+            Column(Modifier.fillMaxSize().padding(paddingValues)) {
+                AppTabBar(
+                    tabs = tabs,
+                    currentState = navState!!,
+                    onTabSelected = { tabIndex -> AppRouter.switchToTab(tabIndex) }
                 )
-            }
 
-            Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
-                Column(Modifier.fillMaxSize().padding(paddingValues)) {
-                    AppTabBar(
-                        tabs = tabs,
-                        currentState = navState!!,
-                        onTabSelected = { tabIndex -> AppRouter.switchToTab(tabIndex) }
-                    )
-
-                    AnimatedContent(
-                        targetState = navState!!.activeTab.index,
-                        transitionSpec = {
-                            // Ta sama logika co w starym TabNavigatorze
-                            val direction = if (targetState > initialState) {
-                                AnimatedContentTransitionScope.SlideDirection.Left
-                            } else {
-                                AnimatedContentTransitionScope.SlideDirection.Right
-                            }
-
-                            slideIntoContainer(
-                                towards = direction, animationSpec = tween(300)
-                            ) togetherWith slideOutOfContainer(
-                                towards = direction, animationSpec = tween(300)
-                            )
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    ) { targetTabIndex ->
-                        val activeStack = navState!!.tabStacks[targetTabIndex] ?: emptyList()
-
-                        if (activeStack.isNotEmpty()) {
-                            ScreenContent(
-                                screenStack = activeStack,
-                                onBack = { AppRouter.goBack() }
-                            )
+                AnimatedContent(
+                    targetState = navState!!.activeTab.index,
+                    transitionSpec = {
+                        // Ta sama logika co w starym TabNavigatorze
+                        val direction = if (targetState > initialState) {
+                            AnimatedContentTransitionScope.SlideDirection.Left
+                        } else {
+                            AnimatedContentTransitionScope.SlideDirection.Right
                         }
+
+                        slideIntoContainer(
+                            towards = direction, animationSpec = tween(300)
+                        ) togetherWith slideOutOfContainer(
+                            towards = direction, animationSpec = tween(300)
+                        )
+                    },
+                    modifier = Modifier.fillMaxSize()
+                ) { targetTabIndex ->
+                    val activeStack = navState!!.tabStacks[targetTabIndex] ?: emptyList()
+
+                    if (activeStack.isNotEmpty()) {
+                        ScreenContent(
+                            screenStack = activeStack,
+                            onBack = { AppRouter.goBack() }
+                        )
                     }
                 }
             }
