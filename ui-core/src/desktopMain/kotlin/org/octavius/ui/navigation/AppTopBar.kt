@@ -1,4 +1,4 @@
-package org.octavius.navigation
+package org.octavius.ui.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.octavius.contract.Tab
+import org.octavius.navigation.AppNavigationState
 
 /**
  * Komponent UI wyświetlający główny pasek zakładek aplikacji.

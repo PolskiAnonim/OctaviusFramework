@@ -1,4 +1,4 @@
-package org.octavius.navigation
+package org.octavius.ui.navigation
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility

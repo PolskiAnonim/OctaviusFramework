@@ -1,4 +1,4 @@
-package org.octavius.report.column.type.number
+package org.octavius.report.column.type
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -11,6 +11,7 @@ import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.NumberFilter
+import java.math.BigDecimal
 import kotlin.reflect.KClass
 
 /**
@@ -61,3 +62,66 @@ class NumberColumn<T : Number>(
         }
     }
 }
+
+/**
+ * Funkcja fabryczna tworząca kolumnę do wyświetlania liczb o wysokiej precyzji (BigDecimal).
+ * Używa generycznej NumberColumn pod spodem.
+ */
+@Suppress("FunctionName")
+fun BigDecimalColumn(
+    header: String,
+    width: Float = 1f,
+    sortable: Boolean = true,
+    filterable: Boolean = true,
+    formatter: (BigDecimal?) -> String = { it?.toPlainString() ?: "" }
+) = NumberColumn(
+    header = header,
+    numberClass = BigDecimal::class,
+    valueParser = { it.replace(",", ".").toBigDecimalOrNull() },
+    width = width,
+    sortable = sortable,
+    filterable = filterable,
+    formatter = formatter
+)
+
+/**
+ * Funkcja fabryczna tworząca kolumnę do wyświetlania liczb zmiennoprzecinkowych.
+ * Używa generycznej NumberColumn pod spodem.
+ */
+@Suppress("FunctionName")
+fun DoubleColumn(
+    header: String,
+    width: Float = 1f,
+    sortable: Boolean = true,
+    filterable: Boolean = true,
+    formatter: (Double?) -> String = { it?.toString() ?: "" }
+) = NumberColumn(
+    header = header,
+    numberClass = Double::class,
+    valueParser = { it.replace(",", ".").toDoubleOrNull() },
+    width = width,
+    sortable = sortable,
+    filterable = filterable,
+    formatter = formatter
+)
+
+/**
+ * Funkcja fabryczna tworząca kolumnę do wyświetlania liczb całkowitych.
+ * Używa generycznej NumberColumn pod spodem.
+ */
+@Suppress("FunctionName")
+fun IntegerColumn(
+    header: String,
+    width: Float = 1f,
+    sortable: Boolean = true,
+    filterable: Boolean = true,
+    formatter: (Int?) -> String = { it?.toString() ?: "" }
+) = NumberColumn(
+    header = header,
+    numberClass = Int::class,
+    valueParser = { it.toIntOrNull() },
+    width = width,
+    sortable = sortable,
+    filterable = filterable,
+    formatter = formatter
+)

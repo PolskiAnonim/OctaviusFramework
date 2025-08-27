@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import org.octavius.contract.LocalNotifier
 import org.octavius.contract.Tab
 import org.octavius.navigation.AppRouter
-import org.octavius.navigation.AppTabBar
-import org.octavius.navigation.ScreenContent
+import org.octavius.ui.navigation.AppTabBar
+import org.octavius.ui.navigation.ScreenContent
 import org.octavius.ui.component.SnackbarManager
 
 /**

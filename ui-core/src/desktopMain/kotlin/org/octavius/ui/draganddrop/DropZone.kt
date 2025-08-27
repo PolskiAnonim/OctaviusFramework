@@ -1,4 +1,4 @@
-package org.octavius.draganddrop
+package org.octavius.ui.draganddrop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
