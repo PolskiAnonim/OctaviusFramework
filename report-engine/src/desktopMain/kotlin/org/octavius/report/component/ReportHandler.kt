@@ -7,11 +7,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.octavius.domain.SortDirection
+import org.octavius.navigation.AppRouter
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportEvent
 import org.octavius.report.configuration.ReportConfiguration
 import org.octavius.report.configuration.ReportConfigurationManager
-import org.octavius.ui.error.GlobalErrorHandler
 
 val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHandler provided") }
 
@@ -107,7 +109,7 @@ class ReportHandler(
                     )
                 }
                 is ReportDataResult.Failure -> {
-                    GlobalErrorHandler.showError(result.error)
+                    GlobalDialogManager.show(ErrorDialogConfig(result.error))
                     _state.value = _state.value.copy(
                         isLoading = false,
                         error = "Błąd pobierania danych z bazy."

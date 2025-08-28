@@ -8,8 +8,9 @@ import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
-import org.octavius.ui.error.GlobalErrorHandler
-import java.lang.IllegalStateException
+import org.octavius.navigation.AppRouter
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 
 /**
  * Abstrakcyjna klasa zarządzająca przepływem danych w formularzach.
@@ -83,7 +84,7 @@ abstract class FormDataManager: KoinComponent {
 
         return when (entity) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(entity.error)
+                GlobalDialogManager.show(ErrorDialogConfig(entity.error))
                 mapOf()
             }
             is DataResult.Success<Map<ColumnInfo, Any?>?> -> entity.value ?: mapOf()

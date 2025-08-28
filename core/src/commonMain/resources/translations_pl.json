@@ -6,7 +6,8 @@
     "load": "Wczytaj",
     "overwrite": "Nadpisz",
     "remove": "Usuń",
-    "save": "Zapisz"
+    "save": "Zapisz",
+    "confirm": "Potwierdź"
   },
   "app": {
     "name": "Octavius"

@@ -5,12 +5,13 @@ import org.koin.core.component.inject
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.map
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
 import org.octavius.form.control.type.selection.dropdown.DropdownOption
-import org.octavius.ui.error.GlobalErrorHandler
+import org.octavius.navigation.AppRouter
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 
 /**
  * Kontrolka do wyboru rekordu z bazy danych z listy rozwijanej.
@@ -49,7 +50,7 @@ class DatabaseControl(
 
         return when (result) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(result.error)
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 null
             }
             is DataResult.Success<String?> -> {
@@ -75,7 +76,7 @@ class DatabaseControl(
         val totalCount = when (countResult) {
             is DataResult.Success -> countResult.value
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(countResult.error)
+                GlobalDialogManager.show(ErrorDialogConfig(countResult.error))
                 return Pair(emptyList(), 0L)
             }
         }
@@ -103,7 +104,7 @@ class DatabaseControl(
                 Pair(mappedOptions, totalPages)
             }
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(optionsResult.error)
+                GlobalDialogManager.show(ErrorDialogConfig(optionsResult.error))
                 Pair(emptyList(), 0L)
             }
         }

@@ -4,7 +4,9 @@ import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormValidator
 import org.octavius.localization.Translations
-import org.octavius.ui.error.GlobalErrorHandler
+import org.octavius.navigation.AppRouter
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 
 class GameSeriesFormValidator : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
@@ -15,7 +17,7 @@ class GameSeriesFormValidator : FormValidator() {
 
         when (existingCount) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(existingCount.error)
+                GlobalDialogManager.show(ErrorDialogConfig(existingCount.error))
                 return false
             }
 

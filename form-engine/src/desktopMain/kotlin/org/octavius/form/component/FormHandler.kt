@@ -6,7 +6,9 @@ import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
-import org.octavius.ui.error.GlobalErrorHandler
+import org.octavius.navigation.AppRouter
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 
 /**
  * Klasa obsługująca cykl życia formularza.
@@ -120,7 +122,7 @@ class FormHandler(
         val result = batchExecutor.execute(databaseOperations)
         return when (result) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(result.error)
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
             is DataResult.Success<*> -> true

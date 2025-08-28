@@ -10,7 +10,9 @@ import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.data.contract.toListOf
 import org.octavius.data.contract.toSingleOf
-import org.octavius.ui.error.GlobalErrorHandler
+import org.octavius.navigation.AppRouter
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.util.toMap
 
 class ReportConfigurationManager : KoinComponent {
@@ -24,7 +26,7 @@ class ReportConfigurationManager : KoinComponent {
 
         val configId = when (configResult) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(configResult.error)
+                GlobalDialogManager.show(ErrorDialogConfig(configResult.error))
                 null
             }
             is DataResult.Success<*> -> configResult.value
@@ -50,7 +52,7 @@ class ReportConfigurationManager : KoinComponent {
         val result = batchExecutor.execute(listOf(databaseStep))
         return when (result) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(result.error)
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
             is DataResult.Success<BatchStepResults> -> true
@@ -68,7 +70,7 @@ class ReportConfigurationManager : KoinComponent {
 
         return when (result) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(result.error)
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 null
             }
             is DataResult.Success<ReportConfiguration?> -> result.value
@@ -85,7 +87,7 @@ class ReportConfigurationManager : KoinComponent {
 
         return when (result) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(result.error)
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 emptyList()
             }
             is DataResult.Success<List<ReportConfiguration>> -> result.value
@@ -102,7 +104,7 @@ class ReportConfigurationManager : KoinComponent {
 
         when(result) {
             is DataResult.Failure -> {
-                GlobalErrorHandler.showError(result.error)
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 return false
             }
             is DataResult.Success -> {

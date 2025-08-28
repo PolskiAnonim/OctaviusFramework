@@ -14,10 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import org.octavius.navigation.Tab
 import org.octavius.navigation.AppRouter
+import org.octavius.dialog.DialogWrapper
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.ui.navigation.AppTabBar
 import org.octavius.ui.navigation.ScreenContent
-import org.octavius.ui.error.GlobalErrorDialog
-import org.octavius.ui.error.GlobalErrorHandler
 import org.octavius.ui.snackbar.SnackbarManager
 
 /**
@@ -50,18 +50,12 @@ object MainScreen {
 
         if (navState == null) return
 
-
         val snackbarHostState = remember { SnackbarHostState() }
 
         SnackbarManager.HandleSnackbar(snackbarHostState)
 
-        val error by GlobalErrorHandler.errorDetails.collectAsState()
-        error?.let { details ->
-            GlobalErrorDialog(
-                errorDetails = details,
-                onDismiss = { GlobalErrorHandler.dismissError() }
-            )
-        }
+        val dialog by GlobalDialogManager.dialogConfig.collectAsState()
+        DialogWrapper(config = dialog)
 
         Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
             Column(Modifier.fillMaxSize().padding(paddingValues)) {
