@@ -3,7 +3,7 @@ package org.octavius.modules.asian
 import org.octavius.api.contract.ApiModule
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
-import org.octavius.contract.Tab
+import org.octavius.navigation.Tab
 import org.octavius.modules.asian.api.AsianMediaApi
 import org.octavius.modules.asian.navigation.AsianMediaTab
 

@@ -1,6 +1,7 @@
 package org.octavius.contract
 
 import org.octavius.api.contract.ApiModule
+import org.octavius.navigation.Tab
 
 
 /**

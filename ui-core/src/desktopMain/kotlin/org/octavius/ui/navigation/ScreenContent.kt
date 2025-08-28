@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.contract.Screen
+import org.octavius.navigation.Screen
 import org.octavius.localization.Translations
 
 /**

@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import org.octavius.contract.Screen
+import org.octavius.navigation.Screen
 import org.octavius.localization.Translations
 import org.octavius.modules.settings.report.ui.ApiIntegrationsReportScreen
 import org.octavius.navigation.AppRouter

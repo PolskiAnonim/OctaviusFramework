@@ -1,5 +1,7 @@
 package org.octavius.contract
 
+import org.octavius.navigation.Screen
+
 /**
  * Interfejs fabryki dla ekranów, które można tworzyć dynamicznie.
  * Moduły `feature-*` implementują go, aby umożliwić nawigację do swoich ekranów z zewnątrz.

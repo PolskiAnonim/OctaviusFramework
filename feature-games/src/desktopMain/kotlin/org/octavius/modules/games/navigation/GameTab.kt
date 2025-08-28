@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import octavius.feature_games.generated.resources.Res
 import octavius.feature_games.generated.resources.game_icon
 import org.jetbrains.compose.resources.painterResource
-import org.octavius.contract.Screen
-import org.octavius.contract.Tab
-import org.octavius.contract.TabOptions
+import org.octavius.navigation.Screen
+import org.octavius.navigation.Tab
+import org.octavius.navigation.TabOptions
 import org.octavius.localization.Translations
 import org.octavius.modules.games.report.ui.GameReportScreen
 

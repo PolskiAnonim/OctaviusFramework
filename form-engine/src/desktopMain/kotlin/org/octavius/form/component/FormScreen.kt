@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.contract.Screen
+import org.octavius.navigation.Screen
 import org.octavius.localization.Translations
 import org.octavius.ui.snackbar.SnackbarManager
 

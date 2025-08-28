@@ -1,4 +1,4 @@
-package org.octavius.contract
+package org.octavius.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter

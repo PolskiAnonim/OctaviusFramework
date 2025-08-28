@@ -12,7 +12,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import org.octavius.contract.Tab
+import org.octavius.navigation.Tab
 import org.octavius.navigation.AppRouter
 import org.octavius.ui.navigation.AppTabBar
 import org.octavius.ui.navigation.ScreenContent
