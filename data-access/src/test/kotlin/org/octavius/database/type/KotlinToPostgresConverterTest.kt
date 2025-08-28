@@ -44,7 +44,7 @@ class KotlinToPostgresConverterTest {
         val result = converter.expandParametersInQuery(sql, params)
 
         assertThat(result.expandedSql).isEqualTo("SELECT * FROM users WHERE id = :id AND name = :name")
-        assertThat(result.expandedParams).isEqualTo(result.expandedParams)
+        assertThat(result.expandedParams).isEqualTo(params)
     }
 
     @Test
