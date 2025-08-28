@@ -63,7 +63,9 @@
       "dragToReorder": "Przeciągnij aby zmienić kolejność",
       "hideColumn": "Ukryj kolumnę",
       "showColumn": "Pokaż kolumnę",
-      "sorting": "Sortowanie"
+      "sorting": "Sortowanie",
+      "dragColumnsHere": "Przeciągnij tutaj kolumny",
+      "dragMoreColumns": "Przeciągnij więcej kolumn"
     },
     "configuration": {
       "configuration": {
