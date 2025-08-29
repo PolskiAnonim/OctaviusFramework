@@ -6,6 +6,7 @@ import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
+import org.octavius.form.FormActionResult
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
@@ -73,7 +74,14 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     buttonType = ButtonType.Filled,
                     actions = listOf(
                         ControlAction {
-                            trigger.triggerAction("save", true)
+                            val result = trigger.triggerAction("validate", true)
+                            when (result) {
+                                is FormActionResult.Failure -> Unit // Nic nie rób, Error został dodany
+                                is FormActionResult.Success -> trigger.triggerAction("save", false) // Już zwalidowane
+                                is FormActionResult.ValidationFailed -> Unit // Nic nie rób, Error został dodany
+                                else -> Unit // Brak możliwości wystąpienia
+                            }
+
                         }
                     )
                 ),

@@ -31,13 +31,10 @@ class FormHandler(
     val formDataManager: FormDataManager,
     val formValidator: FormValidator = FormValidator(),
     private val payload: Map<String, Any?>? = null
-): FormActionTrigger, KoinComponent {
+): FormActionTrigger {
     val errorManager: ErrorManager = ErrorManager()
     private val formState: FormState = FormState()
     private val formSchema: FormSchema = formSchemaBuilder.build()
-
-    // Wstrzykujemy transaction manager
-    private val batchExecutor: BatchExecutor by inject()
 
     init {
         setupFormReferences()
@@ -95,18 +92,18 @@ class FormHandler(
         formState.initializeStates(formSchema, initValues, errorManager)
     }
 
-    override fun triggerAction(actionKey: String, validates: Boolean) {
+    override fun triggerAction(actionKey: String, validates: Boolean): FormActionResult {
         val formActions = formDataManager.definedFormActions()
         val action = formActions[actionKey] ?: run {
             GlobalDialogManager.show(ErrorDialogConfig("Exception", "No form action defined for key: $actionKey"))
-            return
+            return handleActionResult(FormActionResult.Failure)
         }
 
         errorManager.clearAll()
 
         if (validates && !formValidator.validateFields()) {
             SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
-            return
+            return handleActionResult(FormActionResult.Failure)
         }
 
         val rawFormData = formState.collectFormData(formSchema)
@@ -114,28 +111,27 @@ class FormHandler(
         // Walidacja
         if (validates && !formValidator.validateBusinessRules(rawFormData)) {
                 SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
-                return
+                return handleActionResult(FormActionResult.Failure)
         }
 
         val actionResult = action.invoke(rawFormData, entityId)
 
-        // Obsługa wyniku akcji - bezpośrednie wywołanie AppRoutera
-        handleActionResult(actionResult)
+        // Obsługa wyniku akcji
+        return handleActionResult(actionResult)
     }
 
-    private fun handleActionResult(result: FormActionResult) {
+    private fun handleActionResult(result: FormActionResult): FormActionResult {
         when (result) {
-            is FormActionResult.Success, is FormActionResult.CloseScreen -> {
+            is FormActionResult.CloseScreen -> {
                 AppRouter.goBack()
             }
             is FormActionResult.Navigate -> {
                 AppRouter.navigateTo(result.screen)
             }
-            // Dla błędów nic nie robimy na poziomie nawigacji,
-            // bo dialogi/snackbary zostały już pokazane.
-            is FormActionResult.Failure, is FormActionResult.ValidationFailed -> {
-                // no-op
+            is FormActionResult.Failure,is FormActionResult.Success,is FormActionResult.ValidationFailed -> {
+                //no op
             }
         }
+        return result
     }
 }

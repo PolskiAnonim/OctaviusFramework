@@ -5,7 +5,6 @@ import org.octavius.form.component.FormScreen
 import org.octavius.localization.Translations
 import org.octavius.modules.games.form.series.GameSeriesFormDataManager
 import org.octavius.modules.games.form.series.GameSeriesFormSchemaBuilder
-import org.octavius.modules.games.form.series.GameSeriesFormValidator
 
 class GameSeriesFormScreen {
 
@@ -19,8 +18,7 @@ class GameSeriesFormScreen {
             val formHandler = FormHandler(
                 entityId = entityId,
                 formSchemaBuilder = GameSeriesFormSchemaBuilder(),
-                formDataManager = GameSeriesFormDataManager(),
-                formValidator = GameSeriesFormValidator()
+                formDataManager = GameSeriesFormDataManager()
             )
             return FormScreen(title, formHandler)
         }
