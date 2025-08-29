@@ -119,7 +119,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 return FormActionResult.Failure
             }
-            is DataResult.Success<*> -> return FormActionResult.Success
+            is DataResult.Success<*> -> return FormActionResult.CloseScreen
         }
     }
 
