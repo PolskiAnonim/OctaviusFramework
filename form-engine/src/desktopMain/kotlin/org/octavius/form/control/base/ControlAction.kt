@@ -1,6 +1,7 @@
 package org.octavius.form.control.base
 
 import kotlinx.coroutines.CoroutineScope
+import org.octavius.form.FormActionTrigger
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
@@ -32,6 +33,7 @@ data class ActionContext<T>(
     val formState: FormState,
     val formSchema: FormSchema,
     val errorManager: ErrorManager,
+    val trigger: FormActionTrigger,
     val coroutineScope: CoroutineScope,
     val payload: Any? = null // Dodatkowe dane, przykładowo dla kontrolek dropdown dodatkowa wartość
 ) {

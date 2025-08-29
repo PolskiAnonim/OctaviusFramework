@@ -1,14 +1,16 @@
 package org.octavius.modules.asian.form
 
 import org.octavius.data.contract.ColumnInfo
+import org.octavius.dialog.DialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
+import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
-import org.octavius.form.control.type.button.SubmitButtonControl
 import org.octavius.form.control.type.collection.StringListControl
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.BooleanControl
@@ -66,29 +68,51 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     label = Translations.get("asianMedia.form.publications")
                 ),
                 // Przyciski
-                "saveButton" to SubmitButtonControl(
+                "saveButton" to ButtonControl(
                     text = Translations.get("action.save"),
-                    actionKey = "save",
-                    validates = true,
-                    buttonType = ButtonType.Filled
-                ),
-                "deleteButton" to SubmitButtonControl(
-                    text = Translations.get("action.remove"),
-                    actionKey = "delete",
-                    validates = false,
                     buttonType = ButtonType.Filled,
-                    dependencies = mapOf("visible" to ControlDependency(
-                        controlName = "id",
-                        value = null,
-                        dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.NotEquals
-                    ))
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("save", true)
+                        }
+                    )
                 ),
-                "cancelButton" to SubmitButtonControl(
+                "deleteButton" to ButtonControl(
+                    text = Translations.get("action.remove"),
+                    buttonType = ButtonType.Filled,
+                    dependencies = mapOf(
+                        "visible" to ControlDependency(
+                            controlName = "id",
+                            value = null,
+                            dependencyType = DependencyType.Visible,
+                            comparisonType = ComparisonType.NotEquals
+                        )
+                    ),
+                    actions = listOf(
+                        ControlAction {
+                            GlobalDialogManager.show(
+                                DialogConfig(
+                                    title = Translations.get("action.confirm"),
+                                    text = "Czy potwierdzasz usunięcie", //TODO tłumaczenie
+                                    onDismiss = { GlobalDialogManager.dismiss() },
+                                    confirmButtonText = "Tak", //TODO tłumaczenie
+                                    onConfirm = {
+                                        trigger.triggerAction("delete", false)
+                                        GlobalDialogManager.dismiss()
+                                    }
+                                )
+                            )
+                        }
+                    )
+                ),
+                "cancelButton" to ButtonControl(
                     text = Translations.get("action.cancel"),
-                    actionKey = "cancel",
-                    validates = false,
-                    buttonType = ButtonType.Outlined
+                    buttonType = ButtonType.Outlined,
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("cancel", false)
+                        }
+                    )
                 )
             ),
             listOf("titleInfo", "publications", "cancelButton", "saveButton", "deleteButton")

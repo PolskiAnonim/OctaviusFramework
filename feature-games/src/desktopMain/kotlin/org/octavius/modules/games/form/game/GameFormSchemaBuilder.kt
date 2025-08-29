@@ -5,8 +5,8 @@ import org.octavius.domain.game.GameStatus
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
+import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
-import org.octavius.form.control.type.button.SubmitButtonControl
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.number.DoubleControl
@@ -183,16 +183,22 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     )
                 ),
                 // Przyciski
-                "saveButton" to SubmitButtonControl(
+                "saveButton" to ButtonControl(
                     text = Translations.get("action.save"),
-                    actionKey = "save",
-                    validates = true,
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("save", true)
+                        }
+                    ),
                     buttonType = ButtonType.Filled
                 ),
-                "cancelButton" to SubmitButtonControl(
+                "cancelButton" to ButtonControl(
                     text = Translations.get("action.cancel"),
-                    actionKey = "cancel",
-                    validates = false,
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("cancel", false)
+                        }
+                    ),
                     buttonType = ButtonType.Outlined
                 )
             ),

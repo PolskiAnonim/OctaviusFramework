@@ -54,6 +54,7 @@ abstract class Control<T : Any>(
                 formState = formState,
                 formSchema = formSchema,
                 errorManager = errorManager,
+                trigger = formActionTrigger,
                 coroutineScope = scope,
                 payload = payload
             )

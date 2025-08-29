@@ -3,9 +3,9 @@ package org.octavius.modules.games.form.series
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
-import org.octavius.form.control.base.StringValidation
+import org.octavius.form.control.base.ControlAction
+import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
-import org.octavius.form.control.type.button.SubmitButtonControl
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.localization.Translations
@@ -27,17 +27,23 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                     label = Translations.get("games.series.basicInfo")
                 ),
                 // Przyciski
-                "saveButton" to SubmitButtonControl(
+                "saveButton" to ButtonControl(
                     text = Translations.get("action.save"),
-                    actionKey = "save",
-                    validates = true,
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("save", true)
+                        }
+                    ),
                     buttonType = ButtonType.Filled
                 ),
-                "cancelButton" to SubmitButtonControl(
+                "cancelButton" to ButtonControl(
                     text = Translations.get("action.cancel"),
-                    actionKey = "cancel",
-                    validates = false,
-                    buttonType = ButtonType.Outlined
+                    buttonType = ButtonType.Outlined,
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("cancel", false)
+                        }
+                    )
                 )
             ),
             listOf("basicInfo")
