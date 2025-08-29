@@ -75,9 +75,23 @@ class AsianMediaFormDataManager : FormDataManager() {
 
     override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
         return mapOf(
-            "SAVE" to { formData, loadedId -> processSave(formData, loadedId) },
-            "CANCEL" to { _, _ -> FormActionResult.CloseScreen }
+            "save" to { formData, loadedId -> processSave(formData, loadedId) },
+            "delete" to { formData, loadedId -> processDelete(formData, loadedId) },
+            "cancel" to { _, _ -> FormActionResult.CloseScreen }
         )
+    }
+
+    fun processDelete(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
+        // Wykorzystanie CASCADE
+        val step = DatabaseStep.Delete("titles", mapOf("id" to loadedId.toDatabaseValue()))
+        val result = batchExecutor.execute(listOf(step))
+        when (result) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                return FormActionResult.Failure
+            }
+            is DataResult.Success<*> -> return FormActionResult.Success
+        }
     }
 
     fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {

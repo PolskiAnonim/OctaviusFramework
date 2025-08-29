@@ -21,6 +21,10 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {
         return FormSchema(
             mapOf(
+                "id" to IntegerControl(
+                    ColumnInfo("titles", "id"),
+                    null
+                ),
                 "titleInfo" to SectionControl(
                     ctrls = listOf("titles", "language"),
                     collapsible = false,
@@ -68,6 +72,18 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     validates = true,
                     buttonType = ButtonType.Filled
                 ),
+                "deleteButton" to SubmitButtonControl(
+                    text = Translations.get("action.remove"),
+                    actionKey = "delete",
+                    validates = false,
+                    buttonType = ButtonType.Filled,
+                    dependencies = mapOf("visible" to ControlDependency(
+                        controlName = "id",
+                        value = null,
+                        dependencyType = DependencyType.Visible,
+                        comparisonType = ComparisonType.NotEquals
+                    ))
+                ),
                 "cancelButton" to SubmitButtonControl(
                     text = Translations.get("action.cancel"),
                     actionKey = "cancel",
@@ -75,7 +91,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     buttonType = ButtonType.Outlined
                 )
             ),
-            listOf("titleInfo", "publications", "cancelButton", "saveButton")
+            listOf("titleInfo", "publications", "cancelButton", "saveButton", "deleteButton")
         )
     }
 
