@@ -2,15 +2,7 @@ package org.octavius.report.configuration
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.BatchExecutor
-import org.octavius.data.contract.BatchStepResults
-import org.octavius.data.contract.DataFetcher
-import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.DatabaseStep
-import org.octavius.data.contract.toDatabaseValue
-import org.octavius.data.contract.toListOf
-import org.octavius.data.contract.toSingleOf
-import org.octavius.navigation.AppRouter
+import org.octavius.data.contract.*
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.util.toMap

@@ -9,8 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.navigation.Screen
 import org.octavius.localization.Translations
+import org.octavius.navigation.Screen
 
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę

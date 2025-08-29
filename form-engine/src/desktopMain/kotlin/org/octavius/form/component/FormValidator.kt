@@ -1,8 +1,5 @@
 package org.octavius.form.component
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.octavius.data.contract.DataFetcher
 import org.octavius.form.ControlResultData
 
 /**

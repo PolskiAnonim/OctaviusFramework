@@ -14,8 +14,8 @@ import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.collection.StringListControl
 import org.octavius.form.control.type.container.SectionControl
-import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.number.IntegerControl
+import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.EnumControl
 import org.octavius.localization.Translations

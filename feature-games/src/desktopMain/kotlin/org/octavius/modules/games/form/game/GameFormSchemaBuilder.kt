@@ -8,9 +8,9 @@ import org.octavius.form.control.base.*
 import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.container.SectionControl
-import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.number.DoubleControl
 import org.octavius.form.control.type.number.IntegerControl
+import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.DatabaseControl

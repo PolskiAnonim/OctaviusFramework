@@ -6,11 +6,11 @@ import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DataResult
-import org.octavius.form.ControlResultData
-import org.octavius.form.TableRelation
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.form.ControlResultData
 import org.octavius.form.FormActionResult
+import org.octavius.form.TableRelation
 
 /**
  * Abstrakcyjna klasa zarządzająca przepływem danych w formularzach.

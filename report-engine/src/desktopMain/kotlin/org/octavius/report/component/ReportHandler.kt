@@ -6,10 +6,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.octavius.domain.SortDirection
-import org.octavius.navigation.AppRouter
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.domain.SortDirection
 import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportEvent
 import org.octavius.report.configuration.ReportConfiguration

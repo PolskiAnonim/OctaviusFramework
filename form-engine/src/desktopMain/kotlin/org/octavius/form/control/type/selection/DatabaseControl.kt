@@ -5,13 +5,12 @@ import org.koin.core.component.inject
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DataResult
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
 import org.octavius.form.control.type.selection.dropdown.DropdownOption
-import org.octavius.navigation.AppRouter
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
 
 /**
  * Kontrolka do wyboru rekordu z bazy danych z listy rozwijanej.

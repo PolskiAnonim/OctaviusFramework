@@ -13,7 +13,6 @@ import org.octavius.domain.test.TestPriority
 import org.octavius.domain.test.TestProject
 import org.octavius.domain.test.TestStatus
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Paths
 

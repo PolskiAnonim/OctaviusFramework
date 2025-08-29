@@ -1,10 +1,10 @@
 package org.octavius.form.control.type.number
 
 import org.octavius.data.contract.ColumnInfo
+import org.octavius.form.control.base.BigDecimalValidation
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.BigDecimalValidation
 import org.octavius.form.control.type.number.primitive.PrimitiveNumberControl
 import org.octavius.form.control.validator.number.BigDecimalValidator
 import java.math.BigDecimal

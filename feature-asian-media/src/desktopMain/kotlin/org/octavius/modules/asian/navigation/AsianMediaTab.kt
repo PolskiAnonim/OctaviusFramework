@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import octavius.feature_asian_media.generated.resources.Res
 import octavius.feature_asian_media.generated.resources.asian_media_icon
 import org.jetbrains.compose.resources.painterResource
+import org.octavius.localization.Translations
+import org.octavius.modules.asian.report.ui.AsianMediaReportScreen
 import org.octavius.navigation.Screen
 import org.octavius.navigation.Tab
 import org.octavius.navigation.TabOptions
-import org.octavius.localization.Translations
-import org.octavius.modules.asian.report.ui.AsianMediaReportScreen
 
 class AsianMediaTab : Tab {
     override val options: TabOptions

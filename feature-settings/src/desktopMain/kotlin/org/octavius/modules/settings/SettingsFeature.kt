@@ -3,8 +3,8 @@ package org.octavius.modules.settings
 import org.octavius.api.contract.ApiModule
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
-import org.octavius.navigation.Tab
 import org.octavius.modules.settings.navigation.SettingsTab
+import org.octavius.navigation.Tab
 
 object SettingsFeature : FeatureModule {
     override val name: String = "settings"

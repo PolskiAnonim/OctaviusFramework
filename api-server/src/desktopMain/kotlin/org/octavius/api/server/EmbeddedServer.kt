@@ -8,6 +8,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.octavius.api.contract.ApiModule
+
 class EmbeddedServer(private val apiModules: List<ApiModule>) {
 
     val server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
@@ -21,9 +22,11 @@ class EmbeddedServer(private val apiModules: List<ApiModule>) {
         server.start(wait = true)
     }
 }
+
 fun Application.module(apiModules: List<ApiModule>) {
     configureRouting(apiModules)
 }
+
 fun Application.configureRouting(apiModules: List<ApiModule>) {
     routing {
         // Podstawowy, powitalny endpoint
