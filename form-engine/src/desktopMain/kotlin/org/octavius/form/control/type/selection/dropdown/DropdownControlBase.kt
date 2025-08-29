@@ -16,9 +16,7 @@ import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
-import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.layout.RenderNormalLabel
-import org.octavius.form.control.validator.DefaultValidator
 import org.octavius.localization.Translations
 import org.octavius.ui.theme.FormSpacing
 
@@ -52,7 +50,6 @@ abstract class DropdownControlBase<T : Any>(
     hasStandardLayout = false,
     actions = actions
 ) {
-    override val validator: ControlValidator<T> = DefaultValidator()
 
     // Flagi konfiguracyjne dla kontrolki
     protected open val supportSearch: Boolean = false

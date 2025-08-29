@@ -13,8 +13,6 @@ import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
-import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.validator.DefaultValidator
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -43,8 +41,6 @@ class ButtonControl(
     hasStandardLayout = false, // Pełna kontrola nad renderowaniem
     actions = actions
 ) {
-    override val validator: ControlValidator<Unit> = DefaultValidator()
-
     @Composable
     override fun Display(controlName: String, controlState: ControlState<Unit>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()

@@ -13,6 +13,7 @@ import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
 import org.octavius.form.control.layout.RenderFieldError
 import org.octavius.form.control.layout.RenderNormalLabel
+import org.octavius.form.control.validator.DefaultValidator
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich kontrolek formularza.
@@ -65,7 +66,7 @@ abstract class Control<T : Any>(
      * Validator odpowiedzialny za walidację tej kontrolki.
      * Każdy typ kontrolki ma własny validator dostosowany do typu danych.
      */
-    protected abstract val validator: ControlValidator<T>
+    protected open val validator: ControlValidator<T> = DefaultValidator()
 
     // Referencje do komponentów formularza - ustawiane przez setupFormReferences
     protected lateinit var formState: FormState

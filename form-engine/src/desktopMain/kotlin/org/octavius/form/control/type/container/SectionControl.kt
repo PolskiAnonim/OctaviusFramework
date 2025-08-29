@@ -15,8 +15,6 @@ import androidx.compose.ui.Modifier
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
-import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.validator.DefaultValidator
 import org.octavius.localization.Translations
 import org.octavius.ui.theme.FormSpacing
 
@@ -35,7 +33,6 @@ class SectionControl(
     label: String,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Unit>(label, null, false, dependencies, hasStandardLayout = false) {
-    override val validator: ControlValidator<Unit> = DefaultValidator()
 
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
         ctrls.forEach { childControlName ->
