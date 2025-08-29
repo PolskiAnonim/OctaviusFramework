@@ -11,7 +11,7 @@ class GameSeriesFormScreen {
 
     companion object {
         fun create(
-            entityId: Int? = null, onSaveSuccess: () -> Unit = {}, onCancel: () -> Unit = {}
+            entityId: Int? = null
         ): FormScreen {
             val title =
                 if (entityId == null) Translations.get("games.form.newSeries") else Translations.get("games.form.editSeries")
@@ -22,7 +22,7 @@ class GameSeriesFormScreen {
                 formDataManager = GameSeriesFormDataManager(),
                 formValidator = GameSeriesFormValidator()
             )
-            return FormScreen(title, formHandler, onSaveSuccess, onCancel)
+            return FormScreen(title, formHandler)
         }
     }
 }

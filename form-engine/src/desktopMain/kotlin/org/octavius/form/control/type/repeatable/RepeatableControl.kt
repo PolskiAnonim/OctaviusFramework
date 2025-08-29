@@ -59,7 +59,7 @@ class RepeatableControl(
     ) {
         super.setupFormReferences(formState, formSchema, errorManager, controlName, formActionTrigger)
         rowControls.values.forEach { rowControl ->
-            rowControl.setupFormReferences(formState, formSchema, errorManager, "")
+            rowControl.setupFormReferences(formState, formSchema, errorManager, "", formActionTrigger)
         }
         this.controlName = controlName
         this.rowManager = RepeatableRowManager(controlName, rowControls, formState, validationOptions as RepeatableValidation?)

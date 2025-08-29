@@ -11,9 +11,7 @@ class AsianMediaFormScreen {
     companion object {
         fun create(
             entityId: Int? = null,
-            payload: Map<String, Any?>? = null,
-            onSaveSuccess: () -> Unit,
-            onCancel: () -> Unit = {}
+            payload: Map<String, Any?>? = null
         ): FormScreen {
             val title =
                 if (entityId == null) Translations.get("asianMedia.form.newTitle") else Translations.get("asianMedia.form.editTitle")
@@ -26,7 +24,7 @@ class AsianMediaFormScreen {
                 payload = payload
             )
 
-            return FormScreen(title, formHandler, onSaveSuccess, onCancel)
+            return FormScreen(title, formHandler)
         }
     }
 }

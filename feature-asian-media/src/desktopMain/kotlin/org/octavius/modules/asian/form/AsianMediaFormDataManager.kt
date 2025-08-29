@@ -11,6 +11,7 @@ import org.octavius.form.control.type.repeatable.RepeatableResultValue
 import org.octavius.navigation.AppRouter
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.form.FormActionResult
 
 class AsianMediaFormDataManager : FormDataManager() {
 
@@ -72,8 +73,14 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
     }
 
+    override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
+        return mapOf(
+            "SAVE" to { formData, loadedId -> processSave(formData, loadedId) },
+            "CANCEL" to { _, _ -> FormActionResult.CloseScreen }
+        )
+    }
 
-    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<DatabaseStep> {
+    fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
         val databaseSteps = mutableListOf<DatabaseStep>()
 
         // =================================================================================
@@ -166,8 +173,14 @@ class AsianMediaFormDataManager : FormDataManager() {
             // Warunkowo zaktualizuj 'publication_volumes' (które stworzył trigger) używając nowego ID.
             addPublicationVolumesUpdateOperation(databaseSteps, rowData, newPublicationIdRef)
         }
-
-        return databaseSteps
+        val result = batchExecutor.execute(databaseSteps)
+        when (result) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                return FormActionResult.Failure
+            }
+            is DataResult.Success<*> -> return FormActionResult.Success
+        }
     }
 
     /**
