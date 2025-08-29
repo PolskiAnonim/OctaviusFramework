@@ -64,9 +64,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
             if (id != null) {
                 AppRouter.navigateTo(
                     AsianMediaFormScreen.create(
-                        entityId = id,
-                        onSaveSuccess = { AppRouter.goBack() },
-                        onCancel = { AppRouter.goBack() }
+                        entityId = id
                     )
                 )
             }
@@ -77,8 +75,6 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
         ReportAddAction(Translations.get("asianMedia.report.newTitle"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 AsianMediaFormScreen.create(
-                    onSaveSuccess = { AppRouter.goBack() },
-                    onCancel = { AppRouter.goBack() }
                 ))
         }
     )

@@ -10,9 +10,7 @@ class GameFormScreen {
     companion object {
         fun create(
             entityId: Int? = null,
-            payload: Map<String, Any?>? = null,
-            onSaveSuccess: () -> Unit = {},
-            onCancel: () -> Unit = {}
+            payload: Map<String, Any?>? = null
         ): FormScreen {
             val title =
                 if (entityId == null) Translations.get("games.form.newGame") else Translations.get("games.form.editGame")
@@ -24,7 +22,7 @@ class GameFormScreen {
                 payload = payload
             )
 
-            return FormScreen(title, formHandler, onSaveSuccess, onCancel)
+            return FormScreen(title, formHandler)
         }
     }
 

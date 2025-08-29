@@ -5,6 +5,8 @@ import org.octavius.domain.game.GameStatus
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
+import org.octavius.form.control.type.button.ButtonControl
+import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.number.DoubleControl
@@ -179,6 +181,25 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                         maxItems = 10,
                         uniqueFields = listOf("category")
                     )
+                ),
+                // Przyciski
+                "saveButton" to ButtonControl(
+                    text = Translations.get("action.save"),
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("save", true)
+                        }
+                    ),
+                    buttonType = ButtonType.Filled
+                ),
+                "cancelButton" to ButtonControl(
+                    text = Translations.get("action.cancel"),
+                    actions = listOf(
+                        ControlAction {
+                            trigger.triggerAction("cancel", false)
+                        }
+                    ),
+                    buttonType = ButtonType.Outlined
                 )
             ),
             listOf(
@@ -187,6 +208,10 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 "ratingsSection",
                 "charactersSection",
                 "categories"
+            ),
+            listOf(
+                "cancelButton",
+                "saveButton"
             )
         )
     }

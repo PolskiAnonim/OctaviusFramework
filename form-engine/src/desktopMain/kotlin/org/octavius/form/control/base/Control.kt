@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.form.ControlResultData
 import org.octavius.form.ControlState
+import org.octavius.form.FormActionTrigger
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
@@ -53,6 +54,7 @@ abstract class Control<T : Any>(
                 formState = formState,
                 formSchema = formSchema,
                 errorManager = errorManager,
+                trigger = formActionTrigger,
                 coroutineScope = scope,
                 payload = payload
             )
@@ -69,7 +71,7 @@ abstract class Control<T : Any>(
     protected lateinit var formState: FormState
     protected lateinit var formSchema: FormSchema
     protected lateinit var errorManager: ErrorManager
-
+    protected lateinit var formActionTrigger: FormActionTrigger
     /**
      * Ustawia relacje hierarchiczne między kontrolkami.
      * Używane gdy kontrolka powinna zależeć od widoczności kontrolki nadrzędnej.
@@ -86,13 +88,14 @@ abstract class Control<T : Any>(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager,
-        controlName: String
+        controlName: String,
+        formActionTrigger: FormActionTrigger
     ) {
         this.formState = formState
         this.formSchema = formSchema
         this.errorManager = errorManager
+        this.formActionTrigger = formActionTrigger
         validator.setupFormReferences(formState, formSchema, errorManager)
-
     }
 
     /**

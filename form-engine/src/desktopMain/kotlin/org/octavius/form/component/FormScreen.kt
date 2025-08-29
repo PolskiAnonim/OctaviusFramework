@@ -3,100 +3,74 @@ package org.octavius.form.component
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.navigation.Screen
 import org.octavius.localization.Translations
-import org.octavius.ui.snackbar.SnackbarManager
 
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę
  */
 class FormScreen(
     override val title: String,
-    val formHandler: FormHandler,
-    private val onSaveSuccess: () -> Unit = {},
-    private val onCancel: () -> Unit = {}
+    val formHandler: FormHandler
 ) : Screen {
     /**
      * Tworzenie wyglądu formularza
      */
     @Composable
     override fun Content() {
-        val scrollState = rememberScrollState()
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Główna zawartość
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                // Wyświetlanie błędów globalnych
+                val globalErrors by formHandler.errorManager.globalErrors
+                if (globalErrors.isNotEmpty()) {
+                    GlobalErrorsCard(errors = globalErrors)
+                }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .verticalScroll(scrollState) // Dodajemy przewijanie pionowe
-        ) {
-            // Wyświetlanie błędów globalnych
-            val globalErrors by formHandler.errorManager.globalErrors
-            if (globalErrors.isNotEmpty()) {
-                GlobalErrorsCard(errors = globalErrors)
-            }
+                // content
+                formHandler.getContentControlsInOrder().forEach { controlName ->
+                    val control = formHandler.getControl(controlName)!!
+                    val state = formHandler.getControlState(controlName)!!
+                    control.Render(controlName = controlName, controlState = state)
+                }
+            } // Koniec strefy scrollowanej
 
-            // Renderowanie kontrolek
-            formHandler.getControlsInOrder().forEach { controlName ->
-                formHandler.getControl(controlName)!!.let { control ->
-                    formHandler.getControlState(controlName)!!.let { state ->
-                        control.Render(
-                            controlName = controlName,
-                            controlState = state
-                        )
+            // Pasek akcji
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    formHandler.getActionBarControlsInOrder().forEach { controlName ->
+                        val control = formHandler.getControl(controlName)!!
+                        val state = formHandler.getControlState(controlName)!!
+                        Box(modifier = Modifier.weight(1f)) {
+                            control.Render(controlName = controlName, controlState = state)
+                        }
                     }
                 }
-            }
-
-            // Przyciski akcji
-            ActionButtons(
-                onSave = {
-                    if (formHandler.onSaveClicked()) {
-                        SnackbarManager.showMessage(Translations.get("form.actions.savedSuccessfully"))
-                        onSaveSuccess()
-                    } else {
-                        SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
-                    }
-                },
-                onCancel = {
-                    formHandler.onCancelClicked()
-                    onCancel()
-                }
-            )
+            } // Koniec paska akcji
         }
     }
 
-    /**
-     * Przyciski akcji
-     */
-    @Composable
-    private fun ActionButtons(onSave: () -> Unit, onCancel: () -> Unit) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            OutlinedButton(onClick = onCancel) {
-                Text(Translations.get("action.cancel"))
-            }
-
-            Button(onClick = onSave) {
-                Icon(
-                    imageVector = Icons.Default.Save,
-                    contentDescription = Translations.get("action.save"),
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(Translations.get("action.save"))
-            }
-        }
-    }
 
     /**
      * Komponent wyświetlający błędy globalne

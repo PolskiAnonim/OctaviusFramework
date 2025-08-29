@@ -2,8 +2,8 @@ package org.octavius.form
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-
-
+import org.octavius.exception.DatabaseException
+import org.octavius.navigation.Screen
 
 
 /**
@@ -57,3 +57,17 @@ data class TableRelation(
     val joinCondition: String = "",
     val primaryKey: String = "id"
 )
+
+sealed class FormActionResult {
+    // Akcje zmieniające UI
+    data class Navigate(val screen: Screen) : FormActionResult() // Przekierowanie
+    object CloseScreen : FormActionResult() // Akcja "Anuluj"
+    //Akcje generyczne
+    object ValidationFailed : FormActionResult() // Błędy walidacji
+    object Failure : FormActionResult() // Ogólny błąd
+    object Success : FormActionResult() // Generyczny sukces, np. po zapisie
+}
+
+interface FormActionTrigger {
+    fun triggerAction(actionKey: String, validates: Boolean): FormActionResult
+}

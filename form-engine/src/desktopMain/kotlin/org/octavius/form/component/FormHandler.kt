@@ -1,14 +1,14 @@
 package org.octavius.form.component
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.octavius.data.contract.BatchExecutor
-import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
-import org.octavius.navigation.AppRouter
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.form.FormActionResult
+import org.octavius.form.FormActionTrigger
+import org.octavius.localization.Translations
+import org.octavius.navigation.AppRouter
+import org.octavius.ui.snackbar.SnackbarManager
 
 /**
  * Klasa obsługująca cykl życia formularza.
@@ -27,13 +27,10 @@ class FormHandler(
     val formDataManager: FormDataManager,
     val formValidator: FormValidator = FormValidator(),
     private val payload: Map<String, Any?>? = null
-): KoinComponent {
+): FormActionTrigger {
     val errorManager: ErrorManager = ErrorManager()
     private val formState: FormState = FormState()
     private val formSchema: FormSchema = formSchemaBuilder.build()
-
-    // Wstrzykujemy transaction manager
-    private val batchExecutor: BatchExecutor by inject()
 
     init {
         setupFormReferences()
@@ -49,25 +46,20 @@ class FormHandler(
      */
     private fun setupFormReferences() {
         formSchema.getAllControls().forEach { (controlName, control) ->
-            control.setupFormReferences(formState, formSchema, errorManager, controlName)
+            control.setupFormReferences(formState, formSchema, errorManager, controlName, this)
         }
         formValidator.setupFormReferences(formState, formSchema, errorManager)
+        formDataManager.setupFormReferences(errorManager)
     }
 
 
     /**
      * Publiczne API dla FormScreen - metody dostępu do komponentów formularza
      */
-    fun getControlsInOrder(): List<String> = formSchema.order
+    fun getContentControlsInOrder(): List<String> = formSchema.contentOrder
+    fun getActionBarControlsInOrder(): List<String> = formSchema.actionBarOrder
     fun getControl(name: String): Control<*>? = formSchema.getControl(name)
     fun getControlState(name: String): ControlState<*>? = formState.getControlState(name)
-
-    /**
-     * Metody obsługi akcji użytkownika z UI
-     */
-    fun onSaveClicked(): Boolean = saveForm()
-    fun onCancelClicked() { /* logika anulowania */
-    }
 
     /**
      * Ładuje dane dla edytowanej encji z bazy danych i inicjalizuje stan formularza.
@@ -97,35 +89,46 @@ class FormHandler(
         formState.initializeStates(formSchema, initValues, errorManager)
     }
 
-    /**
-     * Przetwarza i zapisuje dane formularza do bazy danych.
-     *
-     * Proces zapisu:
-     * 1. Walidacja pól (wymagalność, format, zależności)
-     * 2. Zbieranie danych z kontrolek
-     * 3. Walidacja reguł biznesowych
-     * 4. Przetwarzanie danych do operacji bazodanowych
-     * 5. Wykonanie operacji w bazie danych
-     *
-     * @return true jeśli zapis się powiódł, false w przypadku błędów
-     */
-    private fun saveForm(): Boolean {
+    override fun triggerAction(actionKey: String, validates: Boolean): FormActionResult {
+        val formActions = formDataManager.definedFormActions()
+        val action = formActions[actionKey] ?: run {
+            GlobalDialogManager.show(ErrorDialogConfig("Exception", "No form action defined for key: $actionKey"))
+            return handleActionResult(FormActionResult.Failure)
+        }
+
         errorManager.clearAll()
 
-        if (!formValidator.validateFields()) return false
+        if (validates && !formValidator.validateFields()) {
+            SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
+            return handleActionResult(FormActionResult.Failure)
+        }
 
         val rawFormData = formState.collectFormData(formSchema)
 
-        if (!formValidator.validateBusinessRules(rawFormData)) return false
-        val databaseOperations = formDataManager.processFormData(rawFormData, entityId)
-
-        val result = batchExecutor.execute(databaseOperations)
-        return when (result) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success<*> -> true
+        // Walidacja
+        if (validates && !formValidator.validateBusinessRules(rawFormData)) {
+                SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
+                return handleActionResult(FormActionResult.Failure)
         }
+
+        val actionResult = action.invoke(rawFormData, entityId)
+
+        // Obsługa wyniku akcji
+        return handleActionResult(actionResult)
+    }
+
+    private fun handleActionResult(result: FormActionResult): FormActionResult {
+        when (result) {
+            is FormActionResult.CloseScreen -> {
+                AppRouter.goBack()
+            }
+            is FormActionResult.Navigate -> {
+                AppRouter.navigateTo(result.screen)
+            }
+            is FormActionResult.Failure,is FormActionResult.Success,is FormActionResult.ValidationFailed -> {
+                //no op
+            }
+        }
+        return result
     }
 }

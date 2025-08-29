@@ -1,11 +1,16 @@
 package org.octavius.modules.games.form.series
 
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.ControlResultData
+import org.octavius.form.FormActionResult
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
+import org.octavius.localization.Translations
 
 class GameSeriesFormDataManager : FormDataManager() {
     override fun defineTableRelations(): List<TableRelation> {
@@ -18,14 +23,58 @@ class GameSeriesFormDataManager : FormDataManager() {
         return emptyMap() // Tylko nazwa, brak domyślnych wartości
     }
 
-    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<DatabaseStep> {
+    override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
+        return mapOf(
+            "save" to { formData, loadedId -> processSave(formData, loadedId) },
+            "cancel" to { _, _ -> FormActionResult.CloseScreen },
+            "validate" to { formData, loadedId -> validateTitleAgainstDatabase(formData, loadedId) }
+        )
+    }
+
+    private fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
         val seriesData = mutableMapOf<String, DatabaseValue>()
         seriesData["name"] = formData["name"]!!.currentValue.toDatabaseValue()
 
-        return if (loadedId != null) {
+        val steps = if (loadedId != null) {
             listOf(DatabaseStep.Update("series", seriesData, mapOf("id" to loadedId.toDatabaseValue())))
         } else {
             listOf(DatabaseStep.Insert("series", seriesData))
+        }
+        val result = batchExecutor.execute(steps)
+        when (result) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                return FormActionResult.Failure
+            }
+
+            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+        }
+    }
+
+    private fun validateTitleAgainstDatabase(
+        formData: Map<String, ControlResultData>,
+        loadedId: Int?
+    ): FormActionResult {
+        val name = formData["name"]!!.currentValue as String
+
+        // Sprawdź unikalność nazwy serii
+        val existingCount = dataFetcher.query().from("series").where("name = :name").toCount(mapOf("name" to name))
+
+        when (existingCount) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(existingCount.error))
+                return FormActionResult.Failure
+            }
+
+            is DataResult.Success<Long> -> {
+                val count = existingCount.value
+                if (count > 0L) {
+                    errorManager.addFieldError("name", Translations.get("games.validation.duplicatedSeries"))
+                    return FormActionResult.ValidationFailed
+                } else {
+                    return FormActionResult.Success
+                }
+            }
         }
     }
 }

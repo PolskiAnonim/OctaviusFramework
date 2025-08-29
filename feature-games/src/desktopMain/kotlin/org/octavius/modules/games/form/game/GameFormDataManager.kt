@@ -4,8 +4,11 @@ import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.DatabaseStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.ControlResultData
+import org.octavius.form.FormActionResult
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
@@ -76,8 +79,14 @@ class GameFormDataManager : FormDataManager() {
         }
     }
 
+    override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
+        return mapOf(
+            "save" to { formData, loadedId -> processSave(formData, loadedId) },
+            "cancel" to { _, _ -> FormActionResult.CloseScreen }
+        )
+    }
 
-    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<DatabaseStep> {
+    fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
         val databaseSteps = mutableListOf<DatabaseStep>()
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
 
@@ -231,7 +240,14 @@ class GameFormDataManager : FormDataManager() {
             )
         }
 
-        return databaseSteps
+        val result = batchExecutor.execute(databaseSteps)
+        when (result) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                return FormActionResult.Failure
+            }
+            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+        }
     }
 
     /**

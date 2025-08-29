@@ -2,15 +2,15 @@ package org.octavius.form.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.DatabaseStep
 import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
-import org.octavius.navigation.AppRouter
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.form.FormActionResult
 
 /**
  * Abstrakcyjna klasa zarządzająca przepływem danych w formularzach.
@@ -26,7 +26,13 @@ import org.octavius.dialog.GlobalDialogManager
  */
 abstract class FormDataManager: KoinComponent {
 
+    lateinit var errorManager: ErrorManager
+    fun setupFormReferences(errorManager: ErrorManager) {
+        this.errorManager = errorManager
+    }
+
     protected val dataFetcher: DataFetcher by inject()
+    protected val batchExecutor: BatchExecutor by inject()
 
     /**
      * Dostarcza wartości początkowe dla kontrolek formularza.
@@ -42,21 +48,6 @@ abstract class FormDataManager: KoinComponent {
      * @return lista relacji tabel z warunkami JOIN dla DatabaseManager
      */
     abstract fun defineTableRelations(): List<TableRelation>
-
-    /**
-     * Przetwarza dane z formularza na operacje bazodanowe.
-     *
-     * Konwertuje dane z kontrolek na sekwencję operacji INSERT/UPDATE/DELETE
-     * z odpowiednimi foreign key i relacjami między tabelami.
-     *
-     * @param formData zebrane dane ze wszystkich kontrolek formularza
-     * @param loadedId ID edytowanej encji (null dla nowych rekordów)
-     * @return lista operacji do wykonania w bazie danych w odpowiedniej kolejności
-     */
-    abstract fun processFormData(
-        formData: Map<String, ControlResultData>,
-        loadedId: Int?
-    ): List<DatabaseStep>
 
     /**
      * Ładuje kompletne dane encji z bazy danych używając zdefiniowanych relacji.
@@ -89,5 +80,19 @@ abstract class FormDataManager: KoinComponent {
             }
             is DataResult.Success<Map<ColumnInfo, Any?>?> -> entity.value ?: mapOf()
         }
+    }
+
+    /**
+    * Definiuje logikę dla wszystkich akcji formularza (Zapisz, Anuluj, Usuń, etc.).
+    * Klucz mapy odpowiada `actionKey` w `SubmitButtonControl`.
+    * Wartość to lambda, która otrzymuje:
+    * - formData: aktualne dane z formularza
+    * - loadedId: ID edytowanego rekordu
+    * Powinna zwrócić `FormActionResult`, aby FormHandler wiedział, czy operacja się udała.
+    *
+    * @return Mapa akcji formularza.
+    */
+    open fun definedFormActions(): Map<String, (formData: Map<String, ControlResultData>, loadedId: Int?) -> FormActionResult> {
+        return emptyMap()
     }
 }

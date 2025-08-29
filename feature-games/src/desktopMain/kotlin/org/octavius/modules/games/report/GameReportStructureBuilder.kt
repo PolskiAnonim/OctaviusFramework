@@ -43,9 +43,7 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
             if (id != null) {
                 AppRouter.navigateTo(
                     GameFormScreen.create(
-                        entityId = id,
-                        onSaveSuccess = { AppRouter.goBack() },
-                        onCancel = { AppRouter.goBack() }
+                        entityId = id
                     ))
             }
         })
@@ -54,15 +52,12 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
         ReportAddAction(Translations.get("games.report.newGame"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameFormScreen.create(
-                    onSaveSuccess = { AppRouter.goBack() },
-                    onCancel = { AppRouter.goBack() })
+                )
             )
         },
         ReportAddAction(Translations.get("games.report.newSeries"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameSeriesFormScreen.create(
-                    onSaveSuccess = { AppRouter.goBack() },
-                    onCancel = { AppRouter.goBack() }
                 ))
         })
 }

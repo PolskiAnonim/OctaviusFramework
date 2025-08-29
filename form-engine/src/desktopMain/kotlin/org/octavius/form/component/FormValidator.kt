@@ -9,12 +9,11 @@ import org.octavius.form.ControlResultData
  * Klasa odpowiedzialna za walidację formularza na dwóch poziomach:
  * 1. Walidacja pól - sprawdza wymagalność, format, zależności między kontrolkami
  * 2. Walidacja reguł biznesowych - sprawdza niestandardowe reguły specyficzne dla domeny
+ * Operuje na stanie formularza
  *
  * Klasa może być rozszerzona dla implementacji niestandardowych reguł walidacji.
  */
-open class FormValidator(): KoinComponent {
-
-    protected val dataFetcher: DataFetcher by inject()
+open class FormValidator() {
 
     protected lateinit var formState: FormState
     protected lateinit var formSchema: FormSchema

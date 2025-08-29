@@ -8,9 +8,10 @@ import org.octavius.form.ControlResultData
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
-import org.octavius.navigation.AppRouter
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.form.FormActionResult
+import org.octavius.localization.Translations
 
 class AsianMediaFormDataManager : FormDataManager() {
 
@@ -72,8 +73,57 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
     }
 
+    override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
+        return mapOf(
+            "save" to { formData, loadedId -> processSave(formData, loadedId) },
+            "delete" to { formData, loadedId -> processDelete(formData, loadedId) },
+            "cancel" to { _, _ -> FormActionResult.CloseScreen },
+            "validate" to { formData, loadedId -> validateTitlesAgainstDatabase(formData, loadedId) }
+        )
+    }
 
-    override fun processFormData(formData: Map<String, ControlResultData>, loadedId: Int?): List<DatabaseStep> {
+    fun validateTitlesAgainstDatabase(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
+        @Suppress("UNCHECKED_CAST")
+        val titles = formData["titles"]!!.currentValue as List<String>
+
+        if (titles.isEmpty()) return FormActionResult.Success
+
+        val params = if (loadedId != null) mapOf("titles" to titles, "id" to loadedId) else mapOf("titles" to titles)
+        val result = dataFetcher.query().from("SELECT id, UNNEST(titles) AS title FROM titles")
+            .where("title = ANY(:titles) ${if (loadedId != null) "AND id != :id" else ""}").toCount(params)
+
+
+        when (result) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                return FormActionResult.Failure
+            }
+            is DataResult.Success<Long> -> {
+                if (result.value > 0L) {
+                    errorManager.addGlobalError(Translations.get("asianMedia.form.titlesAlreadyExist"))
+                    return FormActionResult.ValidationFailed
+                } else {
+                    return FormActionResult.Success
+                }
+            }
+        }
+
+    }
+
+    fun processDelete(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
+        // Wykorzystanie CASCADE
+        val step = DatabaseStep.Delete("titles", mapOf("id" to loadedId.toDatabaseValue()))
+        val result = batchExecutor.execute(listOf(step))
+        when (result) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                return FormActionResult.Failure
+            }
+            is DataResult.Success<*> -> return FormActionResult.Success
+        }
+    }
+
+    fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
         val databaseSteps = mutableListOf<DatabaseStep>()
 
         // =================================================================================
@@ -166,8 +216,14 @@ class AsianMediaFormDataManager : FormDataManager() {
             // Warunkowo zaktualizuj 'publication_volumes' (które stworzył trigger) używając nowego ID.
             addPublicationVolumesUpdateOperation(databaseSteps, rowData, newPublicationIdRef)
         }
-
-        return databaseSteps
+        val result = batchExecutor.execute(databaseSteps)
+        when (result) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                return FormActionResult.Failure
+            }
+            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+        }
     }
 
     /**
