@@ -207,7 +207,9 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 "playTimeSection",
                 "ratingsSection",
                 "charactersSection",
-                "categories",
+                "categories"
+            ),
+            listOf(
                 "cancelButton",
                 "saveButton"
             )

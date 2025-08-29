@@ -39,7 +39,8 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                                 is FormActionResult.ValidationFailed -> Unit //Niejawna obsługa lub brak wystąpień
                                 is FormActionResult.Success -> trigger.triggerAction("save", false)
                             }
-                        }), buttonType = ButtonType.Filled),
+                        }), buttonType = ButtonType.Filled
+                ),
                 "cancelButton" to ButtonControl(
                     text = Translations.get("action.cancel"), buttonType = ButtonType.Outlined, actions = listOf(
                         ControlAction {
@@ -48,6 +49,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                     )
                 )
             ),
-            listOf("basicInfo"))
+            listOf("basicInfo"),
+            listOf("cancelButton", "saveButton"))
     }
 }

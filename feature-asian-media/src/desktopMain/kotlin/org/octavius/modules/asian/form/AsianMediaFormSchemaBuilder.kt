@@ -123,7 +123,8 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     )
                 )
             ),
-            listOf("titleInfo", "publications", "cancelButton", "saveButton", "deleteButton")
+            listOf("titleInfo", "publications"),
+            listOf( "cancelButton", "saveButton", "deleteButton")
         )
     }
 

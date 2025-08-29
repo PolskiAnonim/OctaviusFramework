@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.navigation.Screen
@@ -23,31 +24,50 @@ class FormScreen(
      */
     @Composable
     override fun Content() {
-        val scrollState = rememberScrollState()
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Główna zawartość
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                // Wyświetlanie błędów globalnych
+                val globalErrors by formHandler.errorManager.globalErrors
+                if (globalErrors.isNotEmpty()) {
+                    GlobalErrorsCard(errors = globalErrors)
+                }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .verticalScroll(scrollState) // Dodajemy przewijanie pionowe
-        ) {
-            // Wyświetlanie błędów globalnych
-            val globalErrors by formHandler.errorManager.globalErrors
-            if (globalErrors.isNotEmpty()) {
-                GlobalErrorsCard(errors = globalErrors)
-            }
+                // content
+                formHandler.getContentControlsInOrder().forEach { controlName ->
+                    val control = formHandler.getControl(controlName)!!
+                    val state = formHandler.getControlState(controlName)!!
+                    control.Render(controlName = controlName, controlState = state)
+                }
+            } // Koniec strefy scrollowanej
 
-            // Renderowanie kontrolek
-            formHandler.getControlsInOrder().forEach { controlName ->
-                formHandler.getControl(controlName)!!.let { control ->
-                    formHandler.getControlState(controlName)!!.let { state ->
-                        control.Render(
-                            controlName = controlName,
-                            controlState = state
-                        )
+            // Pasek akcji
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    formHandler.getActionBarControlsInOrder().forEach { controlName ->
+                        val control = formHandler.getControl(controlName)!!
+                        val state = formHandler.getControlState(controlName)!!
+                        Box(modifier = Modifier.weight(1f)) {
+                            control.Render(controlName = controlName, controlState = state)
+                        }
                     }
                 }
-            }
+            } // Koniec paska akcji
         }
     }
 

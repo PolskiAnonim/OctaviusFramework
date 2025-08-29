@@ -1,9 +1,5 @@
 package org.octavius.form.component
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.octavius.data.contract.BatchExecutor
-import org.octavius.data.contract.DataResult
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.dialog.ErrorDialogConfig
@@ -60,7 +56,8 @@ class FormHandler(
     /**
      * Publiczne API dla FormScreen - metody dostępu do komponentów formularza
      */
-    fun getControlsInOrder(): List<String> = formSchema.order
+    fun getContentControlsInOrder(): List<String> = formSchema.contentOrder
+    fun getActionBarControlsInOrder(): List<String> = formSchema.actionBarOrder
     fun getControl(name: String): Control<*>? = formSchema.getControl(name)
     fun getControlState(name: String): ControlState<*>? = formState.getControlState(name)
 
