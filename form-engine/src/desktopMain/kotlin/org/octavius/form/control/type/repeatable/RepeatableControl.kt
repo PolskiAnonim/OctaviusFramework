@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import org.octavius.form.ControlResultData
 import org.octavius.form.ControlState
+import org.octavius.form.FormActionTrigger
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
@@ -53,9 +54,10 @@ class RepeatableControl(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager,
-        controlName: String
+        controlName: String,
+        formActionTrigger: FormActionTrigger
     ) {
-        super.setupFormReferences(formState, formSchema, errorManager, controlName)
+        super.setupFormReferences(formState, formSchema, errorManager, controlName, formActionTrigger)
         rowControls.values.forEach { rowControl ->
             rowControl.setupFormReferences(formState, formSchema, errorManager, "")
         }

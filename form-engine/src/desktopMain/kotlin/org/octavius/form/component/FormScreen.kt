@@ -3,8 +3,6 @@ package org.octavius.form.component
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -12,16 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.navigation.Screen
 import org.octavius.localization.Translations
-import org.octavius.ui.snackbar.SnackbarManager
 
 /**
  * Klasa będąca UI formularza - należy do niej wstawić klasę która odpowiada za jego obsługę
  */
 class FormScreen(
     override val title: String,
-    val formHandler: FormHandler,
-    private val onSaveSuccess: () -> Unit = {},
-    private val onCancel: () -> Unit = {}
+    val formHandler: FormHandler
 ) : Screen {
     /**
      * Tworzenie wyglądu formularza
@@ -53,50 +48,9 @@ class FormScreen(
                     }
                 }
             }
-
-            // Przyciski akcji
-            ActionButtons(
-                onSave = {
-                    if (formHandler.onSaveClicked()) {
-                        SnackbarManager.showMessage(Translations.get("form.actions.savedSuccessfully"))
-                        onSaveSuccess()
-                    } else {
-                        SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
-                    }
-                },
-                onCancel = {
-                    formHandler.onCancelClicked()
-                    onCancel()
-                }
-            )
         }
     }
 
-    /**
-     * Przyciski akcji
-     */
-    @Composable
-    private fun ActionButtons(onSave: () -> Unit, onCancel: () -> Unit) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            OutlinedButton(onClick = onCancel) {
-                Text(Translations.get("action.cancel"))
-            }
-
-            Button(onClick = onSave) {
-                Icon(
-                    imageVector = Icons.Default.Save,
-                    contentDescription = Translations.get("action.save"),
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(Translations.get("action.save"))
-            }
-        }
-    }
 
     /**
      * Komponent wyświetlający błędy globalne
