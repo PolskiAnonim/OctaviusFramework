@@ -27,7 +27,7 @@ class FormHandler(
     val formDataManager: FormDataManager,
     val formValidator: FormValidator = FormValidator(),
     private val payload: Map<String, Any?>? = null
-): FormActionTrigger {
+) : FormActionTrigger {
     val errorManager: ErrorManager = ErrorManager()
     private val formState: FormState = FormState()
     private val formSchema: FormSchema = formSchemaBuilder.build()
@@ -100,15 +100,22 @@ class FormHandler(
 
         if (validates && !formValidator.validateFields()) {
             SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
-            return handleActionResult(FormActionResult.Failure)
+            return handleActionResult(FormActionResult.ValidationFailed)
         }
 
         val rawFormData = formState.collectFormData(formSchema)
 
         // Walidacja
         if (validates && !formValidator.validateBusinessRules(rawFormData)) {
-                SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
-                return handleActionResult(FormActionResult.Failure)
+            SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
+            return handleActionResult(FormActionResult.ValidationFailed)
+        }
+
+        // Walidacja specyficzna dla akcji (zawsze uruchamiana, niezależnie od flagi 'validates')
+        val actionValidator = formValidator.defineActionValidations()[actionKey]
+        if (actionValidator != null && !actionValidator.invoke(rawFormData)) {
+            SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
+            return handleActionResult(FormActionResult.ValidationFailed)
         }
 
         val actionResult = action.invoke(rawFormData, entityId)
@@ -122,10 +129,12 @@ class FormHandler(
             is FormActionResult.CloseScreen -> {
                 AppRouter.goBack()
             }
+
             is FormActionResult.Navigate -> {
                 AppRouter.navigateTo(result.screen)
             }
-            is FormActionResult.Failure,is FormActionResult.Success,is FormActionResult.ValidationFailed -> {
+
+            is FormActionResult.Failure, is FormActionResult.Success, is FormActionResult.ValidationFailed -> {
                 //no op
             }
         }

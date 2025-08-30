@@ -74,14 +74,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     buttonType = ButtonType.Filled,
                     actions = listOf(
                         ControlAction {
-                            val result = trigger.triggerAction("validate", true)
-                            when (result) {
-                                is FormActionResult.Failure -> Unit // Nic nie rób, Error został dodany
-                                is FormActionResult.Success -> trigger.triggerAction("save", false) // Już zwalidowane
-                                is FormActionResult.ValidationFailed -> Unit // Nic nie rób, Error został dodany
-                                else -> Unit // Brak możliwości wystąpienia
-                            }
-
+                            trigger.triggerAction("save", true)
                         }
                     )
                 ),
@@ -124,7 +117,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 )
             ),
             listOf("titleInfo", "publications"),
-            listOf( "cancelButton", "saveButton", "deleteButton")
+            listOf("cancelButton", "saveButton", "deleteButton")
         )
     }
 

@@ -11,7 +11,6 @@ import org.octavius.form.FormActionResult
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
-import org.octavius.localization.T
 
 class AsianMediaFormDataManager : FormDataManager() {
 
@@ -77,37 +76,8 @@ class AsianMediaFormDataManager : FormDataManager() {
         return mapOf(
             "save" to { formData, loadedId -> processSave(formData, loadedId) },
             "delete" to { formData, loadedId -> processDelete(formData, loadedId) },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen },
-            "validate" to { formData, loadedId -> validateTitlesAgainstDatabase(formData, loadedId) }
+            "cancel" to { _, _ -> FormActionResult.CloseScreen }
         )
-    }
-
-    fun validateTitlesAgainstDatabase(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
-        @Suppress("UNCHECKED_CAST")
-        val titles = formData["titles"]!!.currentValue as List<String>
-
-        if (titles.isEmpty()) return FormActionResult.Success
-
-        val params = if (loadedId != null) mapOf("titles" to titles, "id" to loadedId) else mapOf("titles" to titles)
-        val result = dataFetcher.query().from("SELECT id, UNNEST(titles) AS title FROM titles")
-            .where("title = ANY(:titles) ${if (loadedId != null) "AND id != :id" else ""}").toCount(params)
-
-
-        when (result) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return FormActionResult.Failure
-            }
-            is DataResult.Success<Long> -> {
-                if (result.value > 0L) {
-                    errorManager.addGlobalError(T.get("asianMedia.form.titlesAlreadyExist"))
-                    return FormActionResult.ValidationFailed
-                } else {
-                    return FormActionResult.Success
-                }
-            }
-        }
-
     }
 
     fun processDelete(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {

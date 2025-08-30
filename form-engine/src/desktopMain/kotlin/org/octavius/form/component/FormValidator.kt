@@ -1,20 +1,26 @@
 package org.octavius.form.component
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.octavius.data.contract.DataFetcher
 import org.octavius.form.ControlResultData
 
 /**
  * Klasa odpowiedzialna za walidację formularza na dwóch poziomach:
  * 1. Walidacja pól - sprawdza wymagalność, format, zależności między kontrolkami
  * 2. Walidacja reguł biznesowych - sprawdza niestandardowe reguły specyficzne dla domeny
+ * 3. Walidacja specyficzna dla akcji - pozwala na dodatkowe reguły dla konkretnych przycisków
  * Operuje na stanie formularza
  *
  * Klasa może być rozszerzona dla implementacji niestandardowych reguł walidacji.
  */
-open class FormValidator() {
+open class FormValidator() : KoinComponent {
 
     protected lateinit var formState: FormState
     protected lateinit var formSchema: FormSchema
     protected lateinit var errorManager: ErrorManager
+
+    protected val dataFetcher: DataFetcher by inject()
 
     fun setupFormReferences(formState: FormState, formSchema: FormSchema, errorManager: ErrorManager) {
         this.formState = formState
@@ -61,4 +67,19 @@ open class FormValidator() {
         return true
     }
 
+
+    /**
+     * Definiuje logikę walidacji specyficzną dla poszczególnych akcji formularza.
+     * Ta walidacja jest uruchamiana ZAWSZE dla danej akcji, niezależnie od flagi `validates` na przycisku.
+     * Uruchamia się po walidacji pól i reguł biznesowych.
+     *
+     * Klucz mapy odpowiada `actionKey` w `triggerAction`.
+     * Wartość to lambda, która otrzymuje `formData` i powinna zwrócić `true` jeśli walidacja się powiodła.
+     * W przypadku niepowodzenia, lambda jest odpowiedzialna за ustawienie błędów w `errorManager`.
+     *
+     * @return Mapa walidacji specyficznych dla akcji.
+     */
+    open fun defineActionValidations(): Map<String, (formData: Map<String, ControlResultData>) -> Boolean> {
+        return emptyMap()
+    }
 }

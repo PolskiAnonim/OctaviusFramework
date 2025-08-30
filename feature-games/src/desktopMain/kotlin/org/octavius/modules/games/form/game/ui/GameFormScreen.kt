@@ -5,6 +5,7 @@ import org.octavius.form.component.FormScreen
 import org.octavius.localization.T
 import org.octavius.modules.games.form.game.GameFormDataManager
 import org.octavius.modules.games.form.game.GameFormSchemaBuilder
+import org.octavius.modules.games.form.game.GameFormValidator
 
 class GameFormScreen {
     companion object {
@@ -19,6 +20,7 @@ class GameFormScreen {
                 entityId = entityId,
                 formSchemaBuilder = GameFormSchemaBuilder(),
                 formDataManager = GameFormDataManager(),
+                formValidator = GameFormValidator(entityId),
                 payload = payload
             )
 
