@@ -26,7 +26,7 @@ import org.octavius.navigation.Tab
  * @param onTabSelected Funkcja zwrotna wywoływana po kliknięciu zakładki, przekazująca jej indeks.
  */
 @Composable
-fun AppTabBar(
+fun AppTopBar(
     tabs: List<Tab>,
     currentState: AppNavigationState,
     onTabSelected: (UShort) -> Unit

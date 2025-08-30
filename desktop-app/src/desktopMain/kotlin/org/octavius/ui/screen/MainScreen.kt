@@ -1,5 +1,6 @@
 package org.octavius.ui.screen
 
+import org.octavius.ui.navigation.MainTopAppBar
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -19,8 +20,8 @@ import org.octavius.dialog.DialogWrapper
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Tab
-import org.octavius.ui.navigation.AppTabBar
-import org.octavius.ui.navigation.ScreenContent
+import org.octavius.ui.navigation.AppTopBar
+import org.octavius.ui.navigation.TabContent
 import org.octavius.ui.snackbar.SnackbarManager
 
 /**
@@ -53,6 +54,9 @@ object MainScreen {
 
         if (navState == null) return
 
+        val currentScreen = navState!!.tabStacks[navState!!.activeTab.index]?.lastOrNull()
+        val screenStackSize = navState!!.tabStacks[navState!!.activeTab.index]?.size ?: 0
+
         val snackbarHostState = remember { SnackbarHostState() }
 
         SnackbarManager.HandleSnackbar(snackbarHostState)
@@ -60,9 +64,19 @@ object MainScreen {
         val dialog by GlobalDialogManager.dialogConfig.collectAsState()
         DialogWrapper(config = dialog)
 
-        Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
+        Scaffold(
+            topBar = {
+                MainTopAppBar(
+                    title = currentScreen?.title ?: "",
+                    showBackButton = screenStackSize > 1,
+                    onBackClicked = { AppRouter.goBack() },
+                    onSettingsClicked = { /* TODO: Nawiguj do ekranu ustawień */ }
+                )
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { paddingValues ->
             Column(Modifier.fillMaxSize().padding(paddingValues)) {
-                AppTabBar(
+                AppTopBar(
                     tabs = tabs,
                     currentState = navState!!,
                     onTabSelected = { tabIndex -> AppRouter.switchToTab(tabIndex) }
@@ -87,12 +101,8 @@ object MainScreen {
                     modifier = Modifier.fillMaxSize()
                 ) { targetTabIndex ->
                     val activeStack = navState!!.tabStacks[targetTabIndex] ?: emptyList()
-
                     if (activeStack.isNotEmpty()) {
-                        ScreenContent(
-                            screenStack = activeStack,
-                            onBack = { AppRouter.goBack() }
-                        )
+                        TabContent(screenStack = activeStack)
                     }
                 }
             }

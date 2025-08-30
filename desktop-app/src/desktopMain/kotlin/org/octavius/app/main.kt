@@ -32,7 +32,7 @@ fun main() = application {
     val features: List<FeatureModule> = listOf(
         AsianMediaFeature,
         GamesFeature,
-        SettingsFeature
+        //SettingsFeature
     )
     // ==========================================================
 
