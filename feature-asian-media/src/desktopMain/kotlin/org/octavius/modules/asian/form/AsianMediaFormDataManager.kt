@@ -11,7 +11,7 @@ import org.octavius.form.FormActionResult
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 class AsianMediaFormDataManager : FormDataManager() {
 
@@ -100,7 +100,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             }
             is DataResult.Success<Long> -> {
                 if (result.value > 0L) {
-                    errorManager.addGlobalError(Translations.get("asianMedia.form.titlesAlreadyExist"))
+                    errorManager.addGlobalError(T.get("asianMedia.form.titlesAlreadyExist"))
                     return FormActionResult.ValidationFailed
                 } else {
                     return FormActionResult.Success

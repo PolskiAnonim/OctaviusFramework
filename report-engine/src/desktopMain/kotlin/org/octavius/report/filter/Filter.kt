@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.Query
@@ -87,7 +87,7 @@ abstract class Filter<T : FilterData> {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = Translations.get("filter.null.values"),
+                text = T.get("filter.null.values"),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 8.dp)
             )
@@ -103,7 +103,7 @@ abstract class Filter<T : FilterData> {
                     )
                 }
             )
-            Text(Translations.get("filter.null.ignore"), modifier = Modifier.padding(end = 12.dp))
+            Text(T.get("filter.null.ignore"), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
                 selected = filterData.nullHandling == NullHandling.Include,
@@ -114,7 +114,7 @@ abstract class Filter<T : FilterData> {
                     )
                 }
             )
-            Text(Translations.get("filter.null.include"), modifier = Modifier.padding(end = 12.dp))
+            Text(T.get("filter.null.include"), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
                 selected = filterData.nullHandling == NullHandling.Exclude,
@@ -128,7 +128,7 @@ abstract class Filter<T : FilterData> {
 
                 }
             )
-            Text(Translations.get("filter.null.exclude"))
+            Text(T.get("filter.null.exclude"))
         }
     }
 
@@ -140,7 +140,7 @@ abstract class Filter<T : FilterData> {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = Translations.get("filter.mode"),
+                text = T.get("filter.mode"),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 8.dp)
             )

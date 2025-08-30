@@ -17,7 +17,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.octavius.domain.FilterConfig
 import org.octavius.domain.SortConfiguration
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState
 
@@ -46,20 +46,20 @@ fun ReportConfigurationDialog(
                 .heightIn(min = 400.dp, max = 600.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                Text(Translations.get("report.configuration.management"), style = MaterialTheme.typography.headlineSmall)
+                Text(T.get("report.configuration.management"), style = MaterialTheme.typography.headlineSmall)
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { showSaveDialog = true }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Bookmark, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                    Text(Translations.get("report.configuration.saveCurrent"))
+                    Text(T.get("report.configuration.saveCurrent"))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(Translations.get("report.configuration.savedConfigurations"), style = MaterialTheme.typography.titleMedium)
+                Text(T.get("report.configuration.savedConfigurations"), style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 if (configurations.isEmpty()) {
                     Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(Translations.get("report.configuration.noSavedConfigurations"), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(T.get("report.configuration.noSavedConfigurations"), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
                     LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -81,7 +81,7 @@ fun ReportConfigurationDialog(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text(Translations.get("action.close")) }
+                    TextButton(onClick = onDismiss) { Text(T.get("action.close")) }
                 }
             }
         }
@@ -115,7 +115,7 @@ fun ConfigurationItem(
                     Text(text = configuration.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
                     if (configuration.isDefault) {
                         Surface(modifier = Modifier.padding(start = 8.dp), shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer) {
-                            Text(text = Translations.get("report.configuration.defaultConfig").uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                            Text(text = T.get("report.configuration.defaultConfig").uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                         }
                     }
                 }
@@ -124,8 +124,8 @@ fun ConfigurationItem(
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                IconButton(onClick = onLoad) { Icon(Icons.Default.Download, contentDescription = Translations.get("action.load")) }
-                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = Translations.get("action.remove"), tint = MaterialTheme.colorScheme.error) }
+                IconButton(onClick = onLoad) { Icon(Icons.Default.Download, contentDescription = T.get("action.load")) }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = T.get("action.remove"), tint = MaterialTheme.colorScheme.error) }
             }
         }
     }
@@ -153,39 +153,39 @@ fun SaveConfigurationDialog(
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Card(modifier = Modifier.width(400.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = Translations.get("report.configuration.saveConfiguration"), style = MaterialTheme.typography.headlineSmall)
+                Text(text = T.get("report.configuration.saveConfiguration"), style = MaterialTheme.typography.headlineSmall)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; nameError = null; generalError = null },
-                    label = { Text(Translations.get("report.configuration.name") + "*") },
+                    label = { Text(T.get("report.configuration.name") + "*") },
                     modifier = Modifier.fillMaxWidth(),
                     isError = nameError != null,
                     singleLine = true,
                     supportingText = {
                         if (nameError != null) Text(nameError!!, color = MaterialTheme.colorScheme.error)
-                        else if (isOverwriting) Text(Translations.get("report.configuration.overwriteWarning"), color = MaterialTheme.colorScheme.tertiary)
+                        else if (isOverwriting) Text(T.get("report.configuration.overwriteWarning"), color = MaterialTheme.colorScheme.tertiary)
                     }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text(Translations.get("report.configuration.description")) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text(T.get("report.configuration.description")) }, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Checkbox(checked = isDefault, onCheckedChange = { isDefault = it })
-                    Text(Translations.get("report.configuration.setAsDefault"))
+                    Text(T.get("report.configuration.setAsDefault"))
                 }
                 if (generalError != null) Text(text = generalError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text(Translations.get("action.cancel")) }
+                    TextButton(onClick = onDismiss) { Text(T.get("action.cancel")) }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
                             if (name.isBlank()) {
-                                nameError = Translations.get("report.configuration.nameRequired")
+                                nameError = T.get("report.configuration.nameRequired")
                                 return@Button
                             }
 
@@ -204,12 +204,12 @@ fun SaveConfigurationDialog(
                             if (configManager.saveConfiguration(newConfiguration)) {
                                 onSaved()
                             } else {
-                                generalError = Translations.get("report.configuration.errorSaving")
+                                generalError = T.get("report.configuration.errorSaving")
                             }
                         },
                         colors = if (isOverwriting) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary) else ButtonDefaults.buttonColors()
                     ) {
-                        Text(if (isOverwriting) Translations.get("action.overwrite") else Translations.get("action.save"))
+                        Text(if (isOverwriting) T.get("action.overwrite") else T.get("action.save"))
                     }
                 }
             }

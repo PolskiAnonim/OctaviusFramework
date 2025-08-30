@@ -2,7 +2,7 @@ package org.octavius.domain.game
 
 import org.octavius.data.contract.PgType
 import org.octavius.domain.EnumWithFormatter
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 @PgType
 enum class GameStatus : EnumWithFormatter<GameStatus> {
@@ -14,11 +14,11 @@ enum class GameStatus : EnumWithFormatter<GameStatus> {
 
     override fun toDisplayString(): String {
         return when (this) {
-            NotPlaying -> Translations.get("games.status.notPlaying")
-            WithoutTheEnd -> Translations.get("games.status.endless")
-            Played -> Translations.get("games.status.played")
-            ToPlay -> Translations.get("games.status.toPlay")
-            Playing -> Translations.get("games.status.playing")
+            NotPlaying -> T.get("games.status.notPlaying")
+            WithoutTheEnd -> T.get("games.status.endless")
+            Played -> T.get("games.status.played")
+            ToPlay -> T.get("games.status.toPlay")
+            Playing -> T.get("games.status.playing")
         }
     }
 }

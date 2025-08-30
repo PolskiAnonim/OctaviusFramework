@@ -9,7 +9,7 @@ import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.StringControl
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {
@@ -17,7 +17,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
             mapOf(
                 "name" to StringControl(
                     ColumnInfo("series", "name"),
-                    Translations.get("games.series.name"),
+                    T.get("games.series.name"),
                     required = true
                 ),
                 "basicInfo" to SectionControl(
@@ -25,11 +25,11 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                     collapsible = false,
                     initiallyExpanded = true,
                     columns = 1,
-                    label = Translations.get("games.series.basicInfo")
+                    label = T.get("games.series.basicInfo")
                 ),
                 // Przyciski
                 "saveButton" to ButtonControl(
-                    text = Translations.get("action.save"), actions = listOf(
+                    text = T.get("action.save"), actions = listOf(
                         ControlAction {
                             val res = trigger.triggerAction("validate", true)
                             when (res) {
@@ -42,7 +42,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                         }), buttonType = ButtonType.Filled
                 ),
                 "cancelButton" to ButtonControl(
-                    text = Translations.get("action.cancel"), buttonType = ButtonType.Outlined, actions = listOf(
+                    text = T.get("action.cancel"), buttonType = ButtonType.Outlined, actions = listOf(
                         ControlAction {
                             trigger.triggerAction("cancel", false)
                         }

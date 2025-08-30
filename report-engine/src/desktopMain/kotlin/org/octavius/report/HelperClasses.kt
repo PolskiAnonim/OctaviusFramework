@@ -3,7 +3,7 @@ package org.octavius.report
 import androidx.compose.ui.unit.Dp
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.exception.DatabaseException
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 
 data class Query(
@@ -31,13 +31,13 @@ enum class NumberFilterDataType: EnumWithFormatter<NumberFilterDataType> {
 
     override fun toDisplayString(): String {
         return when(this) {
-            Equals -> Translations.get("filter.number.equals")
-            NotEquals -> Translations.get("filter.number.notEquals")
-            LessThan -> Translations.get("filter.number.lessThan")
-            LessEquals -> Translations.get("filter.number.lessEqual")
-            GreaterThan -> Translations.get("filter.number.greaterThan")
-            GreaterEquals -> Translations.get("filter.number.greaterEqual")
-            Range -> Translations.get("filter.number.range")
+            Equals -> T.get("filter.number.equals")
+            NotEquals -> T.get("filter.number.notEquals")
+            LessThan -> T.get("filter.number.lessThan")
+            LessEquals -> T.get("filter.number.lessEqual")
+            GreaterThan -> T.get("filter.number.greaterThan")
+            GreaterEquals -> T.get("filter.number.greaterEqual")
+            Range -> T.get("filter.number.range")
         }
     }
 }
@@ -51,11 +51,11 @@ enum class StringFilterDataType: EnumWithFormatter<StringFilterDataType> {
 
     override fun toDisplayString(): String {
         return when(this) {
-            Exact -> Translations.get("filter.string.exact")
-            StartsWith -> Translations.get("filter.string.startsWith")
-            EndsWith -> Translations.get("filter.string.endsWith")
-            Contains -> Translations.get("filter.string.contains")
-            NotContains -> Translations.get("filter.string.notContains")
+            Exact -> T.get("filter.string.exact")
+            StartsWith -> T.get("filter.string.startsWith")
+            EndsWith -> T.get("filter.string.endsWith")
+            Contains -> T.get("filter.string.contains")
+            NotContains -> T.get("filter.string.notContains")
         }
     }
 }
@@ -74,8 +74,8 @@ enum class FilterMode: EnumWithFormatter<FilterMode> {
     override fun toDisplayString(): String {
         return when (this) {
             Single -> "" // Ta wartość jest niemożliwa do zmiany i jest niewidoczna
-            ListAny -> Translations.get("filter.list.any")
-            ListAll -> Translations.get("filter.list.all")
+            ListAny -> T.get("filter.list.any")
+            ListAll -> T.get("filter.list.all")
         }
     }
 }

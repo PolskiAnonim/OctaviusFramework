@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.type.repeatable.RepeatableRow
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
 @Composable
@@ -47,10 +47,10 @@ fun RepeatableHeader(
                 FilledTonalButton(onClick = onAddClick) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = Translations.get("action.add")
+                        contentDescription = T.get("action.add")
                     )
                     Spacer(modifier = Modifier.width(FormSpacing.fieldPaddingHorizontal))
-                    Text(Translations.get("action.add"))
+                    Text(T.get("action.add"))
                 }
             }
         }
@@ -118,7 +118,7 @@ private fun RepeatableRowHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = Translations.get("form.actions.itemLabel", index + 1),
+                text = T.get("form.actions.itemLabel", index + 1),
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -132,7 +132,7 @@ private fun RepeatableRowHeader(
                         Icons.Default.KeyboardArrowUp
                     else
                         Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) Translations.get("expandable.collapse") else Translations.get("expandable.expand"),
+                    contentDescription = if (isExpanded) T.get("expandable.collapse") else T.get("expandable.expand"),
                     modifier = Modifier.padding(end = FormSpacing.itemSpacing)
                 )
 
@@ -144,7 +144,7 @@ private fun RepeatableRowHeader(
                         IconButton(onClick = onDelete) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = Translations.get("action.remove"),
+                                contentDescription = T.get("action.remove"),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }

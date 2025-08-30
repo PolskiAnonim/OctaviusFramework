@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextOverflow
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 // W ui/navigation/MainTopAppBar.kt
 
@@ -36,7 +36,7 @@ fun MainTopAppBar(
                 IconButton(onClick = onBackClicked) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = Translations.get("navigation.back")
+                        contentDescription = T.get("navigation.back")
                     )
                 }
             }
@@ -45,7 +45,7 @@ fun MainTopAppBar(
             IconButton(onClick = onSettingsClicked) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = Translations.get("settings.title")
+                    contentDescription = T.get("settings.title")
                 )
             }
         },

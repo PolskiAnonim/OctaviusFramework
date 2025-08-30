@@ -6,7 +6,7 @@ import org.octavius.form.ControlState
 import org.octavius.form.FormActionResult
 import org.octavius.form.FormActionTrigger
 import org.octavius.form.control.base.Control
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.navigation.AppRouter
 import org.octavius.ui.snackbar.SnackbarManager
 
@@ -99,7 +99,7 @@ class FormHandler(
         errorManager.clearAll()
 
         if (validates && !formValidator.validateFields()) {
-            SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
+            SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
             return handleActionResult(FormActionResult.Failure)
         }
 
@@ -107,7 +107,7 @@ class FormHandler(
 
         // Walidacja
         if (validates && !formValidator.validateBusinessRules(rawFormData)) {
-                SnackbarManager.showMessage(Translations.get("form.actions.containsErrors"))
+                SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
                 return handleActionResult(FormActionResult.Failure)
         }
 

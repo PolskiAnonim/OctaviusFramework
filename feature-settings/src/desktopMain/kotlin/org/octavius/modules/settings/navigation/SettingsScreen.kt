@@ -16,14 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.modules.settings.report.ui.ApiIntegrationsReportScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
 import org.octavius.ui.theme.FormSpacing
 
 class SettingsScreen() : Screen {
-    override val title = Translations.get("settings.title")
+    override val title = T.get("settings.title")
 
     data class SettingOption(
         val title: String,
@@ -37,20 +37,20 @@ class SettingsScreen() : Screen {
 
         val settingOptions = listOf(
             SettingOption(
-                title = Translations.get("settings.language.title"),
-                description = Translations.get("settings.language.description"),
+                title = T.get("settings.language.title"),
+                description = T.get("settings.language.description"),
                 icon = Icons.Default.Language,
                 onClick = { /* TODO: Navigate to language settings */ }
             ),
             SettingOption(
-                title = Translations.get("settings.database.title"),
-                description = Translations.get("settings.database.description"),
+                title = T.get("settings.database.title"),
+                description = T.get("settings.database.description"),
                 icon = Icons.Default.Storage,
                 onClick = { /* TODO: Navigate to database settings */ }
             ),
             SettingOption(
-                title = Translations.get("settings.api.title"),
-                description = Translations.get("settings.api.description"),
+                title = T.get("settings.api.title"),
+                description = T.get("settings.api.description"),
                 icon = Icons.Default.Api,
                 onClick = {
                     AppRouter.navigateTo(ApiIntegrationsReportScreen.create())

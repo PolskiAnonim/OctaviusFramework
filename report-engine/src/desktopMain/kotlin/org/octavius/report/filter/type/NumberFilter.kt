@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.FilterMode
 import org.octavius.report.NumberFilterDataType
 import org.octavius.report.Query
@@ -59,7 +59,7 @@ class NumberFilter<T : Number>(
                             onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = null)))
                         }
                     },
-                    label = { Text(Translations.get("filter.number.from")) },
+                    label = { Text(T.get("filter.number.from")) },
                     singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
@@ -75,7 +75,7 @@ class NumberFilter<T : Number>(
                             onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(maxValue = null)))
                         }
                     },
-                    label = { Text(Translations.get("filter.number.to")) },
+                    label = { Text(T.get("filter.number.to")) },
                     singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
@@ -92,7 +92,7 @@ class NumberFilter<T : Number>(
                         onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = null)))
                     }
                 },
-                label = { Text(Translations.get("filter.number.value")) },
+                label = { Text(T.get("filter.number.value")) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
@@ -105,7 +105,7 @@ class NumberFilter<T : Number>(
                                 )
                             )
                         }) {
-                            Icon(Icons.Default.Clear, Translations.get("filter.general.clear"))
+                            Icon(Icons.Default.Clear, T.get("filter.general.clear"))
                         }
                     }
                 }

@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import java.awt.datatransfer.StringSelection
 
 object ChipConstants {
@@ -76,7 +76,7 @@ fun DraggableChip(
         ) {
             Icon(
                 imageVector = Icons.Default.DragHandle,
-                contentDescription = Translations.get("report.columns.dragToReorder"),
+                contentDescription = T.get("report.columns.dragToReorder"),
                 tint = if (isDragHandleHovered) MaterialTheme.colorScheme.primary else textColor,
                 modifier = Modifier
                     .hoverable(dragHandleInteractionSource)

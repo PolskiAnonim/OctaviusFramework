@@ -85,8 +85,8 @@ tasks.register("validateTranslations") {
                 .filter { it.name != "Translations.kt" }
                 .forEach { file ->
                     val content = file.readText()
-                    val getPattern = Regex("""Translations\.get\s*\(\s*"([^"]+)"""")
-                    val getPluralPattern = Regex("""Translations\.getPlural\s*\(\s*"([^"]+)"""")
+                    val getPattern = Regex("""T\.get\s*\(\s*"([^"]+)"""")
+                    val getPluralPattern = Regex("""T\.getPlural\s*\(\s*"([^"]+)"""")
 
                     (getPattern.findAll(content).asSequence() + getPluralPattern.findAll(content).asSequence())
                         .forEach { match ->

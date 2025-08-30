@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.withPgType
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.FilterMode
 import org.octavius.report.Query
 import org.octavius.report.ReportEvent
@@ -33,13 +33,13 @@ class StringFilter: Filter<StringFilterData>() {
         OutlinedTextField(
             value = data.value,
             onValueChange = { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(value = it))) },
-            label = { Text(Translations.get("filter.string.value")) },
+            label = { Text(T.get("filter.string.value")) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 if (data.value.isNotEmpty()) {
                     IconButton(onClick =  { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(value = ""))) }) {
-                        Icon(Icons.Default.Clear, Translations.get("filter.general.clear"))
+                        Icon(Icons.Default.Clear, T.get("filter.general.clear"))
                     }
                 }
             }
@@ -65,7 +65,7 @@ class StringFilter: Filter<StringFilterData>() {
                 onCheckedChange =  { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(caseSensitive = it))) },
             )
             Text(
-                text = Translations.get("filter.string.caseSensitive"),
+                text = T.get("filter.string.caseSensitive"),
                 modifier = Modifier.padding(start = 8.dp)
             )
         }

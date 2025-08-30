@@ -18,7 +18,7 @@ import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringListValidation
 import org.octavius.form.control.validator.collection.StringListValidator
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -106,7 +106,7 @@ class StringListControl(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = Translations.get("action.add"),
+                            contentDescription = T.get("action.add"),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -149,7 +149,7 @@ class StringListControl(
                             singleLine = true,
                             placeholder = { 
                                 Text(
-                                    text = Translations.get("form.stringList.itemPlaceholder"),
+                                    text = T.get("form.stringList.itemPlaceholder"),
                                     style = MaterialTheme.typography.bodyMedium
                                 ) 
                             }
@@ -173,7 +173,7 @@ class StringListControl(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = Translations.get("action.remove"),
+                                        contentDescription = T.get("action.remove"),
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(16.dp)
                                     )

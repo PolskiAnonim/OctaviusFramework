@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.domain.SortDirection
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.ui.draganddrop.DraggableChip
@@ -33,7 +33,7 @@ fun SortingSection(
 
     Column {
         Text(
-            text = Translations.get("report.columns.sorting"),
+            text = T.get("report.columns.sorting"),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
@@ -44,7 +44,7 @@ fun SortingSection(
         val currentSort = reportState.sortOrder
         if (currentSort.isNotEmpty()) {
             Text(
-                text = Translations.get("report.columns.activeSorting"),
+                text = T.get("report.columns.activeSorting"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -83,8 +83,8 @@ fun SortingSection(
                                     SortDirection.Descending -> Icons.Default.ArrowDownward
                                 },
                                 contentDescription = when (direction) {
-                                    SortDirection.Ascending -> Translations.get("report.columns.ascending")
-                                    SortDirection.Descending -> Translations.get("report.columns.descending")
+                                    SortDirection.Ascending -> T.get("report.columns.ascending")
+                                    SortDirection.Descending -> T.get("report.columns.descending")
                                 },
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.clickable {
@@ -134,7 +134,7 @@ fun SortingSection(
             }
 
             Text(
-                text = Translations.get(textKey),
+                text = T.get(textKey),
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isHovered) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.Center)

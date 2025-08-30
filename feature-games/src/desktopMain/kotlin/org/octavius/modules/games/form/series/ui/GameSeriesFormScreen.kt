@@ -2,7 +2,7 @@ package org.octavius.modules.games.form.series.ui
 
 import org.octavius.form.component.FormHandler
 import org.octavius.form.component.FormScreen
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.modules.games.form.series.GameSeriesFormDataManager
 import org.octavius.modules.games.form.series.GameSeriesFormSchemaBuilder
 
@@ -13,7 +13,7 @@ class GameSeriesFormScreen {
             entityId: Int? = null
         ): FormScreen {
             val title =
-                if (entityId == null) Translations.get("games.form.newSeries") else Translations.get("games.form.editSeries")
+                if (entityId == null) T.get("games.form.newSeries") else T.get("games.form.editSeries")
 
             val formHandler = FormHandler(
                 entityId = entityId,

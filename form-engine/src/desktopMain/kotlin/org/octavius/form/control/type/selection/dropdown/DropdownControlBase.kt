@@ -17,7 +17,7 @@ import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.layout.RenderNormalLabel
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -95,7 +95,7 @@ abstract class DropdownControlBase<T : Any>(
                 // Pole z wybraną wartością
                 OutlinedTextField(
                     value = getDisplayText(controlState.value.value)
-                        ?: (if (!isRequired) Translations.get("form.dropdown.noSelection") else Translations.get("form.dropdown.selectOption")),
+                        ?: (if (!isRequired) T.get("form.dropdown.noSelection") else T.get("form.dropdown.selectOption")),
                     onValueChange = { },  // Nie pozwalamy na edycję ręczną
                     readOnly = true,      // Pole tylko do odczytu
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -117,7 +117,7 @@ abstract class DropdownControlBase<T : Any>(
                                 searchQuery = it
                                 currentPage = 0  // Reset page on search
                             },
-                            placeholder = { Text(Translations.get("search.placeholder")) },
+                            placeholder = { Text(T.get("search.placeholder")) },
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -128,7 +128,7 @@ abstract class DropdownControlBase<T : Any>(
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Search,
-                                    contentDescription = Translations.get("search.search")
+                                    contentDescription = T.get("search.search")
                                 )
                             },
                             trailingIcon = {
@@ -139,7 +139,7 @@ abstract class DropdownControlBase<T : Any>(
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
-                                            contentDescription = Translations.get("search.clear")
+                                            contentDescription = T.get("search.clear")
                                         )
                                     }
                                 }
@@ -162,7 +162,7 @@ abstract class DropdownControlBase<T : Any>(
                         // Opcja null tylko jeśli kontrolka nie jest wymagana
                         if (!isRequired) {
                             DropdownMenuItem(
-                                text = { Text(Translations.get("form.dropdown.noSelection")) },
+                                text = { Text(T.get("form.dropdown.noSelection")) },
                                 onClick = {
                                     controlState.value.value = null
                                     expanded = false
@@ -177,7 +177,7 @@ abstract class DropdownControlBase<T : Any>(
                                 enabled = false,
                                 text = {
                                     Text(
-                                        Translations.get("form.dropdown.noResults"),
+                                        T.get("form.dropdown.noResults"),
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                     )
                                 },
@@ -216,11 +216,11 @@ abstract class DropdownControlBase<T : Any>(
                                     ) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = Translations.get("pagination.previousPage")
+                                            contentDescription = T.get("pagination.previousPage")
                                         )
                                     }
 
-                                    Text(Translations.get("pagination.page") + " ${currentPage + 1} " + Translations.get("pagination.of") + " $totalPages")
+                                    Text(T.get("pagination.page") + " ${currentPage + 1} " + T.get("pagination.of") + " $totalPages")
 
                                     IconButton(
                                         onClick = { if (currentPage < totalPages - 1) currentPage++ },
@@ -228,7 +228,7 @@ abstract class DropdownControlBase<T : Any>(
                                     ) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                            contentDescription = Translations.get("pagination.nextPage")
+                                            contentDescription = T.get("pagination.nextPage")
                                         )
                                     }
                                 }

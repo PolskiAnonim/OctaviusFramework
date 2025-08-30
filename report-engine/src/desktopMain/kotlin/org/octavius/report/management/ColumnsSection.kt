@@ -16,7 +16,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.ui.draganddrop.ChipConstants
@@ -33,7 +33,7 @@ fun ColumnsSection(
 
     Column {
         Text(
-            text = Translations.get("report.columns.columns"),
+            text = T.get("report.columns.columns"),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
@@ -84,7 +84,7 @@ fun ColumnsSection(
                         }) {
                             Icon(
                                 imageVector = if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (isVisible) Translations.get("report.columns.hideColumn") else Translations.get(
+                                contentDescription = if (isVisible) T.get("report.columns.hideColumn") else T.get(
                                     "report.columns.showColumn"
                                 ),
                                 tint = if (isVisible) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant

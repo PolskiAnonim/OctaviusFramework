@@ -15,7 +15,7 @@ import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.DatabaseControl
 import org.octavius.form.control.type.selection.EnumControl
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 class GameFormSchemaBuilder : FormSchemaBuilder() {
     override fun build(): FormSchema {
@@ -24,7 +24,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 // Podstawowe dane
                 "visibleCharactersSection" to BooleanControl(
                     null,
-                    Translations.get("games.form.visibleCharacterSection"),
+                    T.get("games.form.visibleCharacterSection"),
                     required = true
                 ),
                 "playTimeExists" to BooleanControl(
@@ -39,18 +39,18 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 // Sekcja podstawowych informacji
                 "name" to StringControl(
                     ColumnInfo("games", "name"),
-                    Translations.get("games.general.gameName"),
+                    T.get("games.general.gameName"),
                     required = true
                 ),
                 "series" to DatabaseControl(
                     ColumnInfo("games", "series"),
-                    label = Translations.get("games.form.series"),
+                    label = T.get("games.form.series"),
                     relatedTable = "series",
                     displayColumn = "name"
                 ),
                 "status" to EnumControl(
                     ColumnInfo("games", "status"),
-                    Translations.get("games.form.status"),
+                    T.get("games.form.status"),
                     GameStatus::class,
                     required = true
                 ),
@@ -59,17 +59,17 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     collapsible = false,
                     initiallyExpanded = true,
                     columns = 1,
-                    label = Translations.get("games.form.basicInfo")
+                    label = T.get("games.form.basicInfo")
                 ),
                 // Sekcja czasu gry
                 "playTimeHours" to DoubleControl(
                     ColumnInfo("play_time", "play_time_hours"),
-                    Translations.get("games.form.playTimeHours"),
+                    T.get("games.form.playTimeHours"),
                     validationOptions = DoubleValidation(min = 0.0, decimalPlaces = 2)
                 ),
                 "completionCount" to IntegerControl(
                     ColumnInfo("play_time", "completion_count"),
-                    Translations.get("games.form.playCount"),
+                    T.get("games.form.playCount"),
                     required = true, // Automatycznie pomijana walidacja jak niewidoczna kontrolka
                     dependencies = mapOf(
                         "visible" to ControlDependency(
@@ -86,7 +86,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     collapsible = false,
                     initiallyExpanded = true,
                     columns = 2,
-                    label = Translations.get("games.form.playTime"),
+                    label = T.get("games.form.playTime"),
                     dependencies = mapOf(
                         "visible" to ControlDependency(
                             controlName = "status",
@@ -103,18 +103,18 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 // Sekcja ocen
                 "storyRating" to IntegerControl(
                     ColumnInfo("ratings", "story_rating"),
-                    Translations.get("games.form.storyRating"),
+                    T.get("games.form.storyRating"),
                     validationOptions = IntegerValidation(min = 0, max = 10)
                 ),
                 "gameplayRating" to IntegerControl(
                     ColumnInfo("ratings", "gameplay_rating"),
-                    Translations.get("games.form.gameplayRating"),
+                    T.get("games.form.gameplayRating"),
                     required = true,
                     validationOptions = IntegerValidation(min = 0, max = 10)
                 ),
                 "atmosphereRating" to IntegerControl(
                     ColumnInfo("ratings", "atmosphere_rating"),
-                    Translations.get("games.form.atmosphereRating"),
+                    T.get("games.form.atmosphereRating"),
                     validationOptions = IntegerValidation(min = 0, max = 10)
                 ),
                 "ratingsSection" to SectionControl(
@@ -122,7 +122,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     collapsible = true,
                     initiallyExpanded = true,
                     columns = 3,
-                    label = Translations.get("games.form.ratings"),
+                    label = T.get("games.form.ratings"),
                     dependencies = mapOf(
                         "visible" to ControlDependency(
                             controlName = "status",
@@ -135,17 +135,17 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 // Sekcja postaci
                 "hasDistinctiveCharacter" to BooleanControl(
                     ColumnInfo("characters", "has_distinctive_character"),
-                    Translations.get("games.form.distinctiveCharacters"),
+                    T.get("games.form.distinctiveCharacters"),
                     required = true
                 ),
                 "hasDistinctiveProtagonist" to BooleanControl(
                     ColumnInfo("characters", "has_distinctive_protagonist"),
-                    Translations.get("games.form.distinctiveProtagonist"),
+                    T.get("games.form.distinctiveProtagonist"),
                     required = true
                 ),
                 "hasDistinctiveAntagonist" to BooleanControl(
                     ColumnInfo("characters", "has_distinctive_antagonist"),
-                    Translations.get("games.form.distinctiveAntagonist"),
+                    T.get("games.form.distinctiveAntagonist"),
                     required = true
                 ),
                 "charactersSection" to SectionControl(
@@ -153,7 +153,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     collapsible = true,
                     initiallyExpanded = true,
                     columns = 1,
-                    label = Translations.get("games.form.characters"),
+                    label = T.get("games.form.characters"),
                     dependencies = mapOf(
                         "visible" to ControlDependency(
                             controlName = "visibleCharactersSection",
@@ -168,14 +168,14 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     rowControls = mapOf(
                         "category" to DatabaseControl(
                             columnInfo = null,
-                            label = Translations.getPlural("games.form.category", 1),
+                            label = T.getPlural("games.form.category", 1),
                             relatedTable = "categories",
                             displayColumn = "name",
                             required = true
                         )
                     ),
                     rowOrder = listOf("category"),
-                    label = Translations.getPlural("games.form.category", 2),
+                    label = T.getPlural("games.form.category", 2),
                     validationOptions = RepeatableValidation(
                         minItems = 0,
                         maxItems = 10,
@@ -184,7 +184,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                 ),
                 // Przyciski
                 "saveButton" to ButtonControl(
-                    text = Translations.get("action.save"),
+                    text = T.get("action.save"),
                     actions = listOf(
                         ControlAction {
                             trigger.triggerAction("save", true)
@@ -193,7 +193,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
                     buttonType = ButtonType.Filled
                 ),
                 "cancelButton" to ButtonControl(
-                    text = Translations.get("action.cancel"),
+                    text = T.get("action.cancel"),
                     actions = listOf(
                         ControlAction {
                             trigger.triggerAction("cancel", false)

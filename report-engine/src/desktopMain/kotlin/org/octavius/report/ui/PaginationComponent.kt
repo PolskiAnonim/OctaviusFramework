@@ -21,7 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.ReportEvent
 import org.octavius.report.ReportPaginationState
 
@@ -62,7 +62,7 @@ fun PreviousPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Un
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = Translations.get("pagination.previousPage"),
+            contentDescription = T.get("pagination.previousPage"),
             tint = MaterialTheme.colorScheme.onPrimaryContainer
         )
     }
@@ -81,7 +81,7 @@ fun NextPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit) 
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = Translations.get("pagination.nextPage"),
+            contentDescription = T.get("pagination.nextPage"),
             tint = MaterialTheme.colorScheme.onPrimaryContainer
         )
     }
@@ -95,7 +95,7 @@ fun PageSize(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit) 
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = Translations.get("pagination.size"),
+            text = T.get("pagination.size"),
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
 
@@ -156,7 +156,7 @@ fun ActualPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit
         horizontalArrangement = Arrangement.Center
     ) {
         Text(
-            text = Translations.get("pagination.page"),
+            text = T.get("pagination.page"),
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
 
@@ -224,7 +224,7 @@ fun ActualPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit
         }
 
         Text(
-            text = " " + Translations.get("pagination.of") + " ${pagination.totalPages}",
+            text = " " + T.get("pagination.of") + " ${pagination.totalPages}",
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
     }

@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -73,7 +73,7 @@ class SectionControl(
                         if (collapsible) {
                             Icon(
                                 imageVector = if (expanded.value) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (expanded.value) Translations.get("expandable.collapse") else Translations.get("expandable.expand"),
+                                contentDescription = if (expanded.value) T.get("expandable.collapse") else T.get("expandable.expand"),
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }

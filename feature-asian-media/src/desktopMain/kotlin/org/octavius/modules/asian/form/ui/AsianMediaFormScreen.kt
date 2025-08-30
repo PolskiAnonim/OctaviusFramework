@@ -2,7 +2,7 @@ package org.octavius.modules.asian.form.ui
 
 import org.octavius.form.component.FormHandler
 import org.octavius.form.component.FormScreen
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.modules.asian.form.AsianMediaFormDataManager
 import org.octavius.modules.asian.form.AsianMediaFormSchemaBuilder
 import org.octavius.modules.asian.form.AsianMediaValidator
@@ -14,7 +14,7 @@ class AsianMediaFormScreen {
             payload: Map<String, Any?>? = null
         ): FormScreen {
             val title =
-                if (entityId == null) Translations.get("asianMedia.form.newTitle") else Translations.get("asianMedia.form.editTitle")
+                if (entityId == null) T.get("asianMedia.form.newTitle") else T.get("asianMedia.form.editTitle")
 
             val formHandler = FormHandler(
                 entityId = entityId,

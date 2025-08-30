@@ -3,7 +3,7 @@ package org.octavius.form.control.validator.collection
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringListValidation
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 /**
  * Walidator dla kontrolek list tekstowych z obsługą opcji walidacji.
@@ -43,20 +43,20 @@ class StringListValidator(
                     if (item.isNotBlank()) {
                         itemValidation.minLength?.let { minLength ->
                             if (item.length < minLength) {
-                                tempErrors.add(Translations.get("validation.itemMinLength", index + 1, minLength))
+                                tempErrors.add(T.get("validation.itemMinLength", index + 1, minLength))
                             }
                         }
                         itemValidation.maxLength?.let { maxLength ->
                             if (item.length > maxLength) {
-                                tempErrors.add(Translations.get("validation.itemMaxLength", index + 1, maxLength))
+                                tempErrors.add(T.get("validation.itemMaxLength", index + 1, maxLength))
                             }
                         }
                         itemValidation.pattern?.let { pattern ->
                             if (!pattern.matches(item)) {
-                                tempErrors.add(Translations.get(
+                                tempErrors.add(T.get(
                                     "validation.itemPatternError",
                                     index + 1,
-                                    itemValidation.patternErrorMessage ?: Translations.get("validation.invalidFormat")
+                                    itemValidation.patternErrorMessage ?: T.get("validation.invalidFormat")
                                 ))
                             }
                         }

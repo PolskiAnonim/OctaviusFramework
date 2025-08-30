@@ -47,7 +47,7 @@ const val LANGUAGE = "pl"
  * val plural = Translations.getPlural("messages.count", itemCount)
  * ```
  */
-object Translations {
+object T {
 
     /** Konfiguracja JSON do parsowania plików tłumaczeń */
     private val json = Json { ignoreUnknownKeys = true }

@@ -5,7 +5,7 @@ import androidx.compose.material.icons.filled.Add
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
@@ -37,21 +37,21 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
         "titles" to StringColumn(
-            header = Translations.get("games.general.titles"),
+            header = T.get("games.general.titles"),
             width = 2f
         ).asList(5),
         "language" to EnumColumn(
-            header = Translations.get("games.general.language"),
+            header = T.get("games.general.language"),
             enumClass = PublicationLanguage::class,
             width = 1f
         ),
         "publication_type" to EnumColumn(
-            header = Translations.get("games.general.publicationType"),
+            header = T.get("games.general.publicationType"),
             enumClass = PublicationType::class,
             width = 1.5f
         ).asList(9),
         "status" to EnumColumn(
-            header = Translations.get("games.general.status"),
+            header = T.get("games.general.status"),
             enumClass = PublicationStatus::class,
             width = 1.5f
         ).asList(9)
@@ -59,7 +59,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
 
 
     override fun buildRowActions(): List<ReportRowAction> = listOf(
-        ReportRowAction(Translations.get("report.actions.edit")) {
+        ReportRowAction(T.get("report.actions.edit")) {
             val id = rowData["title_id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
@@ -72,7 +72,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
     )
 
     override fun buildAddActions(): List<ReportAddAction> = listOf(
-        ReportAddAction(Translations.get("asianMedia.report.newTitle"), Icons.Default.Add) {
+        ReportAddAction(T.get("asianMedia.report.newTitle"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 AsianMediaFormScreen.create(
                 ))

@@ -3,7 +3,7 @@ package org.octavius.modules.games.report
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import org.octavius.domain.game.GameStatus
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
@@ -29,16 +29,16 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
     )
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
-        "game_name" to StringColumn(Translations.get("games.general.gameName")),
-        "series_name" to StringColumn(Translations.get("games.general.series")),
+        "game_name" to StringColumn(T.get("games.general.gameName")),
+        "series_name" to StringColumn(T.get("games.general.series")),
         "status" to EnumColumn(
-            Translations.get("games.general.status"),
+            T.get("games.general.status"),
             enumClass = GameStatus::class
         ),
     )
 
     override fun buildRowActions(): List<ReportRowAction> = listOf(
-        ReportRowAction(Translations.get("report.actions.edit")) {
+        ReportRowAction(T.get("report.actions.edit")) {
             val id = rowData["id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
@@ -49,13 +49,13 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
         })
 
     override fun buildAddActions(): List<ReportAddAction> = listOf(
-        ReportAddAction(Translations.get("games.report.newGame"), Icons.Default.Add) {
+        ReportAddAction(T.get("games.report.newGame"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameFormScreen.create(
                 )
             )
         },
-        ReportAddAction(Translations.get("games.report.newSeries"), Icons.Default.Add) {
+        ReportAddAction(T.get("games.report.newSeries"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameSeriesFormScreen.create(
                 ))

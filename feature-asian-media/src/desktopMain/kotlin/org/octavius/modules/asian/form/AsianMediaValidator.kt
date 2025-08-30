@@ -2,7 +2,7 @@ package org.octavius.modules.asian.form
 
 import org.octavius.form.ControlResultData
 import org.octavius.form.component.FormValidator
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
     override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
@@ -15,7 +15,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         val hasDuplicates = titles.size != titles.toSet().size
 
         if (hasDuplicates) {
-            errorManager.addFieldError("titles", Translations.get("asianMedia.form.duplicateTitles"))
+            errorManager.addFieldError("titles", T.get("asianMedia.form.duplicateTitles"))
         }
 
         return !hasDuplicates

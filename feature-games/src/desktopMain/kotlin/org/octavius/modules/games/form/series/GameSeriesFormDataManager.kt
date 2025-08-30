@@ -10,7 +10,7 @@ import org.octavius.form.ControlResultData
 import org.octavius.form.FormActionResult
 import org.octavius.form.TableRelation
 import org.octavius.form.component.FormDataManager
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 class GameSeriesFormDataManager : FormDataManager() {
     override fun defineTableRelations(): List<TableRelation> {
@@ -69,7 +69,7 @@ class GameSeriesFormDataManager : FormDataManager() {
             is DataResult.Success<Long> -> {
                 val count = existingCount.value
                 if (count > 0L) {
-                    errorManager.addFieldError("name", Translations.get("games.validation.duplicatedSeries"))
+                    errorManager.addFieldError("name", T.get("games.validation.duplicatedSeries"))
                     return FormActionResult.ValidationFailed
                 } else {
                     return FormActionResult.Success

@@ -5,7 +5,7 @@ import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.RepeatableValidation
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.repeatable.RepeatableRow
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 /**
  * Walidator dla kontrolek typu RepeatableControl.
@@ -59,14 +59,14 @@ class RepeatableValidator(
             // Sprawdź minimalną liczbę elementów
             options.minItems?.let { minItems ->
                 if (rows.size < minItems) {
-                    errors.add(Translations.get("validation.minItems", minItems))
+                    errors.add(T.get("validation.minItems", minItems))
                 }
             }
 
             // Sprawdź maksymalną liczbę elementów
             options.maxItems?.let { maxItems ->
                 if (rows.size > maxItems) {
-                    errors.add(Translations.get("validation.maxItems", maxItems))
+                    errors.add(T.get("validation.maxItems", maxItems))
                 }
             }
 
@@ -86,7 +86,7 @@ class RepeatableValidator(
                     }
 
                     if (!seenValues.add(uniqueKey)) {
-                        errors.add(Translations.get("validation.duplicateInRow", index + 1))
+                        errors.add(T.get("validation.duplicateInRow", index + 1))
                         // Nie przerywamy, aby znaleźć wszystkie duplikaty, ale możemy dodać błąd tylko raz
                         // Można to udoskonalić, by wskazywać wszystkie zduplikowane wiersze. Na razie `break` jest OK.
                         break

@@ -12,10 +12,9 @@ import kotlinx.coroutines.launch
 import org.koin.core.context.startKoin
 import org.octavius.api.server.EmbeddedServer
 import org.octavius.contract.FeatureModule
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.modules.games.GamesFeature
-import org.octavius.modules.settings.SettingsFeature
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
@@ -71,7 +70,7 @@ fun main() = application {
 
     Window(
         onCloseRequest = ::exitApplication,
-        title = Translations.get("app.name"),
+        title = T.get("app.name"),
         state = rememberWindowState(size = DpSize(1280.dp, 720.dp))
     ) {
         App(tabs)

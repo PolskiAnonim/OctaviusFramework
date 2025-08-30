@@ -1,6 +1,6 @@
 package org.octavius.modules.settings.report
 
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.Query
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.BooleanColumn
@@ -21,16 +21,16 @@ class ApiIntegrationsReportStructureBuilder() : ReportStructureBuilder() {
     )
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
-        "name" to StringColumn(Translations.get("settings.api.columns.name"), filterable = true),
-        "enabled" to BooleanColumn(Translations.get("settings.api.columns.enabled"), filterable = true),
-        "api_key" to StringColumn(Translations.get("settings.api.columns.apiKey"), filterable = false),
+        "name" to StringColumn(T.get("settings.api.columns.name"), filterable = true),
+        "enabled" to BooleanColumn(T.get("settings.api.columns.enabled"), filterable = true),
+        "api_key" to StringColumn(T.get("settings.api.columns.apiKey"), filterable = false),
         "endpoint_url" to StringColumn(
-            Translations.get("settings.api.columns.endpointUrl"),
+            T.get("settings.api.columns.endpointUrl"),
             filterable = false
         ),
-        "port" to IntegerColumn(Translations.get("settings.api.columns.port"), filterable = true),
+        "port" to IntegerColumn(T.get("settings.api.columns.port"), filterable = true),
         "last_sync" to StringColumn(
-            Translations.get("settings.api.columns.lastSync"),
+            T.get("settings.api.columns.lastSync"),
             filterable = false
         )
     )

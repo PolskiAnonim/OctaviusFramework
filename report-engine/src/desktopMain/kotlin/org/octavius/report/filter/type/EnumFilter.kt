@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.domain.EnumWithFormatter
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.report.FilterMode
 import org.octavius.report.Query
 import org.octavius.report.ReportEvent
@@ -36,7 +36,7 @@ class EnumFilter<E>(private val enumClass: KClass<E>): Filter<EnumFilterData<E>>
         val enumValues = remember { enumClass.java.enumConstants.toList() }
 
         Text(
-            text = Translations.get("filter.enum.selectValues"),
+            text = T.get("filter.enum.selectValues"),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -45,18 +45,18 @@ class EnumFilter<E>(private val enumClass: KClass<E>): Filter<EnumFilterData<E>>
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(Translations.get("filter.enum.selectionMode"))
+            Text(T.get("filter.enum.selectionMode"))
             RadioButton(
                 selected = data.include,
                 onClick = { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(include = true))) }
             )
-            Text(Translations.get("filter.enum.includeSelected"), modifier = Modifier.padding(end = 8.dp))
+            Text(T.get("filter.enum.includeSelected"), modifier = Modifier.padding(end = 8.dp))
 
             RadioButton(
                 selected = !data.include,
                 onClick = { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(include = false))) }
             )
-            Text(Translations.get("filter.enum.excludeSelected"))
+            Text(T.get("filter.enum.excludeSelected"))
         }
 
         FilterSpacer()

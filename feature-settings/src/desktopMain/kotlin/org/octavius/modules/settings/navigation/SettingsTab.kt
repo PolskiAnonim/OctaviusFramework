@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import octavius.feature_settings.generated.resources.Res
 import octavius.feature_settings.generated.resources.settings_icon
 import org.jetbrains.compose.resources.painterResource
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 import org.octavius.navigation.Screen
 import org.octavius.navigation.Tab
 import org.octavius.navigation.TabOptions
@@ -13,7 +13,7 @@ class SettingsTab : Tab {
     override val options: TabOptions
         @Composable
         get() = TabOptions(
-            title = Translations.get("tabs.settings"),
+            title = T.get("tabs.settings"),
             icon = painterResource(Res.drawable.settings_icon)
         )
 

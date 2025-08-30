@@ -2,7 +2,7 @@ package org.octavius.domain.asian
 
 import org.octavius.data.contract.PgType
 import org.octavius.domain.EnumWithFormatter
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 @PgType
 enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
@@ -13,10 +13,10 @@ enum class PublicationStatus : EnumWithFormatter<PublicationStatus> {
 
     override fun toDisplayString(): String {
         return when (this) {
-            NotReading -> Translations.get("asianMedia.readingStatus.notReading")
-            Reading -> Translations.get("asianMedia.readingStatus.reading")
-            Completed -> Translations.get("asianMedia.readingStatus.completed")
-            PlanToRead -> Translations.get("asianMedia.readingStatus.toRead")
+            NotReading -> T.get("asianMedia.readingStatus.notReading")
+            Reading -> T.get("asianMedia.readingStatus.reading")
+            Completed -> T.get("asianMedia.readingStatus.completed")
+            PlanToRead -> T.get("asianMedia.readingStatus.toRead")
         }
     }
 }
@@ -29,9 +29,9 @@ enum class PublicationLanguage : EnumWithFormatter<PublicationLanguage> {
 
     override fun toDisplayString(): String {
         return when (this) {
-            Korean -> Translations.get("asianMedia.publicationLanguage.korean")
-            Chinese -> Translations.get("asianMedia.publicationLanguage.chinese")
-            Japanese -> Translations.get("asianMedia.publicationLanguage.japanese")
+            Korean -> T.get("asianMedia.publicationLanguage.korean")
+            Chinese -> T.get("asianMedia.publicationLanguage.chinese")
+            Japanese -> T.get("asianMedia.publicationLanguage.japanese")
         }
     }
 }
@@ -48,13 +48,13 @@ enum class PublicationType : EnumWithFormatter<PublicationType> {
 
     override fun toDisplayString(): String {
         return when (this) {
-            Manga -> Translations.get("asianMedia.publicationType.manga")
-            LightNovel -> Translations.get("asianMedia.publicationType.lightNovel")
-            WebNovel -> Translations.get("asianMedia.publicationType.webNovel")
-            PublishedNovel -> Translations.get("asianMedia.publicationType.publishedNovel")
-            Webtoon -> Translations.get("asianMedia.publicationType.webtoon")
-            Manhwa -> Translations.get("asianMedia.publicationType.manhwa")
-            Manhua -> Translations.get("asianMedia.publicationType.manhua")
+            Manga -> T.get("asianMedia.publicationType.manga")
+            LightNovel -> T.get("asianMedia.publicationType.lightNovel")
+            WebNovel -> T.get("asianMedia.publicationType.webNovel")
+            PublishedNovel -> T.get("asianMedia.publicationType.publishedNovel")
+            Webtoon -> T.get("asianMedia.publicationType.webtoon")
+            Manhwa -> T.get("asianMedia.publicationType.manhwa")
+            Manhua -> T.get("asianMedia.publicationType.manhua")
         }
     }
 

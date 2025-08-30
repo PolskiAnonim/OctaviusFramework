@@ -3,7 +3,7 @@ package org.octavius.form.control.validator.number
 import org.octavius.form.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntegerValidation
-import org.octavius.localization.Translations
+import org.octavius.localization.T
 
 /**
  * Walidator dla kontrolek liczb całkowitych z obsługą opcji walidacji.
@@ -20,21 +20,21 @@ class IntegerValidator(
             // Sprawdź wartość minimalną
             options.min?.let { min ->
                 if (value < min) {
-                    errors.add(Translations.get("validation.minValue", min))
+                    errors.add(T.get("validation.minValue", min))
                 }
             }
 
             // Sprawdź wartość maksymalną
             options.max?.let { max ->
                 if (value > max) {
-                    errors.add(Translations.get("validation.maxValue", max))
+                    errors.add(T.get("validation.maxValue", max))
                 }
             }
 
             // Sprawdź krok
             options.step?.let { step ->
                 if (value % step != 0) {
-                    errors.add(Translations.get("validation.multipleOf", step))
+                    errors.add(T.get("validation.multipleOf", step))
                 }
             }
         }
