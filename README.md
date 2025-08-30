@@ -23,10 +23,16 @@ Aplikacja desktopowa w Kotlin Compose Multiplatform do zarządzania i śledzenia
 
 ### Główne Technologie
 - **Kotlin Multiplatform**
-- **Compose Multiplatform**
-- **PostgreSQL**
-- **Spring JDBC**
-- **HikariCP**
+- **Compose Multiplatform** (desktop)
+- **PostgreSQL 17+** z wieloma schematami
+- **Spring JDBC** + **HikariCP**
+- **Material 3** design system
+- **kotlinx-serialization** dla JSON
+
+### Dodatkowe komponenty
+- **Browser Extension** (JS modules)
+- **API Server** (embedded server)
+- **TypeRegistry** (dynamiczne mapowanie typów)
 
 ## 🚀 Uruchamianie
 
@@ -50,10 +56,19 @@ source ~/.bashrc
 ./gradlew run
 ```
 
-### Walidacja tłumaczeń
+### Dodatkowe komendy
+
+**Walidacja tłumaczeń:**
 ```bash
 ./gradlew validateTranslations
 ```
+Sprawdza użycie kluczy tłumaczeń w kodzie i raportuje nieużywane tłumaczenia.
+
+**Budowanie rozszerzenia przeglądarki:**
+```bash
+./gradlew assembleBrowserExtension
+```
+Kompiluje rozszerzenie do `build/extension/`.
 
 ## 🏗️ Architektura
 
@@ -61,14 +76,20 @@ source ~/.bashrc
 
 ```
 Octavius/
-├──  desktop-app/           # Główna aplikacja i punkt wejścia
-├──  core/                  # Fundamenty: database, domain, config
-├──  form-engine/           # Framework formularzy
-├──  report-engine/         # Framework raportów  
-├──  ui-core/                # Współdzielone komponenty UI i system nawigacji
-├──  feature-asian-media/   # Moduł publikacji azjatyckich
-├──  feature-games/         # Moduł gier
-└──  feature-settings/      # Moduł ustawień
+├── desktop-app/           # Główna aplikacja i punkt wejścia
+├── core/                  # Fundamenty: domain, localization, util
+├── data-access/           # Warstwa dostępu do danych (Spring JDBC)
+├── form-engine/           # Framework formularzy
+├── report-engine/         # Framework raportów  
+├── ui-core/               # Współdzielone komponenty UI i system nawigacji
+├── feature-asian-media/   # Moduł publikacji azjatyckich
+├── feature-games/         # Moduł gier
+├── feature-settings/      # Moduł ustawień
+├── feature-contract/      # Interfejsy dla modułów funkcjonalnych
+├── api-server/            # API server
+├── api-contract/          # Kontrakty API
+├── extension-popup/       # Rozszerzenie przeglądarki (popup)
+└── extension-content-script/ # Rozszerzenie przeglądarki (content script)
 ```
 
 ### 🔧 System formularzy (form-engine)
@@ -102,7 +123,7 @@ Dynamiczne tabele z pełną konfiguracją:
 
 Centralny router
 
-```kotlin
+```
 AppRouter (Singleton) -> AppNavigationState -> Tab Stacks -> Screens
 ```
 
@@ -118,30 +139,34 @@ AppRouter (Singleton) -> AppNavigationState -> Tab Stacks -> Screens
 - Wsparcie dla wielu schematów (public, asian_media, games)
 
 **Komponenty:**
-- **DatabaseManager**: Singleton z HikariCP pool
-- **DatabaseFetcher**: Zaawansowane operacje SELECT
-- **DatabaseUpdater**: Transakcyjne operacje UPDATE/INSERT/DELETE
+- **DatabaseSystem**: Singleton z HikariCP pool i inicjalizacją
+- **DatabaseFetcher**: Zaawansowane operacje SELECT z filtrowaniem
+- **DatabaseBatchExecutor**: Transakcyjne operacje UPDATE/INSERT/DELETE
 - **RowMappers**: Automatyczna konwersja ResultSet na obiekty Kotlin
 
 ## 📁 Wzorzec domenowy
 
 Każda encja biznesowa następuje konsekwentny wzorzec:
 
-```kotlin
-modules/[domain]/
+```
+feature-[domain]/
 ├── form/
 │   ├── [Entity]FormDataManager.kt    # Operacje bazodanowe
 │   ├── [Entity]FormSchemaBuilder.kt  # Definicja struktury formularza
-│   └── [Entity]FormValidator.kt      # Reguły walidacji
-├── ui/
-│   ├── [Entity]FormScreen.kt         # UI formularza
-│   ├── [Entity]ReportScreen.kt       # UI raportu
-│   └── [Entity]Tab.kt                # Zakładka główna
-└── [Entity]ReportStructureBuilder.kt # Definicja raportu
+│   ├── [Entity]FormValidator.kt      # Reguły walidacji
+│   └── ui/
+│       └── [Entity]FormScreen.kt     # UI formularza
+├── navigation/
+│   └── [Entity]Tab.kt                # Definicja zakładki
+└── report/
+    ├── [Entity]ReportStructureBuilder.kt # Definicja struktury raportu
+    └── ui/
+        └── [Entity]ReportScreen.kt   # UI raportu
 ```
 
 ## 🌍 System lokalizacji
 
 - **Tłumaczenia oparte o pliki JSON**: `translations_pl.json` w każdym module
-- **Obsługa liczby mnogiej**
-- **Walidacja**: Automatyczne sprawdzanie użycia kluczy tłumaczeń/task `validateTranslations`
+- **Singleton Translations**: Globalny dostęp przez `Translations.get()` i `Translations.getPlural()`
+- **Obsługa liczby mnogiej**: Wsparcie dla form "one", "few", "many"
+- **Walidacja**: Automatyczne sprawdzanie użycia kluczy tłumaczeń przez task `validateTranslations`
