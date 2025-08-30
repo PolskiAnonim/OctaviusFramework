@@ -19,6 +19,21 @@ import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
 
+/**
+ * Funkcja główna aplikacji desktopowej.
+ *
+ * Inicjalizuje wszystkie komponenty aplikacji w następującej kolejności:
+ * 1. Kontener zależności Koin z modułami bazy danych
+ * 2. Rejestrację funkcjonalności (features) i ich komponentów
+ * 3. System nawigacji AppRouter z zakładkami
+ * 4. Serwer API Ktor w tle
+ * 5. Główne okno aplikacji z interfejsem użytkownika
+ *
+ * Aplikacja używa architektury modularnej z oddzielnymi funkcjonalnościami:
+ * - AsianMediaFeature - zarządzanie publikacjami azjatyckimi
+ * - GamesFeature - zarządzanie grami
+ * - SettingsFeature - ustawienia aplikacji (obecnie zakomentowane)
+ */
 fun main() = application {
 
     // Uruchom Koin

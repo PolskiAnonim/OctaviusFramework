@@ -10,8 +10,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextOverflow
 import org.octavius.localization.T
 
-// W ui/navigation/MainTopAppBar.kt
-
+/**
+ * Główny pasek górny aplikacji z tytułem i przyciskami nawigacyjnymi.
+ *
+ * Wyświetla wyśrodkowany pasek z dynamicznym tytułem, opcjonalnym przyciskiem "Wstecz"
+ * oraz przyciskiem ustawień.
+ *
+ * @param title Tekst tytułu wyświetlany w środku paska
+ * @param showBackButton Czy pokazać przycisk "Wstecz" po lewej stronie
+ * @param onBackClicked Callback wywoływany po kliknięciu przycisku "Wstecz"
+ * @param onSettingsClicked Callback wywoływany po kliknięciu przycisku ustawień
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopAppBar(

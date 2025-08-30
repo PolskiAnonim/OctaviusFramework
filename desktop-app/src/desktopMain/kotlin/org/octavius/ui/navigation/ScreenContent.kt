@@ -10,11 +10,10 @@ import org.octavius.navigation.Screen
 /**
  * Komponent wyświetlający zawartość bieżącego ekranu ze stosu nawigacji.
  *
- * Zarządza renderowaniem aktualnego ekranu,
- * który zawiera tytuł oraz przycisk "wstecz" (widoczny tylko, gdy na stosie
- * znajduje się więcej niż jeden ekran).
+ * Zarządza renderowaniem aktualnego ekranu z animowanymi przejściami między ekranami.
+ * Automatycznie wybiera ostatni ekran ze stosu jako aktywny do wyświetlenia.
  *
- * @param screenStack Aktualny stos ekranów. Ostatni element na liście jest traktowany jako aktywny.
+ * @param screenStack Aktualny stos ekranów, gdzie ostatni element jest aktywny
  */
 @Composable
 fun TabContent(screenStack: List<Screen>) {
