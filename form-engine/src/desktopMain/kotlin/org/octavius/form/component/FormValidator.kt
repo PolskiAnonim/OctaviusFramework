@@ -22,7 +22,7 @@ open class FormValidator() : KoinComponent {
 
     protected val dataFetcher: DataFetcher by inject()
 
-    fun setupFormReferences(formState: FormState, formSchema: FormSchema, errorManager: ErrorManager) {
+    internal fun setupFormReferences(formState: FormState, formSchema: FormSchema, errorManager: ErrorManager) {
         this.formState = formState
         this.formSchema = formSchema
         this.errorManager = errorManager
@@ -40,7 +40,7 @@ open class FormValidator() : KoinComponent {
      * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli wszystkie pola są poprawne
      */
-    fun validateFields(): Boolean {
+    internal fun validateFields(): Boolean {
 
         for ((controlName, control) in formSchema.getAllControls()) {
             val state = formState.getControlState(controlName)!!

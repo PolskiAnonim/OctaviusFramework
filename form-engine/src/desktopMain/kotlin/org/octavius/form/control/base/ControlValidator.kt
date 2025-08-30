@@ -26,7 +26,7 @@ abstract class ControlValidator<T : Any> {
     /**
      * Ustawia referencje do komponentów formularza dla walidatora.
      */
-    open fun setupFormReferences(
+    internal open fun setupFormReferences(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager
@@ -49,7 +49,7 @@ abstract class ControlValidator<T : Any> {
      * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli kontrolka powinna być widoczna
      */
-    fun isControlVisible(
+    internal fun isControlVisible(
         control: Control<*>,
         controlName: String
     ): Boolean {
@@ -102,7 +102,7 @@ abstract class ControlValidator<T : Any> {
      * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli kontrolka jest wymagana
      */
-    fun isControlRequired(
+    internal fun isControlRequired(
         control: Control<*>,
         controlName: String
     ): Boolean {
@@ -155,7 +155,7 @@ abstract class ControlValidator<T : Any> {
      * @param value wartość do sprawdzenia
      * @return true jeśli wartość jest pusta
      */
-    fun isValueEmpty(value: Any?): Boolean {
+    internal fun isValueEmpty(value: Any?): Boolean {
         return when (value) {
             null -> true
             is String -> value.isBlank()

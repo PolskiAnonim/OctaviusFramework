@@ -28,7 +28,7 @@ class FormState {
     /**
      * Funkcja inicjalizuje stany kontrolek na podstawie wartości inicjalnych
      */
-    fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>, errorManager: ErrorManager) {
+    internal fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>, errorManager: ErrorManager) {
         // Potem inicjalizuj stany kontrolek
         schema.getAllControls().forEach { (controlName, control) ->
             val value = initValues[controlName]
@@ -40,7 +40,7 @@ class FormState {
      * Funkcja ustawia stan kontrolki o danej nazwie (może być hierarchiczna)
      * Automatycznie triggeruje recomposition dzięki mutableStateMapOf
      */
-    fun setControlState(name: String, state: ControlState<*>) {
+    internal fun setControlState(name: String, state: ControlState<*>) {
         _controlStates[name] = state
     }
 
@@ -48,7 +48,7 @@ class FormState {
      * Funkcja usuwa stan kontrolki o danej nazwie
      * Automatycznie triggeruje recomposition dzięki mutableStateMapOf
      */
-    fun removeControlState(name: String) {
+    internal fun removeControlState(name: String) {
         _controlStates.remove(name)
     }
 
@@ -56,7 +56,7 @@ class FormState {
      * Funkcja usuwa wszystkie stany kontrolek zaczynające się od danego prefiksu
      * Automatycznie triggeruje recomposition dzięki mutableStateMapOf
      */
-    fun removeControlStatesWithPrefix(prefix: String) {
+    internal fun removeControlStatesWithPrefix(prefix: String) {
         val keysToRemove = _controlStates.keys.filter { it.startsWith(prefix) }
         keysToRemove.forEach { _controlStates.remove(it) }
     }
@@ -64,7 +64,7 @@ class FormState {
     /**
      * Funkcja zwraca rezultat formularza w formie danych przetworzonych przez kontrolki
      */
-    fun collectFormData(schema: FormSchema): FormResultData {
+    internal fun collectFormData(schema: FormSchema): FormResultData {
         val result = mutableMapOf<String, ControlResultData>()
 
         schema.getAllControls().forEach { (controlName, control) ->

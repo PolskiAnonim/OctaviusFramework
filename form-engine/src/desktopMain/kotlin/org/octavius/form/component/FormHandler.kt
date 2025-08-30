@@ -26,7 +26,7 @@ class FormHandler(
     val formValidator: FormValidator = FormValidator(),
     private val payload: Map<String, Any?>? = null
 ) : FormActionTrigger {
-    val errorManager: ErrorManager = ErrorManager()
+    internal val errorManager: ErrorManager = ErrorManager()
     private val formState: FormState = FormState()
     private val formSchema: FormSchema = formSchemaBuilder.build()
 
@@ -54,15 +54,15 @@ class FormHandler(
     /**
      * Publiczne API dla FormScreen - metody dostępu do komponentów formularza
      */
-    fun getContentControlsInOrder(): List<String> = formSchema.contentOrder
-    fun getActionBarControlsInOrder(): List<String> = formSchema.actionBarOrder
-    fun getControl(name: String): Control<*>? = formSchema.getControl(name)
-    fun getControlState(name: String): ControlState<*>? = formState.getControlState(name)
+    internal fun getContentControlsInOrder(): List<String> = formSchema.contentOrder
+    internal fun getActionBarControlsInOrder(): List<String> = formSchema.actionBarOrder
+    internal fun getControl(name: String): Control<*>? = formSchema.getControl(name)
+    internal fun getControlState(name: String): ControlState<*>? = formState.getControlState(name)
 
     /**
      * Ładuje dane dla edytowanej encji z bazy danych i inicjalizuje stan formularza.
      */
-    fun loadData() {
+    internal fun loadData() {
         val initValues = formDataManager.initData(entityId!!, payload)
         val databaseData = formDataManager.loadEntityData(entityId)
 
@@ -82,7 +82,7 @@ class FormHandler(
     /**
      * Czyści formularz i ustawia wartości domyślne dla nowego rekordu.
      */
-    fun clearForm() {
+    internal fun clearForm() {
         val initValues = formDataManager.initData(null, payload)
         formState.initializeStates(formSchema, initValues, errorManager)
     }

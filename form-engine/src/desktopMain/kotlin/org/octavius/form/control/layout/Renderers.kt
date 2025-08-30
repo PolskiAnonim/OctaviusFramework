@@ -39,7 +39,7 @@ private fun RenderLabel(label: String, isRequired: Boolean) {
  * Używana przez większość kontrolek formularza.
  */
 @Composable
-fun RenderNormalLabel(label: String?, isRequired: Boolean) {
+internal fun RenderNormalLabel(label: String?, isRequired: Boolean) {
     if (label == null) return
 
     Row(
@@ -58,7 +58,7 @@ fun RenderNormalLabel(label: String?, isRequired: Boolean) {
  * Checkboxy mają własne rozmieszczenie elementów.
  */
 @Composable
-fun RenderCheckboxLabel(label: String?, isRequired: Boolean) {
+internal fun RenderCheckboxLabel(label: String?, isRequired: Boolean) {
     if (label == null) return
 
     RenderLabel(label, isRequired)
@@ -71,7 +71,7 @@ fun RenderCheckboxLabel(label: String?, isRequired: Boolean) {
  * @param error tekst błędu do wyświetlenia
  */
 @Composable
-fun RenderFieldError(error: String) {
+internal fun RenderFieldError(error: String) {
     Text(
         text = error,
         color = MaterialTheme.colorScheme.error,

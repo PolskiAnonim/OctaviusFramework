@@ -66,7 +66,7 @@ fun createRow(
  * @param globalStates mapa wszystkich stanów formularza
  * @return Triple(nowe wiersze, usunięte wiersze, zmienione wiersze)
  */
-fun getRowTypes(
+internal fun getRowTypes(
     controlState: ControlState<List<RepeatableRow>>,
     controlName: String,
     rowControls: Map<String, Control<*>>,

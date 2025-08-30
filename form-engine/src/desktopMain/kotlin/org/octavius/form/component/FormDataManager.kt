@@ -25,7 +25,7 @@ import org.octavius.form.control.base.FormResultData
 abstract class FormDataManager: KoinComponent {
 
     lateinit var errorManager: ErrorManager
-    fun setupFormReferences(errorManager: ErrorManager) {
+    internal fun setupFormReferences(errorManager: ErrorManager) {
         this.errorManager = errorManager
     }
 
@@ -53,7 +53,7 @@ abstract class FormDataManager: KoinComponent {
      * @param id ID encji do załadowania
      * @return mapa kolumn->wartości z wszystkich powiązanych tabel
      */
-    fun loadEntityData(id: Int): Map<ColumnInfo, Any?> {
+    internal fun loadEntityData(id: Int): Map<ColumnInfo, Any?> {
         val tableRelations = defineTableRelations()
 
         if (tableRelations.isEmpty()) {

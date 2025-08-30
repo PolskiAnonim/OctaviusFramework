@@ -20,7 +20,7 @@ import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
 @Composable
-fun RepeatableHeader(
+internal fun RepeatableHeader(
     label: String?,
     onAddClick: () -> Unit,
     canAdd: Boolean
@@ -58,7 +58,7 @@ fun RepeatableHeader(
 }
 
 @Composable
-fun RepeatableRowCard(
+internal fun RepeatableRowCard(
     row: RepeatableRow,
     index: Int,
     canDelete: Boolean,
@@ -156,7 +156,7 @@ private fun RepeatableRowHeader(
 }
 
 @Composable
-fun RepeatableRowContent(
+internal fun RepeatableRowContent(
     row: RepeatableRow,
     controlName: String,
     rowOrder: List<String>,

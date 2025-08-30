@@ -47,7 +47,7 @@ class RepeatableValidator(
         for (row in rows) {
             for ((fieldName, fieldControl) in control.rowControls) {
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldState = allStates[hierarchicalName]
+                val fieldState = allStates[hierarchicalName]!!
 
                 fieldControl.validateControl(hierarchicalName, fieldState)
             }
