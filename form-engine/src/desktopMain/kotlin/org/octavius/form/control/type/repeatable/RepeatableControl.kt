@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import org.octavius.form.ControlResultData
-import org.octavius.form.ControlState
-import org.octavius.form.FormActionTrigger
+import org.octavius.form.control.base.ControlResultData
+import org.octavius.form.control.base.ControlState
+import org.octavius.form.component.FormActionTrigger
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState

@@ -1,6 +1,6 @@
 package org.octavius.form.control.validator.collection
 
-import org.octavius.form.ControlState
+import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringListValidation
 import org.octavius.localization.T

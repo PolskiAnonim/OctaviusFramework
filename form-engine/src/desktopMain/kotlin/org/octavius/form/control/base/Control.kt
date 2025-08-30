@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.data.contract.ColumnInfo
-import org.octavius.form.ControlResultData
-import org.octavius.form.ControlState
-import org.octavius.form.FormActionTrigger
+import org.octavius.form.component.FormActionTrigger
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState

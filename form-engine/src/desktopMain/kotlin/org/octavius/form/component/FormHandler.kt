@@ -2,9 +2,7 @@ package org.octavius.form.component
 
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.form.ControlState
-import org.octavius.form.FormActionResult
-import org.octavius.form.FormActionTrigger
+import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.localization.T
 import org.octavius.navigation.AppRouter

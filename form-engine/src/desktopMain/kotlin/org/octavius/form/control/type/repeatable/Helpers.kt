@@ -1,9 +1,9 @@
 package org.octavius.form.control.type.repeatable
 
-import org.octavius.form.ControlResultData
-import org.octavius.form.ControlState
+import org.octavius.form.control.base.ControlState
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.FormResultData
 
 /**
  * Reprezentuje jeden wiersz w kontrolce powtarzalnej.
@@ -25,9 +25,9 @@ data class RepeatableRow(
  * @param modifiedRows wiersze do zaktualizowania
  */
 data class RepeatableResultValue(
-    val deletedRows: List<Map<String, ControlResultData>>,
-    val addedRows: List<Map<String, ControlResultData>>,
-    val modifiedRows: List<Map<String, ControlResultData>>
+    val deletedRows: List<FormResultData>,
+    val addedRows: List<FormResultData>,
+    val modifiedRows: List<FormResultData>
 )
 
 /**

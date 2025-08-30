@@ -1,38 +1,7 @@
-package org.octavius.form
+package org.octavius.form.component
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import org.octavius.navigation.Screen
 
-
-/**
- * Dane wyniku kontrolki zebrane podczas przetwarzania formularza.
- *
- * @param currentValue wartość kontrolki przygotowana do zapisu w bazie danych
- * @param initialValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
- */
-data class ControlResultData(
-    val currentValue: Any?,
-    val initialValue: Any?
-)
-
-/**
- * Stan pojedynczej kontrolki w formularzu.
- *
- * Przechowuje wszystkie informacje o stanie kontrolki potrzebne
- * do renderowania, walidacji i śledzenia zmian.
- *
- * @param T typ danych przechowywanych przez kontrolkę
- * @param value bieżąca wartość kontrolki (edytowana przez użytkownika)
- * @param initValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
- * @param revision licznik zmian z zewnątrz, służący do wymuszenia synchronizacji UI.
- * Nie musi być używany w prostych kontrolkach w których parsowanie wartości nie jest potrzebne
- */
-data class ControlState<T>(
-    val value: MutableState<T?> = mutableStateOf(null),
-    val initValue: MutableState<T?> = mutableStateOf(null),
-    val revision: MutableState<Int> = mutableStateOf(0)
-)
 
 /**
  * Definicja relacji między tabelami w zapytaniach JOIN dla formularzy.

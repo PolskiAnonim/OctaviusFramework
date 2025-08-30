@@ -1,6 +1,6 @@
 package org.octavius.form.control.validator
 
-import org.octavius.form.ControlState
+import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 
 /**

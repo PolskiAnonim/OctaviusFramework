@@ -3,19 +3,18 @@ package org.octavius.modules.asian.form
 import org.octavius.data.contract.DataResult
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.form.ControlResultData
-import org.octavius.form.FormActionResult
 import org.octavius.form.component.FormValidator
+import org.octavius.form.control.base.FormResultData
 import org.octavius.localization.T
 
 class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
-    override fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
-        return validateTitleDuplication(formData)
+    override fun validateBusinessRules(formResultData: FormResultData): Boolean {
+        return validateTitleDuplication(formResultData)
     }
 
-    private fun validateTitleDuplication(formData: Map<String, ControlResultData>): Boolean {
+    private fun validateTitleDuplication(formResultData: FormResultData): Boolean {
         @Suppress("UNCHECKED_CAST")
-        val titles = formData["titles"]!!.currentValue as List<String>
+        val titles = formResultData["titles"]!!.currentValue as List<String>
         val hasDuplicates = titles.size != titles.toSet().size
 
         if (hasDuplicates) {
@@ -25,9 +24,9 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         return !hasDuplicates
     }
 
-    fun validateTitlesAgainstDatabase(formData: Map<String, ControlResultData>): Boolean {
+    fun validateTitlesAgainstDatabase(formResultData: FormResultData): Boolean {
         @Suppress("UNCHECKED_CAST")
-        val titles = formData["titles"]!!.currentValue as List<String>
+        val titles = formResultData["titles"]!!.currentValue as List<String>
 
         if (titles.isEmpty()) return true
 
@@ -52,7 +51,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         }
     }
 
-    override fun defineActionValidations(): Map<String, (Map<String, ControlResultData>) -> Boolean> {
+    override fun defineActionValidations(): Map<String, (FormResultData) -> Boolean> {
         return mapOf(
             "save" to { formData -> validateTitlesAgainstDatabase(formData) }
         )

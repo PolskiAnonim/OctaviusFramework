@@ -1,8 +1,9 @@
 package org.octavius.form.component
 
 import androidx.compose.runtime.mutableStateMapOf
-import org.octavius.form.ControlResultData
-import org.octavius.form.ControlState
+import org.octavius.form.control.base.ControlResultData
+import org.octavius.form.control.base.ControlState
+import org.octavius.form.control.base.FormResultData
 
 /**
  * Klasa zarządzająca stanem formularza oraz kontrolek w jego wnętrzu
@@ -63,7 +64,7 @@ class FormState {
     /**
      * Funkcja zwraca rezultat formularza w formie danych przetworzonych przez kontrolki
      */
-    fun collectFormData(schema: FormSchema): Map<String, ControlResultData> {
+    fun collectFormData(schema: FormSchema): FormResultData {
         val result = mutableMapOf<String, ControlResultData>()
 
         schema.getAllControls().forEach { (controlName, control) ->
@@ -71,6 +72,6 @@ class FormState {
             result[controlName] = control.getResult(controlName, state)
         }
 
-        return result
+        return result.toMap()
     }
 }

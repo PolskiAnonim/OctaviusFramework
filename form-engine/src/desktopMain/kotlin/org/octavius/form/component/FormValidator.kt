@@ -3,7 +3,7 @@ package org.octavius.form.component
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.DataFetcher
-import org.octavius.form.ControlResultData
+import org.octavius.form.control.base.FormResultData
 
 /**
  * Klasa odpowiedzialna za walidację formularza na dwóch poziomach:
@@ -60,10 +60,10 @@ open class FormValidator() : KoinComponent {
      * niestandardowych reguł walidacji (np. sprawdzanie duplikatów,
      * weryfikacja relacji między polami, itp.)
      *
-     * @param formData zebrane dane z formularza
+     * @param formResultData zebrane dane z formularza
      * @return true jeśli reguły biznesowe są spełnione
      */
-    open fun validateBusinessRules(formData: Map<String, ControlResultData>): Boolean {
+    open fun validateBusinessRules(formResultData: FormResultData): Boolean {
         return true
     }
 
@@ -79,7 +79,7 @@ open class FormValidator() : KoinComponent {
      *
      * @return Mapa walidacji specyficznych dla akcji.
      */
-    open fun defineActionValidations(): Map<String, (formData: Map<String, ControlResultData>) -> Boolean> {
+    open fun defineActionValidations(): Map<String, (formResultData: FormResultData) -> Boolean> {
         return emptyMap()
     }
 }

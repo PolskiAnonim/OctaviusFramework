@@ -6,10 +6,11 @@ import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.form.ControlResultData
-import org.octavius.form.FormActionResult
-import org.octavius.form.TableRelation
+import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
+import org.octavius.form.component.TableRelation
+import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.getCurrent
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class AsianMediaFormDataManager : FormDataManager() {
@@ -72,7 +73,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
     }
 
-    override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
         return mapOf(
             "save" to { formData, loadedId -> processSave(formData, loadedId) },
             "delete" to { formData, loadedId -> processDelete(formData, loadedId) },
@@ -80,7 +81,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         )
     }
 
-    fun processDelete(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
+    fun processDelete(formResultData: FormResultData, loadedId: Int?): FormActionResult {
         // Wykorzystanie CASCADE
         val step = DatabaseStep.Delete("titles", mapOf("id" to loadedId.toDatabaseValue()))
         val result = batchExecutor.execute(listOf(step))
@@ -93,7 +94,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
     }
 
-    fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
+    fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
         val databaseSteps = mutableListOf<DatabaseStep>()
 
         // =================================================================================
@@ -102,8 +103,8 @@ class AsianMediaFormDataManager : FormDataManager() {
         val titleIdRef: DatabaseValue
 
         val titleData = mapOf(
-            "titles" to formData["titles"]!!.currentValue.toDatabaseValue(),
-            "language" to formData["language"]!!.currentValue.toDatabaseValue()
+            "titles" to formResultData["titles"]!!.currentValue.toDatabaseValue(),
+            "language" to formResultData["language"]!!.currentValue.toDatabaseValue()
         )
 
         if (loadedId != null) {
@@ -127,7 +128,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         // =================================================================================
         // KROK 2: Obsługa pod-encji 'publications' (Repeatable Field)
         // =================================================================================
-        val publicationsResult = formData["publications"]!!.currentValue as RepeatableResultValue
+        val publicationsResult = formResultData["publications"]!!.currentValue as RepeatableResultValue
 
         // --- Usunięte publikacje ---
         publicationsResult.deletedRows.forEach { rowData ->
@@ -206,16 +207,16 @@ class AsianMediaFormDataManager : FormDataManager() {
      */
     private fun addPublicationVolumesUpdateOperation(
         databaseSteps: MutableList<DatabaseStep>,
-        rowData: Map<String, ControlResultData>,
+        rowData: FormResultData,
         publicationIdRef: DatabaseValue
     ) {
         if (rowData["trackProgress"]!!.currentValue == true) {
             val volumesData = mapOf(
-                "volumes" to rowData["volumes"]!!.currentValue.toDatabaseValue(),
-                "translated_volumes" to rowData["translatedVolumes"]!!.currentValue.toDatabaseValue(),
-                "chapters" to rowData["chapters"]!!.currentValue.toDatabaseValue(),
-                "translated_chapters" to rowData["translatedChapters"]!!.currentValue.toDatabaseValue(),
-                "original_completed" to rowData["originalCompleted"]!!.currentValue.toDatabaseValue()
+                "volumes" to rowData.getCurrent("volumes").toDatabaseValue(),
+                "translated_volumes" to rowData.getCurrent("translatedVolumes").toDatabaseValue(),
+                "chapters" to rowData.getCurrent("chapters").toDatabaseValue(),
+                "translated_chapters" to rowData.getCurrent("translatedChapters").toDatabaseValue(),
+                "original_completed" to rowData.getCurrent("originalCompleted").toDatabaseValue()
             )
 
             databaseSteps.add(DatabaseStep.Update(

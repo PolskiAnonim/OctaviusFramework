@@ -1,6 +1,5 @@
 package org.octavius.form.control.base
 
-import org.octavius.form.ControlState
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState

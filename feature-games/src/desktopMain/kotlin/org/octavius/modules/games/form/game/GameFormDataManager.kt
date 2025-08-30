@@ -7,10 +7,10 @@ import org.octavius.data.contract.toDatabaseValue
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus
-import org.octavius.form.ControlResultData
-import org.octavius.form.FormActionResult
-import org.octavius.form.TableRelation
+import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
+import org.octavius.form.component.TableRelation
+import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class GameFormDataManager : FormDataManager() {
@@ -79,14 +79,14 @@ class GameFormDataManager : FormDataManager() {
         }
     }
 
-    override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
         return mapOf(
             "save" to { formData, loadedId -> processSave(formData, loadedId) },
             "cancel" to { _, _ -> FormActionResult.CloseScreen }
         )
     }
 
-    fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
+    fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
         val databaseSteps = mutableListOf<DatabaseStep>()
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
 
@@ -95,9 +95,9 @@ class GameFormDataManager : FormDataManager() {
 
         // Dane dla głównej tabeli 'games'.
         val gameData = mapOf(
-            "name" to formData["name"]!!.currentValue.toDatabaseValue(),
-            "series" to formData["series"]!!.currentValue.toDatabaseValue(),
-            "status" to formData["status"]!!.currentValue.toDatabaseValue()
+            "name" to formResultData["name"]!!.currentValue.toDatabaseValue(),
+            "series" to formResultData["series"]!!.currentValue.toDatabaseValue(),
+            "status" to formResultData["status"]!!.currentValue.toDatabaseValue()
         )
 
         // W zależności od tego, czy tworzymy nową grę, czy edytujemy istniejącą,
@@ -133,7 +133,7 @@ class GameFormDataManager : FormDataManager() {
 
         // Od tego momentu wszystkie operacje na tabelach zależnych używają `gameIdRef`,
 
-        val status = formData["status"]!!.currentValue as GameStatus
+        val status = formResultData["status"]!!.currentValue as GameStatus
 
         // =================================================================================
         // KROK 2: Obsługa tabel zależnych (1-do-1)
@@ -142,12 +142,12 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Play Time ---
         handleDependentTable(
             databaseSteps = databaseSteps,
-            exists = formData["playTimeExists"]!!.currentValue as Boolean,
+            exists = formResultData["playTimeExists"]!!.currentValue as Boolean,
             conditionMet = status in statusesWithDetails,
             tableName = "play_time",
             data = mapOf(
-                "play_time_hours" to formData["playTimeHours"]!!.currentValue.toDatabaseValue(),
-                "completion_count" to formData["completionCount"]!!.currentValue.toDatabaseValue()
+                "play_time_hours" to formResultData["playTimeHours"]!!.currentValue.toDatabaseValue(),
+                "completion_count" to formResultData["completionCount"]!!.currentValue.toDatabaseValue()
             ),
             gameIdRef = gameIdRef
         )
@@ -155,13 +155,13 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Ratings ---
         handleDependentTable(
             databaseSteps = databaseSteps,
-            exists = formData["ratingsExists"]!!.currentValue as Boolean,
+            exists = formResultData["ratingsExists"]!!.currentValue as Boolean,
             conditionMet = status in statusesWithDetails,
             tableName = "ratings",
             data = mapOf(
-                "story_rating" to formData["storyRating"]!!.currentValue.toDatabaseValue(),
-                "gameplay_rating" to formData["gameplayRating"]!!.currentValue.toDatabaseValue(),
-                "atmosphere_rating" to formData["atmosphereRating"]!!.currentValue.toDatabaseValue()
+                "story_rating" to formResultData["storyRating"]!!.currentValue.toDatabaseValue(),
+                "gameplay_rating" to formResultData["gameplayRating"]!!.currentValue.toDatabaseValue(),
+                "atmosphere_rating" to formResultData["atmosphereRating"]!!.currentValue.toDatabaseValue()
             ),
             gameIdRef = gameIdRef
         )
@@ -169,13 +169,13 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Characters ---
         handleDependentTable(
             databaseSteps = databaseSteps,
-            exists = formData["charactersExists"]!!.currentValue as Boolean,
-            conditionMet = formData["visibleCharactersSection"]!!.currentValue as Boolean,
+            exists = formResultData["charactersExists"]!!.currentValue as Boolean,
+            conditionMet = formResultData["visibleCharactersSection"]!!.currentValue as Boolean,
             tableName = "characters",
             data = mapOf(
-                "has_distinctive_character" to formData["hasDistinctiveCharacter"]!!.currentValue.toDatabaseValue(),
-                "has_distinctive_protagonist" to formData["hasDistinctiveProtagonist"]!!.currentValue.toDatabaseValue(),
-                "has_distinctive_antagonist" to formData["hasDistinctiveAntagonist"]!!.currentValue.toDatabaseValue()
+                "has_distinctive_character" to formResultData["hasDistinctiveCharacter"]!!.currentValue.toDatabaseValue(),
+                "has_distinctive_protagonist" to formResultData["hasDistinctiveProtagonist"]!!.currentValue.toDatabaseValue(),
+                "has_distinctive_antagonist" to formResultData["hasDistinctiveAntagonist"]!!.currentValue.toDatabaseValue()
             ),
             gameIdRef = gameIdRef
         )
@@ -184,7 +184,7 @@ class GameFormDataManager : FormDataManager() {
         // KROK 3: Obsługa tabeli łączącej (many-to-many)
         // =================================================================================
 
-        val categoriesResult = formData["categories"]!!.currentValue as RepeatableResultValue
+        val categoriesResult = formResultData["categories"]!!.currentValue as RepeatableResultValue
 
         // Usunięte kategorie
         categoriesResult.deletedRows.forEach { rowData ->

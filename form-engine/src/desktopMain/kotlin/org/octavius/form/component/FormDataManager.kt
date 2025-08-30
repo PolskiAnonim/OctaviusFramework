@@ -8,9 +8,7 @@ import org.octavius.data.contract.DataFetcher
 import org.octavius.data.contract.DataResult
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.form.ControlResultData
-import org.octavius.form.FormActionResult
-import org.octavius.form.TableRelation
+import org.octavius.form.control.base.FormResultData
 
 /**
  * Abstrakcyjna klasa zarządzająca przepływem danych w formularzach.
@@ -92,7 +90,7 @@ abstract class FormDataManager: KoinComponent {
     *
     * @return Mapa akcji formularza.
     */
-    open fun definedFormActions(): Map<String, (formData: Map<String, ControlResultData>, loadedId: Int?) -> FormActionResult> {
+    open fun definedFormActions(): Map<String, (formResultData: FormResultData, loadedId: Int?) -> FormActionResult> {
         return emptyMap()
     }
 }

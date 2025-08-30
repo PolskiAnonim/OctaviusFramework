@@ -6,10 +6,10 @@ import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.form.ControlResultData
-import org.octavius.form.FormActionResult
-import org.octavius.form.TableRelation
+import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
+import org.octavius.form.component.TableRelation
+import org.octavius.form.control.base.FormResultData
 import org.octavius.localization.T
 
 class GameSeriesFormDataManager : FormDataManager() {
@@ -23,7 +23,7 @@ class GameSeriesFormDataManager : FormDataManager() {
         return emptyMap() // Tylko nazwa, brak domyślnych wartości
     }
 
-    override fun definedFormActions(): Map<String, (Map<String, ControlResultData>, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
         return mapOf(
             "save" to { formData, loadedId -> processSave(formData, loadedId) },
             "cancel" to { _, _ -> FormActionResult.CloseScreen },
@@ -31,9 +31,9 @@ class GameSeriesFormDataManager : FormDataManager() {
         )
     }
 
-    private fun processSave(formData: Map<String, ControlResultData>, loadedId: Int?): FormActionResult {
+    private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
         val seriesData = mutableMapOf<String, DatabaseValue>()
-        seriesData["name"] = formData["name"]!!.currentValue.toDatabaseValue()
+        seriesData["name"] = formResultData["name"]!!.currentValue.toDatabaseValue()
 
         val steps = if (loadedId != null) {
             listOf(DatabaseStep.Update("series", seriesData, mapOf("id" to loadedId.toDatabaseValue())))
@@ -52,10 +52,10 @@ class GameSeriesFormDataManager : FormDataManager() {
     }
 
     private fun validateTitleAgainstDatabase(
-        formData: Map<String, ControlResultData>,
+        formResultData: FormResultData,
         loadedId: Int?
     ): FormActionResult {
-        val name = formData["name"]!!.currentValue as String
+        val name = formResultData["name"]!!.currentValue as String
 
         // Sprawdź unikalność nazwy serii
         val existingCount = dataFetcher.query().from("series").where("name = :name").toCount(mapOf("name" to name))

@@ -1,7 +1,7 @@
 package org.octavius.form.control.base
 
 import kotlinx.coroutines.CoroutineScope
-import org.octavius.form.FormActionTrigger
+import org.octavius.form.component.FormActionTrigger
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
@@ -45,7 +45,7 @@ data class ActionContext<T>(
         formState.getControlState(controlName)?.let { state ->
             // Używamy "unsafe" cast, ponieważ programista jest odpowiedzialny za poprawny typ
             @Suppress("UNCHECKED_CAST")
-            val typedState = state as org.octavius.form.ControlState<V>
+            val typedState = state as ControlState<V>
             typedState.value.value = newValue
             typedState.revision.value++ // ZAWSZE inkrementuj rewizję
         }
