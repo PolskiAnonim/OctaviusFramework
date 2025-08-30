@@ -14,10 +14,16 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import kotlin.time.measureTime
 
 /**
- * Inicjalizuje i udostępnia podstawowe usługi bazodanowe.
+ * System zarządzania bazą danych - centralny punkt dostępu do usług bazodanowych.
  *
- * Konfiguruje pulę połączeń, menedżery transakcji i usługi dostępu do danych,
- * udostępniając je przez publiczne interfejsy `DataFetcher` i `BatchExecutor`.
+ * Odpowiada za:
+ * - Konfigurację puli połączeń HikariCP z PostgreSQL
+ * - Inicjalizację menedżera transakcji Spring
+ * - Automatyczne ładowanie rejestru typów z bazy danych i classpath
+ * - Udostępnienie usług dostępu do danych przez interfejsy [DataFetcher] i [BatchExecutor]
+ * 
+ * Singleton inicjalizowany przy pierwszym dostępie, konfiguruje wszystkie komponenty
+ * wymagane do pracy z wieloschemtową bazą PostgreSQL (public, asian_media, games).
  */
 class DatabaseSystem {
     companion object {

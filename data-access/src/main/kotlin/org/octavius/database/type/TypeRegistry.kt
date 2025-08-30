@@ -6,15 +6,22 @@ import org.octavius.exception.TypeRegistryException
 import kotlin.reflect.KClass
 
 /**
- * Przechowuje i udostępnia mapowanie między typami PostgreSQL a klasami Kotlina.
+ * Rejestr typów - mapowanie między typami PostgreSQL a klasami Kotlina.
  *
- * Ta klasa jest **niemutowalnym** rejestrem. Jej instancja powinna być tworzona
- * za pomocą [TypeRegistryLoader], który jest odpowiedzialny za zebranie wszystkich
- * niezbędnych danych z bazy i classpath.
+ * Niemutowalny rejestr przechowujący metadane o typach z bazy danych oraz mapowania
+ * na klasy domenowe oznaczone adnotacją @PgType. Inicjalizowany przez [TypeRegistryLoader]
+ * na podstawie skanowania bazy danych i classpath.
  *
- * @property postgresTypeMap Mapa nazw typów PostgreSQL na szczegółowe informacje o typach.
- * @property classFullPathToPgTypeNameMap Mapa pełnych ścieżek klas Kotlina na nazwy typów w PostgreSQL.
- * @property pgTypeNameToClassFullPathMap Mapa nazw typów w PostgreSQL na pełne ścieżki klas Kotlina.
+ * Obsługiwane kategorie typów:
+ * - STANDARD - podstawowe typy PostgreSQL (int4, text, bool, itp.)
+ * - ENUM - typy wyliczeniowe z automatyczną konwersją konwencji nazw
+ * - ARRAY - typy tablicowe z rekurencyjnym przetwarzaniem elementów
+ * - COMPOSITE - typy kompozytowe mapowane na data class
+ * - DOMAIN - typy domenowe delegujące do typów bazowych
+ *
+ * @property postgresTypeMap Mapa nazw typów PostgreSQL na szczegółowe informacje o typach
+ * @property classFullPathToPgTypeNameMap Mapa pełnych ścieżek klas Kotlina na nazwy typów PostgreSQL
+ * @property pgTypeNameToClassFullPathMap Mapa nazw typów PostgreSQL na pełne ścieżki klas Kotlina
  */
 class TypeRegistry internal constructor(
     private val postgresTypeMap: Map<String, PostgresTypeInfo>,

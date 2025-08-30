@@ -4,7 +4,12 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*
 
 /**
- * Przechowuje i zarządza konfiguracją połączenia z bazą danych.
+ * Konfiguracja połączenia z bazą danych PostgreSQL.
+ *
+ * Przechowuje parametry połączenia i umożliwia ich ładowanie z pliku properties.
+ * Domyślnie skonfigurowana dla lokalnego środowiska deweloperskiego.
+ * 
+ * Obsługiwane schematy bazy danych: public, asian_media, games.
  */
 internal object DatabaseConfig {
     private val logger = KotlinLogging.logger {}
