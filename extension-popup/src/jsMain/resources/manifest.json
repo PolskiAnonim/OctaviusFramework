@@ -8,7 +8,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.mangaupdates.com/series/*"
+        "https://www.mangaupdates.com/*"
       ],
       "js": [
         "extension-content-script.js"
