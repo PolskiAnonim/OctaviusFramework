@@ -32,6 +32,29 @@ data class ControlState<T>(
     val revision: MutableState<Int> = mutableStateOf(0)
 )
 
+data class RenderContext(
+    val localName: String, // "status", "publications", "subtasks"
+    val basePath: String = ""  // "projects[uuid1]", "projects[uuid1].tasks[uuid2]"
+) {
+    // To jest teraz pełna, globalnie unikalna ścieżka do stanu w FormState
+    val fullPath: String by lazy {
+        if (basePath.isEmpty()) localName else "$basePath.$localName"
+    }
+
+    // Tworzy nowy, zagnieżdżony kontekst dla kontrolki-dziecka
+    fun forChild(childLocalName: String): RenderContext {
+        return RenderContext(
+            localName = childLocalName,
+            basePath = this.fullPath
+        )
+    }
+
+    fun forRepeatableChild(childLocalName: String, rowId: String): RenderContext {
+        // Specjalna wersja dla wierszy w RepeatableControl
+        return RenderContext(localName = childLocalName, basePath = "${this.fullPath}[$rowId]")
+    }
+}
+
 /**
  * Zwięzły alias dla mapy z wynikami formularza.
  * Używany jako typ danych przekazywany do logiki walidacji i zapisu.

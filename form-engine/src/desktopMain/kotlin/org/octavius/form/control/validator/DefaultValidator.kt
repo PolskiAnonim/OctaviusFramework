@@ -2,6 +2,7 @@ package org.octavius.form.control.validator
 
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
+import org.octavius.form.control.base.RenderContext
 
 /**
  * Domyślna implementacja walidatora kontrolek formularza.
@@ -25,7 +26,7 @@ class DefaultValidator<T : Any> : ControlValidator<T>() {
      *
      * @param state stan kontrolki - nieużywany w tej implementacji
      */
-    override fun validateSpecific(controlName: String, state: ControlState<*>) {
+    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
         // Domyślna implementacja nie wykonuje dodatkowej walidacji
     }
 }

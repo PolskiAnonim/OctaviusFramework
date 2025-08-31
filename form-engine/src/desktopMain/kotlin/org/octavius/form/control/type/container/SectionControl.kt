@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
+import org.octavius.form.control.base.RenderContext
 import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
@@ -41,7 +42,7 @@ class SectionControl(
     }
 
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<Unit>, isRequired: Boolean) {
+    override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
         val expanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(
@@ -108,7 +109,7 @@ class SectionControl(
                                                 val states = this@SectionControl.formState.getAllStates()
                                                 controls[ctrlName]?.let { control ->
                                                     states[ctrlName]?.let { controlState ->
-                                                        control.Render(ctrlName, controlState)
+                                                        control.Render(RenderContext(ctrlName, renderContext.basePath), controlState)
                                                     }
                                                     Spacer(modifier = Modifier.height(FormSpacing.sectionContentSpacing))
                                                 }
@@ -123,7 +124,7 @@ class SectionControl(
                                         val states = this@SectionControl.formState.getAllStates()
                                         controls[ctrlName]?.let { control ->
                                             states[ctrlName]?.let { controlState ->
-                                                control.Render(ctrlName, controlState)
+                                                control.Render(renderContext.forChild(ctrlName), controlState)
                                             }
                                             Spacer(modifier = Modifier.height(FormSpacing.sectionHeaderPaddingBottom))
                                         }

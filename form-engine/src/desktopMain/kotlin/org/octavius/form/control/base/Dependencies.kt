@@ -42,7 +42,9 @@ enum class ComparisonType {
     NotEquals
 }
 
+// TODO: zobaczyć ścieżki relatywne (../) lub od korzenia
 /**
+ *
  * Zasięg zależności między kontrolkami.
  */
 enum class DependencyScope {

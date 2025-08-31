@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import org.octavius.form.control.base.ControlResultData
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.RenderContext
 
 /**
  * Klasa zarządzająca stanem formularza oraz kontrolek w jego wnętrzu
@@ -32,10 +33,9 @@ class FormState {
         // Potem inicjalizuj stany kontrolek
         schema.getAllControls().forEach { (controlName, control) ->
             val value = initValues[controlName]
-            _controlStates[controlName] = control.setInitValue(value)
+            _controlStates[controlName] = control.setInitValue(controlName, value)
         }
     }
-
     /**
      * Funkcja ustawia stan kontrolki o danej nazwie (może być hierarchiczna)
      * Automatycznie triggeruje recomposition dzięki mutableStateMapOf
@@ -69,7 +69,7 @@ class FormState {
 
         schema.getAllControls().forEach { (controlName, control) ->
             val state = _controlStates[controlName]!! // Stan musi istnieć, jeśli kontrolka jest w schemacie
-            result[controlName] = control.getResult(controlName, state)
+            result[controlName] = control.getResult(RenderContext(controlName), state)
         }
 
         return result.toMap()

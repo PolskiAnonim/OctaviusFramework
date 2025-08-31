@@ -16,6 +16,7 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.base.StringListValidation
 import org.octavius.form.control.validator.collection.StringListValidator
 import org.octavius.localization.T
@@ -44,7 +45,7 @@ class StringListControl(
     }
 
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<List<String>>, isRequired: Boolean) {
+    override fun Display(renderContext: RenderContext, controlState: ControlState<List<String>>, isRequired: Boolean) {
         var currentList by remember { mutableStateOf(controlState.value.value ?: listOf()) }
         var newItemText by remember { mutableStateOf("") }
 
@@ -184,7 +185,7 @@ class StringListControl(
                 }
             }
             
-            DisplayFieldErrors(controlName)
+            DisplayFieldErrors(renderContext)
         }
     }
 }

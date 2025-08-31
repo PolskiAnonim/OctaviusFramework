@@ -13,6 +13,7 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
+import org.octavius.form.control.base.RenderContext
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -42,7 +43,7 @@ class ButtonControl(
     actions = actions
 ) {
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<Unit>, isRequired: Boolean) {
+    override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()
 
         val modifier = Modifier
@@ -55,7 +56,7 @@ class ButtonControl(
         when (buttonType) {
             ButtonType.Filled -> {
                 Button(
-                    onClick = { executeActions(controlName, Unit, scope) },
+                    onClick = { executeActions(renderContext, Unit, scope) },
                     modifier = modifier
                 ) {
                     Text(text)
@@ -63,7 +64,7 @@ class ButtonControl(
             }
             ButtonType.Outlined -> {
                 OutlinedButton(
-                    onClick = { executeActions(controlName, Unit, scope) },
+                    onClick = { executeActions(renderContext, Unit, scope) },
                     modifier = modifier
                 ) {
                     Text(text)
@@ -71,7 +72,7 @@ class ButtonControl(
             }
             ButtonType.Text -> {
                 TextButton(
-                    onClick = { executeActions(controlName, Unit, scope) },
+                    onClick = { executeActions(renderContext, Unit, scope) },
                     modifier = modifier
                 ) {
                     Text(text)

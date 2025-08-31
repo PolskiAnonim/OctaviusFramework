@@ -2,6 +2,7 @@ package org.octavius.form.control.validator.primitive
 
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.base.StringValidation
 import org.octavius.localization.T
 
@@ -12,12 +13,12 @@ class StringValidator(
     private val validationOptions: StringValidation? = null
 ) : ControlValidator<String>() {
 
-    override fun validateSpecific(controlName: String, state: ControlState<*>) {
+    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
         val value = state.value.value as? String ?: return
         val errors = mutableListOf<String>()
 
         if (value.isBlank()) {
-            errorManager.setFieldErrors(controlName, errors)
+            errorManager.setFieldErrors(renderContext.fullPath, errors)
             return
         }
 
@@ -44,6 +45,6 @@ class StringValidator(
             }
         }
 
-        errorManager.setFieldErrors(controlName, errors)
+        errorManager.setFieldErrors(renderContext.fullPath, errors)
     }
 }

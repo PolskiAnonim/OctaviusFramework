@@ -3,6 +3,7 @@ package org.octavius.form.control.validator.number
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.DoubleValidation
+import org.octavius.form.control.base.RenderContext
 import org.octavius.localization.T
 import kotlin.math.abs
 import kotlin.math.pow
@@ -15,7 +16,7 @@ class DoubleValidator(
     private val validationOptions: DoubleValidation? = null
 ) : ControlValidator<Double>() {
 
-    override fun validateSpecific(controlName: String, state: ControlState<*>) {
+    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
         val value = state.value.value as? Double ?: return
         val errors = mutableListOf<String>()
 
@@ -52,6 +53,6 @@ class DoubleValidator(
             }
         }
 
-        errorManager.setFieldErrors(controlName, errors)
+        errorManager.setFieldErrors(renderContext.fullPath, errors)
     }
 }

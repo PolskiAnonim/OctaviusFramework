@@ -17,6 +17,7 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.layout.RenderCheckboxLabel
 import org.octavius.ui.theme.FormSpacing
 
@@ -42,7 +43,7 @@ class BooleanControl(
     actions = actions
 ) {
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<Boolean>, isRequired: Boolean) {
+    override fun Display(renderContext: RenderContext, controlState: ControlState<Boolean>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()
         Surface(
             modifier = Modifier
@@ -66,7 +67,7 @@ class BooleanControl(
                             checked = currentValue,
                             onCheckedChange = {
                                 controlState.value.value = it
-                                executeActions(controlName, it, scope)
+                                executeActions(renderContext, it, scope)
                             }
                         )
                     } else {
@@ -77,14 +78,14 @@ class BooleanControl(
                                 val mapping = mapOf(null to false, false to true, true to null)
                                 val newValue = mapping[controlState.value.value]
                                 controlState.value.value = newValue
-                                executeActions(controlName, newValue, scope)
+                                executeActions(renderContext, newValue, scope)
                             }
                         )
                     }
                     RenderCheckboxLabel(label, isRequired)
                 }
 
-                DisplayFieldErrors(controlName)
+                DisplayFieldErrors(renderContext)
             }
         }
     }

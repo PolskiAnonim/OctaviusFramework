@@ -36,6 +36,19 @@ abstract class ControlValidator<T : Any> {
         this.errorManager = errorManager
     }
 
+    private fun createContextFromName(fullPath: String): RenderContext {
+
+        val lastDotIndex = fullPath.lastIndexOf('.')
+        if (lastDotIndex == -1) {
+            // Nie ma kropek, to jest kontrolka na najwyższym poziomie
+            return RenderContext(localName = fullPath, basePath = "")
+        }
+
+        val basePath = fullPath.substring(0, lastDotIndex)
+        val localName = fullPath.substring(lastDotIndex + 1)
+        return RenderContext(localName = localName, basePath = basePath)
+    }
+
     /**
      * Sprawdza czy kontrolka jest widoczna na podstawie zależności i hierarchii.
      *
@@ -44,28 +57,32 @@ abstract class ControlValidator<T : Any> {
      * - Wszystkie zależności typu Visible są spełnione
      *
      * @param control kontrolka do sprawdzenia
-     * @param controlName nazwa stanu kontrolki (do rozwiązywania lokalnych zależności)
-     * @param controls mapa wszystkich kontrolek formularza
-     * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli kontrolka powinna być widoczna
      */
     internal fun isControlVisible(
         control: Control<*>,
-        controlName: String
+        renderContext: RenderContext
     ): Boolean {
         val controls = formSchema.getAllControls()
         val states = formState.getAllStates()
         // Jeśli kontrolka ma rodzica, najpierw sprawdź czy rodzic jest widoczny
         control.parentControl?.let { parentName ->
-            val parentControl = controls[parentName] ?: return false
-            if (!isControlVisible(parentControl, parentName)) return false
+            val parentControl = controls[parentName]!! // Rodzic musi istnieć
+
+            // Stwórz kontekst dla rodzica. Jego nazwa jest jego pełną ścieżką.
+            val parentContext = createContextFromName(parentName)
+
+            // Wywołaj rekurencyjnie isControlVisible dla rodzica, z jego WŁASNYM kontekstem.
+            if (!isControlVisible(parentControl, parentContext)) {
+                return false
+            }
         }
 
         // Sprawdź zależności
         control.dependencies?.forEach { (_, dependency) ->
             if (dependency.dependencyType != DependencyType.Visible) return@forEach
 
-            val resolvedControlName = resolveDependencyControlName(dependency, controlName)
+            val resolvedControlName = resolveDependencyControlName(dependency, renderContext)
             val dependentState = states[resolvedControlName] ?: return@forEach
             val dependentValue = dependentState.value.value
 
@@ -97,14 +114,11 @@ abstract class ControlValidator<T : Any> {
      * - Spełnione są zależności typu Required
      *
      * @param control kontrolka do sprawdzenia
-     * @param controlName nazwa stanu kontrolki (do rozwiązywania lokalnych zależności)
-     * @param controls mapa wszystkich kontrolek formularza
-     * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli kontrolka jest wymagana
      */
     internal fun isControlRequired(
         control: Control<*>,
-        controlName: String
+        renderContext: RenderContext
     ): Boolean {
         formSchema.getAllControls()
         val states = formState.getAllStates()
@@ -113,7 +127,7 @@ abstract class ControlValidator<T : Any> {
         // Sprawdzamy zależności typu Required
         control.dependencies?.forEach { (_, dependency) ->
             if (dependency.dependencyType == DependencyType.Required) {
-                val resolvedControlName = resolveDependencyControlName(dependency, controlName)
+                val resolvedControlName = resolveDependencyControlName(dependency, renderContext)
                 val dependentState = states[resolvedControlName] ?: return@forEach
                 val dependentValue = dependentState.value.value
 
@@ -169,22 +183,16 @@ abstract class ControlValidator<T : Any> {
      */
     private fun resolveDependencyControlName(
         dependency: ControlDependency<*>,
-        currentControlName: String
+        renderContext: RenderContext
     ): String {
         return if (dependency.scope == DependencyScope.Local) {
-            // Jeśli to lokalna zależność, spróbuj wydobyć prefiks z currentControlName
-            // UUID pattern: controlName[uuid].fieldName
-            val regex = "(\\w+)\\[([a-f0-9-]+)\\]\\.(\\w+)".toRegex()
-            val match = regex.find(currentControlName)
-            if (match != null) {
-                val (parentName, uuid, _) = match.destructured
-                "$parentName[$uuid].${dependency.controlName}"
-            } else {
-                // Jeśli nie ma wzorca hierarchicznego, użyj oryginalnej nazwy
-                dependency.controlName
-            }
+            // Jeśli to lokalna zależność, składamy pełną ścieżkę
+            // do "sąsiada" w tym samym basePath.
+            // basePath to np. "publications[123]"
+            // dependency.controlName to np. "trackProgress"
+            "${renderContext.basePath}.${dependency.controlName}"
         } else {
-            // Globalna zależność - użyj oryginalnej nazwy
+            // Globalna zależność - użyj oryginalnej nazwy z definicji zależności
             dependency.controlName
         }
     }
@@ -198,33 +206,30 @@ abstract class ControlValidator<T : Any> {
      * 3. Sprawdza czy wymagane pole nie jest puste
      * 4. Uruchamia walidację specyficzną dla typu kontrolki
      *
-     * @param controlName nazwa kontrolki
      * @param state stan kontrolki
      * @param control definicja kontrolki
-     * @param controls mapa wszystkich kontrolek formularza
-     * @param states mapa stanów wszystkich kontrolek
      */
     open fun validate(
-        controlName: String,
+        renderContext: RenderContext,
         state: ControlState<*>,
         control: Control<*>
     ) {
         // Jeśli kontrolka nie jest widoczna, pomijamy walidację
-        if (!isControlVisible(control, controlName)) {
+        if (!isControlVisible(control, renderContext)) {
             return
         }
 
         // Sprawdzamy, czy pole jest wymagane
-        val isRequired = isControlRequired(control, controlName)
+        val isRequired = isControlRequired(control, renderContext)
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd
         if (isRequired && isValueEmpty(state.value.value)) {
-            errorManager.setFieldErrors(controlName, listOf("To pole jest wymagane"))
+            errorManager.setFieldErrors(renderContext.fullPath, listOf("To pole jest wymagane"))
             return
         }
 
         // Wywołujemy dodatkową walidację specyficzną dla kontrolki
-        validateSpecific(controlName, state)
+        validateSpecific(renderContext, state)
     }
 
     /**
@@ -239,8 +244,8 @@ abstract class ControlValidator<T : Any> {
      * @param controlName nazwa kontrolki
      * @param state stan kontrolki do walidacji
      */
-    open fun validateSpecific(controlName: String, state: ControlState<*>) {
+    open fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
         // Domyślnie czyścimy błędy jeśli nie ma problemów
-        errorManager.clearFieldErrors(controlName)
+        errorManager.clearFieldErrors(renderContext.fullPath)
     }
 }

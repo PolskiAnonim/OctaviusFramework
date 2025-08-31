@@ -3,24 +3,25 @@ package org.octavius.form.control.type.repeatable
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.base.RepeatableValidation
 
 class RepeatableRowManager(
-    private val controlName: String,
     private val rowControls: Map<String, Control<*>>,
     private val formState: FormState,
     private val validationOptions: RepeatableValidation?
 ) {
     
-    fun addRow(controlState: ControlState<List<RepeatableRow>>) {
+    fun addRow(renderContext: RenderContext, controlState: ControlState<List<RepeatableRow>>) {
         val currentRows = controlState.value.value!!.toMutableList()
         val newIndex = currentRows.size
-        val newRow = createRow(newIndex, controlName, rowControls, formState)
+        val newRow = createRow(newIndex, renderContext.fullPath, rowControls, formState)
         currentRows.add(newRow)
         controlState.value.value = currentRows
     }
     
     fun deleteRow(
+        renderContext: RenderContext,
         controlState: ControlState<List<RepeatableRow>>,
         index: Int
     ) {
@@ -37,7 +38,7 @@ class RepeatableRowManager(
         
         if (!wasOriginal) {
             // Nowy wiersz - usuń stany od razu
-            formState.removeControlStatesWithPrefix("$controlName[${rowToRemove.id}]")
+            formState.removeControlStatesWithPrefix("${renderContext.fullPath}[${rowToRemove.id}]")
         }
         
         // Usuń wiersz z listy

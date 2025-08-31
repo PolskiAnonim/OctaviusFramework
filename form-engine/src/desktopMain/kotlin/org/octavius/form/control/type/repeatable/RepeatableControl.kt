@@ -16,6 +16,7 @@ import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlValidator
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.base.RepeatableValidation
 import org.octavius.form.control.layout.repeatable.RepeatableHeader
 import org.octavius.form.control.layout.repeatable.RepeatableRowCard
@@ -46,23 +47,19 @@ class RepeatableControl(
     hasStandardLayout = false,
     validationOptions = validationOptions
 ) {
-
-    private lateinit var controlName: String
     private lateinit var rowManager: RepeatableRowManager
 
     override fun setupFormReferences(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager,
-        controlName: String,
         formActionTrigger: FormActionTrigger
     ) {
-        super.setupFormReferences(formState, formSchema, errorManager, controlName, formActionTrigger)
+        super.setupFormReferences(formState, formSchema, errorManager, formActionTrigger)
         rowControls.values.forEach { rowControl ->
-            rowControl.setupFormReferences(formState, formSchema, errorManager, "", formActionTrigger)
+            rowControl.setupFormReferences(formState, formSchema, errorManager, formActionTrigger)
         }
-        this.controlName = controlName
-        this.rowManager = RepeatableRowManager(controlName, rowControls, formState, validationOptions as RepeatableValidation?)
+        this.rowManager = RepeatableRowManager(rowControls, formState, validationOptions as RepeatableValidation?)
     }
 
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
@@ -81,48 +78,53 @@ class RepeatableControl(
         return value.map { RepeatableRow(id = it.id, index = it.index) }
     }
 
-    override fun setInitValue(value: Any?): ControlState<List<RepeatableRow>> {
-        @Suppress("UNCHECKED_CAST")
-        val initialRows = value as? List<Map<String, Any?>> ?: emptyList()
+    override fun setInitValue(controlName: String, value: Any?): ControlState<List<RepeatableRow>> {
 
-        // Utwórz wiersze i dodaj ich stany do globalnego FormState
-        val initialRowsList = initialRows.mapIndexed { index, initialRow ->
+        @Suppress("UNCHECKED_CAST")
+        val initialDataRows = value as? List<Map<String, Any?>> ?: emptyList()
+
+        // 1. Utwórz wiersze i stany dla danych początkowych
+        val initialModelRows = initialDataRows.mapIndexed { index, dataRow ->
             val row = RepeatableRow(index = index)
 
-            // Dodaj stany kontrolek dla tego wiersza do globalnego FormState
-            initialRow.forEach { (fieldName, fieldValue) ->
+            // Dla każdego pola w danych, stwórz stan kontrolki-dziecka
+            rowControls.forEach { (fieldName, control) ->
+                val fieldValue = dataRow[fieldName]
                 val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val control = rowControls[fieldName]!!
-                val fieldState = control.setInitValue(fieldValue)
-                formState.setControlState(hierarchicalName, fieldState)
-            }
 
+                // Rekurencyjne wywołanie! Tworzymy stan dla dziecka.
+                val childState = control.setInitValue(hierarchicalName, fieldValue)
+                formState.setControlState(hierarchicalName, childState)
+            }
             row
         }
 
-        val additionalRows = mutableListOf<RepeatableRow>()
+        // 2. Dodaj puste wiersze, jeśli wymagane przez minItems
+        val additionalModelRows = mutableListOf<RepeatableRow>()
         val minRows = (validationOptions as? RepeatableValidation)?.minItems ?: 0
-        // Dodaj minimalne wiersze jeśli potrzeba
-        while (initialRowsList.size + additionalRows.size < minRows) {
-            val index = initialRowsList.size + additionalRows.size
-            val newRow = createRow(index, controlName, rowControls, formState!!)
-            additionalRows.add(newRow)
+        while (initialModelRows.size + additionalModelRows.size < minRows) {
+            val index = initialModelRows.size + additionalModelRows.size
+
+            // Używamy nowej funkcji pomocniczej
+            val newRow = createRow(index, controlName, rowControls, formState)
+            additionalModelRows.add(newRow)
         }
 
-        val state = ControlState(
-            initValue = mutableStateOf(initialRowsList),
-            value = mutableStateOf(copyInitToValue(initialRowsList) + additionalRows),
+        // 3. Zwróć stan dla samego RepeatableControl
+        val allInitialRows = initialModelRows + additionalModelRows
+        return ControlState(
+            initValue = mutableStateOf(initialModelRows),
+            value = mutableStateOf(copyInitToValue(allInitialRows)),
         )
-        return state
     }
 
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<List<RepeatableRow>>, isRequired: Boolean) {
+    override fun Display(renderContext: RenderContext, controlState: ControlState<List<RepeatableRow>>, isRequired: Boolean) {
         Column(modifier = Modifier.fillMaxWidth()) {
             RepeatableHeader(
                 label = label,
                 onAddClick = {
-                    rowManager.addRow(controlState)
+                    rowManager.addRow(renderContext, controlState)
                 },
                 canAdd = rowManager.canAddRow(controlState)
             )
@@ -135,12 +137,12 @@ class RepeatableControl(
                     index = index,
                     canDelete = rowManager.canDeleteRow(controlState),
                     onDelete = {
-                        rowManager.deleteRow(controlState, index)
+                        rowManager.deleteRow(renderContext, controlState, index)
                     },
                     content = {
                         RepeatableRowContent(
                             row = row,
-                            controlName = controlName,
+                            renderContext = renderContext,
                             rowOrder = rowOrder,
                             rowControls = rowControls,
                             formState = formState
@@ -154,47 +156,48 @@ class RepeatableControl(
     }
 
     override fun convertToResult(
+        renderContext: RenderContext,
         state: ControlState<*>, // Ten state to ControlState<List<RepeatableRow>> dla RepeatableControl
     ): ControlResultData {
         @Suppress("UNCHECKED_CAST")
         val controlState = state as ControlState<List<RepeatableRow>>
         val states = formState.getAllStates()
-        // controlName jest teraz lateinit i zawsze będzie ustawiony
 
         val (newRows, deletedRows, changedRows) = getRowTypes(
             controlState,
-            controlName,
+            renderContext,
             rowControls,
             states
         )
 
         val deletedRowsValues = deletedRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
-                val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldState = states[hierarchicalName]!!
-                control.getResult(hierarchicalName, fieldState)
+                val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
+                val fieldState = states[hierarchicalContext.fullPath]!!
+                control.getResult(hierarchicalContext, fieldState)
             }
         }
 
         val newRowsValues = newRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
-                val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldControlState = states[hierarchicalName]!!
-                control.getResult(hierarchicalName, fieldControlState)
+                val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
+                val fieldControlState = states[hierarchicalContext.fullPath]!!
+                control.getResult(hierarchicalContext, fieldControlState)
             }
         }
 
         val changedRowsValues = changedRows.map { row ->
             rowControls.mapValues { (fieldName, control) ->
-                val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldControlState = states[hierarchicalName]!!
-                control.getResult(hierarchicalName, fieldControlState)
+                val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
+                val fieldControlState = states[hierarchicalContext.fullPath]!!
+                control.getResult(hierarchicalContext, fieldControlState)
             }
         }
 
         // Wyczyść stany usuniętych wierszy które były oryginalne
         deletedRows.forEach { row ->
-            formState.removeControlStatesWithPrefix("$controlName[${row.id}]")
+            val rowPrefix = "${renderContext.fullPath}[${row.id}]"
+            formState.removeControlStatesWithPrefix(rowPrefix)
         }
 
         return ControlResultData(

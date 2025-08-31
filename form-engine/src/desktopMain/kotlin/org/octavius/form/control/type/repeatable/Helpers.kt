@@ -4,6 +4,7 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.RenderContext
 
 /**
  * Reprezentuje jeden wiersz w kontrolce powtarzalnej.
@@ -34,25 +35,24 @@ data class RepeatableResultValue(
  * Tworzy nowy wiersz i dodaje stany jego kontrolek do globalnego FormState.
  *
  * @param index pozycja wiersza w liście
- * @param controlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
+ * @param parentControlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
  * @param rowControls mapa kontrolek które mają być w wierszu
  * @param formState globalny stan formularza
  * @return nowy wiersz z ustawionym indeksem
  */
-fun createRow(
+internal fun createRow(
     index: Int,
-    controlName: String,
+    parentControlName: String, // Np. "publications" lub "projects[uuid].tasks"
     rowControls: Map<String, Control<*>>,
     formState: FormState
 ): RepeatableRow {
     val row = RepeatableRow(index = index)
     // Utwórz stany dla wszystkich kontrolek w wierszu
     rowControls.forEach { (fieldName, control) ->
-        val hierarchicalName = "$controlName[${row.id}].$fieldName"
-        val state = control.setInitValue(null)
+        val hierarchicalName = "$parentControlName[${row.id}].$fieldName"
+        val state = control.setInitValue(hierarchicalName, null) // Inicjalizujemy z null
         formState.setControlState(hierarchicalName, state)
     }
-
     return row
 }
 
@@ -61,14 +61,14 @@ fun createRow(
  * Używa globalnego stanu zamiast lokalnych stanów wierszy.
  *
  * @param controlState stan kontrolki powtarzalnej
- * @param controlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
+ * @param renderContext kontekst kontrolki powtarzalnej (do budowania hierarchicznych nazw)
  * @param rowControls mapa kontrolek w wierszu
  * @param globalStates mapa wszystkich stanów formularza
  * @return Triple(nowe wiersze, usunięte wiersze, zmienione wiersze)
  */
 internal fun getRowTypes(
     controlState: ControlState<List<RepeatableRow>>,
-    controlName: String,
+    renderContext: RenderContext,
     rowControls: Map<String, Control<*>>,
     globalStates: Map<String, ControlState<*>>
 ): Triple<List<RepeatableRow>, List<RepeatableRow>, List<RepeatableRow>> {
@@ -87,8 +87,8 @@ internal fun getRowTypes(
 
         // Sprawdź czy jakiekolwiek pole w tym wierszu jest zmienione
         rowControls.keys.any { fieldName ->
-            val hierarchicalName = "$controlName[${currentRow.id}].$fieldName"
-            val state = globalStates[hierarchicalName]!!
+            val hierarchicalContext = renderContext.forRepeatableChild(fieldName, currentRow.id)
+            val state = globalStates[hierarchicalContext.fullPath]!!
             state.initValue.value != state.value.value
         }
     }

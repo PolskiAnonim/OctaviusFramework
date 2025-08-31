@@ -3,6 +3,7 @@ package org.octavius.form.control.validator.number
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntegerValidation
+import org.octavius.form.control.base.RenderContext
 import org.octavius.localization.T
 
 /**
@@ -12,7 +13,7 @@ class IntegerValidator(
     private val validationOptions: IntegerValidation? = null
 ) : ControlValidator<Int>() {
 
-    override fun validateSpecific(controlName: String, state: ControlState<*>) {
+    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
         val value = state.value.value as? Int ?: return
         val errors = mutableListOf<String>()
 
@@ -39,6 +40,6 @@ class IntegerValidator(
             }
         }
 
-        errorManager.setFieldErrors(controlName, errors)
+        errorManager.setFieldErrors(renderContext.fullPath, errors)
     }
 }

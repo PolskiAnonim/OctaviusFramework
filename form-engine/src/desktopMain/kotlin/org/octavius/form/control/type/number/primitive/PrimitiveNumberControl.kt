@@ -10,6 +10,7 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.base.ValidationOptions
 import org.octavius.ui.theme.FormSpacing
 
@@ -42,7 +43,7 @@ abstract class PrimitiveNumberControl<T : Number>(
     protected abstract fun parseValue(text: String): T?
 
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<T>, isRequired: Boolean) {
+    override fun Display(renderContext: RenderContext, controlState: ControlState<T>, isRequired: Boolean) {
         // Stan widoku, który jest synchronizowany z modelem.
         var textValue by remember { mutableStateOf(controlState.value.value?.toString() ?: "") }
         val scope = rememberCoroutineScope()
@@ -54,7 +55,7 @@ abstract class PrimitiveNumberControl<T : Number>(
             // widoku (textValue) ze stanem modelu (controlState.value).
             // To kasuje błędne wpisy użytkownika i czyści błędy.
             textValue = controlState.value.value?.toString() ?: ""
-            errorManager.setFormatError(controlName, null)
+            errorManager.setFormatError(renderContext.fullPath, null)
         }
 
         OutlinedTextField(
@@ -65,19 +66,19 @@ abstract class PrimitiveNumberControl<T : Number>(
                 if (newText.isEmpty()) {
                     if (controlState.value.value != null) {
                         controlState.value.value = null
-                        executeActions(controlName, null, scope)
+                        executeActions(renderContext, null, scope)
                     }
-                    errorManager.setFormatError(controlName, null)
+                    errorManager.setFormatError(renderContext.fullPath, null)
                 } else {
                     val parsed = parseValue(newText)
                     if (parsed != null) {
                         if (controlState.value.value != parsed) {
                             controlState.value.value = parsed
-                            executeActions(controlName, parsed, scope)
+                            executeActions(renderContext, parsed, scope)
                         }
-                        errorManager.setFormatError(controlName, null)
+                        errorManager.setFormatError(renderContext.fullPath, null)
                     } else {
-                        errorManager.setFormatError(controlName, "Nieprawidłowy format liczby")
+                        errorManager.setFormatError(renderContext.fullPath, "Nieprawidłowy format liczby")
                     }
                 }
             },

@@ -4,6 +4,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.DataFetcher
 import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.RenderContext
 
 /**
  * Klasa odpowiedzialna za walidację formularza na dwóch poziomach:
@@ -45,7 +46,7 @@ open class FormValidator() : KoinComponent {
         for ((controlName, control) in formSchema.getAllControls()) {
             val state = formState.getControlState(controlName)!!
 
-            control.validateControl(controlName, state)
+            control.validateControl(RenderContext(controlName), state)
         }
 
         // Sprawdź czy są jakieś błędy pól

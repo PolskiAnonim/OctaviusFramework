@@ -2,6 +2,7 @@ package org.octavius.form.control.validator.repeatable
 
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.base.RepeatableValidation
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.repeatable.RepeatableRow
@@ -36,20 +37,20 @@ class RepeatableValidator(
      * @param controlName nazwa kontrolki (potrzebna do budowania hierarchicznych nazw)
      * @param state stan kontrolki powtarzalnej zawierający listę wierszy
      */
-    override fun validateSpecific(controlName: String, state: ControlState<*>) {
+    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
 
-        val control = formSchema.getControl(controlName) as? RepeatableControl ?: return
+        val control = formSchema.getControl(renderContext.fullPath) as? RepeatableControl ?: return
         val allStates = formState.getAllStates()
 
         // 1. Walidacja kontrolek-dzieci
         for (row in rows) {
             for ((fieldName, fieldControl) in control.rowControls) {
-                val hierarchicalName = "$controlName[${row.id}].$fieldName"
-                val fieldState = allStates[hierarchicalName]!!
+                val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
+                val fieldState = allStates[hierarchicalContext.fullPath]!!
 
-                fieldControl.validateControl(hierarchicalName, fieldState)
+                fieldControl.validateControl(hierarchicalContext, fieldState)
             }
         }
 
@@ -76,8 +77,8 @@ class RepeatableValidator(
                 for ((index, row) in rows.withIndex()) {
                     // Bierzemy pod uwagę tylko wiersze, które nie mają błędów w polach unikalności
                     val uniqueKey = options.uniqueFields.map { field ->
-                        val hierarchicalName = "$controlName[${row.id}].$field"
-                        allStates[hierarchicalName]?.value?.value
+                        val hierarchicalContext = renderContext.forRepeatableChild(field, row.id)
+                        allStates[hierarchicalContext.fullPath]?.value?.value
                     }
 
                     // Sprawdzamy, czy którekolwiek z pól klucza jest puste - takie klucze ignorujemy
@@ -96,6 +97,6 @@ class RepeatableValidator(
         }
 
         // Ustawiamy błędy dla GŁÓWNEJ kontrolki
-        errorManager.setFieldErrors(controlName, errors)
+        errorManager.setFieldErrors(renderContext.fullPath, errors)
     }
 }

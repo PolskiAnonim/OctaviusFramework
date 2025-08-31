@@ -45,7 +45,6 @@ abstract class Control<T : Any> internal constructor(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager,
-        controlName: String,
         formActionTrigger: FormActionTrigger
     ) {
         this.formState = formState
@@ -72,7 +71,7 @@ abstract class Control<T : Any> internal constructor(
      * @param value Wartość z bazy danych lub wartość domyślna.
      * @return Utworzony stan kontrolki.
      */
-    internal open fun setInitValue(value: Any?): ControlState<T> {
+    internal open fun setInitValue(controlName: String, value: Any?): ControlState<T> {
         val state = ControlState<T>()
         if (value == null) {
             return state
@@ -105,10 +104,10 @@ abstract class Control<T : Any> internal constructor(
      * Pobiera wynik kontrolki (wartość bieżącą i początkową) do dalszego przetwarzania.
      * Jeśli kontrolka jest niewidoczna, jej `currentValue` jest ustawiane na null.
      */
-    internal fun getResult(controlName: String, state: ControlState<*>): ControlResultData {
-        val result = convertToResult(state)
+    internal fun getResult(renderContext: RenderContext, state: ControlState<*>): ControlResultData {
+        val result = convertToResult(renderContext, state)
         // Niewidoczne kontrolki nie powinny przekazywać swojej wartości do zapisu.
-        return if (!validator.isControlVisible(this, controlName)) {
+        return if (!validator.isControlVisible(this, renderContext)) {
             result.copy(currentValue = null)
         } else {
             result
@@ -119,7 +118,7 @@ abstract class Control<T : Any> internal constructor(
      * Konwertuje wewnętrzny stan kontrolki (`ControlState`) na wynik do zapisu (`ControlResultData`).
      * Może być przesłonięta dla niestandardowych konwersji (np. w `RepeatableControl`).
      */
-    protected open fun convertToResult(state: ControlState<*>): ControlResultData {
+    protected open fun convertToResult(renderContext: RenderContext, state: ControlState<*>): ControlResultData {
         return ControlResultData(currentValue = state.value.value, initialValue = state.initValue.value)
     }
 
@@ -134,8 +133,8 @@ abstract class Control<T : Any> internal constructor(
     /**
      * Uruchamia proces walidacji dla tej kontrolki przy użyciu przypisanego walidatora.
      */
-    internal fun validateControl(controlName: String, state: ControlState<*>) {
-        validator.validate(controlName, state, this)
+    internal fun validateControl(renderContext: RenderContext, state: ControlState<*>) {
+        validator.validate(renderContext, state, this)
     }
 
     // --- 6. Obsługa Akcji ---
@@ -143,7 +142,7 @@ abstract class Control<T : Any> internal constructor(
      * Wykonuje zdefiniowane akcje dla tej kontrolki, zazwyczaj po zmianie wartości.
      */
     protected fun executeActions(
-        controlName: String,
+        renderContext: RenderContext,
         newValue: T?,
         scope: CoroutineScope,
         payload: Any? = null
@@ -151,7 +150,7 @@ abstract class Control<T : Any> internal constructor(
         actions?.forEach { action ->
             val context = ActionContext(
                 sourceValue = newValue,
-                sourceControlName = controlName,
+                sourceRenderContext = renderContext,
                 formState = formState,
                 formSchema = formSchema,
                 errorManager = errorManager,
@@ -169,9 +168,9 @@ abstract class Control<T : Any> internal constructor(
      * Ta metoda jest publicznym API dla `FormScreen`. Obsługuje logikę widoczności.
      */
     @Composable
-    internal fun Render(controlName: String, controlState: ControlState<*>) {
-        val isVisible = validator.isControlVisible(this, controlName)
-        val isRequired = validator.isControlRequired(this, controlName)
+    internal fun Render(renderContext: RenderContext, controlState: ControlState<*>) {
+        val isVisible = validator.isControlVisible(this, renderContext)
+        val isRequired = validator.isControlRequired(this, renderContext)
 
         AnimatedVisibility(visible = isVisible) {
             @Suppress("UNCHECKED_CAST")
@@ -180,12 +179,12 @@ abstract class Control<T : Any> internal constructor(
                 // Standardowy układ: Etykieta nad kontrolką, błędy pod.
                 Column {
                     RenderNormalLabel(label, isRequired)
-                    Display(controlName, typedState, isRequired)
-                    DisplayFieldErrors(controlName)
+                    Display(renderContext, typedState, isRequired)
+                    DisplayFieldErrors(renderContext)
                 }
             } else {
                 // Układ niestandardowy: Kontrolka sama zarządza swoim layoutem.
-                Display(controlName, typedState, isRequired)
+                Display(renderContext, typedState, isRequired)
             }
         }
     }
@@ -196,7 +195,7 @@ abstract class Control<T : Any> internal constructor(
      */
     @Composable
     protected abstract fun Display(
-        controlName: String,
+        renderContext: RenderContext,
         controlState: ControlState<T>,
         isRequired: Boolean
     )
@@ -205,11 +204,11 @@ abstract class Control<T : Any> internal constructor(
      * Pomocnicza funkcja renderująca błędy walidacji dla tej kontrolki.
      */
     @Composable
-    protected fun DisplayFieldErrors(controlName: String) {
-        val formatError = errorManager.getFormatError(controlName)
+    protected fun DisplayFieldErrors(renderContext: RenderContext) {
+        val formatError = errorManager.getFormatError(renderContext.fullPath)
         formatError?.let { error -> RenderFieldError(error) }
 
-        val fieldErrors = errorManager.getFieldErrors(controlName)
+        val fieldErrors = errorManager.getFieldErrors(renderContext.fullPath)
         fieldErrors.forEach { error ->
             RenderFieldError(error)
         }

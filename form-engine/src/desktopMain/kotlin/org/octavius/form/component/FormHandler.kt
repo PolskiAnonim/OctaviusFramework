@@ -43,8 +43,8 @@ class FormHandler(
      * Funkcja ustawia referencje do komponentów formularza dla kontrolek które tego wymagają
      */
     private fun setupFormReferences() {
-        formSchema.getAllControls().forEach { (controlName, control) ->
-            control.setupFormReferences(formState, formSchema, errorManager, controlName, this)
+        formSchema.getAllControls().values.forEach { control ->
+            control.setupFormReferences(formState, formSchema, errorManager, this)
         }
         formValidator.setupFormReferences(formState, formSchema, errorManager)
         formDataManager.setupFormReferences(errorManager)

@@ -16,6 +16,7 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.layout.RenderNormalLabel
 import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
@@ -61,7 +62,7 @@ abstract class DropdownControlBase<T : Any>(
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    override fun Display(controlName: String, controlState: ControlState<T>, isRequired: Boolean) {
+    override fun Display(renderContext: RenderContext, controlState: ControlState<T>, isRequired: Boolean) {
         var expanded by remember { mutableStateOf(false) }
         var searchQuery by remember { mutableStateOf("") }
         var options by remember { mutableStateOf<List<DropdownOption<T>>>(emptyList()) }
@@ -190,7 +191,7 @@ abstract class DropdownControlBase<T : Any>(
                                     text = { Text(option.displayText) },
                                     onClick = {
                                         controlState.value.value = option.value
-                                        executeActions(controlName, option.value, scope)
+                                        executeActions(renderContext, option.value, scope)
                                         expanded = false
                                     }
                                 )
@@ -237,7 +238,7 @@ abstract class DropdownControlBase<T : Any>(
                     }
                 }
             }
-            DisplayFieldErrors(controlName)
+            DisplayFieldErrors(renderContext)
         }
     }
 }
