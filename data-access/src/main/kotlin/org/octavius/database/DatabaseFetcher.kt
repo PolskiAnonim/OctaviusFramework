@@ -158,7 +158,7 @@ internal class DatabaseQueryBuilder(
             return trimmed
         }
 
-        if (upper.contains(Regex("\\bSELECT\\b")) || upper.contains(Regex("\\bSELECT\\b"))) {
+        if (upper.contains(Regex("\\bSELECT\\b")) || upper.contains(Regex("\\bJOIN\\b"))) {
             return "($trimmed)"
         }
 
