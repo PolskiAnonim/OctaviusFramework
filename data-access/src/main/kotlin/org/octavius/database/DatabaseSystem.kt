@@ -75,7 +75,7 @@ class DatabaseSystem {
         rowMappers = RowMappers(typesConverter)
 
         logger.debug { "Initializing database services" }
-        val concreteExecutor = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, kotlinToPostgresConverter)
+        val concreteExecutor = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
         val concreteFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
 
         batchExecutor = concreteExecutor

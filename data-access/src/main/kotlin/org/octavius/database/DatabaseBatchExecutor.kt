@@ -31,6 +31,7 @@ import org.springframework.transaction.support.TransactionTemplate
 class DatabaseBatchExecutor(
     private val transactionManager: DataSourceTransactionManager,
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
+    private val rowMappers: RowMappers,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ): BatchExecutor {
     companion object {
@@ -80,7 +81,11 @@ class DatabaseBatchExecutor(
                             logger.trace { "--> Params: ${expanded.expandedParams}" }
 
                             val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
-                                val returnedRows = namedParameterJdbcTemplate.queryForList(expanded.expandedSql, expanded.expandedParams)
+                                val returnedRows: List<Map<String, Any?>> = namedParameterJdbcTemplate.query(
+                                    expanded.expandedSql,
+                                    expanded.expandedParams,
+                                    rowMappers.ColumnNameMapper() //Przepuszczamy przez system konwersji
+                                )
                                 logger.debug { "Step $index executed, returned ${returnedRows.size} rows." }
                                 returnedRows
                             } else {
