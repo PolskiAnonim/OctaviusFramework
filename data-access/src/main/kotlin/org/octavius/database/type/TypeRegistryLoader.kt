@@ -19,6 +19,12 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
  * @param namedParameterJdbcTemplate Template JDBC do odpytywania bazy danych.
  */
 class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
+    /* //TODO do ustalenia czy pozwalać odwzorowywać "NIEPEŁNE KLASY"/walidacja, np coś takiego
+    @PgType(validation = ValidationMode.STRICT) te same pola.
+    @PgType(validation = ValidationMode.ALLOW_SUPERTYPE) klasy z dodatkowymi polami.
+    @PgType(validation = ValidationMode.ALLOW_SUBTYPE) dla klas, które celowo reprezentują tylko część typu kompozytowego
+    @PgType(validation = ValidationMode.FLEXIBLE) jako domyślne, które pozwala na obie strony.
+    */
 
     // Klasy pomocnicze
     private data class EnumTypeInfo(val typeName: String, val value: String)

@@ -170,7 +170,6 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         val placeholders = typeInfo.attributes.keys.mapIndexed { index, dbAttributeName ->
 
             val value = valueMap[dbAttributeName]
-                ?: throw TypeRegistryException("Nie znaleziono wartości dla atrybutu '$dbAttributeName' w zmapowanym obiekcie '${kClass.simpleName}'.")
 
             val fieldParamName = "${paramName}_f${index + 1}"
             val (placeholder, params) = expandParameter(fieldParamName, value)
