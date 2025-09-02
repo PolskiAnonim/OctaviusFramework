@@ -45,7 +45,7 @@ class GameFormValidator(private val entityId: Int?) : FormValidator() {
             is DataResult.Success -> {
                 if (result.value > 0) {
                     // Tytuł już istnieje. Ustawiamy błąd dla konkretnego pola 'name'.
-                    errorManager.setFieldErrors("name", listOf(T.get("games.form.validation.nameExists")))
+                    errorManager.setFieldErrors("name", listOf(T.get("games.validation.nameExists")))
                     false // Walidacja się nie powiodła.
                 } else {
                     true // Tytuł jest unikalny. Walidacja powiodła się.

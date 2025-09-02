@@ -127,14 +127,14 @@ fun SortingSection(
                 return@DropZone reportHandler.addSortColumn(columnKey)
             }
         ) { isHovered ->
-            val textKey = if (reportState.sortOrder.isEmpty()) {
-                "report.columns.dragColumnsHere"
+            val text = if (reportState.sortOrder.isEmpty()) {
+                T.get("report.columns.dragColumnsHere")
             } else {
-                "report.columns.dragMoreColumns"
+                T.get("report.columns.dragMoreColumns")
             }
 
             Text(
-                text = T.get(textKey),
+                text = text,
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isHovered) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.Center)

@@ -31,15 +31,9 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                 "saveButton" to ButtonControl(
                     text = T.get("action.save"), actions = listOf(
                         ControlAction {
-                            val res = trigger.triggerAction("validate", true)
-                            when (res) {
-                                is FormActionResult.CloseScreen,
-                                is FormActionResult.Failure,
-                                is FormActionResult.Navigate,
-                                is FormActionResult.ValidationFailed -> Unit //Niejawna obsługa lub brak wystąpień
-                                is FormActionResult.Success -> trigger.triggerAction("save", false)
-                            }
-                        }), buttonType = ButtonType.Filled
+                            trigger.triggerAction("save", true)
+                        }
+                    ), buttonType = ButtonType.Filled
                 ),
                 "cancelButton" to ButtonControl(
                     text = T.get("action.cancel"), buttonType = ButtonType.Outlined, actions = listOf(

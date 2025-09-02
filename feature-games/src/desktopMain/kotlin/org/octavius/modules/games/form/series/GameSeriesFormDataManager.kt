@@ -26,8 +26,7 @@ class GameSeriesFormDataManager : FormDataManager() {
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
         return mapOf(
             "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen },
-            "validate" to { formData, loadedId -> validateTitleAgainstDatabase(formData, loadedId) }
+            "cancel" to { _, _ -> FormActionResult.CloseScreen }
         )
     }
 

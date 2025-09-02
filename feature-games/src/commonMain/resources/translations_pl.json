@@ -50,7 +50,8 @@
       "toPlay": "Do zagrania"
     },
     "validation": {
-      "duplicatedSeries": "Seria o tej nazwie już istnieje"
+      "duplicatedSeries": "Seria o tej nazwie już istnieje",
+      "nameExists": "Nazwa już istnieje"
     }
   }
 }
