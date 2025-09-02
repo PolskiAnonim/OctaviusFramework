@@ -125,3 +125,24 @@ fun IntegerColumn(
     filterable = filterable,
     formatter = formatter
 )
+
+/**
+ * Funkcja fabryczna tworząca kolumnę do wyświetlania liczb całkowitych typu Long.
+ * Używa generycznej NumberColumn pod spodem.
+ */
+@Suppress("FunctionName")
+fun LongColumn(
+    header: String,
+    width: Float = 1f,
+    sortable: Boolean = true,
+    filterable: Boolean = true,
+    formatter: (Long?) -> String = { it?.toString() ?: "" }
+) = NumberColumn(
+    header = header,
+    numberClass = Long::class,
+    valueParser = { it.toLongOrNull() },
+    width = width,
+    sortable = sortable,
+    filterable = filterable,
+    formatter = formatter
+)
