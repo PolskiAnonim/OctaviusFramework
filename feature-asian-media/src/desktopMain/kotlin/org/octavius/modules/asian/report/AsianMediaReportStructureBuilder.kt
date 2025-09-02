@@ -9,7 +9,7 @@ import org.octavius.localization.T
 import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
-import org.octavius.report.ReportAddAction
+import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.EnumColumn
@@ -57,22 +57,19 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
         ).asList(9)
     )
 
-
-    override fun buildRowActions(): List<ReportRowAction> = listOf(
-        ReportRowAction(T.get("report.actions.edit")) {
-            val id = rowData["title_id"] as? Int
-            if (id != null) {
-                AppRouter.navigateTo(
-                    AsianMediaFormScreen.create(
-                        entityId = id
-                    )
+    override fun buildDefaultRowAction(): ReportRowAction = ReportRowAction(T.get("report.actions.edit")) {
+        val id = rowData["title_id"] as? Int
+        if (id != null) {
+            AppRouter.navigateTo(
+                AsianMediaFormScreen.create(
+                    entityId = id
                 )
-            }
+            )
         }
-    )
+    }
 
-    override fun buildAddActions(): List<ReportAddAction> = listOf(
-        ReportAddAction(T.get("asianMedia.report.newTitle"), Icons.Default.Add) {
+    override fun buildMainActions(): List<ReportMainAction> = listOf(
+        ReportMainAction(T.get("asianMedia.report.newTitle"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 AsianMediaFormScreen.create(
                 ))

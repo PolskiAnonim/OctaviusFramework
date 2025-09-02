@@ -1,10 +1,11 @@
 package org.octavius.report.component
 
 import org.octavius.report.Query
-import org.octavius.report.ReportAddAction
+import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.special.ActionColumn
+import org.octavius.report.column.type.special.QuickActionColumn
 
 /**
  * ReportStructure
@@ -18,7 +19,8 @@ class ReportStructure(
     private val initColumns: Map<String, ReportColumn>,
     val reportName: String,
     val rowActions: List<ReportRowAction> = emptyList(),
-    val addActions: List<ReportAddAction> = emptyList()
+    val defaultRowAction: ReportRowAction? = null,
+    val addActions: List<ReportMainAction> = emptyList()
 ) {
     lateinit var columns: Map<String, ReportColumn>
 
@@ -33,6 +35,9 @@ class ReportStructure(
         val specialColumns = mutableMapOf<String, ReportColumn>()
         if (rowActions.isNotEmpty()) {
             specialColumns.put("_actions", ActionColumn(rowActions))
+        }
+        if (defaultRowAction != null) {
+            specialColumns.put("_quick_action", QuickActionColumn(defaultRowAction))
         }
         columns = specialColumns + initColumns
     }
@@ -79,7 +84,8 @@ abstract class ReportStructureBuilder {
             initColumns = buildColumns(),
             reportName = getReportName(),
             rowActions = buildRowActions(),
-            addActions = buildAddActions()
+            defaultRowAction = buildDefaultRowAction(),
+            addActions = buildMainActions()
         )
     }
 
@@ -105,8 +111,14 @@ abstract class ReportStructureBuilder {
     open fun buildRowActions(): List<ReportRowAction> = emptyList()
 
     /**
+     * Buduje i zwraca domyślną akcję dla wierszy.
+     * Domyślnie zwraca null.
+     */
+    open fun buildDefaultRowAction(): ReportRowAction? = null
+
+    /**
      * Buduje i zwraca listę akcji dla menu "Dodaj".
      * Domyślnie zwraca pustą listę.
      */
-    open fun buildAddActions(): List<ReportAddAction> = emptyList()
+    open fun buildMainActions(): List<ReportMainAction> = emptyList()
 }

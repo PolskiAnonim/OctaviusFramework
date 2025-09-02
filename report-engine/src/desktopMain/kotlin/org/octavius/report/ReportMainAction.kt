@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * @param icon Opcjonalna ikona dla pozycji w menu.
  * @param action Prosta logika do wykonania po kliknięciu.
  */
-data class ReportAddAction(
+data class ReportMainAction(
     val label: String,
     val icon: ImageVector? = null,
     val action: () -> Unit

@@ -8,7 +8,7 @@ import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
-import org.octavius.report.ReportAddAction
+import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.EnumColumn
@@ -48,14 +48,14 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
             }
         })
 
-    override fun buildAddActions(): List<ReportAddAction> = listOf(
-        ReportAddAction(T.get("games.report.newGame"), Icons.Default.Add) {
+    override fun buildMainActions(): List<ReportMainAction> = listOf(
+        ReportMainAction(T.get("games.report.newGame"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameFormScreen.create(
                 )
             )
         },
-        ReportAddAction(T.get("games.report.newSeries"), Icons.Default.Add) {
+        ReportMainAction(T.get("games.report.newSeries"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameSeriesFormScreen.create(
                 ))
