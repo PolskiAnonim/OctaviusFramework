@@ -148,14 +148,14 @@ class NumberFilter<T : Number>(
             }
 
             NumberFilterDataType.LessThan -> {
-                if (max != null) {
-                    Query("$columnName < :$columnName", mapOf(columnName to max))
+                if (min != null) {
+                    Query("$columnName < :$columnName", mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.LessEquals -> {
-                if (max != null) {
-                    Query("$columnName <= :$columnName", mapOf(columnName to max))
+                if (min != null) {
+                    Query("$columnName <= :$columnName", mapOf(columnName to min))
                 } else null
             }
 
@@ -217,18 +217,18 @@ class NumberFilter<T : Number>(
             }
 
             NumberFilterDataType.LessThan -> {
-                if (max != null) {
+                if (min != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
-                    Query(existsType, mapOf(columnName to max))
+                    Query(existsType, mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.LessEquals -> {
-                if (max != null) {
+                if (min != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
-                    Query(existsType, mapOf(columnName to max))
+                    Query(existsType, mapOf(columnName to min))
                 } else null
             }
 
