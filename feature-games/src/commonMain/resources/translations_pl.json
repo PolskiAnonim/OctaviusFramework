@@ -1,5 +1,23 @@
 {
   "games": {
+    "categories": {
+      "name": "Nazwa kategorii",
+      "gameCount": "Liczba gier",
+      "title": "Kategorie gier"
+    },
+    "home": {
+      "title": "Gry - Strona główna",
+      "mainText": "Moduł Gry",
+      "description": "Zarządzaj swoją kolekcją gier, seriami i kategoriami.",
+      "allGames": "Wszystkie gry",
+      "allGamesDescription": "Przeglądaj i zarządzaj wszystkimi grami w swojej kolekcji",
+      "gameSeries": "Serie gier",
+      "gameSeriesDescription": "Zarządzaj seriami gier i organizuj swoje gry",
+      "gameCategories": "Kategorie gier",
+      "gameCategoriesDescription": "Zarządzaj kategoriami i tagami swoich gier",
+      "statistics": "Statystyki",
+      "statisticsDescription": "Zobacz statystyki swojej kolekcji gier"
+    },
     "form": {
       "atmosphereRating": "Ocena atmosfery (1-10)",
       "basicInfo": "Podstawowe informacje",
@@ -11,9 +29,11 @@
       "distinctiveAntagonist": "Charakterystyczny antagonista",
       "distinctiveCharacters": "Charakterystyczne postacie",
       "distinctiveProtagonist": "Charakterystyczny protagonista",
+      "editCategory": "Edytuj kategorię",
       "editGame": "Edytuj grę",
       "editSeries": "Edytuj serię",
       "gameplayRating": "Ocena rozgrywki (1-10)",
+      "newCategory": "Nowa kategoria",
       "newGame": "Nowa gra",
       "newSeries": "Nowa seria",
       "playCount": "Liczba przejść",
@@ -40,7 +60,9 @@
     },
     "series": {
       "basicInfo": "Informacje o serii",
-      "name": "Nazwa serii"
+      "name": "Nazwa serii",
+      "gameCount": "Liczba gier",
+      "title": "Serie gier"
     },
     "status": {
       "endless": "Gra bez końca",

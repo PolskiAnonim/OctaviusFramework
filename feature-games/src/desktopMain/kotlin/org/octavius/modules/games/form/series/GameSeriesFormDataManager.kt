@@ -10,7 +10,6 @@ import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.component.TableRelation
 import org.octavius.form.control.base.FormResultData
-import org.octavius.localization.T
 
 class GameSeriesFormDataManager : FormDataManager() {
     override fun defineTableRelations(): List<TableRelation> {
@@ -47,33 +46,6 @@ class GameSeriesFormDataManager : FormDataManager() {
             }
 
             is DataResult.Success<*> -> return FormActionResult.CloseScreen
-        }
-    }
-
-    private fun validateTitleAgainstDatabase(
-        formResultData: FormResultData,
-        loadedId: Int?
-    ): FormActionResult {
-        val name = formResultData["name"]!!.currentValue as String
-
-        // Sprawdź unikalność nazwy serii
-        val existingCount = dataFetcher.query().from("series").where("name = :name").toCount(mapOf("name" to name))
-
-        when (existingCount) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(existingCount.error))
-                return FormActionResult.Failure
-            }
-
-            is DataResult.Success<Long> -> {
-                val count = existingCount.value
-                if (count > 0L) {
-                    errorManager.addFieldError("name", T.get("games.validation.duplicatedSeries"))
-                    return FormActionResult.ValidationFailed
-                } else {
-                    return FormActionResult.Success
-                }
-            }
         }
     }
 }
