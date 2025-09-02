@@ -124,7 +124,7 @@ class SectionControl(
                                         val states = this@SectionControl.formState.getAllStates()
                                         controls[ctrlName]?.let { control ->
                                             states[ctrlName]?.let { controlState ->
-                                                control.Render(renderContext.forChild(ctrlName), controlState)
+                                                control.Render(RenderContext(ctrlName, renderContext.basePath), controlState)
                                             }
                                             Spacer(modifier = Modifier.height(FormSpacing.sectionHeaderPaddingBottom))
                                         }
