@@ -15,6 +15,7 @@ import org.octavius.contract.FeatureModule
 import org.octavius.localization.T
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.modules.games.GamesFeature
+import org.octavius.modules.settings.SettingsFeature
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
@@ -46,7 +47,7 @@ fun main() = application {
     val features: List<FeatureModule> = listOf(
         AsianMediaFeature,
         GamesFeature,
-        //SettingsFeature
+        SettingsFeature
     )
     // ==========================================================
 

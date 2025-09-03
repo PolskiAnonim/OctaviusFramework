@@ -112,6 +112,8 @@ data class TabOptions(
  * ```
  */
 interface Tab {
+
+
     /** 
      * Opcje konfiguracyjne zakładki.
      * 
@@ -133,5 +135,14 @@ interface Tab {
      * Zazwyczaj jest to ekran raportu/listy głównej dla danej sekcji.
      */
     fun getInitialScreen(): Screen
+
+    /**
+     * Określa, czy zakładka powinna być renderowana
+     * w głównym pasku nawigacyjnym (np. AppTopBar).
+     * Ustawienie na `false` pozwala na "ukrycie" zakładki,
+     * do której nawigacja odbywa się w inny sposób (np. przez przycisk ustawień bądź API).
+     */
+    val isVisibleInNavBar: Boolean
+        get() = true // Domyślna implementacja
 }
 

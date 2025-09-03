@@ -52,7 +52,7 @@ object MainScreen {
         val navState by AppRouter.state.collectAsState()
 
         if (navState == null) return
-
+        val visibleTabs = remember { tabs.filter { it.isVisibleInNavBar } }
         val currentScreen = navState!!.tabStacks[navState!!.activeTab.index]?.lastOrNull()
         val screenStackSize = navState!!.tabStacks[navState!!.activeTab.index]?.size ?: 0
 
@@ -69,14 +69,14 @@ object MainScreen {
                     title = currentScreen?.title ?: "",
                     showBackButton = screenStackSize > 1,
                     onBackClicked = { AppRouter.goBack() },
-                    onSettingsClicked = { /* TODO: Nawiguj do ekranu ustawień */ }
+                    onSettingsClicked = { AppRouter.switchToTab(2U) }
                 )
             },
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             Column(Modifier.fillMaxSize().padding(paddingValues)) {
                 AppTopBar(
-                    tabs = tabs,
+                    tabs = visibleTabs,
                     currentState = navState!!,
                     onTabSelected = { tabIndex -> AppRouter.switchToTab(tabIndex) }
                 )
