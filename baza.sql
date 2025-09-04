@@ -181,7 +181,7 @@ CREATE INDEX IF NOT EXISTS idx_publications_type
 
 CREATE TABLE asian_media.publication_volumes
 (
-    publication_id      integer NOT NULL,
+    publication_id      integer NOT NULL PRIMARY KEY,
     volumes             integer,
     translated_volumes  integer,
     chapters            integer,
