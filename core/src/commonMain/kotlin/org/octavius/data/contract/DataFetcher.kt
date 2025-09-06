@@ -90,6 +90,19 @@ interface QueryBuilder {
     fun where(condition: String?): QueryBuilder
 
     /**
+     * Dodaje klauzulę GROUP BY do zapytania.
+     * @param columns Lista kolumn do grupowania, oddzielonych przecinkami.
+     */
+    fun groupBy(columns: String?): QueryBuilder
+
+    /**
+     * Dodaje klauzulę HAVING do zapytania, która filtruje wyniki po grupowaniu.
+     * Wymaga uprzedniego zdefiniowania klauzuli GROUP BY.
+     * @param condition Warunek do filtrowania grup.
+     */
+    fun having(condition: String?): QueryBuilder
+
+    /**
      * Dodaje klauzulę `ORDER BY` do zapytania.
      * Wielokrotne wywołania nadpisują poprzednie ustawienia.
      *
@@ -217,6 +230,15 @@ interface QueryBuilder {
      * @return [DataResult] zawierający liczbę jako [Long] lub błąd.
      */
     fun toCount(params: Map<String, Any?> = emptyMap()): DataResult<Long>
+
+    /**
+     * Buduje i zwraca ostateczny string zapytania SQL na podstawie
+     * bieżącej konfiguracji buildera.
+     * Nie wykonuje zapytania.
+     *
+     * @return String zawierający gotowe do wykonania zapytanie SQL.
+     */
+    fun toSql(defaultSelect: String = "*"): String
 }
 
 /**

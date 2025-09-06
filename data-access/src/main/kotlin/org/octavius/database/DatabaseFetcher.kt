@@ -48,6 +48,8 @@ internal class DatabaseQueryBuilder(
     private var selectClause: String? = null
     private var fromClause: String? = null
     private var whereCondition: String? = null
+    private var groupByClause: String? = null
+    private var havingClause: String? = null
     private var orderByClause: String? = null
     private var limitValue: Long? = null
     private var offsetValue: Long? = null
@@ -70,6 +72,14 @@ internal class DatabaseQueryBuilder(
 
     override fun where(condition: String?): QueryBuilder = apply {
         this.whereCondition = condition
+    }
+
+    override fun groupBy(columns: String?): QueryBuilder = apply {
+        this.groupByClause = columns
+    }
+
+    override fun having(condition: String?): QueryBuilder = apply {
+        this.havingClause = condition
     }
 
     override fun orderBy(ordering: String?): QueryBuilder = apply {
@@ -141,6 +151,10 @@ internal class DatabaseQueryBuilder(
         }
     }
 
+    override fun toSql(defaultSelect: String): String {
+        return buildSql(defaultSelect = defaultSelect, forceLimitOne = false)
+    }
+
     /**
      * Formatuje wyrażenie tabeli na potrzeby klauzuli FROM.
      * Opakowuje w nawiasy złożone wyrażenia (podzapytania, złączenia),
@@ -171,8 +185,23 @@ internal class DatabaseQueryBuilder(
      * @param forceLimitOne Jeśli true, dodaje LIMIT 1 do zapytania, nadpisując istniejący limit.
      */
     private fun buildSql(defaultSelect: String, forceLimitOne: Boolean = false): String {
+        if (selectClause == null && fromClause == null) {
+            throw IllegalStateException("Cannot build a query without at least a SELECT or FROM clause.")
+        }
+
+        // ZMIANA: Walidacja klauzul zależnych od FROM
         if (fromClause == null) {
-            throw IllegalStateException("FROM clause must be defined before executing a query.")
+            if (whereCondition != null) {
+                throw IllegalStateException("WHERE clause requires a FROM clause.")
+            }
+            if (orderByClause != null) {
+                throw IllegalStateException("ORDER BY clause requires a FROM clause.")
+            }
+        }
+
+        // Walidacja klauzuli HAVING (musi mieć GROUP BY)
+        if (havingClause != null && groupByClause == null) {
+            throw IllegalStateException("HAVING clause requires a GROUP BY clause.")
         }
 
         val sqlBuilder = StringBuilder()
@@ -191,25 +220,37 @@ internal class DatabaseQueryBuilder(
         sqlBuilder.append("SELECT ").append(selectClause ?: defaultSelect).append(" ")
 
         // 3. FROM clause
-        sqlBuilder.append("FROM ").append(formatTableExpression(fromClause!!)).append(" ")
+        fromClause?.let {
+            sqlBuilder.append("FROM ").append(formatTableExpression(it)).append(" ")
+        }
 
         // 4. WHERE clause
         whereCondition?.takeIf { it.isNotBlank() }?.let {
             sqlBuilder.append("WHERE ").append(it).append(" ")
         }
 
-        // 5. ORDER BY clause
+        // 5. GROUP BY clause
+        groupByClause?.takeIf { it.isNotBlank() }?.let {
+            sqlBuilder.append("GROUP BY ").append(it).append(" ")
+        }
+
+        // 6. HAVING clause
+        havingClause?.takeIf { it.isNotBlank() }?.let {
+            sqlBuilder.append("HAVING ").append(it).append(" ")
+        }
+
+        // 7. ORDER BY clause
         orderByClause?.takeIf { it.isNotBlank() }?.let {
             sqlBuilder.append("ORDER BY ").append(it).append(" ")
         }
 
-        // 6. LIMIT clause (handle forceLimitOne)
+        // 8. LIMIT clause
         val effectiveLimit = if (forceLimitOne) 1L else limitValue
         effectiveLimit?.takeIf { it > 0 }?.let {
             sqlBuilder.append("LIMIT ").append(it).append(" ")
         }
 
-        // 7. OFFSET clause
+        // 9. OFFSET clause
         offsetValue?.takeIf { it >= 0 }?.let {
             sqlBuilder.append("OFFSET ").append(it).append(" ")
         }
