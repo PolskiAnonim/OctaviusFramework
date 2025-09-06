@@ -26,3 +26,13 @@ inline fun <T, R> DataResult<T>.map(transform: (T) -> R): DataResult<R> {
         is DataResult.Failure -> this
     }
 }
+
+fun <T> DataResult<T>.onSuccess(action: (T) -> Unit): DataResult<T> {
+    if (this is DataResult.Success) action(value)
+    return this
+}
+
+fun <T> DataResult<T>.onFailure(action: (DatabaseException) -> Unit): DataResult<T> {
+    if (this is DataResult.Failure) action(error)
+    return this
+}
