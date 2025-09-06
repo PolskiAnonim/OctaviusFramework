@@ -2,6 +2,7 @@ package org.octavius.database.type
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -68,7 +69,9 @@ class RealPostgresDataTest {
 
         // 4. Inicjalizujemy zależności dla konwerterów
         val loader = TypeRegistryLoader(jdbcTemplate)
-        val typeRegistry = loader.load()
+        val typeRegistry = runBlocking {
+            loader.load()
+        }
         postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
     }
 

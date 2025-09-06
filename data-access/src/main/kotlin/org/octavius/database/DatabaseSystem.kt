@@ -3,6 +3,7 @@ package org.octavius.database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
 import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataFetcher
 import org.octavius.database.type.KotlinToPostgresConverter
@@ -65,7 +66,9 @@ class DatabaseSystem {
         logger.debug { "Loading type registry from database" }
         val typeRegistryLoadTime = measureTime {
             val loader = TypeRegistryLoader(namedParameterJdbcTemplate)
-            typeRegistry = loader.load()
+            typeRegistry = runBlocking {
+                loader.load()
+            }
         }
         logger.debug { "Type registry loaded successfully in ${typeRegistryLoadTime.inWholeMilliseconds}ms" } // Dodany czas
 
