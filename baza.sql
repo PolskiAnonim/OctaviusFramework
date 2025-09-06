@@ -76,6 +76,19 @@ CREATE TABLE public.application_settings
 
 -- ASIAN MEDIA
 
+---- Home Screen
+
+------ Typ reprezentujący pojedynczy element na liście szybkiego dostępu
+CREATE TYPE asian_media.dashboard_item AS
+(
+    id         INTEGER,
+    main_title TEXT
+);
+
+
+---- Typy
+
+
 CREATE TYPE asian_media.publication_language AS ENUM (
     'KOREAN',
     'CHINESE',

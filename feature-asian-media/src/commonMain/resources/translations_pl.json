@@ -41,6 +41,16 @@
     "report": {
       "newTitle": "Nowy tytuł",
       "title": "Azjatyckie media"
+    },
+    "home": {
+      "title": "Strona główna",
+      "viewFullList": "Przeglądaj pełną listę (Raport)",
+      "totalTitles": "Łącznie tytułów",
+      "reading": "Czytam",
+      "completed": "Ukończone",
+      "currentlyReading": "Obecnie czytane",
+      "recentlyAdded": "Ostatnio dodane",
+      "noItems": "Brak elementów"
     }
   }
 }
