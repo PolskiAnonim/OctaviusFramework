@@ -202,7 +202,7 @@ class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJ
             // Typy tekstowe
             "text", "varchar", "char",
             // Data i czas
-            "date", "timestamp", "timestamptz",
+            "date", "timestamp", "timestamptz", "time", "timetz",
             // Json
             "json",
             "jsonb",

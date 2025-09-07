@@ -20,11 +20,13 @@ kotlin {
             implementation(compose.ui)
 
             implementation(libs.kotlinx.coroutines.core)
+
+            implementation(libs.kotlinx.datetime)
         }
 
         desktopMain.dependencies {
-            implementation(project(":core"))
-            implementation(project(":ui-core"))
+            implementation(projects.core)
+            implementation(projects.uiCore)
             implementation(project.dependencies.platform(libs.koin.bom))
 
             implementation(libs.koin.core)

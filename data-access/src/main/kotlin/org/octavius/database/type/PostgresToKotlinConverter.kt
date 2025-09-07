@@ -3,6 +3,7 @@ package org.octavius.database.type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.serialization.json.Json
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.exception.DataConversionException
@@ -11,6 +12,10 @@ import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.octavius.util.toDataObject
 import java.text.ParseException
+import java.time.OffsetTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 import java.util.*
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -31,7 +36,17 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         private val logger = KotlinLogging.logger {}
     }
 
-
+    val POSTGRES_TIMETZ_FORMATTER: DateTimeFormatter = DateTimeFormatterBuilder()
+        // Parsuj część czasową (godzina, minuta, sekunda)
+        .appendValue(ChronoField.HOUR_OF_DAY, 2)
+        .appendLiteral(':')
+        .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+        .optionalStart() // Sekundy są opcjonalne
+        .appendLiteral(':')
+        .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+        .optionalEnd()
+        .appendPattern("X")
+        .toFormatter()
 
     /**
      * Główna funkcja konwertująca, delegująca do specjalistycznych handlerów.
@@ -112,6 +127,8 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
                 "date" -> LocalDate.parse(value)
                 "timestamp" -> LocalDateTime.parse(value.replace(' ', 'T'))
                 "timestamptz" -> Instant.parse(value.replace(' ', 'T'))
+                "time" -> LocalTime.parse(value)
+                "timetz" -> OffsetTime.parse(value, POSTGRES_TIMETZ_FORMATTER)
 
                 // Domyślnie wszystkie inne typy (text, varchar, char) jako String
                 else -> value

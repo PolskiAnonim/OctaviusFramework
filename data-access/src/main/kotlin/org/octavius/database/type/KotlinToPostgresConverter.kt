@@ -1,6 +1,12 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toJavaLocalTime
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgTyped
@@ -8,6 +14,11 @@ import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.octavius.util.toMap
 import org.postgresql.util.PGobject
+import java.util.Date
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 /**
  * Wynik ekspansji zapytania.
@@ -76,6 +87,7 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
     }
 
     /** Rozszerza pojedynczy parametr, delegując do odpowiedniej funkcji. */
+    @OptIn(ExperimentalTime::class)
     private fun expandParameter(paramName: String, paramValue: Any?): Pair<String, Map<String, Any?>> {
         return when {
             paramValue is PgTyped -> {
@@ -86,11 +98,51 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
             }
 
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
+            paramValue is LocalDate -> createDateParameter(paramName, paramValue)
+            paramValue is LocalDateTime -> createTimestampParameter(paramName, paramValue)
+            paramValue is LocalTime -> createTimeParameter(paramName, paramValue)
+            paramValue is Instant -> createInstantParameter(paramName, paramValue)
+            paramValue is Duration -> createIntervalParameter(paramName, paramValue)
             isDataClass(paramValue) -> expandRowParameter(paramName, paramValue!!)
             paramValue is JsonObject -> createJsonParameter(paramName, paramValue)
             paramValue is Enum<*> -> createEnumParameter(paramName, paramValue)
             else -> ":$paramName" to mapOf(paramName to paramValue)
         }
+    }
+
+    /** Konwertuje `LocalDate` na `java.sql.Date`. */
+    private fun createDateParameter(paramName: String, value: LocalDate): Pair<String, Map<String, Any?>> {
+        val sqlDate = java.sql.Date.valueOf(value.toJavaLocalDate())
+        return ":$paramName" to mapOf(paramName to sqlDate)
+    }
+
+    /** Konwertuje `LocalDateTime` na `java.sql.Timestamp`. */
+    private fun createTimestampParameter(paramName: String, value: LocalDateTime): Pair<String, Map<String, Any?>> {
+        val sqlTimestamp = java.sql.Timestamp.valueOf(value.toJavaLocalDateTime())
+        return ":$paramName" to mapOf(paramName to sqlTimestamp)
+    }
+
+    /** Konwertuje `LocalTime` na `java.sql.Time` dla kolumn typu TIME. */
+    private fun createTimeParameter(paramName: String, value: LocalTime): Pair<String, Map<String, Any?>> {
+        val sqlTime = java.sql.Time.valueOf(value.toJavaLocalTime())
+        return ":$paramName" to mapOf(paramName to sqlTime)
+    }
+
+    /** Konwertuje `Instant` na `java.sql.Timestamp`. */
+    @OptIn(ExperimentalTime::class)
+    private fun createInstantParameter(paramName: String, value: Instant): Pair<String, Map<String, Any?>> {
+        val sqlTimestamp = java.sql.Timestamp.from(value.toJavaInstant())
+        return ":$paramName" to mapOf(paramName to sqlTimestamp)
+    }
+
+    /** Konwertuje `Duration` na `PGobject` typu `interval`. */
+    @OptIn(ExperimentalTime::class)
+    private fun createIntervalParameter(paramName: String, value: Duration): Pair<String, Map<String, Any?>> {
+        val pgInterval = PGobject().apply {
+            type = "interval"
+            this.value = value.toIsoString() // Format ISO 8601 (np. PT1H30M) jest dobrze obsługiwany przez PG
+        }
+        return ":$paramName" to mapOf(paramName to pgInterval)
     }
 
     /** Tworzy parametr `jsonb` z obiektu `JsonObject`. */
