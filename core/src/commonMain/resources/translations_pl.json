@@ -2,12 +2,15 @@
   "action": {
     "add": "Dodaj",
     "cancel": "Anuluj",
+    "clear": "Wyczyść",
     "close": "Zamknij",
+    "confirm": "Potwierdź",
     "load": "Wczytaj",
+    "ok": "OK",
     "overwrite": "Nadpisz",
     "remove": "Usuń",
     "save": "Zapisz",
-    "confirm": "Potwierdź"
+    "select": "Wybierz"
   },
   "app": {
     "name": "Octavius"
