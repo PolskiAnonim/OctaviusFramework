@@ -48,11 +48,19 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
 
 
     /**
-     * Przetwarza zapytanie SQL, rozszerzając parametry złożone.
+     * Przetwarza zapytanie SQL, rozszerzając parametry złożone na konstrukcje PostgreSQL.
+     *
+     * Obsługuje:
+     * - List<T> -> ARRAY[...] 
+     * - data class -> ROW(...)::type_name
+     * - Enum -> PGobject z odpowiednią konwencją nazw
+     * - JsonObject -> JSONB
+     * - PgTyped -> dodaje rzutowanie ::type_name
+     * - Typy daty/czasu -> odpowiednie typy java.sql
      *
      * @param sql Zapytanie z nazwanymi parametrami (np. `:param`).
-     * @param params Mapa parametrów do ekspansji.
-     * @return `ExpandedQuery` z przetworzonym SQL i parametrami.
+     * @param params Mapa parametrów do ekspansji, może zawierać złożone typy Kotlin.
+     * @return `ExpandedQuery` z przetworzonym SQL i spłaszczonymi parametrami.
      */
     fun expandParametersInQuery(sql: String, params: Map<String, Any?>): ExpandedQuery {
         logger.debug { "Expanding parameters in query. Original params count: ${params.size}" }
@@ -86,7 +94,13 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         return ExpandedQuery(expandedSql, expandedParams)
     }
 
-    /** Rozszerza pojedynczy parametr, delegując do odpowiedniej funkcji. */
+    /**
+     * Rozszerza pojedynczy parametr na odpowiednią konstrukcję SQL.
+     *
+     * @param paramName Nazwa parametru (bez dwukropka).
+     * @param paramValue Wartość parametru do konwersji.
+     * @return Para: placeholder SQL i mapa spłaszczonych parametrów.
+     */
     @OptIn(ExperimentalTime::class)
     private fun expandParameter(paramName: String, paramValue: Any?): Pair<String, Map<String, Any?>> {
         return when {
@@ -181,7 +195,16 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         return ":$paramName" to mapOf(paramName to pgObject)
     }
 
-    /** Rozszerza listę na konstrukcję `ARRAY[...]`, rekurencyjnie przetwarzając elementy. */
+    /**
+     * Rozszerza listę na konstrukcję ARRAY[...] PostgreSQL.
+     *
+     * Rekurencyjnie przetwarza elementy listy, obsługując zagnieżdżone struktury.
+     * Pusta lista zostaje przekonwertowana na '{}' (pusta tablica PostgreSQL).
+     *
+     * @param paramName Nazwa parametru bazowego.
+     * @param arrayValue Lista do konwersji.
+     * @return Para: placeholder ARRAY[...] i mapa parametrów elementów.
+     */
     private fun expandArrayParameter(paramName: String, arrayValue: List<*>): Pair<String, Map<String, Any?>> {
         logger.trace { "Expanding array parameter '$paramName' with ${arrayValue.size} elements" }
         
@@ -203,7 +226,17 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         return arrayPlaceholder to expandedParams
     }
 
-    /** Rozszerza `data class` na konstrukcję `ROW(...)::type_name`, rekurencyjnie przetwarzając pola. */
+    /**
+     * Rozszerza data class na konstrukcję ROW(...)::type_name PostgreSQL.
+     *
+     * Mapuje pola data class na atrybuty typu kompozytowego w kolejności
+     * określonej w TypeRegistry. Rekurencyjnie przetwarza zagnieżdżone pola.
+     *
+     * @param paramName Nazwa parametru bazowego.
+     * @param compositeValue Instancja data class do konwersji.
+     * @return Para: placeholder ROW(...)::type_name i mapa parametrów pól.
+     * @throws TypeRegistryException jeśli klasa nie jest zarejestrowana.
+     */
     private fun expandRowParameter(paramName: String, compositeValue: Any): Pair<String, Map<String, Any?>> {
         val kClass = compositeValue::class
         logger.trace { "Expanding row parameter '$paramName' for class ${kClass.simpleName}" }
@@ -235,7 +268,12 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
         return rowPlaceholder to expandedParams
     }
 
-    /** Sprawdza, czy obiekt jest instancją `data class`. */
+    /**
+     * Sprawdza, czy obiekt jest instancją data class.
+     *
+     * @param obj Obiekt do sprawdzenia.
+     * @return true jeśli obj jest instancją data class, false w przeciwnym razie.
+     */
     private fun isDataClass(obj: Any?): Boolean {
         return obj != null && obj::class.isData
     }

@@ -51,10 +51,14 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
     /**
      * Główna funkcja konwertująca, delegująca do specjalistycznych handlerów.
      *
+     * Obsługuje wszystkie kategorie typów: STANDARD, ENUM, ARRAY, COMPOSITE i DOMAIN.
+     * Dla typów domenowych rekurencyjnie deleguje do typu bazowego.
+     *
      * @param value Wartość z bazy danych jako `String` (może być `null`).
-     * @param pgTypeName Nazwa typu w PostgreSQL (np. "int4", "my_enum").
-     * @return Przekonwertowana wartość lub `null`.
-     * @throws TypeRegistryException jeśli typ jest nieznany.
+     * @param pgTypeName Nazwa typu w PostgreSQL (np. "int4", "my_enum", "_text").
+     * @return Przekonwertowana wartość lub `null` jeśli `value` było `null`.
+     * @throws TypeRegistryException jeśli typ jest nieznany lub nie ma typu bazowego.
+     * @throws DataConversionException jeśli konwersja się nie powiedzie.
      */
     fun convertToDomainType(value: String?, pgTypeName: String): Any? {
         if (value == null) {
@@ -92,7 +96,22 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         }
     }
 
-    /** Konwertuje standardowe typy PostgreSQL (np. int4, text, bool, timestamp). */
+    /**
+     * Konwertuje standardowe typy PostgreSQL na odpowiednie typy Kotlina.
+     *
+     * Obsługiwane typy:
+     * - Numeryczne: int4, int8, float4, float8, numeric
+     * - Logiczne: bool (t/f -> Boolean)
+     * - Tekstowe: text, varchar, char (-> String)
+     * - Data/czas: date, timestamp, timestamptz, time, timetz
+     * - JSON: json, jsonb (-> JsonElement)
+     * - Inne: uuid, interval
+     *
+     * @param value Wartość z bazy danych jako String.
+     * @param pgTypeName Nazwa standardowego typu PostgreSQL.
+     * @return Przekonwertowana wartość.
+     * @throws DataConversionException jeśli konwersja się nie powiedzie.
+     */
     @OptIn(ExperimentalTime::class)
     private fun convertStandardType(value: String, pgTypeName: String): Any? {
         try {
@@ -143,7 +162,20 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         }
     }
 
-    /** Konwertuje enum PostgreSQL na enum Kotlina, mapując `snake_case` na `CamelCase`. */
+    /**
+     * Konwertuje wartość enum z PostgreSQL na enum Kotlina.
+     *
+     * Mapuje nazwy wartości według konwencji określonej w TypeRegistry:
+     * - SNAKE_CASE_LOWER/UPPER -> CamelCase
+     * - PASCAL_CASE -> bez zmian
+     * - AS_IS -> bez zmian
+     *
+     * @param value Wartość enum z bazy danych.
+     * @param typeInfo Informacje o typie enum z TypeRegistry.
+     * @return Instancja enum Kotlina.
+     * @throws TypeRegistryException jeśli nie znaleziono klasy enum.
+     * @throws DataConversionException jeśli konwersja się nie powiedzie.
+     */
     private fun convertEnum(value: String, typeInfo: PostgresTypeInfo): Any? {
         val enumClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
             ?: throw TypeRegistryException("Nie znaleziono klasy enum dla typu PostgreSQL '${typeInfo.typeName}'.")
@@ -176,7 +208,18 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
         }
     }
 
-    /** Konwertuje tablicę PostgreSQL na `List<Any?>`, rekurencyjnie przetwarzając elementy. */
+    /**
+     * Konwertuje tablicę PostgreSQL na `List<Any?>`.
+     *
+     * Obsługuje zagnieżdżone tablice i rekurencyjnie przetwarza elementy
+     * zgodnie z typem elementu określonym w TypeRegistry.
+     *
+     * @param value String reprezentujący tablicę PostgreSQL (format: {elem1,elem2,...}).
+     * @param typeInfo Informacje o typie tablicowym z TypeRegistry.
+     * @return Lista przekonwertowanych elementów.
+     * @throws TypeRegistryException jeśli brak informacji o typie elementu.
+     * @throws DataConversionException jeśli parsowanie się nie powiedzie.
+     */
     private fun convertArray(value: String, typeInfo: PostgresTypeInfo): List<Any?> {
         val elementType = typeInfo.elementType
             ?: throw TypeRegistryException("Typ tablicowy ${typeInfo.typeName} nie ma zdefiniowanego typu elementu.")

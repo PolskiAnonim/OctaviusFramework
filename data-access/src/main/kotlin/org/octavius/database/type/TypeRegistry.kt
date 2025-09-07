@@ -37,7 +37,8 @@ class TypeRegistry internal constructor(
      * Zwraca informacje o typie PostgreSQL.
      *
      * @param pgTypeName Nazwa typu w PostgreSQL.
-     * @return Informacje o typie lub null, jeśli typ nie został znaleziony.
+     * @return Informacje o typie.
+     * @throws TypeRegistryException jeśli typ nie został znaleziony w rejestrze.
      */
     fun getTypeInfo(pgTypeName: String): PostgresTypeInfo {
         val typeInfo = postgresTypeMap[pgTypeName]
@@ -48,8 +49,9 @@ class TypeRegistry internal constructor(
     /**
      * Zwraca nazwę typu PostgreSQL powiązaną z daną klasą Kotlina.
      *
-     * @param clazz Klasa Kotlina (KClass).
-     * @return Nazwa typu w PostgreSQL lub null, jeśli nie znaleziono mapowania.
+     * @param clazz Klasa Kotlina (KClass) oznaczona adnotacją @PgType.
+     * @return Nazwa typu w PostgreSQL.
+     * @throws TypeRegistryException jeśli klasa nie jest zarejestrowanym typem PostgreSQL.
      */
     fun getPgTypeNameForClass(clazz: KClass<*>): String {
         val pgTypeName = classFullPathToPgTypeNameMap[clazz.qualifiedName]

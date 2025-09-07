@@ -13,8 +13,15 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
 
 /**
- * Implementacja [DataFetcher] wykorzystująca [NamedParameterJdbcTemplate]
- * do interakcji z bazą danych i [RowMappers] do mapowania wyników.
+ * Implementacja [DataFetcher] do wykonywania zapytań odczytujących (SELECT).
+ *
+ * Wykorzystuje [NamedParameterJdbcTemplate] do interakcji z bazą danych
+ * i [RowMappers] do mapowania wyników na typy Kotlina.
+ * Obsługuje złożone zapytania z WITH, JOIN, filtrowanie i paginację.
+ *
+ * @param jdbcTemplate Template JDBC do wykonywania zapytań SQL.
+ * @param rowMappers Fabryka mapperów do konwersji ResultSet.
+ * @param kotlinToPostgresConverter Konwerter typów Kotlin na PostgreSQL.
  */
 class DatabaseFetcher(
     val jdbcTemplate: NamedParameterJdbcTemplate,
@@ -31,8 +38,15 @@ class DatabaseFetcher(
 }
 
 /**
- * Wewnętrzna implementacja [QueryBuilder].
- * Zarządza stanem budowanego zapytania i generuje SQL.
+ * Wewnętrzna implementacja [QueryBuilder] do budowania zapytań SQL.
+ *
+ * Zarządza stanem budowanego zapytania i generuje poprawny SQL PostgreSQL.
+ * Obsługuje pełną składnię SELECT z WITH, JOIN, WHERE, GROUP BY, ORDER BY, LIMIT/OFFSET.
+ * Waliduje poprawność kombinacji klauzul (np. HAVING wymaga GROUP BY).
+ *
+ * @param jdbcTemplate Template JDBC do wykonywania zapytań.
+ * @param rowMappers Mappery do konwersji wyników.
+ * @param kotlinToPostgresConverter Konwerter parametrów.
  */
 internal class DatabaseQueryBuilder(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
