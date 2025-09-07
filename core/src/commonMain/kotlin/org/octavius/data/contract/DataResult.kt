@@ -18,7 +18,14 @@ sealed class DataResult<out T> {
 
 /**
  * Transformuje wartość wewnątrz [DataResult.Success], zachowując [DataResult.Failure] bez zmian.
- * Pozwala na czyste i bezpieczne operowanie na wyniku.
+ *
+ * Pozwala na czyste i bezpieczne operowanie na wyniku bez rzucania wyjątków.
+ * Przykład: `result.map { it.toString() }` konwertuje Success<Int> na Success<String>.
+ *
+ * @param T Typ oryginalnej wartości.
+ * @param R Typ wartości po transformacji.
+ * @param transform Funkcja transformująca wartość typu T na typ R.
+ * @return Nowy DataResult z przekształconą wartością lub oryginalny Failure.
  */
 inline fun <T, R> DataResult<T>.map(transform: (T) -> R): DataResult<R> {
     return when (this) {
@@ -27,11 +34,23 @@ inline fun <T, R> DataResult<T>.map(transform: (T) -> R): DataResult<R> {
     }
 }
 
+/**
+ * Wykonuje akcję jeśli wynik jest Success, nie modyfikując oryginalnej wartości.
+ *
+ * @param action Akcja do wykonania na wartości Success.
+ * @return Ten sam DataResult dla łańcuchowania.
+ */
 fun <T> DataResult<T>.onSuccess(action: (T) -> Unit): DataResult<T> {
     if (this is DataResult.Success) action(value)
     return this
 }
 
+/**
+ * Wykonuje akcję jeśli wynik jest Failure, nie modyfikując oryginalnego błędu.
+ *
+ * @param action Akcja do wykonania na błędzie Failure.
+ * @return Ten sam DataResult dla łańcuchowania.
+ */
 fun <T> DataResult<T>.onFailure(action: (DatabaseException) -> Unit): DataResult<T> {
     if (this is DataResult.Failure) action(error)
     return this

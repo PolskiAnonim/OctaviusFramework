@@ -1,12 +1,31 @@
 package org.octavius.exception
 
-/** Bazowy, zapieczętowany wyjątek dla wszystkich błędów warstwy danych. */
+/**
+ * Bazowy, zapieczętowany wyjątek dla wszystkich błędów warstwy danych.
+ *
+ * Wszystkie wyjątki związane z dostępem do bazy danych dziedziczą z tej klasy,
+ * co umożliwia łatwe łapanie i obsługę błędów na różnych poziomach aplikacji.
+ */
 sealed class DatabaseException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-/** Błędy związane z ładowaniem lub używaniem TypeRegistry (błąd konfiguracji). */
+/**
+ * Błędy związane z ładowaniem lub używaniem TypeRegistry.
+ *
+ * Rzucane gdy:
+ * - Nie można znaleźć klasy oznaczonej @PgType
+ * - Brak mapowania między typem PostgreSQL a klasą Kotlin
+ * - Błąd podczas skanowania classpath lub bazy danych
+ */
 class TypeRegistryException(message: String, cause: Throwable? = null) : DatabaseException(message, cause)
 
-/** Błędy podczas konwersji danych między Kotlin a PostgreSQL. */
+/**
+ * Błędy podczas konwersji danych między typami Kotlin a PostgreSQL.
+ *
+ * Zawiera szczegółowe informacje o wartości, która nie mogła być skonwertowana,
+ * oraz docelowym typie. Rzucane podczas:
+ * - Konwersji wartości z bazy na typy Kotlin
+ * - Ekspansji parametrów Kotlin na konstrukcje SQL
+ */
 class DataConversionException(
     message: String,
     val value: Any?,
@@ -21,7 +40,15 @@ class DataConversionException(
     }
 }
 
-/** Błędy podczas wykonywania zapytań SQL. */
+/**
+ * Błędy podczas wykonywania zapytań SQL.
+ *
+ * Zawiera pełny kontekst błędu: zapytanie SQL i parametry.
+ * Rzucane gdy:
+ * - Zapytanie SQL jest niepoprawne składniowo
+ * - Naruszenie ograniczeń bazy danych
+ * - Błędy połączenia z bazą danych
+ */
 class QueryExecutionException(
     message: String,
     val sql: String,
@@ -36,7 +63,15 @@ class QueryExecutionException(
     }
 }
 
-/** Błędy podczas mapowania wiersza ResultSet na obiekt data class. */
+/**
+ * Błędy podczas mapowania wiersza ResultSet na obiekt data class.
+ *
+ * Zawiera informacje o klasie docelowej i danych wiersza, które nie mogły być zmapowane.
+ * Rzucane gdy:
+ * - Brak odpowiedniego konstruktora w data class
+ * - Niezgodność typów między kolumnami a właściwościami klasy
+ * - Błąd podczas tworzenia instancji obiektu
+ */
 class DataMappingException(
     message: String,
     val targetClass: String,
