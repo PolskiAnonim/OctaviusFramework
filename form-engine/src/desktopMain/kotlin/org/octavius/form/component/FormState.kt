@@ -7,8 +7,19 @@ import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.RenderContext
 
 /**
- * Klasa zarządzająca stanem formularza oraz kontrolek w jego wnętrzu
- * Używa mutableStateMapOf dla automatycznej rekomposycji przy zmianach
+ * Reaktywne zarządzanie stanem wszystkich kontrolek formularza.
+ *
+ * FormState przechowuje i zarządza stanami wszystkich kontrolek w formularzu,
+ * wykorzystując Compose State API dla automatycznej rekomposycji UI przy zmianach.
+ *
+ * Główne funkcje:
+ * - Przechowywanie reaktywnych stanów kontrolek (MutableState)
+ * - Automatyczne wyzwalanie rekomposycji przy zmianach
+ * - Zarządzanie hierarchicznymi nazwami kontrolek (np. dla RepeatableControl)
+ * - Zbieranie danych z wszystkich kontrolek do przetworzenia
+ *
+ * Stany kontrolek są indeksowane pełną ścieżką (np. "publications[uuid].title"),
+ * co umożliwia obsługę złożonych, zagnieżdżonych struktur.
  */
 class FormState {
     /**
@@ -27,9 +38,17 @@ class FormState {
     fun getAllStates(): Map<String, ControlState<*>> = _controlStates
 
     /**
-     * Funkcja inicjalizuje stany kontrolek na podstawie wartości inicjalnych
+     * Inicjalizuje stany wszystkich kontrolek na podstawie wartości początkowych.
+     *
+     * Dla każdej kontrolki ze schematu:
+     * 1. Pobiera odpowiednią wartość z mapy inicjalnych
+     * 2. Wywołuje setInitValue() na kontrolce
+     * 3. Zapisuje utworzony stan w mapie reaktywnej
+     *
+     * @param schema Schemat formularza z definicjami kontrolek.
+     * @param initValues Mapa wartości początkowych (klucz = nazwa kontrolki).
      */
-    internal fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>, errorManager: ErrorManager) {
+    internal fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>) {
         // Potem inicjalizuj stany kontrolek
         schema.getAllControls().forEach { (controlName, control) ->
             val value = initValues[controlName]
@@ -62,7 +81,15 @@ class FormState {
     }
 
     /**
-     * Funkcja zwraca rezultat formularza w formie danych przetworzonych przez kontrolki
+     * Zbiera i przetwarza dane ze wszystkich kontrolek formularza.
+     *
+     * Dla każdej kontrolki ze schematu:
+     * 1. Pobiera jej aktualny stan
+     * 2. Wywołuje getResult() na kontrolce
+     * 3. Zwraca mapę z wynikami gotowymi do walidacji i zapisu
+     *
+     * @param schema Schemat formularza z definicjami kontrolek.
+     * @return FormResultData - mapa wyników (klucz = nazwa kontrolki, wartość = ControlResultData).
      */
     internal fun collectFormData(schema: FormSchema): FormResultData {
         val result = mutableMapOf<String, ControlResultData>()

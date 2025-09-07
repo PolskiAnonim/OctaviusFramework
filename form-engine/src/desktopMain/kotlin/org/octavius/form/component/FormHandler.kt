@@ -9,15 +9,25 @@ import org.octavius.navigation.AppRouter
 import org.octavius.ui.snackbar.SnackbarManager
 
 /**
- * Klasa obsługująca cykl życia formularza.
+ * Klasa obsługująca cykl życia formularza - główny koordynator systemu formularzy.
  *
  * FormHandler koordynuje pracę wszystkich komponentów formularza:
- * - FormSchema - definicja struktury formularza
- * - FormState - zarządzanie stanem kontrolek
- * - FormDataManager - ładowanie i przetwarzanie danych
- * - FormValidator - walidacja pól i reguł biznesowych
+ * - **FormSchema** - definicja struktury i kontrolek formularza
+ * - **FormState** - reaktywne zarządzanie stanem wszystkich kontrolek
+ * - **FormDataManager** - ładowanie danych z bazy i przetwarzanie wyników
+ * - **FormValidator** - walidacja pól i reguł biznesowych
  *
- * @param entityId ID edytowanej encji (null dla nowych rekordów)
+ * Cykl życia:
+ * 1. Inicjalizacja komponentów i ustawienie referencji między nimi
+ * 2. Ładowanie danych (dla edycji) lub ustawienie wartości domyślnych (nowy rekord)
+ * 3. Obsługa akcji użytkownika (walidacja + wykonanie akcji)
+ * 4. Nawigacja lub zamknięcie formularza na podstawie wyniku akcji
+ *
+ * @param entityId ID edytowanej encji (null dla nowych rekordów).
+ * @param formSchemaBuilder Builder dostarczający definicję struktury formularza.
+ * @param formDataManager Manager odpowiedzialny za operacje na danych.
+ * @param formValidator Validator do sprawdzania poprawności danych.
+ * @param payload Dodatkowe dane przekazane do formularza (np. ID rodzica).
  */
 class FormHandler(
     private val entityId: Int? = null,
@@ -40,7 +50,10 @@ class FormHandler(
     }
 
     /**
-     * Funkcja ustawia referencje do komponentów formularza dla kontrolek które tego wymagają
+     * Ustawia referencje do komponentów formularza dla wszystkich kontrolek.
+     *
+     * Ta metoda jest kluczowa dla działania systemu - umożliwia kontrolkom
+     * dostęp do globalnego stanu, schemy i menedżera błędów.
      */
     private fun setupFormReferences() {
         formSchema.getAllControls().values.forEach { control ->
@@ -61,6 +74,12 @@ class FormHandler(
 
     /**
      * Ładuje dane dla edytowanej encji z bazy danych i inicjalizuje stan formularza.
+     *
+     * Proces ładowania:
+     * 1. Pobiera wartości inicjalne z FormDataManager
+     * 2. Ładuje dane encji z bazy danych
+     * 3. Łączy dane z priorytetem dla wartości inicjalnych
+     * 4. Inicjalizuje stany wszystkich kontrolek
      */
     internal fun loadData() {
         val initValues = formDataManager.initData(entityId!!, payload)
@@ -76,7 +95,7 @@ class FormHandler(
             }
         }
 
-        formState.initializeStates(formSchema, mergedData, errorManager)
+        formState.initializeStates(formSchema, mergedData)
     }
 
     /**
@@ -84,7 +103,7 @@ class FormHandler(
      */
     internal fun clearForm() {
         val initValues = formDataManager.initData(null, payload)
-        formState.initializeStates(formSchema, initValues, errorManager)
+        formState.initializeStates(formSchema, initValues)
     }
 
     override fun triggerAction(actionKey: String, validates: Boolean): FormActionResult {

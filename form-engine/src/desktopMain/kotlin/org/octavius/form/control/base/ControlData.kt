@@ -4,10 +4,13 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 
 /**
- * Dane wyniku kontrolki zebrane podczas przetwarzania formularza.
+ * Wynik przetwarzania pojedynczej kontrolki formularza.
  *
- * @param currentValue wartość kontrolki przygotowana do zapisu w bazie danych
- * @param initialValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
+ * Zawiera zarówno bieżącą wartość (zmodyfikowaną przez użytkownika)
+ * jak i wartość początkową (z bazy lub domyślną) dla porównań.
+ *
+ * @param currentValue Bieżąca wartość kontrolki przetworzona przez getResult.
+ * @param initialValue Pierwotna wartość załadowana z bazy lub ustawiona domyślnie.
  */
 data class ControlResultData(
     val currentValue: Any?,
@@ -15,16 +18,17 @@ data class ControlResultData(
 )
 
 /**
- * Stan pojedynczej kontrolki w formularzu.
+ * Reaktywny stan pojedynczej kontrolki formularza.
  *
  * Przechowuje wszystkie informacje o stanie kontrolki potrzebne
- * do renderowania, walidacji i śledzenia zmian.
+ * do renderowania, walidacji i śledzenia zmian, wykorzystując
+ * Compose State API dla automatycznej rekomposycji.
  *
- * @param T typ danych przechowywanych przez kontrolkę
- * @param value bieżąca wartość kontrolki (edytowana przez użytkownika)
- * @param initValue pierwotna wartość załadowana z bazy lub ustawiona domyślnie
- * @param revision licznik zmian z zewnątrz, służący do wymuszenia synchronizacji UI.
- * Nie musi być używany w prostych kontrolkach w których parsowanie wartości nie jest potrzebne
+ * @param T Typ danych przechowywanych przez kontrolkę.
+ * @param value Bieżąca wartość kontrolki (edytowana przez użytkownika) - MutableState.
+ * @param initValue Pierwotna wartość załadowana z bazy lub ustawiona domyślnie - MutableState.
+ * @param revision Licznik rewizji do wymuszenia synchronizacji UI w złożonych kontrolkach.
+ *                 Używany gdy parsowanie wartości wymaga dodatkowej logiki.
  */
 data class ControlState<T>(
     val value: MutableState<T?> = mutableStateOf(null),
@@ -56,8 +60,11 @@ data class RenderContext(
 }
 
 /**
- * Zwięzły alias dla mapy z wynikami formularza.
- * Używany jako typ danych przekazywany do logiki walidacji i zapisu.
+ * Alias dla mapy zawierającej wyniki wszystkich kontrolek formularza.
+ *
+ * Kluczem jest nazwa kontrolki, wartością ControlResultData z bieżącą
+ * i początkową wartością. Używane jako główny typ danych przekazywany
+ * do logiki walidacji, zapisu i akcji formularza.
  */
 typealias FormResultData = Map<String, ControlResultData>
 
