@@ -8,11 +8,24 @@ import org.octavius.report.column.type.special.ActionColumn
 import org.octavius.report.column.type.special.QuickActionColumn
 
 /**
- * ReportStructure
- * Klasa definiująca strukturę raportu - zapytanie SQL i kolumny
- * @property query zapytanie SQL do pobrania danych
- * @property columns definicje kolumn raportu jako mapa - nazwy nie mogą się powtarzać
- * @property columnOrder kolejność wyświetlania kolumn
+ * Definicja struktury raportu - schemat określająca zapytania, kolumny i akcje.
+ *
+ * ReportStructure to główna klasa konfiguracyjna systemu raportowania, która:
+ * - Definiuje zapytanie SQL dla pobierania danych
+ * - Konfiguruje kolumny z ich typami, filtrami i opcjami sortowania
+ * - Określa akcje dostępne dla wierszy i całego raportu
+ * - Automatycznie dodaje kolumny specjalne (akcje) do struktury
+ *
+ * Kolumny dzielą się na:
+ * - **Zwykłe kolumny**: Definiowane przez developera, mapują dane z bazy
+ * - **Kolumny specjalne**: Generowane automatycznie (np. kolumna akcji)
+ *
+ * @param query Zapytanie SQL do pobrania danych raportu.
+ * @param initColumns Mapa kolumn zdefiniowanych przez developera (klucz = nazwa kolumny w SQL).
+ * @param reportName Unikalna nazwa raportu (używana do zapisywania konfiguracji).
+ * @param rowActions Lista akcji dostępnych dla każdego wiersza.
+ * @param defaultRowAction Domyślna akcja wykonywana po podwójnym kliknięciu wiersza.
+ * @param mainActions Lista akcji głównych (np. "Dodaj nowy").
  */
 class ReportStructure(
     val query: Query,
@@ -20,7 +33,7 @@ class ReportStructure(
     val reportName: String,
     val rowActions: List<ReportRowAction> = emptyList(),
     val defaultRowAction: ReportRowAction? = null,
-    val addActions: List<ReportMainAction> = emptyList()
+    val mainActions: List<ReportMainAction> = emptyList()
 ) {
     lateinit var columns: Map<String, ReportColumn>
 
@@ -60,9 +73,26 @@ class ReportStructure(
 }
 
 /**
- * Fabryka do tworzenia struktur raportów.
- * Używa wzorca "Template Method" do zdefiniowania szkieletu budowania raportu.
- * Klasy dziedziczące muszą dostarczyć implementacje dla poszczególnych części raportu.
+ * Abstrakcyjna fabryka do tworzenia struktur raportów.
+ *
+ * Używa wzorca Template Method do zdefiniowania szkieletu procesu budowania raportu.
+ * Klasy dziedziczące implementują konkretne części:
+ * - Zapytanie SQL
+ * - Definicje kolumn
+ * - Akcje użytkownika
+ *
+ * Przykład implementacji:
+ * ```kotlin
+ * class UsersReportStructureBuilder : ReportStructureBuilder() {
+ *     override fun getReportName() = "users"
+ *     override fun buildQuery() = Query("SELECT id, name, email FROM users")
+ *     override fun buildColumns() = mapOf(
+ *         "id" to NumberColumn("ID"),
+ *         "name" to StringColumn("Nazwa"),
+ *         "email" to StringColumn("Email")
+ *     )
+ * }
+ * ```
  */
 abstract class ReportStructureBuilder {
     /**
@@ -85,7 +115,7 @@ abstract class ReportStructureBuilder {
             reportName = getReportName(),
             rowActions = buildRowActions(),
             defaultRowAction = buildDefaultRowAction(),
-            addActions = buildMainActions()
+            mainActions = buildMainActions()
         )
     }
 

@@ -11,6 +11,24 @@ import org.octavius.report.ReportPaginationState
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 
+/**
+ * Manager odpowiedzialny za budowanie zapytań SQL i pobieranie danych dla raportów.
+ *
+ * ReportDataManager:
+ * - Buduje dynamiczne zapytania SQL na podstawie filtrów, sortowania i wyszukiwania
+ * - Zarządza paginacją (oblicza całkowitą liczbę elementów)
+ * - Łączy różne typy filtrów w spójne klauzule WHERE
+ * - Obsługuje globalne wyszukiwanie po wszystkich kolumnach
+ * - Wykorzystuje DataFetcher do bezpiecznego wykonywania zapytań
+ *
+ * Proces pobierania danych:
+ * 1. Buduje klauzulę WHERE na podstawie filtrów i wyszukiwania
+ * 2. Wykonuje zapytanie COUNT dla paginacji
+ * 3. Jeśli są dane, wykonuje zapytanie główne z LIMIT/OFFSET
+ * 4. Zwraca wyniki w bezpiecznej otoczce ReportDataResult
+ *
+ * @param reportStructure Definicja struktury raportu z zapytaniem bazowym i kolumnami.
+ */
 class ReportDataManager(
     val reportStructure: ReportStructure
 ) : KoinComponent {

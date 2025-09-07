@@ -4,6 +4,20 @@ import org.octavius.domain.SortDirection
 import org.octavius.report.ReportPaginationState
 import org.octavius.report.filter.data.FilterData
 
+/**
+ * Reaktywny stan raportu przechowujący wszystkie dane potrzebne do renderowania tabeli.
+ *
+ * ReportState to niezmutowalna klasa danych implementująca wzorzec jednokierunkowego
+ * przepływu danych (unidirectional data flow). Każda zmiana tworzy nowy obiekt stanu.
+ *
+ * Składa się z następujących sekcji:
+ * - **Dane i stan**: Dane tabeli, ładowanie, błędy
+ * - **Paginacja**: Aktualna strona, rozmiar strony, całkowita liczba elementów
+ * - **Kolumny**: Kolejność i widoczność kolumn
+ * - **Filtrowanie**: Stany wszystkich filtrów kolumn i wyszukiwania globalnego
+ * - **Sortowanie**: Aktualnie aktywne kryteria sortowania
+ *
+ */
 data class ReportState(
     val data: List<Map<String, Any?>> = emptyList(),
     val isLoading: Boolean = false,

@@ -19,24 +19,63 @@ import org.octavius.report.Query
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.data.FilterData
 
+/**
+ * Abstrakcyjna klasa bazowa dla wszystkich filtrów kolumn raportów.
+ *
+ * System filtrowania opiera się na współpracy dwóch komponentów:
+ * - **Filter**: Logika filtrowania i generowanie SQL
+ * - **FilterData**: Stan filtra (wartości wprowadzone przez użytkownika)
+ *
+ * Każdy typ kolumny ma własny filter (StringFilter, NumberFilter, etc.).
+ * Filter odpowiada za:
+ * - Tworzenie domyślnych danych filtra
+ * - Renderowanie interfejsu użytkownika
+ * - Generowanie fragmentów zapytań SQL
+ * - Serializację/deserializację stanu
+ *
+ * @param T Typ danych filtra dziedziczący z FilterData.
+ */
 abstract class Filter<T : FilterData> {
 
     /**
      * Tworzy domyślny, pusty obiekt danych dla tego filtra.
+     * 
+     * @return Nowa instancja FilterData z wartościami domyślnymi.
      */
     abstract fun createDefaultData(): T
 
+    /**
+     * Deserializuje dane filtra z konfiguracji JSON.
+     *
+     * Używane przy ładowaniu zapisanych konfiguracji raportów.
+     *
+     * @param data Obiekt JSON zawierający zserializowany stan filtra.
+     * @return Zdeserialized obiekt FilterData.
+     */
     abstract fun deserializeData(data: JsonObject): T
 
     /**
-     * Renderuje unikalny interfejs użytkownika dla tego konkretnego filtra.
-     * Ta metoda będzie implementowana przez każdą podklasę (BooleanFilter, StringFilter, etc.).
+     * Renderuje interfejs użytkownika specyficzny dla tego typu filtra.
+     *
+     * Każdy typ filtra implementuje własny UI (pola tekstowe, listy rozwijane, etc.).
+     * UI automatycznie wysyła zdarzenia ReportEvent.FilterChanged przy zmianach.
+     *
+     * @param onEvent Funkcja obsługi zdarzeń raportowania.
+     * @param columnKey Klucz kolumny dla której renderowany jest filtr.
+     * @param data Aktualny stan filtra do wyświetlenia.
      */
     @Composable
     abstract fun RenderFilterUI(onEvent: (ReportEvent) -> Unit, columnKey: String, data: T)
 
     /**
-     * Tworzy fragment zapytania SQL na podstawie danych z filtra.
+     * Tworzy fragment zapytania SQL na podstawie aktualnego stanu filtra.
+     *
+     * Implementowane przez każdy typ filtra zgodnie z jego logiką.
+     * Zwraca null jeśli filtr nie jest aktywny lub nie ma co filtrować.
+     *
+     * @param columnName Nazwa kolumny w bazie danych.
+     * @param data Aktualny stan filtra.
+     * @return Query z fragmentem SQL i parametrami lub null.
      */
     protected abstract fun buildBaseQueryFragment(columnName: String, data: T): Query?
 

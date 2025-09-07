@@ -16,6 +16,24 @@ import org.octavius.report.configuration.ReportConfigurationManager
 
 val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHandler provided") }
 
+/**
+ * Główny kontroler systemu raportowania - zarządza stanem i logiką biznesową raportów.
+ *
+ * ReportHandler jest centralnym komponentem systemu raportowania, który:
+ * - Zarządza reaktywnym stanem raportu (dane, filtrowanie, sortowanie, paginacja)
+ * - Obsługuje zdarzenia użytkownika i aktualizuje stan
+ * - Koordynuje pobieranie danych z bazy przez DataManager
+ * - Zarządza konfiguracją raportów (zapisywanie/ładowanie ustawień)
+ *
+ * Architektura oparta na wzorcu Redux:
+ * 1. UI wysyła zdarzenia (ReportEvent) do handlera
+ * 2. Handler redukuje stan na podstawie zdarzenia
+ * 3. Jeśli potrzeba, wysyła żądanie pobrania danych
+ * 4. UI automatycznie się przerysowuje na podstawie nowego stanu
+ *
+ * @param coroutineScope Scope dla operacji asynchronicznych (pobieranie danych).
+ * @param reportStructure Definicja struktury raportu (kolumny, zapytania, akcje).
+ */
 class ReportHandler(
     private val coroutineScope: CoroutineScope,
     val reportStructure: ReportStructure
@@ -37,6 +55,17 @@ class ReportHandler(
 
     //------------------------------------------Event Handling----------------------------------------------------------
 
+    /**
+     * Główna metoda obsługi zdarzeń użytkownika.
+     *
+     * Implementuje wzorzec Redux/MVI:
+     * 1. Redukuje aktualny stan z nowym zdarzeniem
+     * 2. Aktualizuje stan tylko jeśli nastąpiła zmiana
+     * 3. Sprawdza czy zdarzenie wymaga przeładowania danych z bazy
+     * 4. Jeśli tak, uruchamia asynchroniczne pobieranie
+     *
+     * @param event Zdarzenie użytkownika do przetworzenia.
+     */
     fun onEvent(event: ReportEvent) {
         val currentState = _state.value
         val newState = reduceState(currentState, event)

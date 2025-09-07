@@ -72,7 +72,7 @@ class ReportScreen(
                         addMenuExpanded = uiState.addMenuExpanded.value,
                         onAddMenuDismiss = { uiState.addMenuExpanded.value = false },
                         addMenuContent = {
-                            val addActions = reportHandler.reportStructure.addActions
+                            val addActions = reportHandler.reportStructure.mainActions
                             addActions.forEach { action ->
                                 DropdownMenuItem(
                                     text = { Text(action.label) },
