@@ -22,8 +22,8 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(project(":ui-core"))
-            implementation(project(":api-contract"))
+            implementation(projects.uiCore)
+            implementation(projects.apiContract)
         }
     }
 }

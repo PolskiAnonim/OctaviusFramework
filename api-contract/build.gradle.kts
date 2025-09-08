@@ -14,7 +14,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 // Potrzebujemy zależności do commonMain z core
-                api(project(":core"))
+                api(projects.core)
 
                 api(libs.ktor.server.core)
             }

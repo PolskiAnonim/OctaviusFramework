@@ -22,7 +22,7 @@ kotlin {
             api(compose.materialIconsExtended)
             // Inne współdzielone biblioteki
             implementation(libs.kotlinx.coroutines.core)
-            implementation(project(":core")) // ui-core może zależeć od core
+            implementation(projects.core) // ui-core może zależeć od core
         }
 
         // Zależności tylko dla desktopu (jeśli jakieś są)

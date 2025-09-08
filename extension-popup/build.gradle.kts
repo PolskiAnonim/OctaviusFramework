@@ -14,9 +14,9 @@ kotlin {
         val jsMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-js"))
-                implementation(project(":core"))
-                implementation(project(":api-contract"))
-                implementation(project(":ui-core"))
+                implementation(projects.core)
+                implementation(projects.apiContract)
+                implementation(projects.uiCore)
                 implementation(compose.runtime)
                 implementation(compose.html.core)
                 implementation(compose.material3)

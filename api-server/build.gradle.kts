@@ -9,8 +9,8 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":core"))
-                implementation(project(":api-contract"))
+                implementation(projects.core)
+                implementation(projects.apiContract)
             }
         }
 

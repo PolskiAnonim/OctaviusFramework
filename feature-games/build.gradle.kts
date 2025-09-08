@@ -24,12 +24,12 @@ kotlin {
         }
 
         desktopMain.dependencies {
-            implementation(project(":core"))
-            implementation(project(":ui-core"))
-            implementation(project(":form-engine"))
-            implementation(project(":report-engine"))
-            implementation(project(":feature-contract"))
-            implementation(project(":api-contract"))
+            implementation(projects.core)
+            implementation(projects.uiCore)
+            implementation(projects.formEngine)
+            implementation(projects.reportEngine)
+            implementation(projects.featureContract)
+            implementation(projects.apiContract)
             implementation(project.dependencies.platform(libs.koin.bom))
 
             implementation(libs.koin.core)
