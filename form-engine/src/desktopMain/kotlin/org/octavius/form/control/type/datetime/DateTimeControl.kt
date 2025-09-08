@@ -190,7 +190,7 @@ class DateTimeControl<T : Any>(
 
             AlertDialog(
                 onDismissRequest = { showOffsetPicker = false },
-                title = { Text(T.get("form.datetime.offset.title")) }, // Dodany tytuł dla jasności
+                title = { Text(T.get("form.datetime.offset")) }, // Dodany tytuł dla jasności
                 confirmButton = {
                     TextButton(onClick = {
                         // Sprawdzamy, czy wpisany tekst jest poprawnym offsetem przed zamknięciem
