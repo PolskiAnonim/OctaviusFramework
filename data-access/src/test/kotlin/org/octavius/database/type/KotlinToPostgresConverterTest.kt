@@ -6,9 +6,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
+import io.mockk.every
+import io.mockk.mockk
+import org.octavius.data.contract.EnumCaseConvention
 import org.postgresql.util.PGobject
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -27,11 +27,28 @@ class KotlinToPostgresConverterTest {
     @BeforeAll // KotlinToPostgresConverter nie ma wewnętrznego stanu
     fun setup() {
         // Stwórz mocka
-        mockTypeRegistry = mock()
+        mockTypeRegistry = mockk()
 
-        whenever(mockTypeRegistry.getPgTypeNameForClass(TestStatus::class)).doReturn("test_status")
-
-        whenever(mockTypeRegistry.getPgTypeNameForClass(TestPerson::class)).doReturn("test_person")
+        every { mockTypeRegistry.getPgTypeNameForClass(TestStatus::class) } returns "test_status"
+        every { mockTypeRegistry.getPgTypeNameForClass(TestPerson::class) } returns "test_person"
+        
+        // Mock getTypeInfo for enum types
+        every { mockTypeRegistry.getTypeInfo("test_status") } returns PostgresTypeInfo(
+            typeName = "test_status",
+            typeCategory = TypeCategory.ENUM,
+            enumConvention = EnumCaseConvention.SNAKE_CASE_UPPER
+        )
+        
+        // Mock getTypeInfo for composite types
+        every { mockTypeRegistry.getTypeInfo("test_person") } returns PostgresTypeInfo(
+            typeName = "test_person",
+            typeCategory = TypeCategory.COMPOSITE,
+            attributes = mapOf(
+                "name" to "text",
+                "age" to "int4",
+                "active" to "bool"
+            )
+        )
 
         converter = KotlinToPostgresConverter(mockTypeRegistry)
     }

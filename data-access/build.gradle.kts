@@ -19,9 +19,13 @@ dependencies {
     implementation(libs.kotlin.logging.jvm)
 
 
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.kotlin)
-    testImplementation(libs.junit.jupiter)
+    // Test dependencies - precyzyjnie tylko to co potrzebne
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter.api)  // @Test, @BeforeAll etc.
+    testRuntimeOnly(libs.junit.jupiter.engine)  // silnik do uruchamiania testów
+    testRuntimeOnly(libs.junit.platform.launcher)
+    
+    testImplementation(libs.mockk)
     testImplementation(libs.assertj.core)
 }
 

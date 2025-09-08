@@ -14,10 +14,9 @@ ktor = "3.2.3"
 # koin
 koin = "4.1.0"
 #test/log
-junit-jupiter = "5.10.0"
+junit = "6.0.0-RC2"
 assertj-core = "3.27.3"
-mockito-kotlin = "6.0.0"
-mockito-core = "5.19.0"
+mockk = "1.14.5"
 logback = "1.5.18"
 kotlin-logging = "7.0.13"
 [libraries]
@@ -25,8 +24,7 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 classgraph = { group = "io.github.classgraph", name = "classgraph", version.ref = "classgraph" }
-mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
-mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 # core
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
@@ -48,7 +46,11 @@ koin-core = { module = "io.insert-koin:koin-core" }
 koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 # test / log
-junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit-jupiter" }
+# JUnit 5 - tylko co potrzebne
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
 assertj-core = { group = "org.assertj", name = "assertj-core", version.ref = "assertj-core" }
 
 logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
