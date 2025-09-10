@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -119,7 +120,7 @@ class DateTimeControl<T : Any>(
             )
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
-                confirmButton = {
+                dismissButton = {
                     TextButton(onClick = {
                         datePickerState.selectedDateMillis?.let {
                             tempDate = adapter.dateFromEpochMillis(it)
@@ -132,8 +133,8 @@ class DateTimeControl<T : Any>(
                         } ?: run { showDatePicker = false }
                     }) { Text(T.get("action.select")) }
                 },
-                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(T.get("action.cancel")) } }
-            ) { androidx.compose.material3.DatePicker(state = datePickerState) }
+                confirmButton = { TextButton(onClick = { showDatePicker = false }) { Text(T.get("action.cancel")) } }
+            ) { DatePicker(state = datePickerState) }
         }
 
         if (showTimePicker) {
