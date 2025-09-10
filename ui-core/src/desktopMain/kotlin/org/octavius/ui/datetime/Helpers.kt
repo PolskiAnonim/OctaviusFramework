@@ -1,4 +1,4 @@
-package org.octavius.form.control.type.datetime.common
+package org.octavius.ui.datetime
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -37,7 +37,7 @@ import kotlin.time.Duration.Companion.seconds
  * ale jest nieedytowalne i służy jako przycisk do otwierania okna dialogowego.
  */
 @Composable
-internal fun PickerTextField(
+fun PickerTextField(
     value: String,
     onClick: () -> Unit,
     onClear: (() -> Unit)?,
@@ -86,7 +86,7 @@ internal fun PickerTextField(
  * Okno dialogowe do wprowadzania interwału czasowego (godziny, minuty, sekundy).
  */
 @Composable
-internal fun IntervalPickerDialog(
+fun IntervalPickerDialog(
     initialValue: Duration?,
     onDismiss: () -> Unit,
     onConfirm: (Duration) -> Unit

@@ -15,6 +15,18 @@
       "to": "Do",
       "value": "Wartość"
     },
+    "interval": {
+      "equals": "Równa się",
+      "notEquals": "Nie równa się",
+      "lessThan": "Mniej niż",
+      "lessEqual": "Mniej lub równo",
+      "greaterThan": "Więcej niż",
+      "greaterEqual": "Więcej lub równo",
+      "range": "Zakres",
+      "from": "Od",
+      "to": "Do",
+      "value": "Wartość"
+    },
     "enum": {
       "excludeSelected": "Wyklucz zaznaczone",
       "includeSelected": "Uwzględnij zaznaczone",

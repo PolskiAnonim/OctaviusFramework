@@ -82,6 +82,28 @@ enum class DateTimeFilterDataType : EnumWithFormatter<DateTimeFilterDataType> {
     }
 }
 
+enum class IntervalFilterDataType : EnumWithFormatter<IntervalFilterDataType> {
+    Equals,      // ==
+    NotEquals,   // !=
+    LessThan,    // <
+    LessEquals,  // <=
+    GreaterThan, // >
+    GreaterEquals, // >=
+    Range;        // between min and max
+
+    override fun toDisplayString(): String {
+        return when (this) {
+            Equals -> T.get("filter.interval.equals")
+            NotEquals -> T.get("filter.interval.notEquals")
+            LessThan -> T.get("filter.interval.lessThan")
+            LessEquals -> T.get("filter.interval.lessEqual")
+            GreaterThan -> T.get("filter.interval.greaterThan")
+            GreaterEquals -> T.get("filter.interval.greaterEqual")
+            Range -> T.get("filter.interval.range")
+        }
+    }
+}
+
 enum class NullHandling {
     Ignore,      // Ignoruj wartości null
     Include,     // Dołącz wartości null - dla pustej wartości - tylko nulle
