@@ -1,5 +1,20 @@
 {
   "filter": {
+    "datetime": {
+      "after": "Później niż",
+      "afterEqual": "Później lub równo",
+      "before": "Wcześniej niż",
+      "beforeEqual": "Wcześniej lub równo",
+      "equals": "Równo",
+      "from": "Od",
+      "notEquals": "Różne od",
+      "range": "Zakres",
+      "selectDate": "Wybierz datę",
+      "selectDateTime": "Wybierz datę i czas",
+      "selectTime": "Wybierz czas",
+      "to": "Do",
+      "value": "Wartość"
+    },
     "enum": {
       "excludeSelected": "Wyklucz zaznaczone",
       "includeSelected": "Uwzględnij zaznaczone",

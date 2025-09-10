@@ -30,6 +30,11 @@ interface DateTimeAdapter<T : Any> {
     fun dateFromEpochMillis(millis: Long): LocalDate
     fun getComponents(value: T?): DateTimePickerState
     fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: ZoneOffset?): T?
+
+    // Funkcje serializacji i deserializacji do JSONa
+    fun serialize(value: T): String
+
+    fun deserialize(value: String): T?
 }
 
 // --- Konkretne Implementacje ---
@@ -42,6 +47,9 @@ object DateAdapter : DateTimeAdapter<LocalDate> {
         TimeZone.Companion.UTC).date
     override fun getComponents(value: LocalDate?) = DateTimePickerState(date = value)
     override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: ZoneOffset?) = date
+
+    override fun deserialize(value: String) = LocalDate.parse(value)
+    override fun serialize(value: LocalDate) = value.toString()
 }
 
 object LocalTimeAdapter : DateTimeAdapter<LocalTime> {
@@ -56,6 +64,9 @@ object LocalTimeAdapter : DateTimeAdapter<LocalTime> {
     override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: ZoneOffset?): LocalTime? {
         return time?.let { LocalTime(it.hour, it.minute, it.second) }
     }
+
+    override fun deserialize(value: String) = LocalTime.parse(value)
+    override fun serialize(value: LocalTime) = value.toString()
 }
 
 @OptIn(ExperimentalTime::class)
@@ -76,6 +87,9 @@ object TimestampAdapter : DateTimeAdapter<LocalDateTime> {
             LocalTime(time.hour, time.minute, time.second)
         ) else null
     }
+
+    override fun deserialize(value: String) = LocalDateTime.parse(value)
+    override fun serialize(value: LocalDateTime) = value.toString()
 }
 
 @OptIn(ExperimentalTime::class)
@@ -98,6 +112,9 @@ class InstantAdapter(private val timeZone: TimeZone = TimeZone.Companion.current
             LocalDateTime(date, LocalTime(time.hour, time.minute, time.second)).toInstant(timeZone)
         } else null
     }
+
+    override fun deserialize(value: String) = Instant.parse(value)
+    override fun serialize(value: Instant) = value.toString()
 }
 
 @OptIn(ExperimentalTime::class)
@@ -114,4 +131,7 @@ object OffsetTimeAdapter : DateTimeAdapter<OffsetTime> {
     override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: ZoneOffset?): OffsetTime? {
         return if (time != null && offset != null) OffsetTime.of(time.toJavaLocalTime(), offset) else null
     }
+
+    override fun deserialize(value: String): OffsetTime = OffsetTime.parse(value)
+    override fun serialize(value: OffsetTime) = value.toString()
 }

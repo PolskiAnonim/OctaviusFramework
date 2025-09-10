@@ -60,6 +60,28 @@ enum class StringFilterDataType: EnumWithFormatter<StringFilterDataType> {
     }
 }
 
+enum class DateTimeFilterDataType : EnumWithFormatter<DateTimeFilterDataType> {
+    Equals,      // ==
+    NotEquals,   // !=
+    Before,      // <
+    BeforeEquals, // <=
+    After,       // >
+    AfterEquals, // >=
+    Range;        // between min and max
+
+    override fun toDisplayString(): String {
+        return when (this) {
+            Equals -> T.get("filter.datetime.equals")
+            NotEquals -> T.get("filter.datetime.notEquals")
+            Before -> T.get("filter.datetime.before")
+            BeforeEquals -> T.get("filter.datetime.beforeEqual")
+            After -> T.get("filter.datetime.after")
+            AfterEquals -> T.get("filter.datetime.afterEqual")
+            Range -> T.get("filter.datetime.range")
+        }
+    }
+}
+
 enum class NullHandling {
     Ignore,      // Ignoruj wartości null
     Include,     // Dołącz wartości null - dla pustej wartości - tylko nulle
