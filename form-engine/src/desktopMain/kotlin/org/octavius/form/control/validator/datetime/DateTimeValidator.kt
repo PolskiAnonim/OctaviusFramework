@@ -4,7 +4,7 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.DateTimeValidation
 import org.octavius.form.control.base.RenderContext
-import org.octavius.form.control.type.datetime.adapter.DateTimeAdapter
+import org.octavius.util.DateTimeAdapter
 import org.octavius.localization.T
 
 class DateTimeValidator<T: Any>(

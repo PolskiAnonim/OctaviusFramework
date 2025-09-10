@@ -1,4 +1,4 @@
-package org.octavius.form.control.type.datetime.adapter
+package org.octavius.util
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -37,8 +37,9 @@ interface DateTimeAdapter<T : Any> {
 object DateAdapter : DateTimeAdapter<LocalDate> {
     override val requiredComponents = setOf(DateTimeComponent.DATE)
     override fun format(value: LocalDate?) = value?.toString() ?: ""
-    override fun getEpochMillis(value: LocalDate?) = value?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()
-    override fun dateFromEpochMillis(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.UTC).date
+    override fun getEpochMillis(value: LocalDate?) = value?.atStartOfDayIn(TimeZone.Companion.UTC)?.toEpochMilliseconds()
+    override fun dateFromEpochMillis(millis: Long) = Instant.Companion.fromEpochMilliseconds(millis).toLocalDateTime(
+        TimeZone.Companion.UTC).date
     override fun getComponents(value: LocalDate?) = DateTimePickerState(date = value)
     override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: ZoneOffset?) = date
 }
@@ -61,24 +62,29 @@ object LocalTimeAdapter : DateTimeAdapter<LocalTime> {
 object TimestampAdapter : DateTimeAdapter<LocalDateTime> {
     override val requiredComponents = setOf(DateTimeComponent.DATE, DateTimeComponent.TIME, DateTimeComponent.SECONDS)
     override fun format(value: LocalDateTime?) = value?.toString()?.replace("T", " ") ?: ""
-    override fun getEpochMillis(value: LocalDateTime?) = value?.toInstant(TimeZone.UTC)?.toEpochMilliseconds()
-    override fun dateFromEpochMillis(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.UTC).date
+    override fun getEpochMillis(value: LocalDateTime?) = value?.toInstant(TimeZone.Companion.UTC)?.toEpochMilliseconds()
+    override fun dateFromEpochMillis(millis: Long) = Instant.Companion.fromEpochMilliseconds(millis).toLocalDateTime(
+        TimeZone.Companion.UTC).date
     override fun getComponents(value: LocalDateTime?) = DateTimePickerState(
         date = value?.date,
         time = value?.let { LocalTime(it.hour, it.minute, it.second) },
         seconds = value?.second
     )
     override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: ZoneOffset?): LocalDateTime? {
-        return if (date != null && time != null) LocalDateTime(date, LocalTime(time.hour, time.minute, time.second)) else null
+        return if (date != null && time != null) LocalDateTime(
+            date,
+            LocalTime(time.hour, time.minute, time.second)
+        ) else null
     }
 }
 
 @OptIn(ExperimentalTime::class)
-class InstantAdapter(private val timeZone: TimeZone = TimeZone.currentSystemDefault()) : DateTimeAdapter<Instant> {
+class InstantAdapter(private val timeZone: TimeZone = TimeZone.Companion.currentSystemDefault()) : DateTimeAdapter<Instant> {
     override val requiredComponents = setOf(DateTimeComponent.DATE, DateTimeComponent.TIME, DateTimeComponent.SECONDS)
     override fun format(value: Instant?) = value?.toLocalDateTime(timeZone)?.toString()?.replace("T", " ") ?: ""
     override fun getEpochMillis(value: Instant?) = value?.toEpochMilliseconds()
-    override fun dateFromEpochMillis(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.UTC).date
+    override fun dateFromEpochMillis(millis: Long) = Instant.Companion.fromEpochMilliseconds(millis).toLocalDateTime(
+        TimeZone.Companion.UTC).date
     override fun getComponents(value: Instant?): DateTimePickerState {
         val local = value?.toLocalDateTime(timeZone)
         return DateTimePickerState(
