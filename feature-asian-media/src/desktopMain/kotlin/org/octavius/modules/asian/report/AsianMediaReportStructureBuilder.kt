@@ -72,7 +72,22 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
         ReportMainAction(T.get("asianMedia.report.newTitle"), Icons.Default.Add) {
             AppRouter.navigateTo(
                 AsianMediaFormScreen.create(
-                ))
+                )
+            )
+        },
+        ReportMainAction(T.get("asianMedia.report.newKoreanWebNovel"), Icons.Default.Add) {
+            val payload = mapOf(
+                "publications" to listOf(
+                    mapOf(
+                        "publicationType" to PublicationType.WebNovel,
+                        "status" to PublicationStatus.NotReading,
+                        "trackProgress" to false
+                    )
+                ), "language" to PublicationLanguage.Korean
+            )
+            AppRouter.navigateTo(
+                AsianMediaFormScreen.create(null, payload)
+            )
         }
     )
 }

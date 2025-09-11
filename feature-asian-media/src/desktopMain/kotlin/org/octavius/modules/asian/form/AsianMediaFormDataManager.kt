@@ -76,12 +76,12 @@ class AsianMediaFormDataManager : FormDataManager() {
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
         return mapOf(
             "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "delete" to { formData, loadedId -> processDelete(formData, loadedId) },
+            "delete" to { formData, loadedId -> processDelete(loadedId) },
             "cancel" to { _, _ -> FormActionResult.CloseScreen }
         )
     }
 
-    fun processDelete(formResultData: FormResultData, loadedId: Int?): FormActionResult {
+    fun processDelete(loadedId: Int?): FormActionResult {
         // Wykorzystanie CASCADE
         val step = DatabaseStep.Delete("titles", mapOf("id" to loadedId.toDatabaseValue()))
         val result = batchExecutor.execute(listOf(step))
@@ -130,63 +130,95 @@ class AsianMediaFormDataManager : FormDataManager() {
         // =================================================================================
         val publicationsResult = formResultData["publications"]!!.currentValue as RepeatableResultValue
 
-        // --- Usunięte publikacje ---
-        publicationsResult.deletedRows.forEach { rowData ->
-            val pubId = rowData["id"]!!.initialValue as Int
-            // Usuwamy publikację. Tabela 'publication_volumes' zostanie usunięta kaskadowo przez DB.
-            databaseSteps.add(DatabaseStep.Delete(
-                tableName = "publications",
-                filter = mapOf("id" to pubId.toDatabaseValue())
-            ))
+        if (loadedId != null) {
+            // --- Usunięte publikacje ---
+            publicationsResult.deletedRows.forEach { rowData ->
+                val pubId = rowData["id"]!!.initialValue as Int
+                // Usuwamy publikację. Tabela 'publication_volumes' zostanie usunięta kaskadowo przez DB.
+                databaseSteps.add(
+                    DatabaseStep.Delete(
+                        tableName = "publications",
+                        filter = mapOf("id" to pubId.toDatabaseValue())
+                    )
+                )
+            }
+
+            // --- Zmodyfikowane publikacje ---
+            publicationsResult.modifiedRows.forEach { rowData ->
+                val pubId = rowData["id"]!!.initialValue as Int
+                val publicationIdRef = pubId.toDatabaseValue() // ID tej publikacji jest znane.
+                val publicationData = mapOf(
+                    "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
+                    "status" to rowData["status"]!!.currentValue.toDatabaseValue(),
+                    "track_progress" to rowData["trackProgress"]!!.currentValue.toDatabaseValue()
+                )
+
+                // Zaktualizuj samą publikację
+                databaseSteps.add(
+                    DatabaseStep.Update(
+                        tableName = "publications",
+                        data = publicationData,
+                        filter = mapOf("id" to publicationIdRef)
+                    )
+                )
+
+                // Warunkowo zaktualizuj powiązane 'publication_volumes'
+                addPublicationVolumesUpdateOperation(databaseSteps, rowData, publicationIdRef)
+            }
+
+            // --- Dodane publikacje ---
+            publicationsResult.addedRows.forEach { rowData ->
+                // Zapisujemy indeks operacji, która wstawi nową publikację.
+                val publicationInsertOpIndex = databaseSteps.size
+
+                val publicationData = mapOf(
+                    "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
+                    "status" to rowData["status"]!!.currentValue.toDatabaseValue(),
+                    "track_progress" to rowData["trackProgress"]!!.currentValue.toDatabaseValue(),
+                    // Używamy referencji do ID głównego tytułu (czy to nowego, czy edytowanego)
+                    "title_id" to titleIdRef
+                )
+
+                // Wstaw nową publikację i ZWRÓĆ JEJ ID, bo będzie potrzebne w kolejnym kroku.
+                databaseSteps.add(
+                    DatabaseStep.Insert(
+                        tableName = "publications",
+                        data = publicationData,
+                        returning = listOf("id")
+                    )
+                )
+
+                // ID tej publikacji nie jest jeszcze znane. Tworzymy referencję do wyniku poprzedniej operacji.
+                val newPublicationIdRef = DatabaseValue.FromStep(publicationInsertOpIndex, "id")
+
+                // Warunkowo zaktualizuj 'publication_volumes' (które stworzył trigger) używając nowego ID.
+                addPublicationVolumesUpdateOperation(databaseSteps, rowData, newPublicationIdRef)
+            }
+        } else {
+            // --- TRYB TWORZENIA ---
+            // Ignorujemy podział na dodane/zmienione/usunięte.
+            // Wszystkie wiersze z formularza traktujemy jako NOWE.
+            publicationsResult.allCurrentRows.forEach { rowData ->
+                val publicationInsertOpIndex = databaseSteps.size
+
+                val publicationData = mapOf(
+                    "publication_type" to rowData.getCurrent("publicationType").toDatabaseValue(),
+                    "status" to rowData.getCurrent("status").toDatabaseValue(),
+                    "track_progress" to rowData.getCurrent("trackProgress").toDatabaseValue(),
+                    "title_id" to titleIdRef // Używamy referencji do ID nowo tworzonego tytułu
+                )
+
+                databaseSteps.add(DatabaseStep.Insert(
+                    tableName = "publications",
+                    data = publicationData,
+                    returning = listOf("id")
+                ))
+
+                val newPublicationIdRef = DatabaseValue.FromStep(publicationInsertOpIndex, "id")
+                addPublicationVolumesUpdateOperation(databaseSteps, rowData, newPublicationIdRef)
+            }
         }
 
-        // --- Zmodyfikowane publikacje ---
-        publicationsResult.modifiedRows.forEach { rowData ->
-            val pubId = rowData["id"]!!.initialValue as Int
-            val publicationIdRef = pubId.toDatabaseValue() // ID tej publikacji jest znane.
-            val publicationData = mapOf(
-                "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
-                "status" to rowData["status"]!!.currentValue.toDatabaseValue(),
-                "track_progress" to rowData["trackProgress"]!!.currentValue.toDatabaseValue()
-            )
-
-            // Zaktualizuj samą publikację
-            databaseSteps.add(DatabaseStep.Update(
-                tableName = "publications",
-                data = publicationData,
-                filter = mapOf("id" to publicationIdRef)
-            ))
-
-            // Warunkowo zaktualizuj powiązane 'publication_volumes'
-            addPublicationVolumesUpdateOperation(databaseSteps, rowData, publicationIdRef)
-        }
-
-        // --- Dodane publikacje ---
-        publicationsResult.addedRows.forEach { rowData ->
-            // Zapisujemy indeks operacji, która wstawi nową publikację.
-            val publicationInsertOpIndex = databaseSteps.size
-
-            val publicationData = mapOf(
-                "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
-                "status" to rowData["status"]!!.currentValue.toDatabaseValue(),
-                "track_progress" to rowData["trackProgress"]!!.currentValue.toDatabaseValue(),
-                // Używamy referencji do ID głównego tytułu (czy to nowego, czy edytowanego)
-                "title_id" to titleIdRef
-            )
-
-            // Wstaw nową publikację i ZWRÓĆ JEJ ID, bo będzie potrzebne w kolejnym kroku.
-            databaseSteps.add(DatabaseStep.Insert(
-                tableName = "publications",
-                data = publicationData,
-                returning = listOf("id")
-            ))
-
-            // ID tej publikacji nie jest jeszcze znane. Tworzymy referencję do wyniku poprzedniej operacji.
-            val newPublicationIdRef = DatabaseValue.FromStep(publicationInsertOpIndex, "id")
-
-            // Warunkowo zaktualizuj 'publication_volumes' (które stworzył trigger) używając nowego ID.
-            addPublicationVolumesUpdateOperation(databaseSteps, rowData, newPublicationIdRef)
-        }
         val result = batchExecutor.execute(databaseSteps)
         when (result) {
             is DataResult.Failure -> {

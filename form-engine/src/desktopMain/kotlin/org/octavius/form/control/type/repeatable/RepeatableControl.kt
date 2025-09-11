@@ -194,6 +194,14 @@ class RepeatableControl(
             }
         }
 
+        val allCurrentRowsValues = controlState.value.value!!.map { row ->
+            rowControls.mapValues { (fieldName, control) ->
+                val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
+                val fieldControlState = states[hierarchicalContext.fullPath]!!
+                control.getResult(hierarchicalContext, fieldControlState)
+            }
+        }
+
         // Wyczyść stany usuniętych wierszy które były oryginalne
         deletedRows.forEach { row ->
             val rowPrefix = "${renderContext.fullPath}[${row.id}]"
@@ -204,7 +212,8 @@ class RepeatableControl(
             currentValue = RepeatableResultValue(
                 deletedRows = deletedRowsValues,
                 addedRows = newRowsValues,
-                modifiedRows = changedRowsValues
+                modifiedRows = changedRowsValues,
+                allCurrentRows = allCurrentRowsValues
             ),
             initialValue = null  // Oryginalne wartości są już zawarte w currentValue dla poszczególnych kontrolek
         )

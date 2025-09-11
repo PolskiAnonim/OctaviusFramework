@@ -28,7 +28,8 @@ data class RepeatableRow(
 data class RepeatableResultValue(
     val deletedRows: List<FormResultData>,
     val addedRows: List<FormResultData>,
-    val modifiedRows: List<FormResultData>
+    val modifiedRows: List<FormResultData>,
+    val allCurrentRows: List<FormResultData>
 )
 
 /**
