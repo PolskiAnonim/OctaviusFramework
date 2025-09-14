@@ -1,27 +1,13 @@
 package org.octavius.ui.datetime
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,20 +21,31 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Renderuje pole tekstowe, które wygląda jak standardowy OutlinedTextField,
  * ale jest nieedytowalne i służy jako przycisk do otwierania okna dialogowego.
+ * Jest teraz uniwersalne i może być używane w formularzach oraz filtrach.
+ *
+ * @param value Aktualnie wyświetlana wartość tekstowa.
+ * @param onClick Lambda wywoływana po kliknięciu.
+ * @param modifier Modyfikator do zastosowania na całym komponencie.
+ * @param label Opcjonalna etykieta dla pola.
+ * @param onClear Opcjonalna lambda do czyszczenia wartości (pokazuje przycisk 'X').
+ * @param isRequired Wskazuje, czy pole jest wymagane (wpływa na tekst zastępczy).
  */
 @Composable
 fun PickerTextField(
     value: String,
     onClick: () -> Unit,
-    onClear: (() -> Unit)?,
-    isRequired: Boolean
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    onClear: (() -> Unit)? = null,
+    isRequired: Boolean = false
 ) {
-    Box {
+    Box(modifier = modifier) {
         OutlinedTextField(
-            value = value.ifEmpty { if (isRequired) T.get("form.datetime.select") else T.get("form.datetime.notSet") },
+            value = value.ifEmpty { if (isRequired) T.get("datetime.select") else T.get("datetime.notSet") },
             onValueChange = {},
             readOnly = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(), // Pole zawsze wypełnia dostępną przestrzeń od rodzica (Box)
+            label = label?.let { { Text(it) } },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.DateRange,
@@ -101,25 +98,25 @@ fun IntervalPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(T.get("form.interval.title")) },
+        title = { Text(T.get("interval.title")) },
         text = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IntervalInputField(
                     value = hours,
                     onValueChange = { hours = it },
-                    label = T.get("form.interval.hours")
+                    label = T.get("interval.hours")
                 )
                 Text(":", modifier = Modifier.padding(horizontal = 4.dp))
                 IntervalInputField(
                     value = minutes,
                     onValueChange = { minutes = it },
-                    label = T.get("form.interval.minutes")
+                    label = T.get("interval.minutes")
                 )
                 Text(":", modifier = Modifier.padding(horizontal = 4.dp))
                 IntervalInputField(
                     value = seconds,
                     onValueChange = { seconds = it },
-                    label = T.get("form.interval.seconds")
+                    label = T.get("interval.seconds")
                 )
             }
         },

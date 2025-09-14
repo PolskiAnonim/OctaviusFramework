@@ -4,12 +4,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.toKotlinLocalTime
 import kotlinx.serialization.json.Json
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.exception.DataConversionException
 import org.octavius.exception.DataMappingException
 import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
+import org.octavius.util.KotlinOffsetTime
 import org.octavius.util.toDataObject
 import java.text.ParseException
 import java.time.OffsetTime
@@ -147,8 +150,13 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
                 "timestamp" -> LocalDateTime.parse(value.replace(' ', 'T'))
                 "timestamptz" -> Instant.parse(value.replace(' ', 'T'))
                 "time" -> LocalTime.parse(value)
-                "timetz" -> OffsetTime.parse(value, POSTGRES_TIMETZ_FORMATTER)
-
+                "timetz" -> {
+                    val javaOffsetTime = OffsetTime.parse(value, POSTGRES_TIMETZ_FORMATTER)
+                    return KotlinOffsetTime(
+                        time = javaOffsetTime.toLocalTime().toKotlinLocalTime(),
+                        offset = UtcOffset(seconds = javaOffsetTime.offset.totalSeconds)
+                    )
+                }
                 // Domyślnie wszystkie inne typy (text, varchar, char) jako String
                 else -> value
             }

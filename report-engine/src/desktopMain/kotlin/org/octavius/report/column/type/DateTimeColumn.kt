@@ -14,12 +14,11 @@ import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.DateTimeFilter
 import org.octavius.util.DateAdapter
 import org.octavius.util.DateTimeAdapter
-import org.octavius.util.InstantAdapter
+import org.octavius.util.KotlinOffsetTime
+import org.octavius.util.KotlinOffsetTimeAdapter
 import org.octavius.util.LocalTimeAdapter
-import org.octavius.util.OffsetTimeAdapter
 import org.octavius.util.TimestampAdapter
-import java.math.BigDecimal
-import java.time.OffsetTime
+import org.octavius.util.TimestampWithTimezoneAdapter
 import kotlin.reflect.KClass
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -119,7 +118,7 @@ fun InstantColumn(
 ) = DateTimeColumn(
     header = header,
     kClass = Instant::class,
-    adapter = InstantAdapter(timeZone),
+    adapter = TimestampWithTimezoneAdapter(timeZone),
     width = width,
     sortable = sortable,
     filterable = filterable,
@@ -154,8 +153,8 @@ fun OffsetTimeColumn(
     filterable: Boolean = true,
 ) = DateTimeColumn(
     header = header,
-    kClass = OffsetTime::class,
-    adapter = OffsetTimeAdapter,
+    kClass = KotlinOffsetTime::class,
+    adapter = KotlinOffsetTimeAdapter,
     width = width,
     sortable = sortable,
     filterable = filterable,

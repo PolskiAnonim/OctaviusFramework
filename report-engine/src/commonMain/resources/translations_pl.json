@@ -9,9 +9,6 @@
       "from": "Od",
       "notEquals": "Różne od",
       "range": "Zakres",
-      "selectDate": "Wybierz datę",
-      "selectDateTime": "Wybierz datę i czas",
-      "selectTime": "Wybierz czas",
       "to": "Do",
       "value": "Wartość"
     },
@@ -22,10 +19,7 @@
       "lessEqual": "Mniej lub równo",
       "greaterThan": "Więcej niż",
       "greaterEqual": "Więcej lub równo",
-      "range": "Zakres",
-      "from": "Od",
-      "to": "Do",
-      "value": "Wartość"
+      "range": "Zakres"
     },
     "enum": {
       "excludeSelected": "Wyklucz zaznaczone",

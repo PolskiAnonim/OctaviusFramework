@@ -6,23 +6,10 @@
       "itemLabel": "Element {0}",
       "savedSuccessfully": "Formularz został zapisany pomyślnie"
     },
-    "datetime": {
-      "select": "Wybierz datę/czas",
-      "notSet": "Nie ustawiono",
-      "seconds": "Sekundy",
-      "offset": "Przesunięcie UTC",
-      "commonOffset": "Szybki wybór"
-    },
     "dropdown": {
       "noResults": "Brak wyników",
       "noSelection": "Brak wyboru",
       "selectOption": "Wybierz opcję"
-    },
-    "interval": {
-      "title": "Wybierz interwał czasowy",
-      "hours": "Godziny",
-      "minutes": "Minuty",
-      "seconds": "Sekundy"
     },
     "stringList": {
       "itemPlaceholder": "Wprowadź tekst..."

@@ -19,7 +19,6 @@
     "collapse": "Zwiń",
     "expand": "Rozwiń"
   },
-
   "navigation": {
     "back": "Wstecz"
   },
@@ -41,5 +40,19 @@
     "database": {
       "title": "Błąd bazy danych"
     }
+  },
+  "datetime": {
+    "selectTime": "Wybierz czas",
+    "select": "Wybierz datę/czas",
+    "notSet": "Nie ustawiono",
+    "seconds": "Sekundy",
+    "offset": "Przesunięcie UTC",
+    "commonOffset": "Szybki wybór"
+  },
+  "interval": {
+    "title": "Wybierz interwał czasowy",
+    "hours": "Godziny",
+    "minutes": "Minuty",
+    "seconds": "Sekundy"
   }
 }

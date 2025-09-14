@@ -1,19 +1,17 @@
 package org.octavius.report.filter.type
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import kotlinx.datetime.*
 import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.T
 import org.octavius.report.DateTimeFilterDataType
@@ -24,15 +22,11 @@ import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.FilterSpacer
 import org.octavius.report.filter.data.type.DateTimeFilterData
+import org.octavius.ui.datetime.DateTimePickerDialog
+import org.octavius.ui.datetime.PickerTextField
 import org.octavius.util.DateTimeAdapter
-import org.octavius.util.DateTimeComponent
-import java.time.ZoneId
-import java.time.ZoneOffset
 import kotlin.reflect.KClass
-import kotlin.time.ExperimentalTime
 
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
 class DateTimeFilter<T : Any>(
     private val kClass: KClass<T>,
     private val adapter: DateTimeAdapter<T>
@@ -44,257 +38,76 @@ class DateTimeFilter<T : Any>(
 
     @Composable
     override fun RenderFilterUI(onEvent: (ReportEvent) -> Unit, columnKey: String, data: DateTimeFilterData<T>) {
-        // Ujednolicone stany widoczności pickerów
-        var showDatePicker by remember { mutableStateOf(false) }
-        var showTimePicker by remember { mutableStateOf(false) }
-        var showOffsetPicker by remember { mutableStateOf(false) }
-
-        // Śledzi, czy wybieramy wartość dla 'minValue' (lub pojedynczej 'value') czy 'maxValue'
-        var isPickingMinOrValue by remember { mutableStateOf(true) }
-
-        // Tymczasowe stany do przechowywania komponentów daty/czasu podczas wyboru
-        var tempDate by remember { mutableStateOf<LocalDate?>(null) }
-        var tempTime by remember { mutableStateOf<LocalTime?>(null) }
-        var tempSeconds by remember { mutableStateOf("0") }
-        var tempOffset by remember { mutableStateOf<ZoneOffset?>(null) }
-
-        val systemDefaultOffset by remember {
-            mutableStateOf(ZoneId.systemDefault().rules.getOffset(java.time.Instant.now()))
-        }
-
-        // Funkcja do zbudowania i aktualizacji danych filtra po wybraniu wszystkich komponentów
-        fun confirmAndBuildValue() {
-            val finalTime = tempTime?.let {
-                LocalTime(
-                    hour = it.hour,
-                    minute = it.minute,
-                    second = tempSeconds.toIntOrNull()?.coerceIn(0, 59) ?: 0
-                )
-            }
-            // Używamy runCatching do parsowania offsetu, zwracamy null w przypadku błędu
-            val finalOffset = runCatching { tempOffset?.toString()?.let { ZoneOffset.of(it) } }.getOrNull()
-
-            val newDateTimeValue = adapter.buildFromComponents(tempDate, finalTime, finalOffset)
-
-            if (isPickingMinOrValue) {
-                if (data.filterType == DateTimeFilterDataType.Range) {
-                    onEvent(ReportEvent.FilterChanged(columnKey, data.copy(minValue = newDateTimeValue)))
-                } else {
-                    onEvent(ReportEvent.FilterChanged(columnKey, data.copy(value = newDateTimeValue)))
-                }
-            } else {
-                onEvent(ReportEvent.FilterChanged(columnKey, data.copy(maxValue = newDateTimeValue)))
-            }
-
-            // Resetuj widoczność pickerów
-            showDatePicker = false
-            showTimePicker = false
-            showOffsetPicker = false
-        }
-
-        // Funkcja inicjująca przepływ wyboru dla konkretnej wartości (min/value lub max)
-        fun startPickerFlowFor(forMinOrValue: Boolean) {
-            isPickingMinOrValue = forMinOrValue
-
-            val initialValue = if (forMinOrValue) (data.value ?: data.minValue) else data.maxValue
-            val components = adapter.getComponents(initialValue)
-
-            tempDate = components.date
-            tempTime = components.time
-            tempSeconds = components.seconds?.toString() ?: "0"
-            tempOffset = components.offset ?: systemDefaultOffset // Inicjalizuj systemowym offsetem, jeśli brak
-
-            if (adapter.requiredComponents.contains(DateTimeComponent.DATE)) {
-                showDatePicker = true
-            } else if (adapter.requiredComponents.contains(DateTimeComponent.TIME)) {
-                showTimePicker = true
-            } else if (adapter.requiredComponents.contains(DateTimeComponent.OFFSET)) {
-                showOffsetPicker = true
-            } else {
-                // Jeśli żadne komponenty nie są wymagane, od razu zbuduj wartość
-                confirmAndBuildValue()
-            }
-        }
+        var showDialog by remember { mutableStateOf(false) }
+        var isEditingMinOrValue by remember { mutableStateOf(true) }
 
         EnumDropdownMenu(
             currentValue = data.filterType,
             options = DateTimeFilterDataType.entries,
-            onValueChange = { onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(filterType = it))) }
+            onValueChange = { onEvent(ReportEvent.FilterChanged(columnKey, data.copy(filterType = it))) }
         )
 
         FilterSpacer()
 
-        // UI dla pojedynczej wartości lub zakresu
         if (data.filterType == DateTimeFilterDataType.Range) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(
-                    value = adapter.format(data.minValue),
-                    onValueChange = { /* tylko do odczytu */ },
-                    label = { Text(T.get("filter.datetime.from")) },
-                    readOnly = true,
+                PickerTextField(
                     modifier = Modifier.weight(1f),
-                    trailingIcon = {
-                        IconButton(onClick = { startPickerFlowFor(true) }) {
-                            Icon(Icons.Default.DateRange, contentDescription = T.get("filter.datetime.selectDateTime"))
-                        }
+                    label = T.get("filter.datetime.from"),
+                    value = adapter.format(data.minValue),
+                    onClick = {
+                        isEditingMinOrValue = true
+                        showDialog = true
                     }
                 )
-                OutlinedTextField(
-                    value = adapter.format(data.maxValue),
-                    onValueChange = { /* tylko do odczytu */ },
-                    label = { Text(T.get("filter.datetime.to")) },
-                    readOnly = true,
+                PickerTextField(
                     modifier = Modifier.weight(1f),
-                    trailingIcon = {
-                        IconButton(onClick = { startPickerFlowFor(false) }) {
-                            Icon(Icons.Default.DateRange, contentDescription = T.get("filter.datetime.selectDateTime"))
-                        }
+                    label = T.get("filter.datetime.to"),
+                    value = adapter.format(data.maxValue),
+                    onClick = {
+                        isEditingMinOrValue = false
+                        showDialog = true
                     }
                 )
             }
         } else {
-            OutlinedTextField(
-                value = adapter.format(data.value),
-                onValueChange = { /* tylko do odczytu */ },
-                label = { Text(T.get("filter.datetime.value")) },
-                readOnly = true,
+            PickerTextField(
                 modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    IconButton(onClick = { startPickerFlowFor(true) }) {
-                        Icon(Icons.Default.DateRange, contentDescription = T.get("filter.datetime.selectDateTime"))
-                    }
+                label = T.get("filter.datetime.value"),
+                value = adapter.format(data.value),
+                onClick = {
+                    isEditingMinOrValue = true
+                    showDialog = true
                 }
             )
         }
 
-        // --- Date Picker Dialog ---
-        if (showDatePicker) {
-            val initialMillis = if (isPickingMinOrValue) {
-                (data.value ?: data.minValue)?.let { adapter.getEpochMillis(it) }
+        if (showDialog) {
+            val initialValueForDialog = if (isEditingMinOrValue) {
+                if (data.filterType == DateTimeFilterDataType.Range) data.minValue else data.value
             } else {
-                data.maxValue?.let { adapter.getEpochMillis(it) }
-            }
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = initialMillis
-            )
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                dismissButton = {
-                    TextButton(onClick = {
-                        datePickerState.selectedDateMillis?.let {
-                            tempDate = adapter.dateFromEpochMillis(it)
-                            showDatePicker = false
-                            if (adapter.requiredComponents.contains(DateTimeComponent.TIME)) {
-                                showTimePicker = true
-                            } else if (adapter.requiredComponents.contains(DateTimeComponent.OFFSET)) {
-                                showOffsetPicker = true
-                            } else {
-                                confirmAndBuildValue()
-                            }
-                        } ?: run { showDatePicker = false } // Jeśli data nie została wybrana, po prostu zamknij
-                    }) { Text(T.get("action.select")) }
-                },
-                confirmButton = { TextButton(onClick = { showDatePicker = false }) { Text(T.get("action.cancel")) } }
-            ) { DatePicker(state = datePickerState) }
-        }
-
-        // --- Time Picker Dialog ---
-        if (showTimePicker) {
-            // Inicjalizuj stan time pickera z tempTime, lub domyślny
-            val initialHour = tempTime?.hour ?: 12
-            val initialMinute = tempTime?.minute ?: 0
-            val timePickerState = rememberTimePickerState(initialHour = initialHour, initialMinute = initialMinute)
-
-            // Inicjalizuj pole tekstowe sekund przy otwieraniu pickera
-            LaunchedEffect(Unit) {
-                tempSeconds = tempTime?.second?.toString() ?: "0"
+                data.maxValue
             }
 
-            AlertDialog(
-                onDismissRequest = { showTimePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        tempTime = LocalTime(timePickerState.hour, timePickerState.minute)
-                        showTimePicker = false
-                        if (adapter.requiredComponents.contains(DateTimeComponent.OFFSET)) {
-                            // Upewnij się, że tempOffset jest ustawiony na systemDefaultOffset, jeśli jest null przed otwarciem pickera offsetu
-                            if (tempOffset == null) {
-                                tempOffset = systemDefaultOffset
-                            }
-                            showOffsetPicker = true
+            DateTimePickerDialog(
+                adapter = adapter,
+                initialValue = initialValueForDialog,
+                onDismiss = { showDialog = false },
+                onConfirm = { newValue ->
+                    showDialog = false
+                    val updatedData = if (isEditingMinOrValue) {
+                        if (data.filterType == DateTimeFilterDataType.Range) {
+                            data.copy(minValue = newValue)
                         } else {
-                            confirmAndBuildValue()
+                            data.copy(value = newValue)
                         }
-                    }) { Text(T.get("action.ok")) }
-                },
-                dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(T.get("action.cancel")) } },
-                text = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        TimePicker(state = timePickerState)
-                        if (adapter.requiredComponents.contains(DateTimeComponent.SECONDS)) {
-                            Spacer(Modifier.height(16.dp))
-                            OutlinedTextField(
-                                value = tempSeconds,
-                                onValueChange = { if (it.length <= 2) tempSeconds = it.filter { c -> c.isDigit() } },
-                                label = { Text(T.get("form.datetime.seconds")) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
+                    } else {
+                        data.copy(maxValue = newValue)
                     }
-                }
-            )
-        }
-
-        // --- Offset Picker Dialog ---
-        if (showOffsetPicker) {
-            val commonOffsets by remember {
-                mutableStateOf((-12..14).map { ZoneOffset.ofHours(it) })
-            }
-            // Użyj osobnego mutableStateOf dla wartości pola tekstowego, inicjalizowanego z tempOffset
-            var currentOffsetInput by remember(tempOffset) { mutableStateOf(tempOffset?.toString() ?: systemDefaultOffset.toString()) }
-
-            AlertDialog(
-                onDismissRequest = { showOffsetPicker = false },
-                title = { Text(T.get("form.datetime.offset")) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        runCatching { ZoneOffset.of(currentOffsetInput) }.getOrNull()?.let {
-                            tempOffset = it
-                            showOffsetPicker = false
-                            confirmAndBuildValue()
-                        }
-                    }) { Text(T.get("action.ok")) }
-                },
-                dismissButton = { TextButton(onClick = { showOffsetPicker = false }) { Text(T.get("action.cancel")) } },
-                text = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        OutlinedTextField(
-                            value = currentOffsetInput,
-                            onValueChange = { currentOffsetInput = it },
-                            label = { Text(T.get("form.datetime.offset")) },
-                            placeholder = { Text("+02:00") },
-                            singleLine = true,
-                            isError = runCatching { ZoneOffset.of(currentOffsetInput) }.isFailure,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(Modifier.height(16.dp))
-                        Text(T.get("form.datetime.commonOffset"), modifier = Modifier.align(Alignment.Start))
-                        LazyColumn(modifier = Modifier.height(150.dp)) {
-                            items(commonOffsets) { offset ->
-                                Text(
-                                    text = offset.toString(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { currentOffsetInput = offset.toString() }
-                                        .padding(vertical = 8.dp)
-                                )
-                            }
-                        }
-                    }
+                    onEvent(ReportEvent.FilterChanged(columnKey, updatedData))
                 }
             )
         }

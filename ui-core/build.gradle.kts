@@ -23,6 +23,7 @@ kotlin {
             // Inne współdzielone biblioteki
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core) // ui-core może zależeć od core
+            implementation(libs.kotlinx.datetime)
         }
 
         // Zależności tylko dla desktopu (jeśli jakieś są)
