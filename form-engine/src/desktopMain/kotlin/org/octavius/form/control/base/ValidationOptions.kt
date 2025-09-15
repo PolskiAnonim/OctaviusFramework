@@ -1,13 +1,7 @@
 package org.octavius.form.control.base
 
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
 import java.math.BigDecimal
-import java.time.OffsetTime
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 /**
  * Opcje walidacji dla kontrolek formularza.

@@ -152,69 +152,40 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             "volumes" to IntegerControl(
                 null,
                 T.get("asianMedia.form.volumeCount"),
-                dependencies = mapOf(
-                    "visible" to ControlDependency(
-                        controlName = "trackProgress",
-                        value = true,
-                        dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals,
-                        scope = DependencyScope.Local
-                    )
-                )
+                dependencies = visibleWhenTrackProgress()
             ),
             "translatedVolumes" to IntegerControl(
                 null,
                 T.get("asianMedia.form.translatedVolumes"),
-                dependencies = mapOf(
-                    "visible" to ControlDependency(
-                        controlName = "trackProgress",
-                        value = true,
-                        dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals,
-                        scope = DependencyScope.Local
-                    )
-                )
+                dependencies = visibleWhenTrackProgress()
             ),
             "chapters" to IntegerControl(
                 null,
                 T.get("asianMedia.form.chapterCount"),
-                dependencies = mapOf(
-                    "visible" to ControlDependency(
-                        controlName = "trackProgress",
-                        value = true,
-                        dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals,
-                        scope = DependencyScope.Local
-                    )
-                )
+                dependencies = visibleWhenTrackProgress()
             ),
             "translatedChapters" to IntegerControl(
                 null,
                 T.get("asianMedia.form.translatedChapters"),
-                dependencies = mapOf(
-                    "visible" to ControlDependency(
-                        controlName = "trackProgress",
-                        value = true,
-                        dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals,
-                        scope = DependencyScope.Local
-                    )
-                )
+                dependencies = visibleWhenTrackProgress()
             ),
             "originalCompleted" to BooleanControl(
                 null,
                 T.get("asianMedia.form.originalCompleted"),
                 required = true,
-                dependencies = mapOf(
-                    "visible" to ControlDependency(
-                        controlName = "trackProgress",
-                        value = true,
-                        dependencyType = DependencyType.Visible,
-                        comparisonType = ComparisonType.Equals,
-                        scope = DependencyScope.Local
-                    )
-                )
+                dependencies = visibleWhenTrackProgress()
             )
         )
     }
+
+    private fun visibleWhenTrackProgress(): Map<String, ControlDependency<Boolean>> = mapOf(
+        "visible" to ControlDependency(
+            controlName = "trackProgress",
+            value = true,
+            dependencyType = DependencyType.Visible,
+            comparisonType = ComparisonType.Equals,
+            scope = DependencyScope.Local
+        )
+    )
+
 }

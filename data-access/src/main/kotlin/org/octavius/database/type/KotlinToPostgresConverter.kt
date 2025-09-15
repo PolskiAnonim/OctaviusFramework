@@ -1,22 +1,15 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.*
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.contract.EnumCaseConvention
 import org.octavius.data.contract.PgTyped
 import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
-import org.octavius.util.KotlinOffsetTime
+import org.octavius.util.OffsetTime
 import org.octavius.util.toMap
 import org.postgresql.util.PGobject
-import java.time.OffsetTime
-import java.util.Date
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -118,7 +111,7 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
             paramValue is LocalDateTime -> createTimestampParameter(paramName, paramValue)
             paramValue is LocalTime -> createTimeParameter(paramName, paramValue)
             paramValue is Instant -> createInstantParameter(paramName, paramValue)
-            paramValue is KotlinOffsetTime -> createOffsetTimeParameter(paramName, paramValue)
+            paramValue is OffsetTime -> createOffsetTimeParameter(paramName, paramValue)
             paramValue is Duration -> createIntervalParameter(paramName, paramValue)
             isDataClass(paramValue) -> expandRowParameter(paramName, paramValue!!)
             paramValue is JsonObject -> createJsonParameter(paramName, paramValue)
@@ -153,10 +146,10 @@ class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
     }
 
     /** Konwertuje `KotlinOffsetTime` na `java.time.OffsetTime`, z którym JDBC sobie radzi. */
-    private fun createOffsetTimeParameter(paramName: String, value: KotlinOffsetTime): Pair<String, Map<String, Any?>> {
+    private fun createOffsetTimeParameter(paramName: String, value: OffsetTime): Pair<String, Map<String, Any?>> {
         val javaOffset = java.time.ZoneOffset.ofTotalSeconds(value.offset.totalSeconds)
         val javaTime = value.time.toJavaLocalTime()
-        val offsetTime = OffsetTime.of(javaTime, javaOffset)
+        val offsetTime = java.time.OffsetTime.of(javaTime, javaOffset)
         return ":$paramName" to mapOf(paramName to offsetTime)
     }
 

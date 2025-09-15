@@ -1,6 +1,5 @@
 package org.octavius.ui.screen
 
-import org.octavius.ui.navigation.MainTopAppBar
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -21,6 +20,7 @@ import org.octavius.dialog.GlobalDialogManager
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Tab
 import org.octavius.ui.navigation.AppTopBar
+import org.octavius.ui.navigation.MainTopAppBar
 import org.octavius.ui.navigation.TabContent
 import org.octavius.ui.snackbar.SnackbarManager
 

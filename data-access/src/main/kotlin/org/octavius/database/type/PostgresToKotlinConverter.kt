@@ -12,10 +12,9 @@ import org.octavius.exception.DataConversionException
 import org.octavius.exception.DataMappingException
 import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
-import org.octavius.util.KotlinOffsetTime
+import org.octavius.util.OffsetTime
 import org.octavius.util.toDataObject
 import java.text.ParseException
-import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
@@ -151,8 +150,8 @@ class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
                 "timestamptz" -> Instant.parse(value.replace(' ', 'T'))
                 "time" -> LocalTime.parse(value)
                 "timetz" -> {
-                    val javaOffsetTime = OffsetTime.parse(value, POSTGRES_TIMETZ_FORMATTER)
-                    return KotlinOffsetTime(
+                    val javaOffsetTime = java.time.OffsetTime.parse(value, POSTGRES_TIMETZ_FORMATTER)
+                    return OffsetTime(
                         time = javaOffsetTime.toLocalTime().toKotlinLocalTime(),
                         offset = UtcOffset(seconds = javaOffsetTime.offset.totalSeconds)
                     )

@@ -3,21 +3,10 @@ package org.octavius.report.filter.type
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
-import org.octavius.localization.T
 import org.octavius.report.FilterMode
 import org.octavius.report.IntervalFilterDataType
 import org.octavius.report.Query
@@ -26,12 +15,9 @@ import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.FilterSpacer
 import org.octavius.report.filter.data.type.IntervalFilterData
-import org.octavius.ui.datetime.IntervalPickerDialog // Importujemy nowy dialog
-import org.octavius.ui.datetime.PickerTextField // Importujemy nowy PickerTextField
+import org.octavius.ui.datetime.IntervalPickerDialog
+import org.octavius.ui.datetime.PickerTextField
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)

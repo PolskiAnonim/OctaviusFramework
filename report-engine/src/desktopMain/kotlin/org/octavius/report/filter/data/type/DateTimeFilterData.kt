@@ -1,6 +1,9 @@
 package org.octavius.report.filter.data.type
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.octavius.report.DateTimeFilterDataType
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling

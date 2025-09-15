@@ -10,9 +10,7 @@ import org.octavius.report.Query
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.column.type.IntegerColumn
 import org.octavius.report.column.type.LongColumn
-import org.octavius.report.column.type.NumberColumn
 import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportStructureBuilder
 

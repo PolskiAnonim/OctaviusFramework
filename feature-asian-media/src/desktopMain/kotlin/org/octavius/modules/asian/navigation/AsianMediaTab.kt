@@ -6,7 +6,6 @@ import octavius.feature_asian_media.generated.resources.asian_media_icon
 import org.jetbrains.compose.resources.painterResource
 import org.octavius.localization.T
 import org.octavius.modules.asian.home.ui.AsianMediaHomeScreen
-import org.octavius.modules.asian.report.ui.AsianMediaReportScreen
 import org.octavius.navigation.Screen
 import org.octavius.navigation.Tab
 import org.octavius.navigation.TabOptions

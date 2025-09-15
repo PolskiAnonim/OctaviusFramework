@@ -1,13 +1,12 @@
 package org.octavius.api.server
 
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.octavius.api.contract.ApiModule

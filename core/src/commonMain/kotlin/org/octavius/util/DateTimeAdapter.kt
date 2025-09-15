@@ -1,13 +1,6 @@
 package org.octavius.util
 
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.UtcOffset
-import kotlinx.datetime.offsetAt
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -58,7 +51,7 @@ object LocalTimeAdapter : DateTimeAdapter<LocalTime> {
 }
 
 @OptIn(ExperimentalTime::class)
-object TimestampAdapter : DateTimeAdapter<LocalDateTime> {
+object LocalDateTimeAdapter : DateTimeAdapter<LocalDateTime> {
     override val requiredComponents = setOf(DateTimeComponent.DATE, DateTimeComponent.TIME, DateTimeComponent.SECONDS)
     override fun format(value: LocalDateTime?) = value?.toString()?.replace("T", " ") ?: ""
     override fun getComponents(value: LocalDateTime?) = DateTimePickerState(
@@ -82,8 +75,8 @@ object TimestampAdapter : DateTimeAdapter<LocalDateTime> {
  * UI pokaże datę, czas i offset, co daje użytkownikowi pełen kontekst.
  */
 @OptIn(ExperimentalTime::class)
-class TimestampWithTimezoneAdapter(private val timeZone: TimeZone = TimeZone.currentSystemDefault()) : DateTimeAdapter<Instant> {
-    override val requiredComponents = setOf(DateTimeComponent.DATE, DateTimeComponent.TIME, DateTimeComponent.SECONDS, DateTimeComponent.OFFSET)
+class InstantAdapter(private val timeZone: TimeZone = TimeZone.currentSystemDefault()) : DateTimeAdapter<Instant> {
+    override val requiredComponents = setOf(DateTimeComponent.DATE, DateTimeComponent.TIME, DateTimeComponent.SECONDS)
     override fun format(value: Instant?): String {
         return value?.let {
             val offset = timeZone.offsetAt(it)
@@ -116,18 +109,18 @@ class TimestampWithTimezoneAdapter(private val timeZone: TimeZone = TimeZone.cur
 
 
 @OptIn(ExperimentalTime::class)
-object KotlinOffsetTimeAdapter : DateTimeAdapter<KotlinOffsetTime> {
+object OffsetTimeAdapter : DateTimeAdapter<OffsetTime> {
     override val requiredComponents = setOf(DateTimeComponent.TIME, DateTimeComponent.SECONDS, DateTimeComponent.OFFSET)
-    override fun format(value: KotlinOffsetTime?) = value?.toString() ?: ""
-    override fun getComponents(value: KotlinOffsetTime?) = DateTimePickerState(
+    override fun format(value: OffsetTime?) = value?.toString() ?: ""
+    override fun getComponents(value: OffsetTime?) = DateTimePickerState(
         time = value?.time,
         seconds = value?.time?.second,
         offset = value?.offset
     )
-    override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: UtcOffset?): KotlinOffsetTime? {
-        return if (time != null && offset != null) KotlinOffsetTime(time, offset) else null
+    override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: UtcOffset?): OffsetTime? {
+        return if (time != null && offset != null) OffsetTime(time, offset) else null
     }
 
-    override fun deserialize(value: String): KotlinOffsetTime = KotlinOffsetTime.parse(value)
-    override fun serialize(value: KotlinOffsetTime) = value.toString()
+    override fun deserialize(value: String): OffsetTime = OffsetTime.parse(value)
+    override fun serialize(value: OffsetTime) = value.toString()
 }

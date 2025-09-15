@@ -6,19 +6,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import kotlinx.datetime.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import org.octavius.report.CellRendererUtils
 import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.DateTimeFilter
-import org.octavius.util.DateAdapter
-import org.octavius.util.DateTimeAdapter
-import org.octavius.util.KotlinOffsetTime
-import org.octavius.util.KotlinOffsetTimeAdapter
-import org.octavius.util.LocalTimeAdapter
-import org.octavius.util.TimestampAdapter
-import org.octavius.util.TimestampWithTimezoneAdapter
+import org.octavius.util.*
 import kotlin.reflect.KClass
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -90,7 +87,7 @@ fun DateColumn(
  * Funkcja fabryczna tworząca kolumnę do wyświetlania daty i czasu (LocalDateTime).
  */
 @Suppress("FunctionName")
-fun TimestampColumn(
+fun LocalDateTimeColumn(
     header: String,
     width: Float = 1f,
     sortable: Boolean = true,
@@ -98,7 +95,7 @@ fun TimestampColumn(
 ) = DateTimeColumn(
     header = header,
     kClass = LocalDateTime::class,
-    adapter = TimestampAdapter,
+    adapter = LocalDateTimeAdapter,
     width = width,
     sortable = sortable,
     filterable = filterable,
@@ -118,7 +115,7 @@ fun InstantColumn(
 ) = DateTimeColumn(
     header = header,
     kClass = Instant::class,
-    adapter = TimestampWithTimezoneAdapter(timeZone),
+    adapter = InstantAdapter(timeZone),
     width = width,
     sortable = sortable,
     filterable = filterable,
@@ -128,7 +125,7 @@ fun InstantColumn(
  * Funkcja fabryczna tworząca kolumnę do wyświetlania czasu (LocalTime).
  */
 @Suppress("FunctionName")
-fun TimeColumn(
+fun LocalTimeColumn(
     header: String,
     width: Float = 1f,
     sortable: Boolean = true,
@@ -153,8 +150,8 @@ fun OffsetTimeColumn(
     filterable: Boolean = true,
 ) = DateTimeColumn(
     header = header,
-    kClass = KotlinOffsetTime::class,
-    adapter = KotlinOffsetTimeAdapter,
+    kClass = OffsetTime::class,
+    adapter = OffsetTimeAdapter,
     width = width,
     sortable = sortable,
     filterable = filterable,
