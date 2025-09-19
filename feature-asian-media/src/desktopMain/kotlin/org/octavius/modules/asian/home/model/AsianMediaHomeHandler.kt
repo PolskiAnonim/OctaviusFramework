@@ -8,15 +8,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.toSingleOf
+import org.octavius.data.contract.builder.toSingleOf
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.exception.DatabaseException
 
 class AsianMediaHomeHandler : KoinComponent {
-    private val dataFetcher: DataFetcher by inject()
+    private val dataAccess: DataAccess by inject()
     private val scope = CoroutineScope(Dispatchers.IO)
 
     private val _state = MutableStateFlow(AsianMediaHomeState())
@@ -26,39 +26,61 @@ class AsianMediaHomeHandler : KoinComponent {
         loadData()
     }
 
+    fun getSql(): String {
+        val totalTitlesSubquery = dataAccess.select("COUNT(*)").from("asian_media.titles").toSql()
+
+        val readingCountSubquery = dataAccess.select("COUNT(DISTINCT title_id)")
+                .from("asian_media.publications")
+                .where("status = 'READING'")
+                .toSql()
+
+        val notExistsForCompleted = dataAccess.select("1")
+            .from("asian_media.publications p2")
+            .where("p2.title_id = p1.title_id AND p2.status = 'READING'")
+            .toSql()
+        val completedCountSubquery =
+            dataAccess.select("COUNT(DISTINCT p1.title_id)")
+                .from("asian_media.publications p1")
+                .where("p1.status = 'COMPLETED' AND NOT EXISTS ($notExistsForCompleted)")
+                .toSql()
+
+        val innerCurrentlyReading = dataAccess.select("t.id, t.titles")
+            .from("asian_media.titles t")
+            .where("EXISTS (SELECT 1 FROM asian_media.publications p WHERE p.title_id = t.id AND p.status = 'READING')")
+            .orderBy("t.updated_at DESC")
+            .limit(5)
+            .toSql()
+        val currentlyReadingSubquery = dataAccess.select("array_agg(ROW(id, titles[1])::asian_media.dashboard_item)")
+                .fromSubquery(innerCurrentlyReading)
+                .toSql()
+
+        val innerRecentlyAdded = dataAccess.select("id, titles")
+            .from("asian_media.titles")
+            .orderBy("created_at DESC")
+            .limit(5)
+            .toSql()
+        val recentlyAddedSubquery = dataAccess.select("array_agg(ROW(id, titles[1])::asian_media.dashboard_item)")
+                .fromSubquery(innerRecentlyAdded)
+                .toSql()
+
+        // === Składamy finalną klauzulę SELECT z gotowych klocków ===
+
+        return """
+        ($totalTitlesSubquery) AS total_titles,
+        ($readingCountSubquery) AS reading_count,
+        ($completedCountSubquery) AS completed_count,
+        ($currentlyReadingSubquery) AS currently_reading,
+        ($recentlyAddedSubquery) AS recently_added
+    """
+    }
+
     fun loadData() {
 
         scope.launch {
-            val query = """
-            SELECT
-            -- Sekcja statystyk
-            (SELECT COUNT(*) FROM asian_media.titles) AS total_titles,
-            (SELECT COUNT(DISTINCT title_id) FROM asian_media.publications WHERE status = 'READING') AS reading_count,
-            (SELECT COUNT(DISTINCT p1.title_id) FROM asian_media.publications p1
-                WHERE p1.status = 'COMPLETED' AND NOT EXISTS
-                    (SELECT 1 FROM asian_media.publications p2 WHERE p2.title_id = p1.title_id AND p2.status = 'READING')) AS completed_count,
-            
-            -- Sekcja "currently reading" zagregowana do tablicy typu dashboard_item
-            (SELECT array_agg(ROW(t.id, t.titles[1])::asian_media.dashboard_item)
-             FROM (
-                 SELECT t.id, t.titles
-                 FROM asian_media.titles t
-                 WHERE EXISTS (SELECT 1 FROM asian_media.publications p WHERE p.title_id = t.id AND p.status = 'READING')
-                 ORDER BY t.updated_at DESC
-                 LIMIT 5
-             ) t) AS currently_reading,
-             
-            -- Sekcja "recently added" zagregowana do tablicy typu dashboard_item
-            (SELECT array_agg(ROW(id, titles[1])::asian_media.dashboard_item)
-             FROM (
-                 SELECT id, titles
-                 FROM asian_media.titles
-                 ORDER BY created_at DESC
-                 LIMIT 5
-             ) t) AS recently_added
-            """.trimIndent()
+            val finalSelectClause = getSql()
 
-            when (val result = dataFetcher.query().from(query).toSingleOf<DashboardData>()) {
+            // Finalne wywołanie jest teraz proste i czyste
+            when (val result = dataAccess.select(finalSelectClause).toSingleOf<DashboardData>()) {
                 is DataResult.Success -> {
                     val data = result.value
                     if (data != null) {

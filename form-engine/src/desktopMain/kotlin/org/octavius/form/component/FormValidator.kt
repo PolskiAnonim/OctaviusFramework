@@ -2,7 +2,7 @@ package org.octavius.form.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataAccess
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.RenderContext
 
@@ -21,7 +21,7 @@ open class FormValidator() : KoinComponent {
     protected lateinit var formSchema: FormSchema
     protected lateinit var errorManager: ErrorManager
 
-    protected val dataFetcher: DataFetcher by inject()
+    protected val dataAccess: DataAccess by inject()
 
     internal fun setupFormReferences(formState: FormState, formSchema: FormSchema, errorManager: ErrorManager) {
         this.formState = formState

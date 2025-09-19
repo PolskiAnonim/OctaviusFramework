@@ -34,11 +34,11 @@ class GameFormDataManager : FormDataManager() {
                 "categories" to emptyList<Map<String, Any?>>()
             )
         } else {
-            val dataExists = dataFetcher.select(
+            val dataExists = dataAccess.select(
                 """CASE WHEN pt.game_id IS NULL THEN FALSE ELSE TRUE END AS play_time_exists,
                 CASE WHEN c.game_id IS NULL THEN FALSE ELSE TRUE END AS characters_exists,
                 CASE WHEN r.game_id IS NULL THEN FALSE ELSE TRUE END AS ratings_exists
-                """,
+                """).from(
                 """games g 
                     LEFT JOIN characters c ON c.game_id = g.id
                     LEFT JOIN play_time pt ON pt.game_id = g.id 
@@ -54,8 +54,8 @@ class GameFormDataManager : FormDataManager() {
             }
 
             // Załaduj kategorie dla tej gry
-            val catResult = dataFetcher.select(
-                "ctg.category_id as category",
+            val catResult = dataAccess.select(
+                "ctg.category_id as category").from(
                 "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id"
             ).where("ctg.game_id = :gameId").toList(mapOf("gameId" to loadedId))
 

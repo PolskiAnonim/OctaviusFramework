@@ -19,10 +19,10 @@ import org.octavius.navigation.NavigationEventBus
 /**
  * Implementacja ApiModule dla funkcjonalności "Asian Media".
  * Definiuje endpointy do sprawdzania i dodawania publikacji.
- * Używa Koin do wstrzykiwania zależności (DataFetcher, BatchExecutor).
+ * Używa Koin do wstrzykiwania zależności (DataAccess, BatchExecutor).
  */
 class AsianMediaApi : ApiModule, KoinComponent {
-    private val fetcher: DataFetcher by inject()
+    private val fetcher: DataAccess by inject()
     private val batchExecutor: BatchExecutor by inject()
 
     override fun installRoutes(routing: Routing) {
@@ -50,7 +50,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             // Używamy operatora && (overlap) z PostgreSQL do sprawdzenia,
             // czy tablica tytułów w bazie ma jakikolwiek wspólny element z listą z zapytania.
-            val result = fetcher.select("id, titles", from = "titles").where("titles && :titles")
+            val result = fetcher.select("id, titles").from("titles").where("titles && :titles")
                 .toSingle(mapOf("titles" to titles.withPgType("text[]")))
 
 
