@@ -1,4 +1,6 @@
-package org.octavius.data.contract
+package org.octavius.data.contract.transaction
+
+import org.octavius.data.contract.DataResult
 
 typealias BatchStepResults = Map<Int, List<Map<String, Any?>>>
 
@@ -21,9 +23,9 @@ interface BatchExecutor {
      * Wyniki z wcześniejszych kroków mogą być używane w późniejszych przez DatabaseValue.FromStep.
      * W przypadku błędu w dowolnym kroku, cała transakcja zostaje wycofana.
      *
-     * @param transactionSteps Lista operacji (Insert, Update, Delete, RawSql) do wykonania.
+     * @param transactionSteps Lista operacji (Insert, Update, Delete) do wykonania.
      * @return DataResult zawierający mapę, gdzie kluczem jest indeks operacji (0-based),
      *         a wartością lista zwróconych wierszy lub informacji o liczbie zmian.
      */
-    fun execute(transactionSteps: List<TransactionStep>): DataResult<BatchStepResults>
+    fun execute(transactionSteps: List<TransactionStep<*>>): DataResult<BatchStepResults>
 }

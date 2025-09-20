@@ -1,9 +1,7 @@
 package org.octavius.modules.games.form.series
 
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.TransactionStep
-import org.octavius.data.contract.DatabaseValue
-import org.octavius.data.contract.toDatabaseValue
+import org.octavius.data.contract.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormActionResult
@@ -30,15 +28,15 @@ class GameSeriesFormDataManager : FormDataManager() {
     }
 
     private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
-        val seriesData = mutableMapOf<String, DatabaseValue>()
-        seriesData["name"] = formResultData["name"]!!.currentValue.toDatabaseValue()
-
-        val steps = if (loadedId != null) {
-            listOf(TransactionStep.Update("series", seriesData, mapOf("id" to loadedId.toDatabaseValue())))
+        val seriesData = mutableMapOf<String, Any?>()
+        seriesData["name"] = formResultData["name"]!!.currentValue
+        val plan = TransactionPlan(dataAccess)
+        if (loadedId != null) {
+            plan.update("series", seriesData, mapOf("id" to loadedId))
         } else {
-            listOf(TransactionStep.Insert("series", seriesData))
+            plan.insert("series", seriesData)
         }
-        val result = batchExecutor.execute(steps)
+        val result = batchExecutor.execute(plan.build())
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))

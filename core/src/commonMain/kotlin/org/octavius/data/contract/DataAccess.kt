@@ -1,10 +1,6 @@
 package org.octavius.data.contract
 
-import org.octavius.data.contract.builder.DeleteQueryBuilder
-import org.octavius.data.contract.builder.InsertQueryBuilder
-import org.octavius.data.contract.builder.RawQueryBuilder
-import org.octavius.data.contract.builder.SelectQueryBuilder
-import org.octavius.data.contract.builder.UpdateQueryBuilder
+import org.octavius.data.contract.builder.*
 
 /**
  * Główny kontrakt dla interakcji z warstwą dostępu do danych.

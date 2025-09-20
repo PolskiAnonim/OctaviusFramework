@@ -4,8 +4,9 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
-import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.DataAccess
+import org.octavius.data.contract.transaction.BatchExecutor
+import org.octavius.database.transaction.DatabaseBatchExecutor
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.database.type.TypeRegistry
@@ -78,7 +79,7 @@ class DatabaseSystem {
         rowMappers = RowMappers(typesConverter)
 
         logger.debug { "Initializing database services" }
-        val concreteExecutor = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
+        val concreteExecutor = DatabaseBatchExecutor(datasourceTransactionManager)
         val concreteDataAccess = DatabaseAccess(namedParameterJdbcTemplate, datasourceTransactionManager, rowMappers, kotlinToPostgresConverter)
 
         batchExecutor = concreteExecutor

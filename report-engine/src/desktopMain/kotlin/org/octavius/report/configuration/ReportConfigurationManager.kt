@@ -2,9 +2,13 @@ package org.octavius.report.configuration
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.*
+import org.octavius.data.contract.DataAccess
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.builder.toListOf
 import org.octavius.data.contract.builder.toSingleOf
+import org.octavius.data.contract.transaction.BatchExecutor
+import org.octavius.data.contract.transaction.BatchStepResults
+import org.octavius.data.contract.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.util.toMap
@@ -28,22 +32,21 @@ class ReportConfigurationManager : KoinComponent {
 
         val flatValueMap = configuration.toMap()
 
-        val dataMap =
-            flatValueMap.filter { (key, _) -> key != "id" }.mapValues { (_, value) -> value.toDatabaseValue() }
+        val plan = TransactionPlan(dataAccess)
 
-        val transactionStep = if (configId != null) {
-            TransactionStep.Update(
+        if (configId != null) {
+            plan.update(
                 tableName = "report_configurations",
-                data = dataMap,
-                filter = mapOf("id" to configId.toDatabaseValue())
+                data = flatValueMap,
+                filter = mapOf("id" to configId)
             )
         } else {
-            TransactionStep.Insert(
-                tableName = "public.report_configurations",
-                data = dataMap
+            plan.insert(
+                tableName = "report_configurations",
+                data = flatValueMap,
             )
         }
-        val result = batchExecutor.execute(listOf(transactionStep))
+        val result = batchExecutor.execute(plan.build())
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
@@ -89,12 +92,10 @@ class ReportConfigurationManager : KoinComponent {
     }
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
-        val transactionStep = TransactionStep.Delete(
-            tableName = "report_configurations",
-            filter = mapOf("name" to name.toDatabaseValue(), "report_name" to reportName.toDatabaseValue())
-        )
+        val plan = TransactionPlan(dataAccess)
+        plan.delete("report_configurations", mapOf("name" to name, "report_name" to reportName))
 
-        val result = batchExecutor.execute(listOf(transactionStep))
+        val result = batchExecutor.execute(plan.build())
 
         when(result) {
             is DataResult.Failure -> {

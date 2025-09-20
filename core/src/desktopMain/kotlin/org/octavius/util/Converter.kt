@@ -1,7 +1,6 @@
 package org.octavius.util
 
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor

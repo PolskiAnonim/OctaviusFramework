@@ -2,10 +2,10 @@ package org.octavius.form.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
+import org.octavius.data.contract.transaction.BatchExecutor
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.FormResultData

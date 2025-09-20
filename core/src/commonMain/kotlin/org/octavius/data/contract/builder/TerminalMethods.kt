@@ -2,7 +2,7 @@ package org.octavius.data.contract.builder
 
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.TransactionStep
+import org.octavius.data.contract.transaction.TransactionStep
 import kotlin.reflect.KClass
 
 /** Interfejs zawierający metody terminalne zwracające dane */
@@ -78,44 +78,44 @@ interface StepBuilderMethods {
     // --- Zwracanie pełnych wierszy ---
 
     /** Tworzy ExtendedDatabaseStep z metodą toList */
-    fun toList(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<List<Map<String, Any?>>>
+    fun toList(params: Map<String, Any?> = emptyMap()): TransactionStep<List<Map<String, Any?>>>
 
     /** Tworzy ExtendedDatabaseStep z metodą toSingle */
-    fun toSingle(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<Map<String, Any?>?>
+    fun toSingle(params: Map<String, Any?> = emptyMap()): TransactionStep<Map<String, Any?>?>
 
     /** Tworzy ExtendedDatabaseStep z metodą toSingleWithColumnInfo */
-    fun toSingleWithColumnInfo(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<Map<ColumnInfo, Any?>?>
+    fun toSingleWithColumnInfo(params: Map<String, Any?> = emptyMap()): TransactionStep<Map<ColumnInfo, Any?>?>
 
     // --- Zwracanie obiektów data class ---
 
     /** Tworzy ExtendedDatabaseStep z metodą toListOf */
-    fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<List<T>>
+    fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<List<T>>
 
     /** Tworzy ExtendedDatabaseStep z metodą toSingleOf */
-    fun <T: Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<T?>
+    fun <T: Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
 
     // --- Zwracanie wartości skalarnych ---
 
     /** Tworzy ExtendedDatabaseStep z metodą toField */
-    fun <T> toField(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<T?>
+    fun <T> toField(params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
 
     /** Tworzy ExtendedDatabaseStep z metodą toColumn */
-    fun <T> toColumn(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<List<T?>>
+    fun <T> toColumn(params: Map<String, Any?> = emptyMap()): TransactionStep<List<T?>>
 
     // --- Metoda modyfikująca ---
 
     /** Tworzy ExtendedDatabaseStep z metodą execute */
-    fun execute(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<Int>
+    fun execute(params: Map<String, Any?> = emptyMap()): TransactionStep<Int>
 }
 
 /**
  * Wygodne funkcje rozszerzające inline dla StepBuilderMethods
  */
-inline fun <reified T : Any> StepBuilderMethods.toListOf(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<List<T>> {
+inline fun <reified T : Any> StepBuilderMethods.toListOf(params: Map<String, Any?> = emptyMap()): TransactionStep<List<T>> {
     return this.toListOf(T::class, params)
 }
 
-inline fun <reified T : Any> StepBuilderMethods.toSingleOf(params: Map<String, Any?> = emptyMap()): TransactionStep.FromBuilder<T?> {
+inline fun <reified T : Any> StepBuilderMethods.toSingleOf(params: Map<String, Any?> = emptyMap()): TransactionStep<T?> {
     return this.toSingleOf(T::class, params)
 }
 

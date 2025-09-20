@@ -1,22 +1,12 @@
 package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.contract.*
-import org.octavius.data.contract.builder.DeleteQueryBuilder
-import org.octavius.data.contract.builder.InsertQueryBuilder
-import org.octavius.data.contract.builder.RawQueryBuilder
-import org.octavius.data.contract.builder.SelectQueryBuilder
-import org.octavius.data.contract.builder.UpdateQueryBuilder
-import org.octavius.database.builder.DatabaseDeleteQueryBuilder
-import org.octavius.database.builder.DatabaseInsertQueryBuilder
-import org.octavius.database.builder.DatabaseRawQueryBuilder
-import org.octavius.database.builder.DatabaseSelectQueryBuilder
-import org.octavius.database.builder.DatabaseUpdateQueryBuilder
+import org.octavius.data.contract.DataAccess
+import org.octavius.data.contract.builder.*
+import org.octavius.database.builder.*
 import org.octavius.database.type.KotlinToPostgresConverter
-import org.octavius.exception.QueryExecutionException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
-import org.springframework.transaction.support.TransactionTemplate
 
 class DatabaseAccess(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
