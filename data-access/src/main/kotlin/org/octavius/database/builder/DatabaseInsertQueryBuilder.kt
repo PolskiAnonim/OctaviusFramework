@@ -18,9 +18,9 @@ internal class DatabaseInsertQueryBuilder(
     private var selectSource: String? = null
     private var onConflictBuilder: DatabaseOnConflictClauseBuilder? = null
 
-     override fun values(values: Map<String, Any?>): InsertQueryBuilder = apply {
-        values.keys.forEach { key ->
-            valuePlaceholders[key] = ":$key"
+     override fun values(values: Map<String, String>): InsertQueryBuilder = apply {
+        values.forEach { (key, value) ->
+            valuePlaceholders[key] = value
         }
     }
 

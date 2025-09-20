@@ -123,7 +123,7 @@ interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMet
      * Definiuje wartości do wstawienia. Kolumny są brane z kluczy mapy.
      * Wyklucza użycie `fromSelect`.
      */
-    fun values(values: Map<String, Any?>): InsertQueryBuilder
+    fun values(values: Map<String, String>): InsertQueryBuilder
 
     /**
      * Definiuje zapytanie SELECT jako źródło danych do wstawienia.
