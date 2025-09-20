@@ -70,28 +70,78 @@ class DatabaseBatchExecutor(
                         var expandedSql: String? = null
                         var expandedParams: Map<String, Any?>? = null
                         try {
-                            val (sql, params) = buildQuery(operation, allResults)
-                            val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-                            expandedSql = expanded.expandedSql
-                            expandedParams = expanded.expandedParams
-
                             logger.debug { "Executing step $index/${databaseSteps.size-1}: ${operation::class.simpleName}" }
 
-                            logger.trace { "--> SQL: ${expanded.expandedSql}" }
-                            logger.trace { "--> Params: ${expanded.expandedParams}" }
+                            val result: List<Map<String, Any?>> = when (operation) {
+                                is DatabaseStep.FromBuilder<*> -> {
+                                    // Rozwiązuj referencje w parametrach
+                                    val resolvedParams = operation.params.mapValues { (_, value) ->
+                                        when (value) {
+                                            is DatabaseValue -> resolveReference(value, allResults)
+                                            else -> value
+                                        }
+                                    }
 
-                            val result: List<Map<String, Any?>> = if (operation.returning.isNotEmpty()) {
-                                val returnedRows: List<Map<String, Any?>> = namedParameterJdbcTemplate.query(
-                                    expanded.expandedSql,
-                                    expanded.expandedParams,
-                                    rowMappers.ColumnNameMapper() //Przepuszczamy przez system konwersji
-                                )
-                                logger.debug { "Step $index executed, returned ${returnedRows.size} rows." }
-                                returnedRows
-                            } else {
-                                val rowsAffected = namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
-                                logger.debug { "Step $index executed, affected $rowsAffected rows." }
-                                listOf(mapOf("rows_affected" to rowsAffected))
+                                    logger.trace { "--> FromBuilder params: $resolvedParams" }
+
+                                    // Wywołaj metodę terminalną buildera
+                                    val buildResult = operation.terminalMethod(resolvedParams)
+                                    when (buildResult) {
+                                        is DataResult.Success -> {
+                                            val data = buildResult.value
+                                            when (data) {
+                                                is List<*> -> {
+                                                    // Jeśli wynik to już lista map, użyj jej
+                                                    @Suppress("UNCHECKED_CAST")
+                                                    data as List<Map<String, Any?>>
+                                                }
+                                                is Map<*, *> -> {
+                                                    // Jeśli wynik to pojedyncza mapa, opakuj w listę
+                                                    @Suppress("UNCHECKED_CAST")
+                                                    listOf(data as Map<String, Any?>)
+                                                }
+                                                else -> {
+                                                    // Dla innych typów, stwórz mapę z wartością
+                                                    listOf(mapOf("result" to data))
+                                                }
+                                            }
+                                        }
+                                        is DataResult.Failure -> {
+                                            throw buildResult.error
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    // Obsługa tradycyjnych kroków (Insert, Update, Delete)
+                                    val (sql, params) = buildQuery(operation, allResults)
+                                    val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+                                    expandedSql = expanded.expandedSql
+                                    expandedParams = expanded.expandedParams
+
+                                    logger.trace { "--> SQL: ${expanded.expandedSql}" }
+                                    logger.trace { "--> Params: ${expanded.expandedParams}" }
+
+                                    val returningColumns = when (operation) {
+                                        is DatabaseStep.Insert -> operation.returning
+                                        is DatabaseStep.Update -> operation.returning
+                                        is DatabaseStep.Delete -> operation.returning
+                                        else -> emptyList()
+                                    }
+
+                                    if (returningColumns.isNotEmpty()) {
+                                        val returnedRows: List<Map<String, Any?>> = namedParameterJdbcTemplate.query(
+                                            expanded.expandedSql,
+                                            expanded.expandedParams,
+                                            rowMappers.ColumnNameMapper()
+                                        )
+                                        logger.debug { "Step $index executed, returned ${returnedRows.size} rows." }
+                                        returnedRows
+                                    } else {
+                                        val rowsAffected = namedParameterJdbcTemplate.update(expanded.expandedSql, expanded.expandedParams)
+                                        logger.debug { "Step $index executed, affected $rowsAffected rows." }
+                                        listOf(mapOf("rows_affected" to rowsAffected))
+                                    }
+                                }
                             }
 
                             allResults[index] = result
@@ -201,9 +251,9 @@ class DatabaseBatchExecutor(
                 val sql = "DELETE FROM ${op.tableName}$whereClause$returningClause"
                 return sql to filterParams
             }
-            is DatabaseStep.RawSql -> {
-                val params = op.params.mapValues { resolveReference(it.value, resultsContext) }
-                return op.sql to params
+
+            is DatabaseStep.FromBuilder<*> -> {
+                throw UnsupportedOperationException() // FromBuilder nie używa tej metody
             }
         }
     }

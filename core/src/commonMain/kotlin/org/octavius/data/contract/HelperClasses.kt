@@ -32,14 +32,14 @@ sealed class DatabaseValue {
  * @see BatchExecutor.execute
  */
 sealed class DatabaseStep {
-    /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
-    abstract val returning: List<String>
+
 
     /** Operacja `INSERT`. */
     data class Insert(
         val tableName: String,
         val data: Map<String, DatabaseValue>,
-        override val returning: List<String> = listOf()
+        /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
+        val returning: List<String> = listOf()
     ) : DatabaseStep()
 
     /** Operacja `UPDATE`. */
@@ -47,27 +47,29 @@ sealed class DatabaseStep {
         val tableName: String,
         val data: Map<String, DatabaseValue>,
         val filter: Map<String, DatabaseValue>,
-        override val returning: List<String> = emptyList()
+        /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
+        val returning: List<String> = emptyList()
     ) : DatabaseStep()
 
     /** Operacja `DELETE`. */
     data class Delete(
         val tableName: String,
         val filter: Map<String, DatabaseValue>,
-        override val returning: List<String> = emptyList()
+        /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
+        val returning: List<String> = emptyList()
     ) : DatabaseStep()
 
-    /** Dowolna operacja SQL z nazwanymi parametrami.
-     * Umożliwia wykonywanie złożonych zapytań, które nie mieszczą się
-     * w standardowych operacjach INSERT/UPDATE/DELETE.
+    /**
+     * Krok bazodanowy stworzony za pomocą buildera używając asStep() z metodą terminalną
      *
-     * UWAGA: Jeżeli operacja powinna coś zwracać, oprócz listy returning
-     * należy też zapisać faktyczniego SQLa: RETURNING...
+     * @param builderState Pełny stan buildera (wszystkie klauzule, filtry, etc.)
+     * @param terminalMethod Referencja do metody terminalnej do wywołania
+     * @param params Parametry do przekazania metodzie terminalnej
      */
-    data class RawSql(
-        val sql: String,
-        val params: Map<String, DatabaseValue>,
-        override val returning: List<String> = emptyList()
+    data class FromBuilder<T>(
+        val builderState: Any, // Będzie to konkretny builder (DatabaseSelectQueryBuilder, etc.)
+        val terminalMethod: (Map<String, Any?>) -> DataResult<T>,
+        val params: Map<String, Any?>
     ) : DatabaseStep()
 }
 
@@ -92,3 +94,13 @@ data class PgTyped(val value: Any?, val pgType: String)
  * @param fieldName Nazwa kolumny.
  */
 data class ColumnInfo(val tableName: String, val fieldName: String)
+
+/**
+ * Helper function do tworzenia referencji do wyników poprzednich kroków w transakcji.
+ *
+ * @param stepIndex Indeks kroku (0-based) z którego chcemy pobrać wynik
+ * @param resultKey Nazwa kolumny/klucza z wyniku tego kroku
+ */
+fun stepResult(stepIndex: Int, resultKey: String): DatabaseValue.FromStep {
+    return DatabaseValue.FromStep(stepIndex, resultKey)
+}

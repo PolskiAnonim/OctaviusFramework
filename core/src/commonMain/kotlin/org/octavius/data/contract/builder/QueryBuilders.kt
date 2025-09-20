@@ -3,7 +3,7 @@ package org.octavius.data.contract.builder
 /**
  * Definiuje publiczne API do budowania zapytań SQL SELECT.
  */
-interface SelectQueryBuilder: TerminalReturningMethods {
+interface SelectQueryBuilder: TerminalReturningMethods, StepConvertible {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): SelectQueryBuilder
@@ -51,7 +51,7 @@ interface SelectQueryBuilder: TerminalReturningMethods {
 /**
  * Definiuje publiczne API do budowania zapytań SQL DELETE.
  */
-interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMethods {
+interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, StepConvertible {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): DeleteQueryBuilder
@@ -75,7 +75,7 @@ interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMet
 /**
  * Definiuje publiczne API do budowania zapytań SQL UPDATE.
  */
-interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMethods {
+interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, StepConvertible {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): UpdateQueryBuilder
@@ -111,7 +111,7 @@ interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMet
 /**
  * Definiuje publiczne API do budowania zapytań SQL INSERT.
  */
-interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMethods {
+interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, StepConvertible {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): InsertQueryBuilder
@@ -168,6 +168,6 @@ interface OnConflictClauseBuilder {
 /**
  * Definiuje publiczne API do przekazania pełnego zapytania.
  */
-interface RawQueryBuilder : TerminalReturningMethods, TerminalModificationMethods {
+interface RawQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, StepConvertible {
     // Tylko metody terminalne które są brane z innych interfejsów
 }
