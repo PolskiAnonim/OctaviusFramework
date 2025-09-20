@@ -10,12 +10,7 @@ internal class DatabaseUpdateQueryBuilder(
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     table: String
-) : AbstractModificationQueryBuilder<DatabaseUpdateQueryBuilder> (
-    jdbcTemplate,
-    kotlinToPostgresConverter,
-    rowMappers,
-    table
-), UpdateQueryBuilder {
+) : AbstractQueryBuilder<DatabaseUpdateQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), UpdateQueryBuilder {
 
     private val setClauses = mutableMapOf<String, String>()
     private var fromClause: String? = null

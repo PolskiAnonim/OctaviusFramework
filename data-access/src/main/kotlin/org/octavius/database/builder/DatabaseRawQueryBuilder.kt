@@ -14,8 +14,7 @@ internal class DatabaseRawQueryBuilder(
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     private val sql: String
-) : AbstractModificationQueryBuilder<DatabaseRawQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table = "" ), RawQueryBuilder {
-    // Jest to klasa obchodząca podstawowe buildery dlatego table jest pustym stringiem
+) : AbstractQueryBuilder<DatabaseRawQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), RawQueryBuilder {
 
     override fun buildSql(): String = sql
 }

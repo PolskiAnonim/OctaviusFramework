@@ -12,7 +12,7 @@ internal class DatabaseInsertQueryBuilder(
     rowMappers: RowMappers,
     table: String,
     private val columns: List<String>
-) : AbstractModificationQueryBuilder<DatabaseInsertQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), InsertQueryBuilder {
+) : AbstractQueryBuilder<DatabaseInsertQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), InsertQueryBuilder {
 
     private val valuePlaceholders = mutableMapOf<String, String>()
     private var selectSource: String? = null

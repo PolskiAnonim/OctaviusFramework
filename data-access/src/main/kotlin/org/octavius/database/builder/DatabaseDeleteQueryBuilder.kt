@@ -10,12 +10,7 @@ internal class DatabaseDeleteQueryBuilder(
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     table: String
-) : AbstractModificationQueryBuilder<DatabaseDeleteQueryBuilder>(
-    jdbcTemplate,
-    kotlinToPostgresConverter,
-    rowMappers,
-    table
-), DeleteQueryBuilder {
+) : AbstractQueryBuilder<DatabaseDeleteQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), DeleteQueryBuilder {
 
     private var whereClause: String? = null
     private var usingClause: String? = null

@@ -14,7 +14,7 @@ internal class DatabaseSelectQueryBuilder(
     jdbcTemplate: NamedParameterJdbcTemplate,
     rowMappers: RowMappers,
     kotlinToPostgresConverter: KotlinToPostgresConverter
-) : AbstractQueryBuilder<DatabaseSelectQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers), SelectQueryBuilder {
+) : AbstractQueryBuilder<DatabaseSelectQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), SelectQueryBuilder {
 
     //------------------------------------------------------------------------------------------------------------------
     //                                    STAN WEWNĘTRZNY KLAUZULI SELECT

@@ -23,6 +23,7 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
     protected val jdbcTemplate: NamedParameterJdbcTemplate,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter,
     protected val rowMappers: RowMappers,
+    protected val table: String? = null,
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -39,10 +40,33 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
     abstract fun buildSql(): String
 
     //------------------------------------------------------------------------------------------------------------------
+    //                                         RETURNING CLAUSE (dla INSERT/UPDATE/DELETE)
+    //------------------------------------------------------------------------------------------------------------------
+    protected var returningClause: String? = null
+
+    /**
+     * Dodaje klauzulę RETURNING do zapytania modyfikującego (INSERT, UPDATE, DELETE).
+     * @param columns Kolumny do zwrócenia po wykonaniu operacji.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun returning(columns: String): T = apply {
+        this.returningClause = columns
+    } as T
+
+    /**
+     * Buduje fragment SQL dla klauzuli RETURNING.
+     */
+    protected fun buildReturningClause(): String {
+        return returningClause?.let { " RETURNING $it" } ?: ""
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
     //                                              CTE (WITH)
     //------------------------------------------------------------------------------------------------------------------
     protected val withClauses: MutableList<Pair<String, String>> = mutableListOf()
     protected var recursiveWith: Boolean = false
+
+
 
     /**
      * Dodaje zapytanie do klauzuli WITH (Common Table Expression).
@@ -133,6 +157,22 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
     /** Zwraca wygenerowany string SQL bez wykonywania zapytania. */
     fun toSql(): String {
         return buildSql()
+    }
+
+    /**
+     * Wykonuje zapytanie modyfikujące (bez RETURNING) i zwraca liczbę zmienionych wierszy.
+     * Rzuca wyjątek, jeśli klauzula RETURNING została użyta - w takim przypadku należy
+     * użyć metod `toList()`, `toSingle()` itp.
+     */
+    fun execute(params: Map<String, Any?>): DataResult<Int> {
+        if (returningClause != null) {
+            throw IllegalStateException("Use toList(), toSingle(), etc. when RETURNING clause is specified.")
+        }
+        val sql = buildSql()
+        return execute(sql, params) { expandedSql, expandedParams ->
+            val affectedRows = jdbcTemplate.update(expandedSql, expandedParams)
+            DataResult.Success(affectedRows)
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------
