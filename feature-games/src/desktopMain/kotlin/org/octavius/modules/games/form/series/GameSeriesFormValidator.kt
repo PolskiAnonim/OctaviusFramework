@@ -37,11 +37,11 @@ class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
             params["id"] = entityId
         }
 
-        val result = dataFetcher.query().from("series").where(whereClause).toCount(params)
+        val result = dataAccess.select("COUNT(*)").from("series").where(whereClause).toField<Long>(params)
 
         return when (result) {
             is DataResult.Success -> {
-                if (result.value > 0) {
+                if ((result.value ?: 0L) > 0) {
                     // Tytuł już istnieje. Ustawiamy błąd dla konkretnego pola 'name'.
                     errorManager.setFieldErrors("name", listOf(T.get("games.validation.duplicatedSeries")))
                     false // Walidacja się nie powiodła.

@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import org.octavius.data.contract.BatchExecutor
-import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataAccess
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.database.type.TypeRegistry
@@ -21,7 +21,7 @@ import kotlin.time.measureTime
  * - Konfigurację puli połączeń HikariCP z PostgreSQL
  * - Inicjalizację menedżera transakcji Spring
  * - Automatyczne ładowanie rejestru typów z bazy danych i classpath
- * - Udostępnienie usług dostępu do danych przez interfejsy [DataFetcher] i [BatchExecutor]
+ * - Udostępnienie usług dostępu do danych przez interfejsy [DataAccess] i [BatchExecutor]
  * 
  * Singleton inicjalizowany przy pierwszym dostępie, konfiguruje wszystkie komponenty
  * wymagane do pracy z wieloschemtową bazą PostgreSQL (public, asian_media, games).
@@ -41,8 +41,8 @@ class DatabaseSystem {
     private val rowMappers: RowMappers
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 
-    /** Usługa do wykonywania zapytań odczytujących (SELECT). */
-    val fetcher: DataFetcher
+    /** Usługa do wykonywania zapytań */
+    val dataAccess: DataAccess
     /** Usługa do wykonywania transakcyjnych operacji zapisu (CUD). */
     val batchExecutor: BatchExecutor
 
@@ -79,10 +79,10 @@ class DatabaseSystem {
 
         logger.debug { "Initializing database services" }
         val concreteExecutor = DatabaseBatchExecutor(datasourceTransactionManager, namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
-        val concreteFetcher = DatabaseFetcher(namedParameterJdbcTemplate, rowMappers, kotlinToPostgresConverter)
+        val concreteDataAccess = DatabaseAccess(namedParameterJdbcTemplate, datasourceTransactionManager, rowMappers, kotlinToPostgresConverter)
 
         batchExecutor = concreteExecutor
-        fetcher = concreteFetcher
+        dataAccess = concreteDataAccess
         
         logger.info { "DatabaseSystem initialization completed" }
     }

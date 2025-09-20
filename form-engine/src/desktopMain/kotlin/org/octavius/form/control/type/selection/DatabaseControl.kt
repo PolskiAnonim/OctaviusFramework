@@ -3,7 +3,7 @@ package org.octavius.form.control.type.selection
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.ColumnInfo
-import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
@@ -34,7 +34,7 @@ class DatabaseControl(
     override val supportSearch = true
     override val supportPagination = true
 
-    private val fetcher: DataFetcher by inject()
+    private val dataAccess: DataAccess by inject()
 
     private var cachedValue: DropdownOption<Int>? = null
 
@@ -44,7 +44,7 @@ class DatabaseControl(
         // Próbuj użyć cache
         if (cachedValue?.value == value) return cachedValue!!.displayText
 
-        val result = fetcher.select(displayColumn, from = relatedTable).where("id = :id")
+        val result = dataAccess.select(displayColumn).from(relatedTable).where("id = :id")
             .toField<String>(mapOf("id" to value))
 
         return when (result) {
@@ -70,10 +70,10 @@ class DatabaseControl(
         val params = if (searchQuery.isNotBlank()) mapOf("search" to "%$searchQuery%") else emptyMap()
 
         // Krok 2: Pobierz całkowitą liczbę pasujących rekordów
-        val countResult = fetcher.query().from(relatedTable).where(filter).toCount(params)
+        val countResult = dataAccess.select("COUNT(*)").from(relatedTable).where(filter).toField<Long>(params)
 
         val totalCount = when (countResult) {
-            is DataResult.Success -> countResult.value
+            is DataResult.Success -> countResult.value ?: 0L
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(countResult.error))
                 return Pair(emptyList(), 0L)
@@ -87,7 +87,7 @@ class DatabaseControl(
         val totalPages = (totalCount + pageSize - 1) / pageSize
 
 
-        val optionsResult = fetcher.select("id, $displayColumn", from = relatedTable)
+        val optionsResult = dataAccess.select("id, $displayColumn").from(relatedTable)
             .where(filter)
             .orderBy(displayColumn)
             .page(page, pageSize)

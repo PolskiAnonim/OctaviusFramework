@@ -21,19 +21,19 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun getReportName(): String = "asianMedia"
 
-    override fun buildQuery(): Query = Query(
+    override fun buildQuery(): Query {
+        val query = dataAccess.select(
+            """
+            t.id as title_id,
+            t.titles,
+            t.language,
+            ARRAY_AGG(p.publication_type ORDER BY p.id) AS publication_type,
+            ARRAY_AGG(p.status ORDER BY p.id) as status
         """
-            SELECT 
-                t.id as title_id,
-                t.titles,
-                t.language,
-                ARRAY_AGG(p.publication_type ORDER BY p.id) AS publication_type,
-                ARRAY_AGG(p.status ORDER BY p.id) as status
-            FROM titles t
-            JOIN publications p ON p.title_id = t.id
-            GROUP BY t.id
-            """.trimIndent()
-    )
+        ).from("titles t JOIN publications p ON p.title_id = t.id").groupBy("t.id").toSql()
+
+        return Query(query)
+    }
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
         "titles" to StringColumn(

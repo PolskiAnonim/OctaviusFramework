@@ -3,16 +3,18 @@ package org.octavius.report.configuration
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.contract.*
+import org.octavius.data.contract.builder.toListOf
+import org.octavius.data.contract.builder.toSingleOf
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.util.toMap
 
 class ReportConfigurationManager : KoinComponent {
 
-    val fetcher: DataFetcher by inject()
+    val dataAccess: DataAccess by inject()
     val batchExecutor: BatchExecutor by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
-        val configResult = fetcher.select("id", from = "public.report_configurations")
+        val configResult = dataAccess.select("id").from("public.report_configurations")
             .where("name = :name AND report_name = :report_name")
             .toField<Int>(mapOf("name" to configuration.name, "report_name" to configuration.reportName))
 
@@ -55,9 +57,9 @@ class ReportConfigurationManager : KoinComponent {
 
         val params = mapOf("report_name" to reportName)
 
-        val result: DataResult<ReportConfiguration?> = fetcher.select(
-            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
-            from = "public.report_configurations"
+        val result: DataResult<ReportConfiguration?> = dataAccess.select(
+            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters"
+        ).from("public.report_configurations"
         ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
 
         return when (result) {
@@ -72,9 +74,9 @@ class ReportConfigurationManager : KoinComponent {
     fun listConfigurations(reportName: String): List<ReportConfiguration> {
         val params = mapOf("report_name" to reportName)
 
-        val result: DataResult<List<ReportConfiguration>> = fetcher.select(
-            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
-            from = "public.report_configurations"
+        val result: DataResult<List<ReportConfiguration>> = dataAccess.select(
+            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters"
+        ).from("public.report_configurations"
         ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
 
         return when (result) {

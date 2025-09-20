@@ -42,10 +42,9 @@ class AsianMediaFormDataManager : FormDataManager() {
      * Utrzymuje metodę initData w czystości.
      */
     private fun loadPublications(titleId: Int): Map<String, Any?> {
-
-        val result = dataFetcher.select(
-            "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed",
-            from = "publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id"
+        val result = dataAccess.select(
+            "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed"
+        ).from("publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id"
         ).where("p.title_id = :title").toList(mapOf("title" to titleId))
 
         return when (result) {

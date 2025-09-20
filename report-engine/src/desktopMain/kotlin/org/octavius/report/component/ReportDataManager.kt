@@ -2,7 +2,7 @@ package org.octavius.report.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
 import org.octavius.domain.SortDirection
 import org.octavius.report.Query
@@ -32,7 +32,7 @@ import org.octavius.report.filter.data.FilterData
 class ReportDataManager(
     val reportStructure: ReportStructure
 ) : KoinComponent {
-    val fetcher: DataFetcher by inject()
+    val dataAccess: DataAccess by inject()
     private fun <T : FilterData> getQueryFragment(
         columnName: String,
         filter: Filter<T>,
@@ -93,11 +93,11 @@ class ReportDataManager(
         params: Map<String, Any>
     ): DataResult<ReportPaginationState> {
 
-        val countResult = fetcher.query().from(sourceSql).where(filterClause).toCount(params)
+        val countResult = dataAccess.select("COUNT(*)").fromSubquery(sourceSql).where(filterClause).toField<Long>(params)
 
         return when (countResult) {
             is DataResult.Success -> {
-                val totalItems = countResult.value
+                val totalItems = countResult.value ?: 0L
                 val pageSize = reportState.pagination.pageSize
                 val totalPages = if (totalItems == 0L) 0 else (totalItems + pageSize - 1) / pageSize
                 val newPaginationState = reportState.pagination.copy(totalItems = totalItems, totalPages = totalPages)
@@ -146,7 +146,7 @@ class ReportDataManager(
             return ReportDataResult.Success(emptyList(), newPaginationState)
         }
 
-        val dataResult = fetcher.select(from = query.sql)
+        val dataResult = dataAccess.select("*").fromSubquery(query.sql)
             .where(filterClause.takeIf { it.isNotBlank() })
             .orderBy(orderClause.takeIf { it.isNotBlank() })
             .page(reportState.pagination.currentPage, reportState.pagination.pageSize)
