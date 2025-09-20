@@ -6,7 +6,7 @@ package org.octavius.data.contract
  * Umożliwia przekazywanie zarówno stałych wartości, jak i dynamicznych referencji
  * do wyników poprzednich kroków w tej samej transakcji.
  *
- * @see DatabaseStep
+ * @see TransactionStep
  */
 sealed class DatabaseValue {
     /**
@@ -31,7 +31,7 @@ sealed class DatabaseValue {
  *
  * @see BatchExecutor.execute
  */
-sealed class DatabaseStep {
+sealed class TransactionStep {
 
 
     /** Operacja `INSERT`. */
@@ -40,7 +40,7 @@ sealed class DatabaseStep {
         val data: Map<String, DatabaseValue>,
         /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
         val returning: List<String> = listOf()
-    ) : DatabaseStep()
+    ) : TransactionStep()
 
     /** Operacja `UPDATE`. */
     data class Update(
@@ -49,7 +49,7 @@ sealed class DatabaseStep {
         val filter: Map<String, DatabaseValue>,
         /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
         val returning: List<String> = emptyList()
-    ) : DatabaseStep()
+    ) : TransactionStep()
 
     /** Operacja `DELETE`. */
     data class Delete(
@@ -57,7 +57,7 @@ sealed class DatabaseStep {
         val filter: Map<String, DatabaseValue>,
         /** Lista kolumn do zwrócenia przez `RETURNING`. Pusta lista oznacza brak klauzuli. */
         val returning: List<String> = emptyList()
-    ) : DatabaseStep()
+    ) : TransactionStep()
 
     /**
      * Krok bazodanowy stworzony za pomocą buildera używając asStep() z metodą terminalną
@@ -70,7 +70,7 @@ sealed class DatabaseStep {
         val builderState: Any, // Będzie to konkretny builder (DatabaseSelectQueryBuilder, etc.)
         val terminalMethod: (Map<String, Any?>) -> DataResult<T>,
         val params: Map<String, Any?>
-    ) : DatabaseStep()
+    ) : TransactionStep()
 }
 
 /**

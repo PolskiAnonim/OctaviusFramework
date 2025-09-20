@@ -31,19 +31,19 @@ class ReportConfigurationManager : KoinComponent {
         val dataMap =
             flatValueMap.filter { (key, _) -> key != "id" }.mapValues { (_, value) -> value.toDatabaseValue() }
 
-        val databaseStep = if (configId != null) {
-            DatabaseStep.Update(
+        val transactionStep = if (configId != null) {
+            TransactionStep.Update(
                 tableName = "report_configurations",
                 data = dataMap,
                 filter = mapOf("id" to configId.toDatabaseValue())
             )
         } else {
-            DatabaseStep.Insert(
+            TransactionStep.Insert(
                 tableName = "public.report_configurations",
                 data = dataMap
             )
         }
-        val result = batchExecutor.execute(listOf(databaseStep))
+        val result = batchExecutor.execute(listOf(transactionStep))
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
@@ -89,12 +89,12 @@ class ReportConfigurationManager : KoinComponent {
     }
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
-        val databaseStep = DatabaseStep.Delete(
+        val transactionStep = TransactionStep.Delete(
             tableName = "report_configurations",
             filter = mapOf("name" to name.toDatabaseValue(), "report_name" to reportName.toDatabaseValue())
         )
 
-        val result = batchExecutor.execute(listOf(databaseStep))
+        val result = batchExecutor.execute(listOf(transactionStep))
 
         when(result) {
             is DataResult.Failure -> {

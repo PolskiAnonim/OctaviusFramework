@@ -1,7 +1,7 @@
 package org.octavius.modules.games.form.game
 
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.TransactionStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.dialog.ErrorDialogConfig
@@ -87,7 +87,7 @@ class GameFormDataManager : FormDataManager() {
     }
 
     fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
-        val databaseSteps = mutableListOf<DatabaseStep>()
+        val transactionSteps = mutableListOf<TransactionStep>()
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
 
         // =================================================================================
@@ -108,8 +108,8 @@ class GameFormDataManager : FormDataManager() {
             gameIdRef = loadedId.toDatabaseValue()
 
             // Operacja 0: Aktualizuj grę. Nie potrzebujemy niczego zwracać.
-            databaseSteps.add(
-                DatabaseStep.Update(
+            transactionSteps.add(
+                TransactionStep.Update(
                     tableName = "games",
                     data = gameData,
                     filter = mapOf("id" to gameIdRef),
@@ -122,8 +122,8 @@ class GameFormDataManager : FormDataManager() {
             gameIdRef = DatabaseValue.FromStep(0, "id")
 
             // Operacja 0: Wstaw nową grę i zwróć jej wygenerowane 'id'.
-            databaseSteps.add(
-                DatabaseStep.Insert(
+            transactionSteps.add(
+                TransactionStep.Insert(
                     tableName = "games",
                     data = gameData,
                     returning = listOf("id")
@@ -141,7 +141,7 @@ class GameFormDataManager : FormDataManager() {
 
         // --- Obsługa Play Time ---
         handleDependentTable(
-            databaseSteps = databaseSteps,
+            transactionSteps = transactionSteps,
             exists = formResultData["playTimeExists"]!!.currentValue as Boolean,
             conditionMet = status in statusesWithDetails,
             tableName = "play_time",
@@ -154,7 +154,7 @@ class GameFormDataManager : FormDataManager() {
 
         // --- Obsługa Ratings ---
         handleDependentTable(
-            databaseSteps = databaseSteps,
+            transactionSteps = transactionSteps,
             exists = formResultData["ratingsExists"]!!.currentValue as Boolean,
             conditionMet = status in statusesWithDetails,
             tableName = "ratings",
@@ -168,7 +168,7 @@ class GameFormDataManager : FormDataManager() {
 
         // --- Obsługa Characters ---
         handleDependentTable(
-            databaseSteps = databaseSteps,
+            transactionSteps = transactionSteps,
             exists = formResultData["charactersExists"]!!.currentValue as Boolean,
             conditionMet = formResultData["visibleCharactersSection"]!!.currentValue as Boolean,
             tableName = "characters",
@@ -189,8 +189,8 @@ class GameFormDataManager : FormDataManager() {
         // Usunięte kategorie
         categoriesResult.deletedRows.forEach { rowData ->
             val categoryId = rowData["category"]!!.initialValue as Int
-            databaseSteps.add(
-                DatabaseStep.Delete(
+            transactionSteps.add(
+                TransactionStep.Delete(
                     tableName = "categories_to_games",
                     filter = mapOf(
                         "game_id" to gameIdRef,
@@ -205,8 +205,8 @@ class GameFormDataManager : FormDataManager() {
             val oldCategoryId = rowData["category"]!!.initialValue as Int
             val newCategoryId = rowData["category"]!!.currentValue
             // Usuń stare powiązanie
-            databaseSteps.add(
-                DatabaseStep.Delete(
+            transactionSteps.add(
+                TransactionStep.Delete(
                     tableName = "categories_to_games",
                     filter = mapOf(
                         "game_id" to gameIdRef,
@@ -215,8 +215,8 @@ class GameFormDataManager : FormDataManager() {
                 )
             )
             // Dodaj nowe powiązanie
-            databaseSteps.add(
-                DatabaseStep.Insert(
+            transactionSteps.add(
+                TransactionStep.Insert(
                     tableName = "categories_to_games",
                     data = mapOf(
                         "game_id" to gameIdRef,
@@ -229,8 +229,8 @@ class GameFormDataManager : FormDataManager() {
         // Dodane kategorie
         categoriesResult.addedRows.forEach { rowData ->
             val categoryId = rowData["category"]!!.currentValue
-            databaseSteps.add(
-                DatabaseStep.Insert(
+            transactionSteps.add(
+                TransactionStep.Insert(
                     tableName = "categories_to_games",
                     data = mapOf(
                         "game_id" to gameIdRef,
@@ -240,7 +240,7 @@ class GameFormDataManager : FormDataManager() {
             )
         }
 
-        val result = batchExecutor.execute(databaseSteps)
+        val result = batchExecutor.execute(transactionSteps)
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
@@ -255,7 +255,7 @@ class GameFormDataManager : FormDataManager() {
      * Hermetyzuje powtarzalny wzorzec.
      */
     private fun handleDependentTable(
-        databaseSteps: MutableList<DatabaseStep>,
+        transactionSteps: MutableList<TransactionStep>,
         exists: Boolean,
         conditionMet: Boolean,
         tableName: String,
@@ -265,8 +265,8 @@ class GameFormDataManager : FormDataManager() {
         if (exists) {
             if (conditionMet) {
                 // Rekord istnieje i warunek jest spełniony -> UPDATE
-                databaseSteps.add(
-                    DatabaseStep.Update(
+                transactionSteps.add(
+                    TransactionStep.Update(
                         tableName = tableName,
                         data = data,
                         filter = mapOf("game_id" to gameIdRef)
@@ -274,8 +274,8 @@ class GameFormDataManager : FormDataManager() {
                 )
             } else {
                 // Rekord istnieje, ale warunek nie jest spełniony -> DELETE
-                databaseSteps.add(
-                    DatabaseStep.Delete(
+                transactionSteps.add(
+                    TransactionStep.Delete(
                         tableName = tableName,
                         filter = mapOf("game_id" to gameIdRef)
                     )
@@ -285,8 +285,8 @@ class GameFormDataManager : FormDataManager() {
             // Rekord nie istnieje, ale warunek jest spełniony -> INSERT
             // Klucz obcy `game_id` jest częścią danych do wstawienia.
             val dataWithFk = data + mapOf("game_id" to gameIdRef)
-            databaseSteps.add(
-                DatabaseStep.Insert(
+            transactionSteps.add(
+                TransactionStep.Insert(
                     tableName = tableName,
                     data = dataWithFk
                 )

@@ -1,7 +1,7 @@
 package org.octavius.modules.games.form.series
 
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.TransactionStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.dialog.ErrorDialogConfig
@@ -34,9 +34,9 @@ class GameSeriesFormDataManager : FormDataManager() {
         seriesData["name"] = formResultData["name"]!!.currentValue.toDatabaseValue()
 
         val steps = if (loadedId != null) {
-            listOf(DatabaseStep.Update("series", seriesData, mapOf("id" to loadedId.toDatabaseValue())))
+            listOf(TransactionStep.Update("series", seriesData, mapOf("id" to loadedId.toDatabaseValue())))
         } else {
-            listOf(DatabaseStep.Insert("series", seriesData))
+            listOf(TransactionStep.Insert("series", seriesData))
         }
         val result = batchExecutor.execute(steps)
         when (result) {

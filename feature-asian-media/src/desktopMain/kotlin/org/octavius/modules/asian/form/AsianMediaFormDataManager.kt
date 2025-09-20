@@ -1,7 +1,7 @@
 package org.octavius.modules.asian.form
 
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.DatabaseStep
+import org.octavius.data.contract.TransactionStep
 import org.octavius.data.contract.DatabaseValue
 import org.octavius.data.contract.toDatabaseValue
 import org.octavius.dialog.ErrorDialogConfig
@@ -82,7 +82,7 @@ class AsianMediaFormDataManager : FormDataManager() {
 
     fun processDelete(loadedId: Int?): FormActionResult {
         // Wykorzystanie CASCADE
-        val step = DatabaseStep.Delete("titles", mapOf("id" to loadedId.toDatabaseValue()))
+        val step = TransactionStep.Delete("titles", mapOf("id" to loadedId.toDatabaseValue()))
         val result = batchExecutor.execute(listOf(step))
         when (result) {
             is DataResult.Failure -> {
@@ -94,7 +94,7 @@ class AsianMediaFormDataManager : FormDataManager() {
     }
 
     fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
-        val databaseSteps = mutableListOf<DatabaseStep>()
+        val transactionSteps = mutableListOf<TransactionStep>()
 
         // =================================================================================
         // Główna encja 'titles' i jej referencja ID
@@ -109,7 +109,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         if (loadedId != null) {
             // TRYB EDYCJI: ID jest znane.
             titleIdRef = loadedId.toDatabaseValue()
-            databaseSteps.add(DatabaseStep.Update(
+            transactionSteps.add(TransactionStep.Update(
                 tableName = "titles",
                 data = titleData,
                 filter = mapOf("id" to titleIdRef)
@@ -117,7 +117,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         } else {
             // TRYB TWORZENIA: ID będzie znane po wykonaniu operacji 0.
             titleIdRef = DatabaseValue.FromStep(0, "id")
-            databaseSteps.add(DatabaseStep.Insert(
+            transactionSteps.add(TransactionStep.Insert(
                 tableName = "titles",
                 data = titleData,
                 returning = listOf("id")
@@ -134,8 +134,8 @@ class AsianMediaFormDataManager : FormDataManager() {
             publicationsResult.deletedRows.forEach { rowData ->
                 val pubId = rowData["id"]!!.initialValue as Int
                 // Usuwamy publikację. Tabela 'publication_volumes' zostanie usunięta kaskadowo przez DB.
-                databaseSteps.add(
-                    DatabaseStep.Delete(
+                transactionSteps.add(
+                    TransactionStep.Delete(
                         tableName = "publications",
                         filter = mapOf("id" to pubId.toDatabaseValue())
                     )
@@ -153,8 +153,8 @@ class AsianMediaFormDataManager : FormDataManager() {
                 )
 
                 // Zaktualizuj samą publikację
-                databaseSteps.add(
-                    DatabaseStep.Update(
+                transactionSteps.add(
+                    TransactionStep.Update(
                         tableName = "publications",
                         data = publicationData,
                         filter = mapOf("id" to publicationIdRef)
@@ -162,13 +162,13 @@ class AsianMediaFormDataManager : FormDataManager() {
                 )
 
                 // Warunkowo zaktualizuj powiązane 'publication_volumes'
-                addPublicationVolumesUpdateOperation(databaseSteps, rowData, publicationIdRef)
+                addPublicationVolumesUpdateOperation(transactionSteps, rowData, publicationIdRef)
             }
 
             // --- Dodane publikacje ---
             publicationsResult.addedRows.forEach { rowData ->
                 // Zapisujemy indeks operacji, która wstawi nową publikację.
-                val publicationInsertOpIndex = databaseSteps.size
+                val publicationInsertOpIndex = transactionSteps.size
 
                 val publicationData = mapOf(
                     "publication_type" to rowData["publicationType"]!!.currentValue.toDatabaseValue(),
@@ -179,8 +179,8 @@ class AsianMediaFormDataManager : FormDataManager() {
                 )
 
                 // Wstaw nową publikację i ZWRÓĆ JEJ ID, bo będzie potrzebne w kolejnym kroku.
-                databaseSteps.add(
-                    DatabaseStep.Insert(
+                transactionSteps.add(
+                    TransactionStep.Insert(
                         tableName = "publications",
                         data = publicationData,
                         returning = listOf("id")
@@ -191,14 +191,14 @@ class AsianMediaFormDataManager : FormDataManager() {
                 val newPublicationIdRef = DatabaseValue.FromStep(publicationInsertOpIndex, "id")
 
                 // Warunkowo zaktualizuj 'publication_volumes' (które stworzył trigger) używając nowego ID.
-                addPublicationVolumesUpdateOperation(databaseSteps, rowData, newPublicationIdRef)
+                addPublicationVolumesUpdateOperation(transactionSteps, rowData, newPublicationIdRef)
             }
         } else {
             // --- TRYB TWORZENIA ---
             // Ignorujemy podział na dodane/zmienione/usunięte.
             // Wszystkie wiersze z formularza traktujemy jako NOWE.
             publicationsResult.allCurrentRows.forEach { rowData ->
-                val publicationInsertOpIndex = databaseSteps.size
+                val publicationInsertOpIndex = transactionSteps.size
 
                 val publicationData = mapOf(
                     "publication_type" to rowData.getCurrent("publicationType").toDatabaseValue(),
@@ -207,18 +207,18 @@ class AsianMediaFormDataManager : FormDataManager() {
                     "title_id" to titleIdRef // Używamy referencji do ID nowo tworzonego tytułu
                 )
 
-                databaseSteps.add(DatabaseStep.Insert(
+                transactionSteps.add(TransactionStep.Insert(
                     tableName = "publications",
                     data = publicationData,
                     returning = listOf("id")
                 ))
 
                 val newPublicationIdRef = DatabaseValue.FromStep(publicationInsertOpIndex, "id")
-                addPublicationVolumesUpdateOperation(databaseSteps, rowData, newPublicationIdRef)
+                addPublicationVolumesUpdateOperation(transactionSteps, rowData, newPublicationIdRef)
             }
         }
 
-        val result = batchExecutor.execute(databaseSteps)
+        val result = batchExecutor.execute(transactionSteps)
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
@@ -232,12 +232,12 @@ class AsianMediaFormDataManager : FormDataManager() {
      * Metoda pomocnicza, która hermetyzuje logikę aktualizacji 'publication_volumes'.
      * Działa zarówno dla znanych ID (edycja), jak i dla referencji do przyszłych ID (dodawanie).
      *
-     * @param databaseSteps Lista operacji, do której zostanie dodany ewentualny UPDATE.
+     * @param transactionSteps Lista operacji, do której zostanie dodany ewentualny UPDATE.
      * @param rowData Dane z wiersza, z których pobieramy informacje o wolumenach i fladze 'track_progress'.
      * @param publicationIdRef Referencja do ID publikacji (może być Value lub FromResult).
      */
     private fun addPublicationVolumesUpdateOperation(
-        databaseSteps: MutableList<DatabaseStep>,
+        transactionSteps: MutableList<TransactionStep>,
         rowData: FormResultData,
         publicationIdRef: DatabaseValue
     ) {
@@ -250,7 +250,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                 "original_completed" to rowData.getCurrent("originalCompleted").toDatabaseValue()
             )
 
-            databaseSteps.add(DatabaseStep.Update(
+            transactionSteps.add(TransactionStep.Update(
                 tableName = "publication_volumes",
                 data = volumesData,
                 // Filtrujemy po ID publikacji, używając przekazanej referencji.

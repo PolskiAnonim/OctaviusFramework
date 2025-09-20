@@ -106,9 +106,9 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             val steps = listOf(
                 // Krok 0: Wstaw nowy tytuł i zwróć jego ID
-                DatabaseStep.Insert("titles", newTitle, returning = listOf("id")),
+                TransactionStep.Insert("titles", newTitle, returning = listOf("id")),
                 // Krok 1: Wstaw nową publikację, używając ID z kroku 0
-                DatabaseStep.Insert(
+                TransactionStep.Insert(
                     "publications", newPublication +
                             mapOf("title_id" to DatabaseValue.FromStep(0, "id"))
                 )

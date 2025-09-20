@@ -24,7 +24,7 @@ import org.springframework.transaction.support.TransactionTemplate
  * @param namedParameterJdbcTemplate Template do wykonywania zapytań SQL.
  * @param kotlinToPostgresConverter Konwerter złożonych typów Kotlin na SQL.
  *
- * @see DatabaseStep
+ * @see TransactionStep
  * @see DatabaseValue
  * @see org.octavius.database.type.KotlinToPostgresConverter
  */
@@ -43,7 +43,7 @@ class DatabaseBatchExecutor(
      *
      * W przypadku błędu w dowolnym kroku, cała transakcja jest wycofywana.
      *
-     * @param databaseSteps Lista kroków (Insert, Update, Delete, RawSql) do wykonania.
+     * @param transactionSteps Lista kroków (Insert, Update, Delete, RawSql) do wykonania.
      * @return Mapa, gdzie kluczem jest indeks kroku, a wartością lista zwróconych wierszy.
      * @throws Exception gdy którykolwiek krok się nie powiedzie.
      *
@@ -56,8 +56,8 @@ class DatabaseBatchExecutor(
      * val results = batchExecutor.execute(steps)
      * ```
      */
-    override fun execute(databaseSteps: List<DatabaseStep>): DataResult<BatchStepResults> {
-        logger.info { "Executing batch of ${databaseSteps.size} steps in a single transaction." }
+    override fun execute(transactionSteps: List<TransactionStep>): DataResult<BatchStepResults> {
+        logger.info { "Executing batch of ${transactionSteps.size} steps in a single transaction." }
 
         return try {
             val transactionTemplate = TransactionTemplate(transactionManager)
@@ -66,14 +66,14 @@ class DatabaseBatchExecutor(
                 val allResults = mutableMapOf<Int, List<Map<String, Any?>>>()
 
                 try {
-                    for ((index, operation) in databaseSteps.withIndex()) {
+                    for ((index, operation) in transactionSteps.withIndex()) {
                         var expandedSql: String? = null
                         var expandedParams: Map<String, Any?>? = null
                         try {
-                            logger.debug { "Executing step $index/${databaseSteps.size-1}: ${operation::class.simpleName}" }
+                            logger.debug { "Executing step $index/${transactionSteps.size-1}: ${operation::class.simpleName}" }
 
                             val result: List<Map<String, Any?>> = when (operation) {
-                                is DatabaseStep.FromBuilder<*> -> {
+                                is TransactionStep.FromBuilder<*> -> {
                                     // Rozwiązuj referencje w parametrach
                                     val resolvedParams = operation.params.mapValues { (_, value) ->
                                         when (value) {
@@ -122,9 +122,9 @@ class DatabaseBatchExecutor(
                                     logger.trace { "--> Params: ${expanded.expandedParams}" }
 
                                     val returningColumns = when (operation) {
-                                        is DatabaseStep.Insert -> operation.returning
-                                        is DatabaseStep.Update -> operation.returning
-                                        is DatabaseStep.Delete -> operation.returning
+                                        is TransactionStep.Insert -> operation.returning
+                                        is TransactionStep.Update -> operation.returning
+                                        is TransactionStep.Delete -> operation.returning
                                         else -> emptyList()
                                     }
 
@@ -165,7 +165,7 @@ class DatabaseBatchExecutor(
                 allResults
             }!!
 
-            logger.info { "Batch execution of ${databaseSteps.size} steps completed successfully." }
+            logger.info { "Batch execution of ${transactionSteps.size} steps completed successfully." }
             DataResult.Success(results)
 
         } catch (e: DatabaseException) {
@@ -222,9 +222,9 @@ class DatabaseBatchExecutor(
      * @param resultsContext Kontekst wyników do rozwiązywania referencji.
      * @return Para zawierająca zapytanie SQL i mapę parametrów.
      */
-    private fun buildQuery(op: DatabaseStep, resultsContext: Map<Int, List<Map<String, Any?>>>): Pair<String, Map<String, Any?>> {
+    private fun buildQuery(op: TransactionStep, resultsContext: Map<Int, List<Map<String, Any?>>>): Pair<String, Map<String, Any?>> {
         when (op) {
-            is DatabaseStep.Insert -> {
+            is TransactionStep.Insert -> {
                 val params = op.data.mapValues { resolveReference(it.value, resultsContext) }
                 val columns = params.keys.joinToString(", ")
                 val placeholders = params.keys.joinToString(", ") { ":$it" }
@@ -232,7 +232,7 @@ class DatabaseBatchExecutor(
                 val sql = "INSERT INTO ${op.tableName} ($columns) VALUES ($placeholders)$returningClause"
                 return sql to params
             }
-            is DatabaseStep.Update -> {
+            is TransactionStep.Update -> {
                 val dataParams = op.data.mapValues { resolveReference(it.value, resultsContext) }
                 val filterParams = op.filter.mapValues { resolveReference(it.value, resultsContext) }
 
@@ -243,7 +243,7 @@ class DatabaseBatchExecutor(
                 val sql = "UPDATE ${op.tableName} SET $setClause$whereClause$returningClause"
                 return sql to (dataParams + filterParams)
             }
-            is DatabaseStep.Delete -> {
+            is TransactionStep.Delete -> {
                 val filterParams = op.filter.mapValues { resolveReference(it.value, resultsContext) }
                 val whereClause = if (filterParams.isNotEmpty()) " WHERE " + filterParams.keys.joinToString(" AND ") { "$it = :$it" } else ""
                 val returningClause = if (op.returning.isNotEmpty()) " RETURNING ${op.returning.joinToString(", ")}" else ""
@@ -252,7 +252,7 @@ class DatabaseBatchExecutor(
                 return sql to filterParams
             }
 
-            is DatabaseStep.FromBuilder<*> -> {
+            is TransactionStep.FromBuilder<*> -> {
                 throw UnsupportedOperationException() // FromBuilder nie używa tej metody
             }
         }

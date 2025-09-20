@@ -3,7 +3,7 @@ package org.octavius.database.builder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.ExtendedDatabaseStep
+import org.octavius.data.contract.builder.StepBuilderMethods
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.exception.DatabaseException
@@ -245,7 +245,7 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
      * Konwertuje ten builder na StepBuilder, który umożliwia lazy execution w ramach transakcji.
      * Zwraca wrapper z metodami terminalnymi, które tworzą ExtendedDatabaseStep zamiast wykonywać zapytanie.
      */
-    fun asStep(): StepBuilder<T> {
+    fun asStep(): StepBuilderMethods {
         @Suppress("UNCHECKED_CAST")
         return StepBuilder(this as T)
     }
