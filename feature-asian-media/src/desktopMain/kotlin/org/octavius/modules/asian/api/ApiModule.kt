@@ -10,7 +10,14 @@ import org.octavius.api.contract.asian.PublicationAddRequest
 import org.octavius.api.contract.asian.PublicationAddResponse
 import org.octavius.api.contract.asian.PublicationCheckRequest
 import org.octavius.api.contract.asian.PublicationCheckResponse
-import org.octavius.data.contract.*
+import org.octavius.data.contract.DataAccess
+import org.octavius.data.contract.DataResult
+import org.octavius.data.contract.toDatabaseValue
+import org.octavius.data.contract.transaction.BatchExecutor
+import org.octavius.data.contract.transaction.BatchStepResults
+import org.octavius.data.contract.transaction.DatabaseValue
+import org.octavius.data.contract.transaction.TransactionPlan
+import org.octavius.data.contract.withPgType
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.navigation.NavigationEvent
@@ -19,10 +26,10 @@ import org.octavius.navigation.NavigationEventBus
 /**
  * Implementacja ApiModule dla funkcjonalności "Asian Media".
  * Definiuje endpointy do sprawdzania i dodawania publikacji.
- * Używa Koin do wstrzykiwania zależności (DataFetcher, BatchExecutor).
+ * Używa Koin do wstrzykiwania zależności (DataAccess, BatchExecutor).
  */
 class AsianMediaApi : ApiModule, KoinComponent {
-    private val fetcher: DataFetcher by inject()
+    private val dataAccess: DataAccess by inject()
     private val batchExecutor: BatchExecutor by inject()
 
     override fun installRoutes(routing: Routing) {
@@ -50,7 +57,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             // Używamy operatora && (overlap) z PostgreSQL do sprawdzenia,
             // czy tablica tytułów w bazie ma jakikolwiek wspólny element z listą z zapytania.
-            val result = fetcher.select("id, titles", from = "titles").where("titles && :titles")
+            val result = dataAccess.select("id, titles").from("titles").where("titles && :titles")
                 .toSingle(mapOf("titles" to titles.withPgType("text[]")))
 
 
@@ -104,17 +111,13 @@ class AsianMediaApi : ApiModule, KoinComponent {
                 "track_progress" to false.toDatabaseValue()
             )
 
-            val steps = listOf(
-                // Krok 0: Wstaw nowy tytuł i zwróć jego ID
-                DatabaseStep.Insert("titles", newTitle, returning = listOf("id")),
-                // Krok 1: Wstaw nową publikację, używając ID z kroku 0
-                DatabaseStep.Insert(
-                    "publications", newPublication +
-                            mapOf("title_id" to DatabaseValue.FromStep(0, "id"))
-                )
-            )
+            val plan = TransactionPlan(dataAccess)
+            plan.insert("titles", newTitle, returning = listOf("id"))
+            plan.insert("publications", newPublication +
+                    mapOf("title_id" to DatabaseValue.FromStep(0, "id")))
 
-            val result = batchExecutor.execute(steps)
+
+            val result = batchExecutor.execute(plan.build())
 
             when (result) {
                 is DataResult.Failure -> {

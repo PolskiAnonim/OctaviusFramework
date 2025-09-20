@@ -31,8 +31,8 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         if (titles.isEmpty()) return true
 
         val params = if (entityId != null) mapOf("titles" to titles, "id" to entityId) else mapOf("titles" to titles)
-        val result = dataFetcher.query().from("SELECT id, UNNEST(titles) AS title FROM titles")
-            .where("title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}").toCount(params)
+        val result = dataAccess.select("COUNT(*)").from("(SELECT id, UNNEST(titles) AS title FROM titles)")
+            .where("title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}").toField<Long>(params)
 
 
         when (result) {
@@ -40,8 +40,8 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 return false
             }
-            is DataResult.Success<Long> -> {
-                if (result.value > 0L) {
+            is DataResult.Success<Long?> -> {
+                if ((result.value ?: 0L) > 0L) {
                     errorManager.addGlobalError(T.get("asianMedia.form.titlesAlreadyExist"))
                     return false
                 } else {

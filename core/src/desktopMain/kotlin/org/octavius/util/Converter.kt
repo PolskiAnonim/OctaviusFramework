@@ -39,20 +39,53 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
     val constructor = kClass.primaryConstructor
         ?: throw IllegalArgumentException("Klasa ${kClass.simpleName} musi mieć główny konstruktor.")
 
-    // Mapowanie właściwości w klasie po nazwie
+    // Mapowanie właściwości w klasie po nazwie dla łatwego dostępu
     val propertiesByName = kClass.memberProperties.associateBy { it.name }
 
-    val args = constructor.parameters.associateWith { param ->
-        val property = propertiesByName[param.name]!!
+    val args = constructor.parameters.mapNotNull { param ->
+        // Właściwość odpowiadająca parametrowi konstruktora
+        val property = propertiesByName[param.name]
+            ?: throw IllegalStateException("Błąd wewnętrzny: Nie znaleziono właściwości dla parametru ${param.name}")
 
-        // Określ klucz, którego szukamy w mapie:
-        // 1. Użyj nazwy z adnotacji @MapKey.
-        // 2. W przeciwnym razie, użyj konwencji: przekonwertuj nazwę parametru na snake_case.
+        // Określ klucz, którego szukamy w mapie
         val keyName = property.findAnnotation<MapKey>()?.name
-            ?: Converters.toSnakeCase(param.name!!) // <--- Konwersja na snake_case
+            ?: Converters.toSnakeCase(param.name!!)
 
-        this[keyName] // Pobierz wartość z mapy po kluczu snake_case
-    }
+        // Sprawdzamy, czy klucz ISTNIEJE w mapie (nie tylko czy wartość nie jest null)
+        val hasKeyInMap = this.containsKey(keyName)
+
+        when {
+            // Przypadek 1: Klucz istnieje w mapie. Zawsze używamy wartości z mapy,
+            // nawet jeśli jest to jawne null.
+            hasKeyInMap -> {
+                param to this[keyName]
+            }
+
+            // Przypadek 2: Klucz NIE istnieje w mapie.
+            // Sprawdzamy, czy parametr ma wartość domyślną.
+            param.isOptional -> {
+                // Parametr ma wartość domyślną, więc pomijamy go w mapie args.
+                // callBy() automatycznie użyje wartości domyślnej.
+                null // mapNotNull usunie tę parę
+            }
+
+            // Parametr nie ma wartości domyślnej i nie ma go w mapie.
+            // Musimy zdecydować, co wstawić.
+            param.type.isMarkedNullable -> {
+                // Parametr jest nullable (np. String?), więc możemy wstawić null.
+                param to null
+            }
+
+            else -> {
+                // Parametr jest non-nullable (np. String) i nie ma wartości domyślnej,
+                // a klucz nie został znaleziony w mapie. To jest błąd.
+                throw IllegalArgumentException(
+                    "Wymagany parametr '${param.name}' dla klasy ${kClass.simpleName} " +
+                            "nie został znaleziony w mapie i nie posiada wartości domyślnej."
+                )
+            }
+        }
+    }.associate { (k, v) -> k to v }
 
     // Wywołaj główny konstruktor z przygotowanymi argumentami.
     return constructor.callBy(args)

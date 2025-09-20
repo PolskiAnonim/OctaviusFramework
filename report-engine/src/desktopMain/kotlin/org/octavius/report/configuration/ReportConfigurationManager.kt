@@ -2,17 +2,23 @@ package org.octavius.report.configuration
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.*
+import org.octavius.data.contract.DataAccess
+import org.octavius.data.contract.DataResult
+import org.octavius.data.contract.builder.toListOf
+import org.octavius.data.contract.builder.toSingleOf
+import org.octavius.data.contract.transaction.BatchExecutor
+import org.octavius.data.contract.transaction.BatchStepResults
+import org.octavius.data.contract.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.util.toMap
 
 class ReportConfigurationManager : KoinComponent {
 
-    val fetcher: DataFetcher by inject()
+    val dataAccess: DataAccess by inject()
     val batchExecutor: BatchExecutor by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
-        val configResult = fetcher.select("id", from = "public.report_configurations")
+        val configResult = dataAccess.select("id").from("public.report_configurations")
             .where("name = :name AND report_name = :report_name")
             .toField<Int>(mapOf("name" to configuration.name, "report_name" to configuration.reportName))
 
@@ -26,22 +32,21 @@ class ReportConfigurationManager : KoinComponent {
 
         val flatValueMap = configuration.toMap()
 
-        val dataMap =
-            flatValueMap.filter { (key, _) -> key != "id" }.mapValues { (_, value) -> value.toDatabaseValue() }
+        val plan = TransactionPlan(dataAccess)
 
-        val databaseStep = if (configId != null) {
-            DatabaseStep.Update(
+        if (configId != null) {
+            plan.update(
                 tableName = "report_configurations",
-                data = dataMap,
-                filter = mapOf("id" to configId.toDatabaseValue())
+                data = flatValueMap,
+                filter = mapOf("id" to configId)
             )
         } else {
-            DatabaseStep.Insert(
-                tableName = "public.report_configurations",
-                data = dataMap
+            plan.insert(
+                tableName = "report_configurations",
+                data = flatValueMap,
             )
         }
-        val result = batchExecutor.execute(listOf(databaseStep))
+        val result = batchExecutor.execute(plan.build())
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
@@ -55,9 +60,9 @@ class ReportConfigurationManager : KoinComponent {
 
         val params = mapOf("report_name" to reportName)
 
-        val result: DataResult<ReportConfiguration?> = fetcher.select(
-            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
-            from = "public.report_configurations"
+        val result: DataResult<ReportConfiguration?> = dataAccess.select(
+            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters"
+        ).from("public.report_configurations"
         ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
 
         return when (result) {
@@ -72,9 +77,9 @@ class ReportConfigurationManager : KoinComponent {
     fun listConfigurations(reportName: String): List<ReportConfiguration> {
         val params = mapOf("report_name" to reportName)
 
-        val result: DataResult<List<ReportConfiguration>> = fetcher.select(
-            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters",
-            from = "public.report_configurations"
+        val result: DataResult<List<ReportConfiguration>> = dataAccess.select(
+            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters"
+        ).from("public.report_configurations"
         ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
 
         return when (result) {
@@ -87,12 +92,10 @@ class ReportConfigurationManager : KoinComponent {
     }
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
-        val databaseStep = DatabaseStep.Delete(
-            tableName = "report_configurations",
-            filter = mapOf("name" to name.toDatabaseValue(), "report_name" to reportName.toDatabaseValue())
-        )
+        val plan = TransactionPlan(dataAccess)
+        plan.delete("report_configurations", mapOf("name" to name, "report_name" to reportName))
 
-        val result = batchExecutor.execute(listOf(databaseStep))
+        val result = batchExecutor.execute(plan.build())
 
         when(result) {
             is DataResult.Failure -> {

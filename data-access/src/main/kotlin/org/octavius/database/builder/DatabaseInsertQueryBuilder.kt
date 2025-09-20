@@ -1,0 +1,120 @@
+package org.octavius.database.builder
+
+import org.octavius.data.contract.builder.InsertQueryBuilder
+import org.octavius.data.contract.builder.OnConflictClauseBuilder
+import org.octavius.database.RowMappers
+import org.octavius.database.type.KotlinToPostgresConverter
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+
+internal class DatabaseInsertQueryBuilder(
+    jdbcTemplate: NamedParameterJdbcTemplate,
+    kotlinToPostgresConverter: KotlinToPostgresConverter,
+    rowMappers: RowMappers,
+    table: String,
+    private val columns: List<String>
+) : AbstractQueryBuilder<DatabaseInsertQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), InsertQueryBuilder {
+
+    private val valuePlaceholders = mutableMapOf<String, String>()
+    private var selectSource: String? = null
+    private var onConflictBuilder: DatabaseOnConflictClauseBuilder? = null
+
+     override fun values(values: Map<String, String>): InsertQueryBuilder = apply {
+        values.forEach { (key, value) ->
+            valuePlaceholders[key] = value
+        }
+    }
+
+     override fun fromSelect(query: String): InsertQueryBuilder = apply {
+        if (valuePlaceholders.isNotEmpty()) {
+            throw IllegalStateException("Cannot use fromSelect() when values() has already been called.")
+        }
+        if (columns.isEmpty()) {
+            throw IllegalStateException("Must specify columns in insertInto() to use fromSelect().")
+        }
+        this.selectSource = query
+    }
+
+    /**
+     * Konfiguruje klauzulę ON CONFLICT w sposób płynny i bezpieczny.
+     * Przykład:
+     * .onConflict {
+     *   onColumns("email")
+     *   doUpdate("last_login = NOW()")
+     * }
+     */
+    override fun onConflict(config: OnConflictClauseBuilder.() -> Unit): InsertQueryBuilder = apply {
+        if (onConflictBuilder == null) {
+            onConflictBuilder = DatabaseOnConflictClauseBuilder()
+        }
+        onConflictBuilder!!.apply(config)
+    }
+
+    override fun buildSql(): String {
+        val hasValues = valuePlaceholders.isNotEmpty()
+        val hasSelect = selectSource != null
+
+        if (!hasValues && !hasSelect) {
+            throw IllegalStateException("Cannot build an INSERT statement without values or a SELECT source.")
+        }
+
+        val targetColumns = if (columns.isNotEmpty()) columns else valuePlaceholders.keys.toList()
+        val columnsSql = targetColumns.joinToString(", ")
+
+        val sql = StringBuilder(buildWithClause())
+        sql.append("INSERT INTO $table ($columnsSql) ")
+
+        if (hasValues) {
+            val placeholders = targetColumns.joinToString(", ") { key -> valuePlaceholders[key]!! }
+            sql.append("VALUES ($placeholders)")
+        } else {
+            sql.append(selectSource!!)
+        }
+
+        onConflictBuilder?.let { builder ->
+            val target = builder.target ?: throw IllegalStateException("ON CONFLICT target (columns or constraint) must be specified.")
+            val action = builder.action ?: throw IllegalStateException("ON CONFLICT action (doNothing or doUpdate) must be specified.")
+
+            // onConstraint już zawiera "ON CONSTRAINT", więc nie dodajemy nawiasów
+            val targetSql = if (target.startsWith("ON CONSTRAINT")) target else "($target)"
+
+            sql.append(" ON CONFLICT $targetSql $action")
+        }
+
+        sql.append(buildReturningClause())
+
+        return sql.toString()
+    }
+}
+
+internal class DatabaseOnConflictClauseBuilder: OnConflictClauseBuilder {
+        internal var target: String? = null
+        internal var action: String? = null
+
+        /** Definiuje cel konfliktu (kolumny). */
+        override fun onColumns(vararg columns: String) {
+            target = columns.joinToString(", ")
+        }
+
+        /** Definiuje cel konfliktu (nazwa ograniczenia). */
+        override fun onConstraint(constraintName: String) {
+            target = "ON CONSTRAINT $constraintName"
+        }
+
+        /** Definiuje akcję DO NOTHING. */
+        override fun doNothing() {
+            action = "DO NOTHING"
+        }
+
+        /**
+         * Definiuje akcję DO UPDATE.
+         * @param setExpression Wyrażenie SET, np. "name = EXCLUDED.name, updated_at = NOW()"
+         * @param whereCondition Opcjonalny warunek WHERE, np. "target_table.version < EXCLUDED.version"
+         */
+        override fun doUpdate(setExpression: String, whereCondition: String?) {
+            val updateAction = StringBuilder("DO UPDATE SET $setExpression")
+            whereCondition?.let {
+                updateAction.append(" WHERE $it")
+            }
+            action = updateAction.toString()
+        }
+    }

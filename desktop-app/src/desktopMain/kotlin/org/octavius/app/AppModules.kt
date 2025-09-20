@@ -20,6 +20,6 @@ val databaseModule = module {
 
     // 2. Udostępnij jego komponenty przez interfejsy.
     // get() automatycznie pobierze instancję DatabaseSystem z definicji powyżej.
-    single { get<DatabaseSystem>().fetcher }
+    single { get<DatabaseSystem>().dataAccess }
     single { get<DatabaseSystem>().batchExecutor }
 }

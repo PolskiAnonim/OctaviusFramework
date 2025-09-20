@@ -39,11 +39,11 @@ class GameFormValidator(private val entityId: Int?) : FormValidator() {
             params["id"] = entityId
         }
 
-        val result = dataFetcher.query().from("games").where(whereClause).toCount(params)
+        val result = dataAccess.select("COUNT(*)").from("games").where(whereClause).toField<Long>(params)
 
         return when (result) {
             is DataResult.Success -> {
-                if (result.value > 0) {
+                if ((result.value ?: 0) > 0) {
                     // Tytuł już istnieje. Ustawiamy błąd dla konkretnego pola 'name'.
                     errorManager.setFieldErrors("name", listOf(T.get("games.validation.nameExists")))
                     false // Walidacja się nie powiodła.

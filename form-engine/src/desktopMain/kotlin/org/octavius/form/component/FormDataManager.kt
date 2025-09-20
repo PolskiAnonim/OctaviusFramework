@@ -2,10 +2,10 @@ package org.octavius.form.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.BatchExecutor
 import org.octavius.data.contract.ColumnInfo
-import org.octavius.data.contract.DataFetcher
+import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
+import org.octavius.data.contract.transaction.BatchExecutor
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.FormResultData
@@ -29,7 +29,7 @@ abstract class FormDataManager: KoinComponent {
         this.errorManager = errorManager
     }
 
-    protected val dataFetcher: DataFetcher by inject()
+    protected val dataAccess: DataAccess by inject()
     protected val batchExecutor: BatchExecutor by inject()
 
     /**
@@ -68,7 +68,7 @@ abstract class FormDataManager: KoinComponent {
             tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
         }
 
-        val entity = dataFetcher.query().from(tables.toString()).where("$mainTable.id = :id")
+        val entity = dataAccess.select("*").from(tables.toString()).where("$mainTable.id = :id")
             .toSingleWithColumnInfo(mapOf("id" to id))
 
         return when (entity) {

@@ -1,5 +1,7 @@
 package org.octavius.exception
 
+import org.octavius.data.contract.transaction.TransactionStep
+
 /**
  * Bazowy, zapieczętowany wyjątek dla wszystkich błędów warstwy danych.
  *
@@ -106,3 +108,23 @@ class StepDependencyException(
         """.trimMargin()
     }
 }
+
+/**
+ * Wyjątek rzucany, gdy wykonanie konkretnego kroku w ramach transakcji wsadowej nie powiedzie się.
+ *
+ * Opakowuje oryginalny wyjątek (np. QueryExecutionException), dodając kontekst
+ * o tym, który krok zawiódł.
+ *
+ * @param stepIndex Indeks (0-based) kroku, który się nie powiódł.
+ * @param failedStep Sam obiekt kroku, który się nie powiódł, dla celów diagnostycznych.
+ * @param cause Oryginalny wyjątek, który spowodował błąd.
+ */
+class BatchStepExecutionException(
+    val stepIndex: Int,
+    val failedStep: TransactionStep<*>,
+    override val cause: Throwable
+) : DatabaseException(
+    // Tworzymy bardziej opisową wiadomość
+    "Execution of transaction step $stepIndex failed. Cause: ${cause.message}",
+    cause
+)
