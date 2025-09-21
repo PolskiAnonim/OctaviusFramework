@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
  * @property classFullPathToPgTypeNameMap Mapa pełnych ścieżek klas Kotlina na nazwy typów PostgreSQL
  * @property pgTypeNameToClassFullPathMap Mapa nazw typów PostgreSQL na pełne ścieżki klas Kotlina
  */
-class TypeRegistry internal constructor(
+internal class TypeRegistry(
     private val postgresTypeMap: Map<String, PostgresTypeInfo>,
     private val classFullPathToPgTypeNameMap: Map<String, String>,
     private val pgTypeNameToClassFullPathMap: Map<String, String>
@@ -85,7 +85,7 @@ class TypeRegistry internal constructor(
 /**
  * Kategorie typów PostgreSQL obsługiwane przez system.
  */
-enum class TypeCategory {
+internal enum class TypeCategory {
     /** Typ wyliczeniowy (CREATE TYPE ... AS ENUM) */
     ENUM,
     /** Typ tablicowy (prefikś "_" w nazwie typu) */
@@ -109,7 +109,7 @@ enum class TypeCategory {
  * @param attributes Mapa atrybutów dla typów kompozytowych (pusta dla innych typów)
  * @param baseTypeName podstawowy typ dla typu DOMAIN (null dla innych typów)
  */
-data class PostgresTypeInfo(
+internal data class PostgresTypeInfo(
     val typeName: String,
     val typeCategory: TypeCategory,
     val enumValues: List<String> = emptyList(),

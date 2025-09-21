@@ -1,6 +1,8 @@
 package org.octavius.data.contract
 
 import org.octavius.data.contract.builder.*
+import org.octavius.data.contract.transaction.TransactionPlanResults
+import org.octavius.data.contract.transaction.TransactionStep
 
 /**
  * Główny kontrakt dla interakcji z warstwą dostępu do danych.
@@ -32,9 +34,9 @@ interface DataAccess {
     /** Umożliwia wykonanie dowolnego, surowego zapytania SQL. */
     fun rawQuery(sql: String): RawQueryBuilder
 
-//    // --- Deklaratywny Batch ---
-//    fun executeBatch(steps: List<TransactionStep>): DataResult<BatchStepResults>
-//
+    // --- Deklaratywny Batch ---
+    fun executeTransactionPlan(steps: List<TransactionStep<*>>): DataResult<TransactionPlanResults>
+
 //    // --- Blok Transakcyjny ---
 //    fun <T> transaction(block: (tx: TransactionalDataAccess) -> DataResult<T>): DataResult<T>
 }

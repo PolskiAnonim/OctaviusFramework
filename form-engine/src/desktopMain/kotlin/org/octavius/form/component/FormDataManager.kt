@@ -5,7 +5,6 @@ import org.koin.core.component.inject
 import org.octavius.data.contract.ColumnInfo
 import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.transaction.BatchExecutor
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.FormResultData
@@ -30,7 +29,6 @@ abstract class FormDataManager: KoinComponent {
     }
 
     protected val dataAccess: DataAccess by inject()
-    protected val batchExecutor: BatchExecutor by inject()
 
     /**
      * Dostarcza wartości początkowe dla kontrolek formularza.

@@ -28,11 +28,11 @@ sealed class DatabaseValue {
 
 /**
  * Reprezentuje pojedynczą operację w transakcji bazodanowej.
- *
- * @see BatchExecutor.execute
  */
 class TransactionStep<T>(
     val builderState: Any, // Będzie to konkretny builder (DatabaseSelectQueryBuilder, etc.)
     val terminalMethod: (Map<String, Any?>) -> DataResult<T>,
     val params: Map<String, Any?>
 )
+
+typealias TransactionPlanResults = Map<Int, List<Map<String, Any?>>>

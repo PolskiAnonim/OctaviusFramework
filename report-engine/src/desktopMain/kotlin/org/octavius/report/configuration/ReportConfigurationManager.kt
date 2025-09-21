@@ -6,8 +6,7 @@ import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.builder.toListOf
 import org.octavius.data.contract.builder.toSingleOf
-import org.octavius.data.contract.transaction.BatchExecutor
-import org.octavius.data.contract.transaction.BatchStepResults
+import org.octavius.data.contract.transaction.TransactionPlanResults
 import org.octavius.data.contract.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
@@ -16,7 +15,6 @@ import org.octavius.util.toMap
 class ReportConfigurationManager : KoinComponent {
 
     val dataAccess: DataAccess by inject()
-    val batchExecutor: BatchExecutor by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
         val configResult = dataAccess.select("id").from("public.report_configurations")
             .where("name = :name AND report_name = :report_name")
@@ -46,13 +44,13 @@ class ReportConfigurationManager : KoinComponent {
                 data = flatValueMap,
             )
         }
-        val result = batchExecutor.execute(plan.build())
+        val result = dataAccess.executeTransactionPlan(plan.build())
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
-            is DataResult.Success<BatchStepResults> -> true
+            is DataResult.Success<TransactionPlanResults> -> true
         }
     }
 
@@ -95,7 +93,7 @@ class ReportConfigurationManager : KoinComponent {
         val plan = TransactionPlan(dataAccess)
         plan.delete("report_configurations", mapOf("name" to name, "report_name" to reportName))
 
-        val result = batchExecutor.execute(plan.build())
+        val result = dataAccess.executeTransactionPlan(plan.build())
 
         when(result) {
             is DataResult.Failure -> {

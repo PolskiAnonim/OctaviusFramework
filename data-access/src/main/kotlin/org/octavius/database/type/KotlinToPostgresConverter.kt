@@ -36,7 +36,7 @@ data class ExpandedQuery(
  * - `JsonObject` -> `JSONB`
  * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
  */
-class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
+internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
     companion object {
         private val logger = KotlinLogging.logger {}
     }

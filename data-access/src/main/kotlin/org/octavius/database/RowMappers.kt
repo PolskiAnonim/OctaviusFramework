@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
  *
  * @param typesConverter Konwerter typów PostgreSQL na typy Kotlina, używany przez wszystkie mappery.
  */
-class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
+internal class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
     companion object {
         private val logger = KotlinLogging.logger {}
     }

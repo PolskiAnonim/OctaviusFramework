@@ -2,13 +2,17 @@ package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.DataAccess
+import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.builder.*
+import org.octavius.data.contract.transaction.TransactionPlanResults
+import org.octavius.data.contract.transaction.TransactionStep
 import org.octavius.database.builder.*
+import org.octavius.database.transaction.TransactionPlanExecutor
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
-class DatabaseAccess(
+internal class DatabaseAccess(
     private val jdbcTemplate: NamedParameterJdbcTemplate,
     private val transactionManager: DataSourceTransactionManager,
     private val rowMappers: RowMappers,
@@ -37,18 +41,14 @@ class DatabaseAccess(
         return DatabaseRawQueryBuilder(jdbcTemplate, kotlinToPostgresConverter, rowMappers, sql)
     }
 
-    // --- PARADYGMAT 2: Deklaratywny Batch ---
+     //--- PARADYGMAT 2: Deklaratywny Batch ---
 
-//    override fun executeBatch(steps: List<TransactionStep>): DataResult<BatchStepResults> {
-//        // Wykorzystujemy Twoją istniejącą logikę, ale opakowaną w nowej klasie
-//        val batchExecutor = DatabaseBatchExecutor(
-//            transactionManager,
-//            jdbcTemplate,
-//            rowMappers,
-//            kotlinToPostgresConverter
-//        )
-//        return batchExecutor.execute(steps)
-//    }
+    override fun executeTransactionPlan(steps: List<TransactionStep<*>>): DataResult<TransactionPlanResults> {
+        val transactionPlanExecutor = TransactionPlanExecutor(
+            transactionManager
+        )
+        return transactionPlanExecutor.execute(steps)
+    }
 //
 //    // --- PARADYGMAT 3: Imperatywny Blok Transakcyjny ---
 //

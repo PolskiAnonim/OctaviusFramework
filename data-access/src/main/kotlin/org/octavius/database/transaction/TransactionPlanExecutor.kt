@@ -2,8 +2,7 @@ package org.octavius.database.transaction
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.transaction.BatchExecutor
-import org.octavius.data.contract.transaction.BatchStepResults
+import org.octavius.data.contract.transaction.TransactionPlanResults
 import org.octavius.data.contract.transaction.DatabaseValue
 import org.octavius.data.contract.transaction.TransactionStep
 import org.octavius.exception.BatchStepExecutionException
@@ -29,9 +28,9 @@ import org.springframework.transaction.support.TransactionTemplate
  * @see DatabaseValue
  * @see org.octavius.database.type.KotlinToPostgresConverter
  */
-class DatabaseBatchExecutor(
+internal class TransactionPlanExecutor(
     private val transactionManager: DataSourceTransactionManager,
-) : BatchExecutor {
+) {
     companion object {
         private val logger = KotlinLogging.logger {}
     }
@@ -54,13 +53,13 @@ class DatabaseBatchExecutor(
      * val results = batchExecutor.execute(steps)
      * ```
      */
-    override fun execute(transactionSteps: List<TransactionStep<*>>): DataResult<BatchStepResults> {
+    fun execute(transactionSteps: List<TransactionStep<*>>): DataResult<TransactionPlanResults> {
         logger.info { "Executing batch of ${transactionSteps.size} steps in a single transaction." }
 
         return try {
             val transactionTemplate = TransactionTemplate(transactionManager)
 
-            val results: BatchStepResults = transactionTemplate.execute { status ->
+            val results: TransactionPlanResults = transactionTemplate.execute { status ->
                 val allResults = mutableMapOf<Int, List<Map<String, Any?>>>()
 
                 try {

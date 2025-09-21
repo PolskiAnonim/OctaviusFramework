@@ -13,8 +13,7 @@ import org.octavius.api.contract.asian.PublicationCheckResponse
 import org.octavius.data.contract.DataAccess
 import org.octavius.data.contract.DataResult
 import org.octavius.data.contract.toDatabaseValue
-import org.octavius.data.contract.transaction.BatchExecutor
-import org.octavius.data.contract.transaction.BatchStepResults
+import org.octavius.data.contract.transaction.TransactionPlanResults
 import org.octavius.data.contract.transaction.DatabaseValue
 import org.octavius.data.contract.transaction.TransactionPlan
 import org.octavius.data.contract.withPgType
@@ -30,7 +29,6 @@ import org.octavius.navigation.NavigationEventBus
  */
 class AsianMediaApi : ApiModule, KoinComponent {
     private val dataAccess: DataAccess by inject()
-    private val batchExecutor: BatchExecutor by inject()
 
     override fun installRoutes(routing: Routing) {
         routing.route("/api/asian-media") {
@@ -117,7 +115,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
                     mapOf("title_id" to DatabaseValue.FromStep(0, "id")))
 
 
-            val result = batchExecutor.execute(plan.build())
+            val result = dataAccess.executeTransactionPlan(plan.build())
 
             when (result) {
                 is DataResult.Failure -> {
@@ -129,7 +127,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
                     )
                 }
 
-                is DataResult.Success<BatchStepResults> -> {
+                is DataResult.Success<TransactionPlanResults> -> {
                     val newId = result.value[0]?.first()?.get("id") as? Int
 
                     if (newId != null) {

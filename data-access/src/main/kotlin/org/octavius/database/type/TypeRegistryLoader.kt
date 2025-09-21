@@ -21,7 +21,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
  *
  * @param namedParameterJdbcTemplate Template JDBC do odpytywania bazy danych.
  */
-class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
+internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
 
     // Klasy pomocnicze do przetwarzania wyników z bazy
     private data class DbTypeRawInfo(val infoType: String, val typeName: String, val col1: String?, val col2: String?)

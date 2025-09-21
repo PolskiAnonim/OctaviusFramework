@@ -85,8 +85,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         // Wykorzystanie CASCADE
         val plan = TransactionPlan(dataAccess)
         plan.delete("titles", mapOf("id" to loadedId))
-        val steps = plan.build()
-        val result = batchExecutor.execute(steps)
+        val result = dataAccess.executeTransactionPlan(plan.build())
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
@@ -207,8 +206,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             }
         }
 
-        val transactionSteps = plan.build()
-        val result = batchExecutor.execute(transactionSteps)
+        val result = dataAccess.executeTransactionPlan(plan.build())
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))

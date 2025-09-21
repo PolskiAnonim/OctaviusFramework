@@ -79,7 +79,6 @@ class AsianMediaHomeHandler : KoinComponent {
         scope.launch {
             val finalSelectClause = getSql()
 
-            // Finalne wywołanie jest teraz proste i czyste
             when (val result = dataAccess.select(finalSelectClause).toSingleOf<DashboardData>()) {
                 is DataResult.Success -> {
                     val data = result.value

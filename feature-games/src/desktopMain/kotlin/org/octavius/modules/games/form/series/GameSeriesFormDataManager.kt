@@ -36,7 +36,7 @@ class GameSeriesFormDataManager : FormDataManager() {
         } else {
             plan.insert("series", seriesData)
         }
-        val result = batchExecutor.execute(plan.build())
+        val result = dataAccess.executeTransactionPlan(plan.build())
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))

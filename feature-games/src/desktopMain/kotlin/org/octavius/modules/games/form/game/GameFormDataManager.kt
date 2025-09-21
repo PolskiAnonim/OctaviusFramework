@@ -226,7 +226,7 @@ class GameFormDataManager : FormDataManager() {
             )
         }
 
-        val result = batchExecutor.execute(plan.build())
+        val result = dataAccess.executeTransactionPlan(plan.build())
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
