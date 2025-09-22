@@ -16,15 +16,25 @@ internal class DatabaseUpdateQueryBuilder(
     private var fromClause: String? = null
     private var whereClause: String? = null
 
-    override fun set(values: Map<String, String>): UpdateQueryBuilder = apply {
+    override fun setExpression(column: String, value: String): UpdateQueryBuilder = apply {
+        // Podobnie jak niżej, ale dla pojedynczej kolumny
+        setClauses[column] = value
+    }
+
+    override fun setExpressions(values: Map<String, String>): UpdateQueryBuilder = apply {
         values.forEach { (key, value) ->
             setClauses[key] = value
         }
     }
 
-    override fun set(column: String, value: String): UpdateQueryBuilder = apply {
-        // Podobnie jak wyżej, ale dla pojedynczej kolumny
-        setClauses[column] = value
+    override fun setValues(values: Map<String, Any?>): UpdateQueryBuilder {
+        // Generujemy mapę placeholderów dla istniejącej metody setExpressions
+        val placeholders = values.keys.associateWith { key -> ":$key" }
+        return this.setExpressions(placeholders)
+    }
+
+    override fun setValue(column: String): UpdateQueryBuilder {
+        return this.setExpression(column, ":$column")
     }
 
     override fun from(tables: String): UpdateQueryBuilder = apply {

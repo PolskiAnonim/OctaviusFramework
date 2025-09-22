@@ -86,10 +86,20 @@ interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMet
     /**
      * Definiuje przypisania w klauzuli SET.
      */
-    fun set(values: Map<String, String>): UpdateQueryBuilder
+    fun setExpressions(values: Map<String, String>): UpdateQueryBuilder
 
     /** Definiuje pojedyncze przypisanie w klauzuli SET. */
-    fun set(column: String, value: String): UpdateQueryBuilder
+    fun setExpression(column: String, value: String): UpdateQueryBuilder
+
+    /** Definiuje pojedyncze przypisanie w klauzuli SET Automatycznie generuje placeholder o nazwie klucza. */
+    fun setValue(column: String): UpdateQueryBuilder
+
+    /**
+     * Ustawia wartości do aktualizacji. Automatycznie generuje placeholdery
+     * w formacie ":key" dla każdego klucza w mapie.
+     * Wartości z mapy muszą być przekazane w metodzie terminalnej (np. .execute()).
+     */
+    fun setValues(values: Map<String, Any?>): UpdateQueryBuilder
 
     /**
      * Dodaje do zapytania UPDATE klauzulę FROM.

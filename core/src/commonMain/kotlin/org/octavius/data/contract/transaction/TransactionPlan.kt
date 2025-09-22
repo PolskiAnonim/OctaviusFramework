@@ -46,7 +46,7 @@ class TransactionPlan(private val dataAccess: DataAccess) {
         returning: List<String> = emptyList()
     ): StepReference {
         val builder = dataAccess.update(tableName)
-            .set(data.mapValues { (key, _) -> ":$key" })
+            .setValues(data)
             .where(filter.keys.joinToString(" AND ") { "$it = :$it" })
 
         if (returning.isNotEmpty()) {
