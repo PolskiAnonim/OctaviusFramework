@@ -18,10 +18,25 @@ internal class DatabaseInsertQueryBuilder(
     private var selectSource: String? = null
     private var onConflictBuilder: DatabaseOnConflictClauseBuilder? = null
 
-     override fun values(values: Map<String, String>): InsertQueryBuilder = apply {
-        values.forEach { (key, value) ->
+    override fun valuesExpressions(expressions: Map<String, String>): InsertQueryBuilder = apply {
+        expressions.forEach { (key, value) ->
             valuePlaceholders[key] = value
         }
+    }
+
+    override fun valueExpression(column: String, expression: String): InsertQueryBuilder = apply {
+        valuePlaceholders[column] = expression
+    }
+
+    override fun values(data: Map<String, Any?>): InsertQueryBuilder {
+        val placeholders = data.keys.associateWith { key -> ":$key" }
+        // Delegujemy do metody niskopoziomowej
+        return this.valuesExpressions(placeholders)
+    }
+
+    override fun value(column: String): InsertQueryBuilder {
+        // Delegujemy do metody niskopoziomowej
+        return this.valueExpression(column, ":$column")
     }
 
      override fun fromSelect(query: String): InsertQueryBuilder = apply {
@@ -57,7 +72,7 @@ internal class DatabaseInsertQueryBuilder(
             throw IllegalStateException("Cannot build an INSERT statement without values or a SELECT source.")
         }
 
-        val targetColumns = if (columns.isNotEmpty()) columns else valuePlaceholders.keys.toList()
+        val targetColumns = columns.ifEmpty { valuePlaceholders.keys.toList() }
         val columnsSql = targetColumns.joinToString(", ")
 
         val sql = StringBuilder(buildWithClause())

@@ -130,15 +130,38 @@ interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMet
     fun recursive(recursive: Boolean = true): InsertQueryBuilder
 
     /**
-     * Definiuje wartości do wstawienia. Kolumny są brane z kluczy mapy.
-     * Wyklucza użycie `fromSelect`.
+     * Definiuje wartości do wstawienia jako wyrażenia SQL lub placeholdery.
+     * To jest metoda niskopoziomowa.
+     * @param expressions Mapa, gdzie klucz to nazwa kolumny, a wartość to string SQL (np. ":name", "NOW()").
      */
-    fun values(values: Map<String, String>): InsertQueryBuilder
+    fun valuesExpressions(expressions: Map<String, String>): InsertQueryBuilder
+
+    /**
+     * Definiuje pojedynczą wartość do wstawienia jako wyrażenie SQL.
+     * @param column Nazwa kolumny.
+     * @param expression Wyrażenie SQL (np. ":user_id", "DEFAULT").
+     */
+    fun valueExpression(column: String, expression: String): InsertQueryBuilder
+
+    /**
+     * Definiuje wartości do wstawienia, automatycznie generując placeholdery.
+     * To jest preferowana, wysokopoziomowa metoda do wstawiania danych.
+     * Wartości z mapy muszą być przekazane w metodzie terminalnej (np. .execute()).
+     *
+     * @param data Mapa danych (kolumna -> wartość).
+     */
+    fun values(data: Map<String, Any?>): InsertQueryBuilder
+
+    /**
+     * Definiuje pojedynczą wartość, automatycznie generując placeholder.
+     * @param column Nazwa kolumny, dla której zostanie wygenerowany placeholder (np. ":nazwa_kolumny").
+     */
+    fun value(column: String): InsertQueryBuilder
 
     /**
      * Definiuje zapytanie SELECT jako źródło danych do wstawienia.
      * Wymaga, aby kolumny były zdefiniowane podczas tworzenia buildera (w `insertInto`).
-     * Wyklucza użycie `values`.
+     * Wyklucza użycie wszelkiego rodzaju funkcji `value(s)`.
      */
     fun fromSelect(query: String): InsertQueryBuilder
 

@@ -17,7 +17,7 @@ class TransactionPlan(private val dataAccess: DataAccess) {
     ): StepReference {
         // Używamy prawdziwego buildera pod spodem
         val builder = dataAccess.insertInto(tableName, data.keys.toList())
-            .values(data.mapValues { (key, _) -> ":$key" })
+            .values(data)
 
         if (returning.isNotEmpty()) {
             builder.returning(returning.joinToString(", "))
