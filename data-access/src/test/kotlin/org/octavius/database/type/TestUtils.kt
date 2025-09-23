@@ -9,7 +9,7 @@ import org.octavius.domain.test.* // Importuj swoje klasy domenowe
  *
  * Odzwierciedla strukturę typów z pliku init-complex-test-db.sql.
  */
-fun createFakeTypeRegistry(): TypeRegistry {
+internal fun createFakeTypeRegistry(): TypeRegistry {
     // Pełne ścieżki do klas, żeby uniknąć literówek
     val tsPath = TestStatus::class.qualifiedName!!
     val tpPath = TestPriority::class.qualifiedName!!
