@@ -13,13 +13,14 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 internal class DatabaseSelectQueryBuilder(
     jdbcTemplate: NamedParameterJdbcTemplate,
     rowMappers: RowMappers,
-    kotlinToPostgresConverter: KotlinToPostgresConverter
+    kotlinToPostgresConverter: KotlinToPostgresConverter,
+    private val selectClause: String
 ) : AbstractQueryBuilder<DatabaseSelectQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), SelectQueryBuilder {
 
     //------------------------------------------------------------------------------------------------------------------
     //                                    STAN WEWNĘTRZNY KLAUZULI SELECT
     //------------------------------------------------------------------------------------------------------------------
-    private var selectClause: String? = null
+
     private var fromClause: String? = null
     private var whereCondition: String? = null
     private var groupByClause: String? = null
@@ -31,9 +32,6 @@ internal class DatabaseSelectQueryBuilder(
     //------------------------------------------------------------------------------------------------------------------
     //                                      BUDOWANIE KLAUZULI SELECT
     //------------------------------------------------------------------------------------------------------------------
-    override fun select(columns: String): SelectQueryBuilder = apply {
-        this.selectClause = columns
-    }
 
     /**
      * Ustawia klauzulę FROM.
@@ -97,7 +95,7 @@ internal class DatabaseSelectQueryBuilder(
     //------------------------------------------------------------------------------------------------------------------
 
     override fun buildSql(): String {
-        if (selectClause.isNullOrBlank()) {
+        if (selectClause.isBlank()) {
             throw IllegalStateException("Cannot build a SELECT query without a SELECT clause. Please call .select(...)")
         }
         if (fromClause.isNullOrBlank()) {

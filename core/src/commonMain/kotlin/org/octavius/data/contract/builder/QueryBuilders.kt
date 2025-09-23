@@ -11,9 +11,6 @@ interface SelectQueryBuilder: TerminalReturningMethods, StepConvertible {
     /** Oznacza klauzulę WITH jako rekurencyjną. */
     fun recursive(recursive: Boolean = true): SelectQueryBuilder
 
-    /** Definiuje listę kolumn do pobrania (klauzula SELECT). */
-    fun select(columns: String): SelectQueryBuilder
-
     /** Definiuje źródło danych (klauzula FROM). */
     fun from(source: String): SelectQueryBuilder
 
