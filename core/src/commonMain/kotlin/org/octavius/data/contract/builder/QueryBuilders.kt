@@ -41,7 +41,10 @@ interface SelectQueryBuilder: TerminalReturningMethods, StepConvertible {
     /** Określa liczbę wierszy do pominięcia (klauzula OFFSET). */
     fun offset(position: Long): SelectQueryBuilder
 
-    /** Konfiguruje paginację, ustawiając LIMIT i OFFSET. */
+    /** Konfiguruje paginację, ustawiając LIMIT i OFFSET.
+     * @param page Numer strony (indeksowany od zera).
+     * @param size Rozmiar strony
+     */
     fun page(page: Long, size: Long): SelectQueryBuilder
 }
 

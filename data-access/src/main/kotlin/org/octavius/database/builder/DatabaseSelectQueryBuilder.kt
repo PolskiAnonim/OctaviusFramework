@@ -46,8 +46,8 @@ internal class DatabaseSelectQueryBuilder(
      * - "UNNEST(:ids) AS id"
      *
      */
-    override fun from(expression: String): SelectQueryBuilder = apply {
-        this.fromClause = expression
+    override fun from(source: String): SelectQueryBuilder = apply {
+        this.fromClause = source
     }
 
     override fun fromSubquery(subquery: String, alias: String?): SelectQueryBuilder {
