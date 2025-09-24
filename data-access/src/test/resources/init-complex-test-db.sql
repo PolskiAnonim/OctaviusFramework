@@ -234,7 +234,7 @@ INSERT INTO complex_test_data (
             'Experimental features and "new technologies"',
             'active',
             ARRAY[
-                ROW('Researcher "The Innovator"', 33, 'research@example.com', true, ARRAY['researcher', 'innovator']),
+                ROW('Researcher ''The Innovator''', 33, 'research@example.com', true, ARRAY['researcher', 'innovator']),
                 ROW('Data Scientist', 27, 'data@example.com', true, ARRAY['data-science', 'ml'])
             ]::test_person[],
             ARRAY[
