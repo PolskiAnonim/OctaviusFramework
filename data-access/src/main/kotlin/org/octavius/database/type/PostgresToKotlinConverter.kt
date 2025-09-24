@@ -10,11 +10,14 @@ import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.octavius.util.OffsetTime
 import org.octavius.util.toDataObject
+import java.lang.reflect.Method
 import java.text.ParseException
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -32,6 +35,12 @@ import kotlin.time.Instant
 internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
     companion object {
         private val logger = KotlinLogging.logger {}
+
+        // Cache dla klasy enum i metody valueOf
+        private val enumClassCache = ConcurrentHashMap<String, Method>()
+
+        // Cache dla Kotlin KClass kompozytowych (data class)
+        private val compositeKClassCache = ConcurrentHashMap<String, KClass<*>>()
     }
 
     val POSTGRES_TIMETZ_FORMATTER: DateTimeFormatter = DateTimeFormatterBuilder()
@@ -63,7 +72,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             logger.trace { "Converting null value for type: $pgTypeName" }
             return null
         }
-        
+
         logger.trace { "Converting value '$value' from PostgreSQL type: $pgTypeName" }
         val typeInfo = typeRegistry.getTypeInfo(pgTypeName)
 
@@ -72,18 +81,22 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                 logger.trace { "Converting enum value '$value' for type $pgTypeName" }
                 convertEnum(value, typeInfo)
             }
+
             TypeCategory.ARRAY -> {
                 logger.trace { "Converting array value for type $pgTypeName" }
                 convertArray(value, typeInfo)
             }
+
             TypeCategory.COMPOSITE -> {
                 logger.trace { "Converting composite value for type $pgTypeName" }
                 convertCompositeType(value, typeInfo)
             }
+
             TypeCategory.STANDARD -> {
                 logger.trace { "Converting standard value '$value' for type $pgTypeName" }
                 convertStandardType(value, pgTypeName)
             }
+
             TypeCategory.DOMAIN -> {
                 val baseTypeName = typeInfo.baseTypeName
                     ?: throw TypeRegistryException("Domena '${typeInfo.typeName}' nie ma zdefiniowanego typu bazowego w TypeRegistry.")
@@ -156,12 +169,12 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                 else -> value
             }
         } catch (e: Exception) {
-                throw DataConversionException(
-                    message = "Nie można przekonwertować wartości '$value' na docelowy typ dla PostgreSQL typu '$pgTypeName'.",
-                    value = value,
-                    targetType = "N/A (deduced from $pgTypeName)",
-                    cause = e
-                )
+            throw DataConversionException(
+                message = "Nie można przekonwertować wartości '$value' na docelowy typ dla PostgreSQL typu '$pgTypeName'.",
+                value = value,
+                targetType = "N/A (deduced from $pgTypeName)",
+                cause = e
+            )
         }
     }
 
@@ -184,7 +197,12 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             ?: throw TypeRegistryException("Nie znaleziono klasy enum dla typu PostgreSQL '${typeInfo.typeName}'.")
 
         return try {
-            val enumClass = Class.forName(enumClassName)
+            // Użycie cache'a
+            val valueOfMethod = enumClassCache.getOrPut(enumClassName) {
+                logger.debug { "Cache miss for enum class $enumClassName. Loading via reflection." }
+                val clazz = Class.forName(enumClassName)
+                clazz.getMethod("valueOf", String::class.java)
+            }
 
             val enumValueName = when (typeInfo.enumConvention) {
                 EnumCaseConvention.SNAKE_CASE_LOWER -> Converters.toCamelCase(value, true)
@@ -193,10 +211,9 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                 EnumCaseConvention.CAMEL_CASE -> Converters.toCamelCase(value, true)
                 EnumCaseConvention.AS_IS -> value
             }
-            
+
             logger.trace { "Converting enum '$value' to '$enumValueName' using convention: ${typeInfo.enumConvention}" }
-            val method = enumClass.getMethod("valueOf", String::class.java)
-            val result = method.invoke(null, enumValueName)
+            val result = valueOfMethod.invoke(null, enumValueName)
             logger.trace { "Successfully converted enum value to: $result" }
             result
         } catch (e: Exception) {
@@ -260,15 +277,14 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
 
     /**
      * Konwertuje typ kompozytowy PostgreSQL na `data class` Kotlina.
-     * Odpowiada za parsowanie stringa z PG i przetłumaczenie nazw atrybutów
-     * z konwencji snake_case na camelCase, tworząc mapę gotową dla `toDataObject`.
+     * Wykorzystuje cache dla KClass i deleguje do `toDataObject` (które samo ma cache).
      */
     private fun convertCompositeType(value: String, typeInfo: PostgresTypeInfo): Any? {
         val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
             ?: throw TypeRegistryException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
 
         logger.trace { "Converting composite type ${typeInfo.typeName} to class: $fullClassName" }
-        
+
         // 1. Parsowanie stringa na listę surowych wartości
         val fieldValues: List<String?>
         try {
@@ -284,7 +300,6 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             throw conversionEx
         }
 
-
         val dbAttributes = typeInfo.attributes.toList()
 
         if (fieldValues.size != dbAttributes.size) {
@@ -296,7 +311,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             logger.error(ex) { "Field count mismatch for type ${typeInfo.typeName}: got ${fieldValues.size}, expected ${dbAttributes.size}" }
             throw ex
         }
-        
+
         logger.trace { "Converting ${dbAttributes.size} composite fields" }
         val constructorArgsMap = dbAttributes.mapIndexed { index, (dbAttributeName, dbAttributeType) ->
             val convertedValue = convertToDomainType(fieldValues[index], dbAttributeType)
@@ -304,21 +319,24 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
         }.toMap()
 
         return try {
-            val clazz = Class.forName(fullClassName).kotlin
-            // 3. Przekazanie idealnie przygotowanej mapy do uniwersalnego konstruktora
+            // Użycie cache'a dla KClass
+            val clazz = compositeKClassCache.getOrPut(fullClassName) {
+                logger.trace { "Cache miss for composite KClass $fullClassName. Loading via reflection." }
+                Class.forName(fullClassName).kotlin
+            }
             val result = constructorArgsMap.toDataObject(clazz)
             logger.trace { "Successfully created instance of ${clazz.simpleName}" }
             result
         } catch (e: Exception) {
-                val mappingEx = DataMappingException(
-                    message = "Nie można utworzyć instancji klasy '$fullClassName' z danych typu kompozytowego '${typeInfo.typeName}'",
-                    targetClass = fullClassName,
-                    rowData = constructorArgsMap, // mamy mapę, która się nie powiodła
-                    cause = e
-                )
-                logger.error(mappingEx) { mappingEx.message }
-                throw mappingEx
-            }
+            val mappingEx = DataMappingException(
+                message = "Nie można utworzyć instancji klasy '$fullClassName' z danych typu kompozytowego '${typeInfo.typeName}'",
+                targetClass = fullClassName,
+                rowData = constructorArgsMap,
+                cause = e
+            )
+            logger.error(mappingEx) { mappingEx.message }
+            throw mappingEx
+        }
     }
 
     // =================================================================
@@ -326,7 +344,8 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     // =================================================================
 
     private fun parsePostgresArray(pgArrayString: String): List<String?> = parseNestedStructure(pgArrayString, '{', '}')
-    private fun parsePostgresComposite(pgCompositeString: String): List<String?> = parseNestedStructure(pgCompositeString, '(', ')')
+    private fun parsePostgresComposite(pgCompositeString: String): List<String?> =
+        parseNestedStructure(pgCompositeString, '(', ')')
 
     /**
      * Uniwersalny parser dla zagnieżdżonych struktur (tablic i kompozytów).

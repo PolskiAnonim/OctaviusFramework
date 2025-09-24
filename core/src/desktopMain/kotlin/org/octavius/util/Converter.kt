@@ -1,6 +1,10 @@
 package org.octavius.util
 
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.KParameter
+import kotlin.reflect.KProperty1
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -22,6 +26,19 @@ import kotlin.reflect.full.primaryConstructor
 @Retention(AnnotationRetention.RUNTIME)
 annotation class MapKey(val name: String)
 
+// --- Cache dla toDataObject() ---
+
+// Przechowujemy główny konstruktor i szczegóły parametrów.
+private data class ToDataObjectClassMetadata<T : Any>(
+    val constructor: KFunction<T>,
+    // Triple: (parametr konstruktora, odpowiadająca mu właściwość, nazwa klucza w mapie)
+    val parameterDetails: List<Triple<KParameter, KProperty1<T, Any?>, String>>
+)
+
+// Używamy KClass<*> jako klucza, aby być generycznym i unikać problemów z typami.
+private val toDataObjectCache = ConcurrentHashMap<KClass<*>, ToDataObjectClassMetadata<*>>()
+
+
 // --- Konwersja Z MAPY do OBIEKTU  ---
 
 inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
@@ -36,21 +53,29 @@ inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
  * @return Nowa instancja klasy [T] wypełniona danymi z mapy.
  */
 fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
-    val constructor = kClass.primaryConstructor
-        ?: throw IllegalArgumentException("Klasa ${kClass.simpleName} musi mieć główny konstruktor.")
+    // Pobierz lub oblicz metadane dla tej klasy
+    @Suppress("UNCHECKED_CAST")
+    val metadata = toDataObjectCache.getOrPut(kClass) {
+        val constructor = kClass.primaryConstructor
+            ?: throw IllegalArgumentException("Klasa ${kClass.simpleName} musi mieć główny konstruktor.")
 
-    // Mapowanie właściwości w klasie po nazwie dla łatwego dostępu
-    val propertiesByName = kClass.memberProperties.associateBy { it.name }
+        // Mapowanie właściwości w klasie po nazwie dla łatwego dostępu
+        val propertiesByName = kClass.memberProperties.associateBy { it.name }
 
-    val args = constructor.parameters.mapNotNull { param ->
-        // Właściwość odpowiadająca parametrowi konstruktora
-        val property = propertiesByName[param.name]
-            ?: throw IllegalStateException("Błąd wewnętrzny: Nie znaleziono właściwości dla parametru ${param.name}")
+        val parameterDetails = constructor.parameters.map { param ->
+            val property = propertiesByName[param.name]
+                ?: throw IllegalStateException("Błąd wewnętrzny: Nie znaleziono właściwości dla parametru ${param.name}")
 
-        // Określ klucz, którego szukamy w mapie
-        val keyName = property.findAnnotation<MapKey>()?.name
-            ?: Converters.toSnakeCase(param.name!!)
+            val keyName = property.findAnnotation<MapKey>()?.name
+                ?: Converters.toSnakeCase(param.name!!)
 
+            Triple(param, property, keyName)
+        }
+        ToDataObjectClassMetadata(constructor, parameterDetails)
+    } as ToDataObjectClassMetadata<T>
+
+
+    val args = metadata.parameterDetails.mapNotNull { (param, property, keyName) ->
         // Sprawdzamy, czy klucz ISTNIEJE w mapie (nie tylko czy wartość nie jest null)
         val hasKeyInMap = this.containsKey(keyName)
 
@@ -88,28 +113,37 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
     }.associate { (k, v) -> k to v }
 
     // Wywołaj główny konstruktor z przygotowanymi argumentami.
-    return constructor.callBy(args)
+    return metadata.constructor.callBy(args)
 }
 
+// --- Cache dla toMap() ---
 
-// --- Konwersja Z OBIEKTU do MAPY (dwie oddzielne funkcje) ---
+// Przechowujemy pre-obliczone nazwy kluczy mapy i referencje do właściwości.
+private data class ToMapClassMetadata<T : Any>(
+    val propertiesMapInfo: List<Pair<String, KProperty1<T, Any?>>>
+)
 
-/**
- * Konwertuje obiekt na mapę `Map<String, Any?>`, stosując konwencję camelCase -> snake_case.
- * Używa adnotacji @MapKey do nadpisania domyślnej konwencji nazewnictwa.
- *
- * @receiver Obiekt do skonwertowania.
- * @return Niemutowalna mapa z kluczami w formacie snake_case.
- */
+// Używamy KClass<*> jako klucza, aby być generycznym i unikać problemów z typami.
+private val toMapCache = ConcurrentHashMap<KClass<*>, ToMapClassMetadata<*>>()
+
+
+// --- Konwersja Z OBIEKTU do MAPY ---
+
 fun <T : Any> T.toMap(): Map<String, Any?> {
-    return this::class.memberProperties.associate { property ->
-        // Określ klucz:
-        // 1. Użyj nazwy z adnotacji @MapKey, jeśli istnieje.
-        // 2. W przeciwnym razie, użyj konwencji: przekonwertuj nazwę właściwości na snake_case.
-        val keyName = property.findAnnotation<MapKey>()?.name
-            ?: Converters.toSnakeCase(property.name)
+    // Pobierz lub oblicz metadane dla tej klasy
+    // Bezpieczne rzutowanie jest możliwe, ponieważ kluczem w mapie jest T::class, a wartością ClassMetadata<T>
+    @Suppress("UNCHECKED_CAST")
+    val metadata = toMapCache.getOrPut(this::class) {
+        val propertiesMapInfo = this::class.memberProperties.map { property ->
+            val keyName = property.findAnnotation<MapKey>()?.name
+                ?: Converters.toSnakeCase(property.name)
+            keyName to (property as KProperty1<T, Any?>) // Rzutowanie na konkretny typ, żeby pasowało do T
+        }
+        ToMapClassMetadata(propertiesMapInfo)
+    } as ToMapClassMetadata<T>
 
-        val value = property.getter.call(this)
-        keyName to value
+    return metadata.propertiesMapInfo.associate { (keyName, property) ->
+        // Ta część MUSI być wywołana dla każdej instancji, ponieważ wartości są dynamiczne
+        keyName to property.getter.call(this)
     }
 }
