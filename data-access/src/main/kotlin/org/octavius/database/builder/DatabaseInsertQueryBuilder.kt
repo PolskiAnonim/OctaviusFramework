@@ -13,7 +13,7 @@ internal class DatabaseInsertQueryBuilder(
     table: String,
     private val columns: List<String>
 ) : AbstractQueryBuilder<DatabaseInsertQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), InsertQueryBuilder {
-
+    override val canReturnResultsByDefault = false
     private val valuePlaceholders = mutableMapOf<String, String>()
     private var selectSource: String? = null
     private var onConflictBuilder: DatabaseOnConflictClauseBuilder? = null

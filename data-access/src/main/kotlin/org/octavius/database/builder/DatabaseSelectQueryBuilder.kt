@@ -16,7 +16,7 @@ internal class DatabaseSelectQueryBuilder(
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     private val selectClause: String
 ) : AbstractQueryBuilder<DatabaseSelectQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), SelectQueryBuilder {
-
+    override val canReturnResultsByDefault = true
     //------------------------------------------------------------------------------------------------------------------
     //                                    STAN WEWNĘTRZNY KLAUZULI SELECT
     //------------------------------------------------------------------------------------------------------------------

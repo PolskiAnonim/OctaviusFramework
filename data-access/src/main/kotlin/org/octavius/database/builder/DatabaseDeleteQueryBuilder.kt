@@ -11,7 +11,7 @@ internal class DatabaseDeleteQueryBuilder(
     rowMappers: RowMappers,
     table: String
 ) : AbstractQueryBuilder<DatabaseDeleteQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), DeleteQueryBuilder {
-
+    override val canReturnResultsByDefault = false
     private var whereClause: String? = null
     private var usingClause: String? = null
 

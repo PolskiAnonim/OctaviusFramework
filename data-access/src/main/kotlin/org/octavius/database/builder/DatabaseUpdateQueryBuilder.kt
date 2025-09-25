@@ -11,7 +11,7 @@ internal class DatabaseUpdateQueryBuilder(
     rowMappers: RowMappers,
     table: String
 ) : AbstractQueryBuilder<DatabaseUpdateQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), UpdateQueryBuilder {
-
+    override val canReturnResultsByDefault = false
     private val setClauses = mutableMapOf<String, String>()
     private var fromClause: String? = null
     private var whereClause: String? = null

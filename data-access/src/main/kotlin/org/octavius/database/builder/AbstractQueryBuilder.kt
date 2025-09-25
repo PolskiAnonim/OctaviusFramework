@@ -29,7 +29,8 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
     companion object {
         private val logger = KotlinLogging.logger {}
     }
-
+    // Bardzo nie chcemy żeby SELECT umierał przy wykonywaniu zapytań
+    protected abstract val canReturnResultsByDefault: Boolean
     //------------------------------------------------------------------------------------------------------------------
     //                                 ABSTRAKCYJNA METODA DO IMPLEMENTACJI
     //------------------------------------------------------------------------------------------------------------------
@@ -166,7 +167,7 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
      */
     fun execute(params: Map<String, Any?>): DataResult<Int> {
         if (returningClause != null) {
-            throw IllegalStateException("Use toList(), toSingle(), etc. when RETURNING clause is specified.")
+            throw IllegalStateException("Użyj metod toList(), toSingle() etc., gdy zdefiniowano klauzulę RETURNING.")
         }
         val sql = buildSql()
         return execute(sql, params) { expandedSql, expandedParams ->
@@ -190,6 +191,9 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
         rowMapper: RowMapper<M>,
         transform: (List<M>) -> DataResult<R>
     ): DataResult<R> {
+        if (!canReturnResultsByDefault && returningClause == null) {
+            throw IllegalStateException("Nie można wywołać toList(), toSingle() etc. na zapytaniu modyfikującym bez klauzuli RETURNING. Użyj .returning().")
+        }
         val sql = buildSql()
         return execute(sql, params) { expandedSql, expandedParams ->
             val results: List<M> = jdbcTemplate.query(expandedSql, expandedParams, rowMapper)

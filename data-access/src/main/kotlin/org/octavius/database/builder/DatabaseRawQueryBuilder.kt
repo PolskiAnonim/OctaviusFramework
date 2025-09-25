@@ -15,6 +15,6 @@ internal class DatabaseRawQueryBuilder(
     rowMappers: RowMappers,
     private val sql: String
 ) : AbstractQueryBuilder<DatabaseRawQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), RawQueryBuilder {
-
+    override val canReturnResultsByDefault = true
     override fun buildSql(): String = sql
 }
