@@ -103,7 +103,7 @@ class ReportConfigurationManager : KoinComponent {
             is DataResult.Success -> {
                 val firstStepResult = result.value[0]!!
                 val firstStepFirstResult = firstStepResult.first()
-                return firstStepFirstResult["rows_affected"] as Int > 0
+                return firstStepFirstResult["result"] as Int > 0
             }
         }
     }
