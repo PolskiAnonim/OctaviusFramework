@@ -4,10 +4,10 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
-import org.octavius.domain.SortDirection
 import org.octavius.report.Query
 import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportPaginationState
+import org.octavius.report.configuration.SortDirection
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.FilterData
 

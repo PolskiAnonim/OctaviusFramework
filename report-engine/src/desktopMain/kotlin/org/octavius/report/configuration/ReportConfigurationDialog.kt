@@ -15,8 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import org.octavius.domain.FilterConfig
-import org.octavius.domain.SortConfiguration
 import org.octavius.localization.T
 import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState

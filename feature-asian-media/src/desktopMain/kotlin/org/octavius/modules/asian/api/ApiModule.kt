@@ -15,6 +15,7 @@ import org.octavius.data.DataResult
 import org.octavius.data.transaction.DatabaseValue
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResults
+import org.octavius.data.withPgType
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.navigation.NavigationEvent
@@ -97,14 +98,14 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             // Przygotuj operacje bazodanowe w jednej transakcji
             val newTitle = mapOf(
-                "titles" to request.titles.toDatabaseValue(),
-                "language" to request.language.toDatabaseValue()
+                "titles" to request.titles,
+                "language" to request.language
             )
             // Domyślnie dodajemy publikację ze statusem NotReading
             val newPublication = mapOf(
-                "publication_type" to request.type.toDatabaseValue(),
-                "status" to PublicationStatus.NotReading.toDatabaseValue(),
-                "track_progress" to false.toDatabaseValue()
+                "publication_type" to request.type,
+                "status" to PublicationStatus.NotReading,
+                "track_progress" to false
             )
 
             val plan = TransactionPlan(dataAccess)

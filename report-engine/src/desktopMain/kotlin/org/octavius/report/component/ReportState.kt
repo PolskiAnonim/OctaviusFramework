@@ -1,7 +1,7 @@
 package org.octavius.report.component
 
-import org.octavius.domain.SortDirection
 import org.octavius.report.ReportPaginationState
+import org.octavius.report.configuration.SortDirection
 import org.octavius.report.filter.data.FilterData
 
 /**

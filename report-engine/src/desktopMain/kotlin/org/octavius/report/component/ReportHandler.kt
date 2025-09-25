@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.domain.SortDirection
 import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportEvent
 import org.octavius.report.configuration.ReportConfiguration
 import org.octavius.report.configuration.ReportConfigurationManager
+import org.octavius.report.configuration.SortDirection
 
 val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHandler provided") }
 

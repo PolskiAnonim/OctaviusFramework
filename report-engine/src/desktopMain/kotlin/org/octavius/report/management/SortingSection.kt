@@ -16,10 +16,10 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.octavius.domain.SortDirection
 import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
+import org.octavius.report.configuration.SortDirection
 import org.octavius.ui.draganddrop.DraggableChip
 import org.octavius.ui.draganddrop.DropZone
 import org.octavius.ui.draganddrop.DropZoneConstants
