@@ -1,6 +1,6 @@
 package org.octavius.domain.asian
 
-import org.octavius.data.contract.PgType
+import org.octavius.data.PgType
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.T
 

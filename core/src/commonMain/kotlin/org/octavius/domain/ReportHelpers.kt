@@ -1,7 +1,7 @@
 package org.octavius.domain
 
 import kotlinx.serialization.json.JsonObject
-import org.octavius.data.contract.PgType
+import org.octavius.data.PgType
 
 @PgType
 enum class SortDirection {

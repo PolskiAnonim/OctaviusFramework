@@ -1,4 +1,4 @@
-package org.octavius.data.contract.builder
+package org.octavius.data.builder
 
 /**
  * Definiuje publiczne API do budowania zapytań SQL SELECT.

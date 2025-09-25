@@ -1,4 +1,4 @@
-package org.octavius.data.contract
+package org.octavius.data
 
 import org.octavius.exception.DatabaseException
 

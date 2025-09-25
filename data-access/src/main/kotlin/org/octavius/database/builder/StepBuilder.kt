@@ -1,8 +1,8 @@
 package org.octavius.database.builder
 
-import org.octavius.data.contract.ColumnInfo
-import org.octavius.data.contract.builder.StepBuilderMethods
-import org.octavius.data.contract.transaction.TransactionStep
+import org.octavius.data.ColumnInfo
+import org.octavius.data.builder.StepBuilderMethods
+import org.octavius.data.transaction.TransactionStep
 import kotlin.reflect.KClass
 
 /**

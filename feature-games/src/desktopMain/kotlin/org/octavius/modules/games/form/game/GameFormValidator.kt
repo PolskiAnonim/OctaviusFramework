@@ -1,6 +1,6 @@
 package org.octavius.modules.games.form.game
 
-import org.octavius.data.contract.DataResult
+import org.octavius.data.DataResult
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator

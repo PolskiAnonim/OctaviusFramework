@@ -1,4 +1,4 @@
-package org.octavius.data.contract
+package org.octavius.data
 
 /**
  * Opakowuje wartość, aby jawnie określić docelowy typ PostgreSQL.

@@ -1,4 +1,4 @@
-package org.octavius.data.contract.transaction
+package org.octavius.data.transaction
 
 // Ta klasa to "uchwyt" do przyszłego wyniku kroku.
 // Jest wewnętrznie zarządzana przez TransactionPlan.

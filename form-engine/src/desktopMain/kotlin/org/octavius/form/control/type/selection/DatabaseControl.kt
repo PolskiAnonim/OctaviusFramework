@@ -2,9 +2,9 @@ package org.octavius.form.control.type.selection
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.ColumnInfo
-import org.octavius.data.contract.DataAccess
-import org.octavius.data.contract.DataResult
+import org.octavius.data.ColumnInfo
+import org.octavius.data.DataAccess
+import org.octavius.data.DataResult
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.ControlAction

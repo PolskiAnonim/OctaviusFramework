@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import org.octavius.data.contract.ColumnInfo
+import org.octavius.data.ColumnInfo
 import org.octavius.form.control.base.*
 import org.octavius.ui.theme.FormSpacing
 

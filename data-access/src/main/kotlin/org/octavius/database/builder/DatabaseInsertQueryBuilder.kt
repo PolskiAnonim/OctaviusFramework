@@ -1,7 +1,7 @@
 package org.octavius.database.builder
 
-import org.octavius.data.contract.builder.InsertQueryBuilder
-import org.octavius.data.contract.builder.OnConflictClauseBuilder
+import org.octavius.data.builder.InsertQueryBuilder
+import org.octavius.data.builder.OnConflictClauseBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

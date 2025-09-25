@@ -1,8 +1,8 @@
-package org.octavius.data.contract
+package org.octavius.data
 
-import org.octavius.data.contract.builder.*
-import org.octavius.data.contract.transaction.TransactionPlanResults
-import org.octavius.data.contract.transaction.TransactionStep
+import org.octavius.data.builder.*
+import org.octavius.data.transaction.TransactionPlanResults
+import org.octavius.data.transaction.TransactionStep
 
 /**
  * Główny kontrakt dla interakcji z warstwą dostępu do danych.

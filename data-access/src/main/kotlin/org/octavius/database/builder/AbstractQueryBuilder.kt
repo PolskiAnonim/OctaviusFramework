@@ -1,9 +1,9 @@
 package org.octavius.database.builder
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.contract.ColumnInfo
-import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.builder.StepBuilderMethods
+import org.octavius.data.ColumnInfo
+import org.octavius.data.DataResult
+import org.octavius.data.builder.StepBuilderMethods
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.exception.DatabaseException

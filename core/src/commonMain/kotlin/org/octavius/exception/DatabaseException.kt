@@ -1,6 +1,6 @@
 package org.octavius.exception
 
-import org.octavius.data.contract.transaction.TransactionStep
+import org.octavius.data.transaction.TransactionStep
 
 /**
  * Bazowy, zapieczętowany wyjątek dla wszystkich błędów warstwy danych.

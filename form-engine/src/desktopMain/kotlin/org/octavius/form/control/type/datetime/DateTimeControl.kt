@@ -1,7 +1,7 @@
 package org.octavius.form.control.type.datetime
 
 import androidx.compose.runtime.*
-import org.octavius.data.contract.ColumnInfo
+import org.octavius.data.ColumnInfo
 import org.octavius.form.control.base.*
 import org.octavius.form.control.validator.datetime.DateTimeValidator
 import org.octavius.ui.datetime.DateTimePickerDialog

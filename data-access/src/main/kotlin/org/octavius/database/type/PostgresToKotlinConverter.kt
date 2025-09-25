@@ -3,13 +3,13 @@ package org.octavius.database.type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
 import kotlinx.serialization.json.Json
-import org.octavius.data.contract.EnumCaseConvention
+import org.octavius.data.EnumCaseConvention
+import org.octavius.data.toDataObject
 import org.octavius.exception.DataConversionException
 import org.octavius.exception.DataMappingException
 import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.octavius.util.OffsetTime
-import org.octavius.util.toDataObject
 import java.lang.reflect.Method
 import java.text.ParseException
 import java.time.format.DateTimeFormatter

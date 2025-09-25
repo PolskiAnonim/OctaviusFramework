@@ -5,8 +5,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import org.octavius.data.contract.EnumCaseConvention
-import org.octavius.data.contract.PgType
+import org.octavius.data.EnumCaseConvention
+import org.octavius.data.PgType
 import org.octavius.database.DatabaseConfig
 import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters

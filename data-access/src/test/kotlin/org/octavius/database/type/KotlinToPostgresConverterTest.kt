@@ -8,7 +8,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.octavius.data.contract.EnumCaseConvention
+import org.octavius.data.EnumCaseConvention
 import org.postgresql.util.PGobject
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

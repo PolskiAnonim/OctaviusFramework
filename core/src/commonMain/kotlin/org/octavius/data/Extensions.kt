@@ -1,6 +1,6 @@
-package org.octavius.data.contract
+package org.octavius.data
 
-import org.octavius.data.contract.transaction.DatabaseValue
+import org.octavius.data.transaction.DatabaseValue
 
 /**
  * Konwertuje dowolną  wartość (także null) na instancję [DatabaseValue.Value].

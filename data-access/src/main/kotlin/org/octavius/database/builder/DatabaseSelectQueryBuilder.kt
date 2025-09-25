@@ -1,6 +1,6 @@
 package org.octavius.database.builder
 
-import org.octavius.data.contract.builder.SelectQueryBuilder
+import org.octavius.data.builder.SelectQueryBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

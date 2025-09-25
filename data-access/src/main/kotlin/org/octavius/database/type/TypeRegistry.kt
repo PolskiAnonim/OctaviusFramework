@@ -1,7 +1,7 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.contract.EnumCaseConvention
+import org.octavius.data.EnumCaseConvention
 import org.octavius.exception.TypeRegistryException
 import kotlin.reflect.KClass
 

@@ -1,10 +1,10 @@
 package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.contract.ColumnInfo
+import org.octavius.data.ColumnInfo
+import org.octavius.data.toDataObject
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.exception.DataMappingException
-import org.octavius.util.toDataObject
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
 import kotlin.reflect.KClass

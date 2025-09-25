@@ -1,6 +1,6 @@
 package org.octavius.form.control.type.number
 
-import org.octavius.data.contract.ColumnInfo
+import org.octavius.data.ColumnInfo
 import org.octavius.form.control.base.BigDecimalValidation
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency

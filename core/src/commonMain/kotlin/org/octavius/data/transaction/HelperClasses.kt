@@ -1,6 +1,6 @@
-package org.octavius.data.contract.transaction
+package org.octavius.data.transaction
 
-import org.octavius.data.contract.DataResult
+import org.octavius.data.DataResult
 
 /**
  * Reprezentuje wartość w kroku bazodanowym.

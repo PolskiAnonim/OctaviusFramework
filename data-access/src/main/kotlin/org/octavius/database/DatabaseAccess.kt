@@ -1,11 +1,11 @@
 package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.contract.DataAccess
-import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.builder.*
-import org.octavius.data.contract.transaction.TransactionPlanResults
-import org.octavius.data.contract.transaction.TransactionStep
+import org.octavius.data.DataAccess
+import org.octavius.data.DataResult
+import org.octavius.data.builder.*
+import org.octavius.data.transaction.TransactionPlanResults
+import org.octavius.data.transaction.TransactionStep
 import org.octavius.database.builder.*
 import org.octavius.database.transaction.TransactionPlanExecutor
 import org.octavius.database.type.KotlinToPostgresConverter

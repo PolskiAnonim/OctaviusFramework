@@ -1,6 +1,6 @@
 package org.octavius.modules.asian.home.model
 
-import org.octavius.data.contract.PgType
+import org.octavius.data.PgType
 
 @PgType
 data class DashboardItem(

@@ -1,8 +1,8 @@
-package org.octavius.data.contract.builder
+package org.octavius.data.builder
 
-import org.octavius.data.contract.ColumnInfo
-import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.transaction.TransactionStep
+import org.octavius.data.ColumnInfo
+import org.octavius.data.DataResult
+import org.octavius.data.transaction.TransactionStep
 import kotlin.reflect.KClass
 
 /** Interfejs zawierający metody terminalne zwracające dane */

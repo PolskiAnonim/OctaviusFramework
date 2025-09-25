@@ -2,7 +2,7 @@ package org.octavius.form.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.DataAccess
+import org.octavius.data.DataAccess
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.RenderContext
 

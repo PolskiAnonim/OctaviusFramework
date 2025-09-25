@@ -1,6 +1,6 @@
 package org.octavius.modules.asian.form
 
-import org.octavius.data.contract.ColumnInfo
+import org.octavius.data.ColumnInfo
 import org.octavius.dialog.DialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.asian.PublicationLanguage

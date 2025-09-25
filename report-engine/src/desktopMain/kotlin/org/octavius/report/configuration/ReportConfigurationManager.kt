@@ -2,15 +2,15 @@ package org.octavius.report.configuration
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.DataAccess
-import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.builder.toListOf
-import org.octavius.data.contract.builder.toSingleOf
-import org.octavius.data.contract.transaction.TransactionPlanResults
-import org.octavius.data.contract.transaction.TransactionPlan
+import org.octavius.data.DataAccess
+import org.octavius.data.DataResult
+import org.octavius.data.builder.toListOf
+import org.octavius.data.builder.toSingleOf
+import org.octavius.data.toMap
+import org.octavius.data.transaction.TransactionPlan
+import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.util.toMap
 
 class ReportConfigurationManager : KoinComponent {
 

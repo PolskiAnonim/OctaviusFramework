@@ -1,6 +1,6 @@
-package org.octavius.data.contract.transaction
+package org.octavius.data.transaction
 
-import org.octavius.data.contract.DataAccess
+import org.octavius.data.DataAccess
 
 class TransactionPlan(private val dataAccess: DataAccess) {
 

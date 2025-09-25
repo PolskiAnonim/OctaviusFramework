@@ -2,7 +2,7 @@ package org.octavius.report.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.DataAccess
+import org.octavius.data.DataAccess
 import org.octavius.report.Query
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction

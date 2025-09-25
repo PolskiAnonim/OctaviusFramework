@@ -1,4 +1,4 @@
-package org.octavius.data.contract
+package org.octavius.data
 
 enum class EnumCaseConvention {
     SNAKE_CASE_UPPER,  // MOJA_WARTOSC

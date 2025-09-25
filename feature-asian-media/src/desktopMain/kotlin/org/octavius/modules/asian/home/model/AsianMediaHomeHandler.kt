@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.contract.DataAccess
-import org.octavius.data.contract.DataResult
-import org.octavius.data.contract.builder.toSingleOf
+import org.octavius.data.DataAccess
+import org.octavius.data.DataResult
+import org.octavius.data.builder.toSingleOf
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.exception.DatabaseException
