@@ -58,7 +58,7 @@ class ComprehensiveBulkInsertBenchmark {
         DatabaseConfig.loadFromFile("test-database.properties")
         val connectionUrl = DatabaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/")
-        if (!connectionUrl.contains("localhost:5430") || dbName != "octavius_test") {
+        if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException("ABORTING TEST! Safety guard failed. Connection URL: '$connectionUrl'")
         }
         println("Safety guard passed. Connected to: $dbName")

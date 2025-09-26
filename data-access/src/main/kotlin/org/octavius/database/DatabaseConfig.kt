@@ -15,7 +15,7 @@ internal object DatabaseConfig {
     private val logger = KotlinLogging.logger {}
     
     // Domyślne wartości
-    var dbUrl = "jdbc:postgresql://localhost:5430/novels_games"
+    var dbUrl = "jdbc:postgresql://localhost:5432/octavius"
     var dbUsername = "postgres"
     var dbPassword = "1234"
     var dbSchemas: List<String>  = listOf("public", "asian_media", "games")

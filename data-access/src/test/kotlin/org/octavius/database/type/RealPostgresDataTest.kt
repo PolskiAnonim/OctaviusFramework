@@ -35,7 +35,7 @@ class RealPostgresDataTest {
 
         // Sprawdzamy zarówno URL, jak i nazwę bazy, aby być podwójnie pewnym.
         // Można też sprawdzić hosta, port etc.
-        if (!connectionUrl.contains("localhost:5430") || dbName != "octavius_test") {
+        if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException(
                 "ABORTING TEST! Attempting to run destructive tests on a non-test database. " +
                         "Connection URL: '$connectionUrl'. This is a safety guard to prevent data loss."

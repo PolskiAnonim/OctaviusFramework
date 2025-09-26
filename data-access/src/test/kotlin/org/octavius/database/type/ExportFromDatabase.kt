@@ -25,7 +25,7 @@ class GoldenStringExporterTest {
         // Guard bezpieczeństwa
         val connectionUrl = DatabaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/")
-        if (!connectionUrl.contains("localhost:5430") || dbName != "octavius_test") {
+        if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException("ABORTING! Próba uruchomienia na bazie innej niż testowa: $connectionUrl")
         }
 
