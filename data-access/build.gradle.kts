@@ -24,7 +24,8 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)  // @Test, @BeforeAll etc.
     testRuntimeOnly(libs.junit.jupiter.engine)  // silnik do uruchamiania testów
     testRuntimeOnly(libs.junit.platform.launcher)
-    
+    testImplementation(libs.junit.jupiter.params)
+
     testImplementation(libs.mockk)
     testImplementation(libs.assertj.core)
 }
