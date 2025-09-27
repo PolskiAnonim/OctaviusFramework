@@ -4,6 +4,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import org.octavius.localization.T
+import org.octavius.modules.games.form.category.ui.GameCategoryFormScreen
+import org.octavius.navigation.AppRouter
 import org.octavius.report.Query
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
@@ -48,7 +50,7 @@ class GameCategoriesReportStructureBuilder : ReportStructureBuilder() {
     ) {
         val categoryId = rowData["id"] as? Int
         if (categoryId != null) {
-            // TODO: Navigate to CategoryFormScreen when it exists
+            AppRouter.navigateTo(GameCategoryFormScreen.create(categoryId))
         }
     }
 
@@ -57,7 +59,7 @@ class GameCategoriesReportStructureBuilder : ReportStructureBuilder() {
             label = T.get("games.form.newCategory"),
             icon = Icons.Default.Add
         ) {
-            // TODO: Navigate to CategoryFormScreen when it exists
+            AppRouter.navigateTo(GameCategoryFormScreen.create())
         }
     )
 }
