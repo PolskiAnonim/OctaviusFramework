@@ -37,20 +37,19 @@ interface DataAccess {
     // --- Deklaratywny Batch ---
     fun executeTransactionPlan(steps: List<TransactionStep<*>>): DataResult<TransactionPlanResults>
 
-//    // --- Blok Transakcyjny ---
-//    fun <T> transaction(block: (tx: TransactionalDataAccess) -> DataResult<T>): DataResult<T>
+    // --- Blok Transakcyjny ---
+    fun <T> transaction(block: (tx: TransactionalDataAccess) -> DataResult<T>): DataResult<T>
 }
 
 /**
- * Specjalna wersja [DataAccess] przeznaczona do użycia wewnątrz bloku transakcyjnego.
- * Zapewnia, że wszystkie operacje są wykonywane w kontekście tej samej transakcji.
+ * Definiuje API dostępu do danych w kontekście już istniejącej transakcji.
+ * Udostępnia te same buildery co główny interfejs DataAccess, ale nie pozwala
+ * na rozpoczynanie nowych transakcji.
  */
 interface TransactionalDataAccess {
-    fun select(columns: String = "*", from: String): SelectQueryBuilder
-    fun select(): SelectQueryBuilder // do bardziej wykorzystania domyślnych kolumn lub dla braku FROM
+    fun select(columns: String): SelectQueryBuilder
     fun update(table: String): UpdateQueryBuilder
-    fun insertInto(table: String): InsertQueryBuilder
+    fun insertInto(table: String, columns: List<String> = emptyList()): InsertQueryBuilder
     fun deleteFrom(table: String): DeleteQueryBuilder
-
-    // Uwaga: Brak `executeBatch` i `transaction`, aby uniknąć zagnieżdżania.
+    fun rawQuery(sql: String): RawQueryBuilder
 }
