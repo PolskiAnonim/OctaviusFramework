@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import org.octavius.data.DataAccess
-import org.octavius.database.DatabaseAccess
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.database.type.TypeRegistry

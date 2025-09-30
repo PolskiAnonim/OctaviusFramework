@@ -16,6 +16,7 @@ import org.octavius.localization.T
 import org.octavius.modules.games.report.ui.GameCategoriesReportScreen
 import org.octavius.modules.games.report.ui.GameReportScreen
 import org.octavius.modules.games.report.ui.GameSeriesReportScreen
+import org.octavius.modules.games.statistics.ui.GameStatisticsScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
 
@@ -106,7 +107,7 @@ class GamesHomeScreen : Screen {
                     description = T.get("games.home.statisticsDescription"),
                     icon = Icons.Default.Analytics,
                     onClick = {
-                        // TODO: Navigate to Statistics screen
+                        AppRouter.navigateTo(GameStatisticsScreen.create())
                     },
                     modifier = Modifier.weight(1f)
                 )

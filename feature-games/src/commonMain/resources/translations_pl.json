@@ -64,6 +64,23 @@
       "gameCount": "Liczba gier",
       "title": "Serie gier"
     },
+    "stats": {
+      "title": "Statystyki gier",
+      "kpiHeader": "Podstawowe statystyki",
+      "totalGames": "Wszystkie gry",
+      "playedGames": "Zagrane gry",
+      "totalPlaytime": "Całkowity czas gry",
+      "avgPlaytime": "Średni czas gry",
+      "ratingHeader": "Oceny",
+      "avgStory": "Średnia ocena fabuły",
+      "avgGameplay": "Średnia ocena rozgrywki",
+      "avgAtmosphere": "Średnia ocena atmosfery",
+      "favoritesHeader": "Ulubione",
+      "favoriteCategory": "Ulubiona kategoria",
+      "favoriteSeries": "Ulubiona seria",
+      "mostPlayed": "Najczęściej grane",
+      "highestRated": "Najwyżej oceniane"
+    },
     "status": {
       "endless": "Gra bez końca",
       "notPlaying": "Nie gram",
