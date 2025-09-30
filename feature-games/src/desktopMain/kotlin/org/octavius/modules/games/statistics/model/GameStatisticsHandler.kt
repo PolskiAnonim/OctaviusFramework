@@ -29,12 +29,11 @@ class GameStatisticsHandler : KoinComponent {
     private fun buildGameStatisticsQuery(): String {
         // --- CTE 1: kpi_stats ---
         // Bez zmian, było idealnie.
-        val kpiStatsQuery = dataAccess.select("""
-            COUNT(*) AS total_games,
-            (SELECT time_played FROM games.time_played) AS total_playtime_hours,
-            COUNT(*) FILTER (WHERE g.status = 'PLAYED') AS played_games_count,
-            COALESCE(AVG(pt.play_time_hours) FILTER (WHERE g.status = 'PLAYED'), 0)::numeric(10, 2) AS avg_playtime_for_played
-            """
+        val kpiStatsQuery = dataAccess.select(
+            "COUNT(*) AS total_games",
+            "(SELECT time_played FROM games.time_played) AS total_playtime_hours",
+            "COUNT(*) FILTER (WHERE g.status = 'PLAYED') AS played_games_count",
+            "COALESCE(AVG(pt.play_time_hours) FILTER (WHERE g.status = 'PLAYED'), 0)::numeric(10, 2) AS avg_playtime_for_played"
         )
             .from("games.games g LEFT JOIN games.play_time pt ON g.id = pt.game_id")
             .toSql()
@@ -54,11 +53,10 @@ class GameStatisticsHandler : KoinComponent {
 
         // --- CTE 3: rating_stats ---
         // Bez zmian.
-        val ratingStatsQuery = dataAccess.select("""
-            AVG(story_rating)::numeric(10, 2) AS avg_story_rating,
-            AVG(gameplay_rating)::numeric(10, 2) AS avg_gameplay_rating,
-            AVG(atmosphere_rating)::numeric(10, 2) AS avg_atmosphere_rating
-            """
+        val ratingStatsQuery = dataAccess.select(
+            "AVG(story_rating)::numeric(10, 2) AS avg_story_rating",
+            "AVG(gameplay_rating)::numeric(10, 2) AS avg_gameplay_rating",
+            "AVG(atmosphere_rating)::numeric(10, 2) AS avg_atmosphere_rating"
         )
             .from("games.ratings")
             .toSql()

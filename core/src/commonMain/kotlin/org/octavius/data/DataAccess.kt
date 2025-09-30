@@ -20,7 +20,7 @@ interface DataAccess {
      * Rozpoczyna budowanie zapytania SELECT.
      * @param columns Lista kolumn do pobrania
      */
-    fun select(columns: String): SelectQueryBuilder
+    fun select(vararg columns: String): SelectQueryBuilder
 
     /** Rozpoczyna budowanie zapytania UPDATE dla podanej tabeli. */
     fun update(table: String): UpdateQueryBuilder

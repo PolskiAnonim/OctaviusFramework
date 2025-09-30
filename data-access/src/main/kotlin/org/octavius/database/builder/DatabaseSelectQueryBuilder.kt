@@ -96,7 +96,7 @@ internal class DatabaseSelectQueryBuilder(
 
     override fun buildSql(): String {
         if (selectClause.isBlank()) {
-            throw IllegalStateException("Cannot build a SELECT query without a SELECT clause. Please call .select(...)")
+            throw IllegalStateException("Cannot build a SELECT query without a SELECT clause.")
         }
         if (fromClause.isNullOrBlank()) {
             // Jeśli są inne klauzule, które wymagają FROM, rzucamy wyjątek.

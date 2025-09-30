@@ -26,8 +26,11 @@ internal class DatabaseAccess(
 
     // --- PARADYGMAT 1: Fluent Builders ---
 
-    override fun select(columns: String): SelectQueryBuilder =
-        DatabaseSelectQueryBuilder(jdbcTemplate, rowMappers, kotlinToPostgresConverter, columns)
+    override fun select(vararg columns: String): SelectQueryBuilder {
+        // Łączymy wszystkie argumenty w jeden string, oddzielając je ", "
+        val selectClause = columns.joinToString(", ")
+        return DatabaseSelectQueryBuilder(jdbcTemplate, rowMappers, kotlinToPostgresConverter, selectClause)
+    }
 
     override fun update(table: String): UpdateQueryBuilder {
         return DatabaseUpdateQueryBuilder(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table)
