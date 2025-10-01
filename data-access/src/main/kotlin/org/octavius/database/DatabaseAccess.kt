@@ -3,13 +3,12 @@ package org.octavius.database
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
-import org.octavius.data.TransactionalDataAccess
+import org.octavius.data.QueryOperations
 import org.octavius.data.builder.*
 import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.data.transaction.TransactionStep
 import org.octavius.database.builder.*
 import org.octavius.database.transaction.TransactionPlanExecutor
-import org.octavius.database.transaction.TransactionalDatabaseAccess
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.exception.DatabaseException
 import org.octavius.exception.QueryExecutionException
@@ -24,11 +23,10 @@ internal class DatabaseAccess(
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataAccess {
 
-    // --- PARADYGMAT 1: Fluent Builders ---
+    // --- Implementacja QueryOperations (dla pojedynczych zapytań i użycia w transakcji) ---
 
     override fun select(vararg columns: String): SelectQueryBuilder {
-        // Łączymy wszystkie argumenty w jeden string, oddzielając je ", "
-        val selectClause = columns.joinToString(", ")
+        val selectClause = if (columns.isEmpty()) "*" else columns.joinToString(", ")
         return DatabaseSelectQueryBuilder(jdbcTemplate, rowMappers, kotlinToPostgresConverter, selectClause)
     }
 
@@ -48,27 +46,20 @@ internal class DatabaseAccess(
         return DatabaseRawQueryBuilder(jdbcTemplate, kotlinToPostgresConverter, rowMappers, sql)
     }
 
-     //--- PARADYGMAT 2: Deklaratywny Batch ---
+    //--- Implementacja zarządzania transakcjami ---
 
     override fun executeTransactionPlan(steps: List<TransactionStep<*>>): DataResult<TransactionPlanResults> {
-        val transactionPlanExecutor = TransactionPlanExecutor(
-            transactionManager
-        )
+        val transactionPlanExecutor = TransactionPlanExecutor(transactionManager)
         return transactionPlanExecutor.execute(steps)
     }
 
-    // --- PARADYGMAT 3: Imperatywny Blok Transakcyjny ---
-
-    override fun <T> transaction(block: (tx: TransactionalDataAccess) -> DataResult<T>): DataResult<T> {
+    override fun <T> transaction(block: (tx: QueryOperations) -> DataResult<T>): DataResult<T> {
         val transactionTemplate = TransactionTemplate(transactionManager)
 
-        // Użycie !! jest bezpieczne, bo `execute` zwraca null tylko, gdy nie ma `block`
         return transactionTemplate.execute { status ->
             try {
-                // Tworzymy instancję TransactionalDataAccess, która używa tego samego jdbcTemplate
-                val transactionalScope =
-                    TransactionalDatabaseAccess(jdbcTemplate, rowMappers, kotlinToPostgresConverter)
-                val result = block(transactionalScope)
+                // `this` jest instancją `QueryOperations`, więc przekazujemy go bezpośrednio.
+                val result = block(this)
 
                 // Jeśli jakakolwiek operacja wewnątrz bloku zwróciła Failure, wycofujemy transakcję.
                 // To pozwala na kontrolowane wycofanie bez rzucania wyjątku!
@@ -91,8 +82,8 @@ internal class DatabaseAccess(
                     QueryExecutionException(
                         "Transaction failed due to an unexpected error: ${e.message}",
                         sql = "N/A",
-                        mapOf(),
-                        e
+                        params = mapOf(),
+                        cause = e
                     )
                 )
             }
