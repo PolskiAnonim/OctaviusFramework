@@ -65,7 +65,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
         val expandedParams = mutableMapOf<String, Any?>()
 
         params.forEach { (paramName, paramValue) ->
-            val placeholderRegex = Regex(":$paramName\\b")
+            val placeholderRegex = Regex("(?<!:):$paramName\\b")
 
             // Sprawdzamy, czy placeholder w ogóle istnieje w SQL
             if (placeholderRegex.containsMatchIn(expandedSql)) {
