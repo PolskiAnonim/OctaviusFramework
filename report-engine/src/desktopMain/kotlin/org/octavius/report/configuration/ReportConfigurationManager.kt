@@ -28,7 +28,7 @@ class ReportConfigurationManager : KoinComponent {
             is DataResult.Success<*> -> configResult.value
         }
 
-        val flatValueMap = configuration.toMap()
+        val flatValueMap = configuration.toMap().filterKeys { it != "id" }
 
         val plan = TransactionPlan(dataAccess)
 
@@ -59,7 +59,7 @@ class ReportConfigurationManager : KoinComponent {
         val params = mapOf("report_name" to reportName)
 
         val result: DataResult<ReportConfiguration?> = dataAccess.select(
-            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters"
+            "*"
         ).from("public.report_configurations"
         ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
 
@@ -76,7 +76,7 @@ class ReportConfigurationManager : KoinComponent {
         val params = mapOf("report_name" to reportName)
 
         val result: DataResult<List<ReportConfiguration>> = dataAccess.select(
-            "id, name, report_name, description, sort_order, visible_columns, column_order, page_size, is_default, filters"
+            "*"
         ).from("public.report_configurations"
         ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
 
