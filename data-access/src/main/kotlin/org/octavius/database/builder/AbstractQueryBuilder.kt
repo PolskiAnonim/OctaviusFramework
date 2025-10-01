@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
  * zapytań z klauzulą WITH (Common Table Expressions). Używa generyków, aby zapewnić płynny
  * interfejs (fluent API) w podklasach.
  */
-internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
+internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
     protected val jdbcTemplate: NamedParameterJdbcTemplate,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter,
     protected val rowMappers: RowMappers,
@@ -51,9 +51,9 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
      * @param columns Kolumny do zwrócenia po wykonaniu operacji.
      */
     @Suppress("UNCHECKED_CAST")
-    fun returning(columns: String): T = apply {
+    fun returning(columns: String): R = apply {
         this.returningClause = columns
-    } as T
+    } as R
 
     /**
      * Buduje fragment SQL dla klauzuli RETURNING.
@@ -75,17 +75,17 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
      * @param query Zapytanie SQL definiujące CTE.
      */
     @Suppress("UNCHECKED_CAST")
-    fun with(name: String, query: String): T = apply {
+    fun with(name: String, query: String): R = apply {
         withClauses.add(name to query)
-    } as T
+    } as R
 
     /**
      * Oznacza klauzulę WITH jako rekurencyjną.
      */
     @Suppress("UNCHECKED_CAST")
-    fun recursive(recursive: Boolean): T = apply {
+    fun recursive(recursive: Boolean): R = apply {
         this.recursiveWith = recursive
-    } as T
+    } as R
 
     /**
      * Tworzy fragment SQL dla klauzuli WITH na podstawie dodanych zapytań.
@@ -135,7 +135,7 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
     // --- Mapowanie do pojedynczych wartości (skalarne) ---
 
     /** Wykonuje zapytanie i zwraca wartość z pierwszej kolumny pierwszego wiersza. */
-    fun <T> toField(params: Map<String, Any?>): DataResult<T?> {
+    fun <T: Any> toField(params: Map<String, Any?>): DataResult<T?> {
         return executeReturningQuery(params, rowMappers.SingleValueMapper()) {
             @Suppress("UNCHECKED_CAST")
             DataResult.Success(it.firstOrNull() as T?)
@@ -143,7 +143,7 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
     }
 
     /** Wykonuje zapytanie i zwraca listę wartości z pierwszej kolumny wszystkich wierszy. */
-    fun <T> toColumn(params: Map<String, Any?>): DataResult<List<T?>> {
+    fun <T: Any> toColumn(params: Map<String, Any?>): DataResult<List<T?>> {
         return executeReturningQuery(params, rowMappers.SingleValueMapper()) {
             @Suppress("UNCHECKED_CAST")
             DataResult.Success(it as List<T?>)
@@ -251,6 +251,6 @@ internal abstract class AbstractQueryBuilder<T : AbstractQueryBuilder<T>>(
      */
     fun asStep(): StepBuilderMethods {
         @Suppress("UNCHECKED_CAST")
-        return StepBuilder(this as T)
+        return StepBuilder(this as R)
     }
 }

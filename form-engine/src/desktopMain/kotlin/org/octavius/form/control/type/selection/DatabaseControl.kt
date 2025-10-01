@@ -5,6 +5,7 @@ import org.koin.core.component.inject
 import org.octavius.data.ColumnInfo
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
+import org.octavius.data.builder.toField
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.ControlAction
@@ -45,7 +46,7 @@ class DatabaseControl(
         if (cachedValue?.value == value) return cachedValue!!.displayText
 
         val result = dataAccess.select(displayColumn).from(relatedTable).where("id = :id")
-            .toField<String>(mapOf("id" to value))
+            .toField<String>("id" to value)
 
         return when (result) {
             is DataResult.Failure -> {

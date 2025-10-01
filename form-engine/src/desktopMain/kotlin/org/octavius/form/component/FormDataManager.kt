@@ -5,6 +5,7 @@ import org.koin.core.component.inject
 import org.octavius.data.ColumnInfo
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
+import org.octavius.data.builder.toSingleWithColumnInfo
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.FormResultData
@@ -67,7 +68,7 @@ abstract class FormDataManager: KoinComponent {
         }
 
         val entity = dataAccess.select("*").from(tables.toString()).where("$mainTable.id = :id")
-            .toSingleWithColumnInfo(mapOf("id" to id))
+            .toSingleWithColumnInfo("id" to id)
 
         return when (entity) {
             is DataResult.Failure -> {

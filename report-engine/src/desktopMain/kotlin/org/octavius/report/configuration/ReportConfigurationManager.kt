@@ -4,6 +4,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
+import org.octavius.data.builder.toField
 import org.octavius.data.builder.toListOf
 import org.octavius.data.builder.toSingleOf
 import org.octavius.data.toMap
@@ -18,7 +19,7 @@ class ReportConfigurationManager : KoinComponent {
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
         val configResult = dataAccess.select("id").from("public.report_configurations")
             .where("name = :name AND report_name = :report_name")
-            .toField<Int>(mapOf("name" to configuration.name, "report_name" to configuration.reportName))
+            .toField<Int>("name" to configuration.name, "report_name" to configuration.reportName)
 
         val configId = when (configResult) {
             is DataResult.Failure -> {
@@ -55,13 +56,10 @@ class ReportConfigurationManager : KoinComponent {
     }
 
     fun loadDefaultConfiguration(reportName: String): ReportConfiguration? {
-
-        val params = mapOf("report_name" to reportName)
-
         val result: DataResult<ReportConfiguration?> = dataAccess.select(
             "*"
         ).from("public.report_configurations"
-        ).where("report_name = :report_name AND is_default = true").toSingleOf(params)
+        ).where("report_name = :report_name AND is_default = true").toSingleOf("report_name" to reportName)
 
         return when (result) {
             is DataResult.Failure -> {
@@ -73,12 +71,10 @@ class ReportConfigurationManager : KoinComponent {
     }
 
     fun listConfigurations(reportName: String): List<ReportConfiguration> {
-        val params = mapOf("report_name" to reportName)
-
         val result: DataResult<List<ReportConfiguration>> = dataAccess.select(
             "*"
         ).from("public.report_configurations"
-        ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf(params)
+        ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf("report_name" to reportName)
 
         return when (result) {
             is DataResult.Failure -> {

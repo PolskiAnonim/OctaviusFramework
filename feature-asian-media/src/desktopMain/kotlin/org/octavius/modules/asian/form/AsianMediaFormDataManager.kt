@@ -1,6 +1,7 @@
 package org.octavius.modules.asian.form
 
 import org.octavius.data.DataResult
+import org.octavius.data.builder.toList
 import org.octavius.data.toDatabaseValue
 import org.octavius.data.transaction.DatabaseValue
 import org.octavius.data.transaction.StepReference
@@ -46,7 +47,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         val result = dataAccess.select(
             "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed"
         ).from("publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id"
-        ).where("p.title_id = :title").toList(mapOf("title" to titleId))
+        ).where("p.title_id = :title").toList("title" to titleId)
 
         return when (result) {
             is DataResult.Success -> {

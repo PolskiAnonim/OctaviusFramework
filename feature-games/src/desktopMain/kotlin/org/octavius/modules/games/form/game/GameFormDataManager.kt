@@ -2,6 +2,8 @@ package org.octavius.modules.games.form.game
 
 import org.octavius.data.DataResult
 import org.octavius.data.toDatabaseValue
+import org.octavius.data.builder.toList
+import org.octavius.data.builder.toSingle
 import org.octavius.data.transaction.DatabaseValue
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
@@ -44,7 +46,7 @@ class GameFormDataManager : FormDataManager() {
                     LEFT JOIN characters c ON c.game_id = g.id
                     LEFT JOIN play_time pt ON pt.game_id = g.id 
                     LEFT JOIN ratings r ON r.game_id = g.id""",
-            ).where("g.id = :id").toSingle(mapOf("id" to loadedId))
+            ).where("g.id = :id").toSingle("id" to loadedId)
 
             val game: Map<String, Any?>
             when (dataExists) {
@@ -59,7 +61,7 @@ class GameFormDataManager : FormDataManager() {
                 "ctg.category_id as category"
             ).from(
                 "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id"
-            ).where("ctg.game_id = :gameId").toList(mapOf("gameId" to loadedId))
+            ).where("ctg.game_id = :gameId").toList("gameId" to loadedId)
 
             val categories: List<Map<String, Any?>>
 

@@ -12,6 +12,7 @@ import org.octavius.api.contract.asian.PublicationCheckRequest
 import org.octavius.api.contract.asian.PublicationCheckResponse
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
+import org.octavius.data.builder.toSingle
 import org.octavius.data.transaction.DatabaseValue
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResults
@@ -55,7 +56,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
             // Używamy operatora && (overlap) z PostgreSQL do sprawdzenia,
             // czy tablica tytułów w bazie ma jakikolwiek wspólny element z listą z zapytania.
             val result = dataAccess.select("id, titles").from("titles").where("titles && :titles")
-                .toSingle(mapOf("titles" to titles.withPgType("text[]")))
+                .toSingle("titles" to titles.withPgType("text[]"))
 
 
             when (result) {
