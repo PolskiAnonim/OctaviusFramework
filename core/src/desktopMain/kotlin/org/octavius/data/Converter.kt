@@ -117,12 +117,27 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
 }
 
 
-// --- Konwersja Z OBIEKTU do MAPY ---
+// --- Konwersja Z OBIEKTU do MAPY --
 
-fun <T : Any> T.toMap(): Map<String, Any?> {
+/**
+ * Konwertuje obiekt data class na mapę, gdzie kluczami są nazwy właściwości
+ * (lub wartości z adnotacji @MapKey), a wartościami są wartości tych właściwości.
+ *
+ * @param includeNulls Jeśli `true` (domyślnie), właściwości z wartością `null` zostaną
+ *                     uwzględnione w mapie. Jeśli `false`, zostaną pominięte.
+ *                     Jest to przydatne np. przy operacjach UPDATE, gdzie chcemy
+ *                     zmienić tylko pola, które nie są nullem.
+ * @return Mapa reprezentująca obiekt.
+ */
+fun <T : Any> T.toMap(includeNulls: Boolean = true): Map<String, Any?> {
     val metadata = getOrCreateDataObjectMetadata(this::class)
 
-    return metadata.constructorProperties.associate { (_, property, keyName) ->
-        keyName to property.getter.call(this)
-    }
+    return metadata.constructorProperties.mapNotNull { (_, property, keyName) ->
+        val value = property.getter.call(this)
+        if (!includeNulls && value == null) {
+            null
+        } else {
+            keyName to value
+        }
+    }.associate { it }
 }

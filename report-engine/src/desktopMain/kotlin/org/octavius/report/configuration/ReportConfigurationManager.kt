@@ -29,7 +29,7 @@ class ReportConfigurationManager : KoinComponent {
             is DataResult.Success<*> -> configResult.value
         }
 
-        val flatValueMap = configuration.toMap().filterKeys { it != "id" }
+        val flatValueMap = configuration.toMap(includeNulls = false)
 
         val plan = TransactionPlan(dataAccess)
 
