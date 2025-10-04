@@ -26,8 +26,7 @@ internal class DatabaseAccess(
     // --- Implementacja QueryOperations (dla pojedynczych zapytań i użycia w transakcji) ---
 
     override fun select(vararg columns: String): SelectQueryBuilder {
-        val selectClause = if (columns.isEmpty()) "*" else columns.joinToString(", ")
-        return DatabaseSelectQueryBuilder(jdbcTemplate, rowMappers, kotlinToPostgresConverter, selectClause)
+        return DatabaseSelectQueryBuilder(jdbcTemplate, rowMappers, kotlinToPostgresConverter, columns.joinToString(", "))
     }
 
     override fun update(table: String): UpdateQueryBuilder {

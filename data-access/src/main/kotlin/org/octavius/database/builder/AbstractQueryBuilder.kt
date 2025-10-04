@@ -51,8 +51,8 @@ internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
      * @param columns Kolumny do zwrócenia po wykonaniu operacji.
      */
     @Suppress("UNCHECKED_CAST")
-    fun returning(columns: String): R = apply {
-        this.returningClause = columns
+    fun returning(vararg columns: String): R = apply {
+        this.returningClause = columns.joinToString(", ")
     } as R
 
     /**

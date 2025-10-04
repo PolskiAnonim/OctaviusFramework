@@ -69,7 +69,7 @@ interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMet
      * Dodaje klauzulę RETURNING. Wymaga użycia metod `.toList()`, `.toSingle()` itp.
      * zamiast `.execute()`.
      */
-    fun returning(columns: String): DeleteQueryBuilder
+    fun returning(vararg columns: String): DeleteQueryBuilder
 }
 
 /**
@@ -115,7 +115,7 @@ interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMet
      * Dodaje klauzulę RETURNING. Wymaga użycia metod `.toList()`, `.toSingle()` itp.
      * zamiast `.execute()`.
      */
-    fun returning(columns: String): UpdateQueryBuilder
+    fun returning(vararg columns: String): UpdateQueryBuilder
 }
 
 /**
@@ -173,7 +173,7 @@ interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMet
     /**
      * Dodaje klauzulę RETURNING. Wymaga użycia `.toList()`, `.toSingle()` itp. zamiast `.execute()`.
      */
-    fun returning(columns: String): InsertQueryBuilder
+    fun returning(vararg columns: String): InsertQueryBuilder
 }
 
 /**
