@@ -6,7 +6,6 @@ import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
-import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
 import org.octavius.form.control.type.button.ButtonControl
@@ -20,105 +19,104 @@ import org.octavius.form.control.type.selection.EnumControl
 import org.octavius.localization.T
 
 class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
-    override fun build(): FormSchema {
-        return FormSchema(
-            mapOf(
-                "id" to IntegerControl(
-                    ColumnInfo("titles", "id"),
-                    null
-                ),
-                "titleInfo" to SectionControl(
-                    ctrls = listOf("titles", "language"),
-                    collapsible = false,
-                    initiallyExpanded = true,
-                    columns = 2,
-                    label = T.get("asianMedia.form.titleInfo")
-                ),
-                "titles" to StringListControl(
-                    ColumnInfo("titles", "titles"),
-                    T.get("asianMedia.form.titles"),
-                    required = true,
-                    validationOptions = StringListValidation(minItems = 1)
-                ),
-                "language" to EnumControl(
-                    ColumnInfo("titles", "language"),
-                    T.get("asianMedia.form.originalLanguage"),
-                    PublicationLanguage::class,
-                    required = true
-                ),
 
-                // Sekcja publikacji - używa RepeatableControl
-                "publications" to RepeatableControl(
-                    rowControls = createPublicationControls(),
-                    rowOrder = listOf(
-                        "publicationType",
-                        "status",
-                        "trackProgress",
-                        "volumes",
-                        "translatedVolumes",
-                        "chapters",
-                        "translatedChapters",
-                        "originalCompleted"
-                    ),
-                    validationOptions = RepeatableValidation(
-                        uniqueFields = listOf("publicationType"),
-                        minItems = 1,
-                        maxItems = 7
-                    ),
-                    label = T.get("asianMedia.form.publications")
-                ),
-                // Przyciski
-                "saveButton" to ButtonControl(
-                    text = T.get("action.save"),
-                    buttonType = ButtonType.Filled,
-                    actions = listOf(
-                        ControlAction {
-                            trigger.triggerAction("save", true)
-                        }
-                    )
-                ),
-                "deleteButton" to ButtonControl(
-                    text = T.get("action.remove"),
-                    buttonType = ButtonType.Filled,
-                    dependencies = mapOf(
-                        "visible" to ControlDependency(
-                            controlName = "id",
-                            value = null,
-                            dependencyType = DependencyType.Visible,
-                            comparisonType = ComparisonType.NotEquals
-                        )
-                    ),
-                    actions = listOf(
-                        ControlAction {
-                            GlobalDialogManager.show(
-                                DialogConfig(
-                                    title = T.get("action.confirm"),
-                                    text = "Czy potwierdzasz usunięcie", //TODO tłumaczenie
-                                    onDismiss = { GlobalDialogManager.dismiss() },
-                                    confirmButtonText = "Tak", //TODO tłumaczenie
-                                    onConfirm = {
-                                        trigger.triggerAction("delete", false)
-                                        GlobalDialogManager.dismiss()
-                                    }
-                                )
-                            )
-                        }
-                    )
-                ),
-                "cancelButton" to ButtonControl(
-                    text = T.get("action.cancel"),
-                    buttonType = ButtonType.Outlined,
-                    actions = listOf(
-                        ControlAction {
-                            trigger.triggerAction("cancel", false)
-                        }
-                    )
+    override fun defineActionBarOrder(): List<String> = listOf("cancelButton", "saveButton", "deleteButton")
+    override fun defineContentOrder(): List<String> = listOf("titleInfo", "publications")
+
+    override fun defineControls(): Map<String, Control<*>> = mapOf(
+        "id" to IntegerControl(
+            ColumnInfo("titles", "id"),
+            null
+        ),
+        "titleInfo" to SectionControl(
+            ctrls = listOf("titles", "language"),
+            collapsible = false,
+            initiallyExpanded = true,
+            columns = 2,
+            label = T.get("asianMedia.form.titleInfo")
+        ),
+        "titles" to StringListControl(
+            ColumnInfo("titles", "titles"),
+            T.get("asianMedia.form.titles"),
+            required = true,
+            validationOptions = StringListValidation(minItems = 1)
+        ),
+        "language" to EnumControl(
+            ColumnInfo("titles", "language"),
+            T.get("asianMedia.form.originalLanguage"),
+            PublicationLanguage::class,
+            required = true
+        ),
+
+        // Sekcja publikacji - używa RepeatableControl
+        "publications" to RepeatableControl(
+            rowControls = createPublicationControls(),
+            rowOrder = listOf(
+                "publicationType",
+                "status",
+                "trackProgress",
+                "volumes",
+                "translatedVolumes",
+                "chapters",
+                "translatedChapters",
+                "originalCompleted"
+            ),
+            validationOptions = RepeatableValidation(
+                uniqueFields = listOf("publicationType"),
+                minItems = 1,
+                maxItems = 7
+            ),
+            label = T.get("asianMedia.form.publications")
+        ),
+        // Przyciski
+        "saveButton" to ButtonControl(
+            text = T.get("action.save"),
+            buttonType = ButtonType.Filled,
+            actions = listOf(
+                ControlAction {
+                    trigger.triggerAction("save", true)
+                }
+            )
+        ),
+        "deleteButton" to ButtonControl(
+            text = T.get("action.remove"),
+            buttonType = ButtonType.Filled,
+            dependencies = mapOf(
+                "visible" to ControlDependency(
+                    controlName = "id",
+                    value = null,
+                    dependencyType = DependencyType.Visible,
+                    comparisonType = ComparisonType.NotEquals
                 )
             ),
-            listOf("titleInfo", "publications"),
-            listOf("cancelButton", "saveButton", "deleteButton")
+            actions = listOf(
+                ControlAction {
+                    GlobalDialogManager.show(
+                        DialogConfig(
+                            title = T.get("action.confirm"),
+                            text = "Czy potwierdzasz usunięcie", //TODO tłumaczenie
+                            onDismiss = { GlobalDialogManager.dismiss() },
+                            confirmButtonText = "Tak", //TODO tłumaczenie
+                            onConfirm = {
+                                trigger.triggerAction("delete", false)
+                                GlobalDialogManager.dismiss()
+                            }
+                        )
+                    )
+                }
+            )
+        ),
+        "cancelButton" to ButtonControl(
+            text = T.get("action.cancel"),
+            buttonType = ButtonType.Outlined,
+            actions = listOf(
+                ControlAction {
+                    trigger.triggerAction("cancel", false)
+                }
+            )
         )
-    }
+    )
+
 
     private fun createPublicationControls(): Map<String, Control<*>> {
         return mapOf(

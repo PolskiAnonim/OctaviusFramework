@@ -77,5 +77,18 @@ class FormSchema(
  * ```
  */
 abstract class FormSchemaBuilder {
-    abstract fun build(): FormSchema
+    fun build(): FormSchema {
+        return FormSchema(
+            defineControls(),
+            defineContentOrder(),
+            defineActionBarOrder()
+        )
+    }
+
+    abstract fun defineControls() : Map<String, Control<*>>
+
+    abstract fun defineContentOrder() : List<String>
+
+    abstract fun defineActionBarOrder() : List<String>
+
 }

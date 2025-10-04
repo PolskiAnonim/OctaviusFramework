@@ -2,7 +2,6 @@ package org.octavius.modules.games.form.game
 
 import org.octavius.data.ColumnInfo
 import org.octavius.domain.game.GameStatus
-import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
 import org.octavius.form.control.type.button.ButtonControl
@@ -18,201 +17,201 @@ import org.octavius.form.control.type.selection.EnumControl
 import org.octavius.localization.T
 
 class GameFormSchemaBuilder : FormSchemaBuilder() {
-    override fun build(): FormSchema {
-        return FormSchema(
-            mapOf(
-                // Podstawowe dane
-                "visibleCharactersSection" to BooleanControl(
-                    null,
-                    T.get("games.form.visibleCharacterSection"),
-                    required = true
-                ),
-                "playTimeExists" to BooleanControl(
-                    null, null
-                ),
-                "ratingsExists" to BooleanControl(
-                    null, null
-                ),
-                "charactersExists" to BooleanControl(
-                    null, null
-                ),
-                // Sekcja podstawowych informacji
-                "name" to StringControl(
-                    ColumnInfo("games", "name"),
-                    T.get("games.general.gameName"),
-                    required = true
-                ),
-                "series" to DatabaseControl(
-                    ColumnInfo("games", "series"),
-                    label = T.get("games.form.series"),
-                    relatedTable = "series",
-                    displayColumn = "name"
-                ),
-                "status" to EnumControl(
-                    ColumnInfo("games", "status"),
-                    T.get("games.form.status"),
-                    GameStatus::class,
-                    required = true
-                ),
-                "basicInfo" to SectionControl(
-                    ctrls = listOf("name", "series", "status", "visibleCharactersSection"),
-                    collapsible = false,
-                    initiallyExpanded = true,
-                    columns = 1,
-                    label = T.get("games.form.basicInfo")
-                ),
-                // Sekcja czasu gry
-                "playTimeHours" to DoubleControl(
-                    ColumnInfo("play_time", "play_time_hours"),
-                    T.get("games.form.playTimeHours"),
-                    validationOptions = DoubleValidation(min = 0.0, decimalPlaces = 2)
-                ),
-                "completionCount" to IntegerControl(
-                    ColumnInfo("play_time", "completion_count"),
-                    T.get("games.form.playCount"),
-                    required = true, // Automatycznie pomijana walidacja jak niewidoczna kontrolka
-                    dependencies = mapOf(
-                        "visible" to ControlDependency(
-                            controlName = "status",
-                            value = listOf(GameStatus.Playing, GameStatus.Played),
-                            dependencyType = DependencyType.Visible,
-                            comparisonType = ComparisonType.OneOf
-                        )
-                    ),
-                    validationOptions = IntegerValidation(min = 0)
-                ),
-                "playTimeSection" to SectionControl(
-                    ctrls = listOf("playTimeHours", "completionCount"),
-                    collapsible = false,
-                    initiallyExpanded = true,
-                    columns = 2,
-                    label = T.get("games.form.playTime"),
-                    dependencies = mapOf(
-                        "visible" to ControlDependency(
-                            controlName = "status",
-                            value = listOf(
-                                GameStatus.Playing,
-                                GameStatus.Played,
-                                GameStatus.WithoutTheEnd
-                            ),
-                            dependencyType = DependencyType.Visible,
-                            comparisonType = ComparisonType.OneOf
-                        )
-                    )
-                ),
-                // Sekcja ocen
-                "storyRating" to IntegerControl(
-                    ColumnInfo("ratings", "story_rating"),
-                    T.get("games.form.storyRating"),
-                    validationOptions = IntegerValidation(min = 0, max = 10)
-                ),
-                "gameplayRating" to IntegerControl(
-                    ColumnInfo("ratings", "gameplay_rating"),
-                    T.get("games.form.gameplayRating"),
-                    required = true,
-                    validationOptions = IntegerValidation(min = 0, max = 10)
-                ),
-                "atmosphereRating" to IntegerControl(
-                    ColumnInfo("ratings", "atmosphere_rating"),
-                    T.get("games.form.atmosphereRating"),
-                    validationOptions = IntegerValidation(min = 0, max = 10)
-                ),
-                "ratingsSection" to SectionControl(
-                    ctrls = listOf("storyRating", "gameplayRating", "atmosphereRating"),
-                    collapsible = true,
-                    initiallyExpanded = true,
-                    columns = 3,
-                    label = T.get("games.form.ratings"),
-                    dependencies = mapOf(
-                        "visible" to ControlDependency(
-                            controlName = "status",
-                            value = listOf(GameStatus.Played, GameStatus.WithoutTheEnd),
-                            dependencyType = DependencyType.Visible,
-                            comparisonType = ComparisonType.OneOf
-                        )
-                    )
-                ),
-                // Sekcja postaci
-                "hasDistinctiveCharacter" to BooleanControl(
-                    ColumnInfo("characters", "has_distinctive_character"),
-                    T.get("games.form.distinctiveCharacters"),
-                    required = true
-                ),
-                "hasDistinctiveProtagonist" to BooleanControl(
-                    ColumnInfo("characters", "has_distinctive_protagonist"),
-                    T.get("games.form.distinctiveProtagonist"),
-                    required = true
-                ),
-                "hasDistinctiveAntagonist" to BooleanControl(
-                    ColumnInfo("characters", "has_distinctive_antagonist"),
-                    T.get("games.form.distinctiveAntagonist"),
-                    required = true
-                ),
-                "charactersSection" to SectionControl(
-                    ctrls = listOf("hasDistinctiveCharacter", "hasDistinctiveProtagonist", "hasDistinctiveAntagonist"),
-                    collapsible = true,
-                    initiallyExpanded = true,
-                    columns = 1,
-                    label = T.get("games.form.characters"),
-                    dependencies = mapOf(
-                        "visible" to ControlDependency(
-                            controlName = "visibleCharactersSection",
-                            value = true,
-                            dependencyType = DependencyType.Visible,
-                            comparisonType = ComparisonType.Equals
-                        )
-                    )
-                ),
-                // Sekcja kategorii
-                "categories" to RepeatableControl(
-                    rowControls = mapOf(
-                        "category" to DatabaseControl(
-                            columnInfo = null,
-                            label = T.getPlural("games.form.category", 1),
-                            relatedTable = "categories",
-                            displayColumn = "name",
-                            required = true
-                        )
-                    ),
-                    rowOrder = listOf("category"),
-                    label = T.getPlural("games.form.category", 2),
-                    validationOptions = RepeatableValidation(
-                        minItems = 0,
-                        maxItems = 10,
-                        uniqueFields = listOf("category")
-                    )
-                ),
-                // Przyciski
-                "saveButton" to ButtonControl(
-                    text = T.get("action.save"),
-                    actions = listOf(
-                        ControlAction {
-                            trigger.triggerAction("save", true)
-                        }
-                    ),
-                    buttonType = ButtonType.Filled
-                ),
-                "cancelButton" to ButtonControl(
-                    text = T.get("action.cancel"),
-                    actions = listOf(
-                        ControlAction {
-                            trigger.triggerAction("cancel", false)
-                        }
-                    ),
-                    buttonType = ButtonType.Outlined
+
+    override fun defineControls(): Map<String, Control<*>> = mapOf(
+        // Podstawowe dane
+        "visibleCharactersSection" to BooleanControl(
+            null,
+            T.get("games.form.visibleCharacterSection"),
+            required = true
+        ),
+        "playTimeExists" to BooleanControl(
+            null, null
+        ),
+        "ratingsExists" to BooleanControl(
+            null, null
+        ),
+        "charactersExists" to BooleanControl(
+            null, null
+        ),
+        // Sekcja podstawowych informacji
+        "name" to StringControl(
+            ColumnInfo("games", "name"),
+            T.get("games.general.gameName"),
+            required = true
+        ),
+        "series" to DatabaseControl(
+            ColumnInfo("games", "series"),
+            label = T.get("games.form.series"),
+            relatedTable = "series",
+            displayColumn = "name"
+        ),
+        "status" to EnumControl(
+            ColumnInfo("games", "status"),
+            T.get("games.form.status"),
+            GameStatus::class,
+            required = true
+        ),
+        "basicInfo" to SectionControl(
+            ctrls = listOf("name", "series", "status", "visibleCharactersSection"),
+            collapsible = false,
+            initiallyExpanded = true,
+            columns = 1,
+            label = T.get("games.form.basicInfo")
+        ),
+        // Sekcja czasu gry
+        "playTimeHours" to DoubleControl(
+            ColumnInfo("play_time", "play_time_hours"),
+            T.get("games.form.playTimeHours"),
+            validationOptions = DoubleValidation(min = 0.0, decimalPlaces = 2)
+        ),
+        "completionCount" to IntegerControl(
+            ColumnInfo("play_time", "completion_count"),
+            T.get("games.form.playCount"),
+            required = true, // Automatycznie pomijana walidacja jak niewidoczna kontrolka
+            dependencies = mapOf(
+                "visible" to ControlDependency(
+                    controlName = "status",
+                    value = listOf(GameStatus.Playing, GameStatus.Played),
+                    dependencyType = DependencyType.Visible,
+                    comparisonType = ComparisonType.OneOf
                 )
             ),
-            listOf(
-                "basicInfo",
-                "playTimeSection",
-                "ratingsSection",
-                "charactersSection",
-                "categories"
-            ),
-            listOf(
-                "cancelButton",
-                "saveButton"
+            validationOptions = IntegerValidation(min = 0)
+        ),
+        "playTimeSection" to SectionControl(
+            ctrls = listOf("playTimeHours", "completionCount"),
+            collapsible = false,
+            initiallyExpanded = true,
+            columns = 2,
+            label = T.get("games.form.playTime"),
+            dependencies = mapOf(
+                "visible" to ControlDependency(
+                    controlName = "status",
+                    value = listOf(
+                        GameStatus.Playing,
+                        GameStatus.Played,
+                        GameStatus.WithoutTheEnd
+                    ),
+                    dependencyType = DependencyType.Visible,
+                    comparisonType = ComparisonType.OneOf
+                )
             )
+        ),
+        // Sekcja ocen
+        "storyRating" to IntegerControl(
+            ColumnInfo("ratings", "story_rating"),
+            T.get("games.form.storyRating"),
+            validationOptions = IntegerValidation(min = 0, max = 10)
+        ),
+        "gameplayRating" to IntegerControl(
+            ColumnInfo("ratings", "gameplay_rating"),
+            T.get("games.form.gameplayRating"),
+            required = true,
+            validationOptions = IntegerValidation(min = 0, max = 10)
+        ),
+        "atmosphereRating" to IntegerControl(
+            ColumnInfo("ratings", "atmosphere_rating"),
+            T.get("games.form.atmosphereRating"),
+            validationOptions = IntegerValidation(min = 0, max = 10)
+        ),
+        "ratingsSection" to SectionControl(
+            ctrls = listOf("storyRating", "gameplayRating", "atmosphereRating"),
+            collapsible = true,
+            initiallyExpanded = true,
+            columns = 3,
+            label = T.get("games.form.ratings"),
+            dependencies = mapOf(
+                "visible" to ControlDependency(
+                    controlName = "status",
+                    value = listOf(GameStatus.Played, GameStatus.WithoutTheEnd),
+                    dependencyType = DependencyType.Visible,
+                    comparisonType = ComparisonType.OneOf
+                )
+            )
+        ),
+        // Sekcja postaci
+        "hasDistinctiveCharacter" to BooleanControl(
+            ColumnInfo("characters", "has_distinctive_character"),
+            T.get("games.form.distinctiveCharacters"),
+            required = true
+        ),
+        "hasDistinctiveProtagonist" to BooleanControl(
+            ColumnInfo("characters", "has_distinctive_protagonist"),
+            T.get("games.form.distinctiveProtagonist"),
+            required = true
+        ),
+        "hasDistinctiveAntagonist" to BooleanControl(
+            ColumnInfo("characters", "has_distinctive_antagonist"),
+            T.get("games.form.distinctiveAntagonist"),
+            required = true
+        ),
+        "charactersSection" to SectionControl(
+            ctrls = listOf("hasDistinctiveCharacter", "hasDistinctiveProtagonist", "hasDistinctiveAntagonist"),
+            collapsible = true,
+            initiallyExpanded = true,
+            columns = 1,
+            label = T.get("games.form.characters"),
+            dependencies = mapOf(
+                "visible" to ControlDependency(
+                    controlName = "visibleCharactersSection",
+                    value = true,
+                    dependencyType = DependencyType.Visible,
+                    comparisonType = ComparisonType.Equals
+                )
+            )
+        ),
+        // Sekcja kategorii
+        "categories" to RepeatableControl(
+            rowControls = mapOf(
+                "category" to DatabaseControl(
+                    columnInfo = null,
+                    label = T.getPlural("games.form.category", 1),
+                    relatedTable = "categories",
+                    displayColumn = "name",
+                    required = true
+                )
+            ),
+            rowOrder = listOf("category"),
+            label = T.getPlural("games.form.category", 2),
+            validationOptions = RepeatableValidation(
+                minItems = 0,
+                maxItems = 10,
+                uniqueFields = listOf("category")
+            )
+        ),
+        // Przyciski
+        "saveButton" to ButtonControl(
+            text = T.get("action.save"),
+            actions = listOf(
+                ControlAction {
+                    trigger.triggerAction("save", true)
+                }
+            ),
+            buttonType = ButtonType.Filled
+        ),
+        "cancelButton" to ButtonControl(
+            text = T.get("action.cancel"),
+            actions = listOf(
+                ControlAction {
+                    trigger.triggerAction("cancel", false)
+                }
+            ),
+            buttonType = ButtonType.Outlined
         )
-    }
+    )
+
+    override fun defineContentOrder(): List<String> = listOf(
+        "basicInfo",
+        "playTimeSection",
+        "ratingsSection",
+        "charactersSection",
+        "categories"
+    )
+
+    override fun defineActionBarOrder(): List<String> = listOf(
+        "cancelButton",
+        "saveButton"
+    )
+
 }
