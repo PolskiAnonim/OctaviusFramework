@@ -31,8 +31,7 @@ import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
 import org.octavius.ui.theme.AppTheme
-
-// ... inne importy
+import java.awt.Frame
 
 // Prosty enum do zarządzania stanem aplikacji
 private enum class AppState {
@@ -92,24 +91,12 @@ fun main() {
                 Triple(tabs, apiModules, screenFactories)
             }
 
-            LaunchedEffect(tabs) { // Używamy LaunchedEffect, żeby zainicjować logikę tylko raz
-                val applicationScope = CoroutineScope(Dispatchers.Default)
+            // Inicjalizacja serwera
+            LaunchedEffect(Unit) {
                 AppRouter.initialize(tabs)
 
-                applicationScope.launch {
-                    NavigationEventBus.events.collectLatest { event ->
-                        when (event) {
-                            is NavigationEvent.SwitchToTab -> AppRouter.switchToTab(event.tabIndex)
-                            is NavigationEvent.NavigateToScreen -> {
-                                screenFactories[event.screenId]?.let { factory ->
-                                    val screen = factory.create(event.payload)
-                                    AppRouter.navigateTo(screen)
-                                } ?: println("Error: No factory for screenId: ${event.screenId}")
-                            }
-                        }
-                    }
-                }
-                applicationScope.launch(Dispatchers.IO) {
+                // Uruchomienie serwera w tle
+                launch(Dispatchers.Default) {
                     val server = EmbeddedServer(apiModules)
                     server.run()
                 }
@@ -120,6 +107,36 @@ fun main() {
                 title = T.get("app.name"),
                 state = rememberWindowState(size = DpSize(1280.dp, 720.dp))
             ) {
+                // Uzyskujemy dostęp do bazowego okna AWT
+                val awtWindow = this.window
+
+                LaunchedEffect(Unit) {
+                    NavigationEventBus.events.collectLatest { event ->
+                        when (event) {
+                            is NavigationEvent.SwitchToTab -> AppRouter.switchToTab(event.tabIndex)
+                            is NavigationEvent.NavigateToScreen -> {
+                                screenFactories[event.screenId]?.let { factory ->
+                                    val screen = factory.create(event.payload)
+                                    AppRouter.navigateTo(screen)
+                                } ?: println("Error: No factory for screenId: ${event.screenId}")
+                            }
+                        }
+
+
+                        // Jeśli okno było zminimalizowane, przywróć je
+                        if (awtWindow.extendedState == Frame.ICONIFIED) {
+                            awtWindow.extendedState = Frame.NORMAL
+                        }
+                        // Sztuczka z "always on top" do wymuszenia przeniesienia na wierzch
+                        awtWindow.isAlwaysOnTop = true
+                        awtWindow.isAlwaysOnTop = false
+                        // Na koniec poproś o focus, aby okno było aktywne
+                        awtWindow.requestFocus()
+
+                    }
+                }
+
+                // Renderowanie UI aplikacji
                 App(tabs)
             }
         }
