@@ -4,12 +4,14 @@ import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toList
 import org.octavius.data.builder.toSingle
+import org.octavius.dialog.DialogConfig
+import org.octavius.dialog.ErrorDialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.util.Converters
 
 // --- Główne klasy DSL ---
 
-data class FieldMapping(val controlName: String, val dbColumnAlias: String)
-
+data class FieldMapping(val controlName: String, val dbColumn: String)
 data class ExistenceFlag(val controlName: String, val checkColumn: String)
 
 abstract class BaseTableMappingBuilder {
@@ -31,18 +33,15 @@ abstract class BaseTableMappingBuilder {
         mappings.add(FieldMapping(controlName, finalDbColumn))
     }
 
-    // Metoda walidująca wspólne części
     protected fun validateBase() {
-        if (!::tableName.isInitialized) throw IllegalStateException("`from` clause is missing in a mapping.")
+        if (!::tableName.isInitialized) throw IllegalStateException("Klauzula `from` jest wymagana w mapowaniu.")
     }
 }
 
-// Zaktualizowane buildery
 class OneToOneMappingBuilder : BaseTableMappingBuilder() {
     lateinit var joinCondition: String
     private var existenceFlag: ExistenceFlag? = null
 
-    // Nowa, jawna metoda w DSL
     fun existenceFlag(controlName: String, checkColumn: String) {
         this.existenceFlag = ExistenceFlag(controlName, checkColumn)
     }
@@ -55,7 +54,7 @@ class OneToOneMappingBuilder : BaseTableMappingBuilder() {
 
     fun validate() {
         validateBase()
-        if (!::joinCondition.isInitialized) throw IllegalStateException("`on` clause is missing in a one-to-one mapping.")
+        if (!::joinCondition.isInitialized) throw IllegalStateException("Klauzula `on` jest wymagana w mapowaniu jeden-do-jednego.")
     }
 }
 
@@ -73,7 +72,7 @@ class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
 
     fun validate() {
         validateBase()
-        if (!::linkColumn.isInitialized) throw IllegalStateException("`linkedBy` clause is missing in a related data mapping.")
+        if (!::linkColumn.isInitialized) throw IllegalStateException("Klauzula `linkedBy` jest wymagana w mapowaniu listy powiązanych danych.")
     }
 
     fun buildWhereClause(): String {
@@ -81,12 +80,15 @@ class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
     }
 }
 
-// --- Główny Builder ---
+// --- Reprezentacje wewnętrzne ---
 
 sealed class RelationMapping
 data class SimpleMapping(val mapping: FieldMapping) : RelationMapping()
 data class OneToOneMapping(val existenceFlag: ExistenceFlag?, val table: String, val on: String, val fields: List<FieldMapping>) : RelationMapping()
 data class RelatedDataMapping(val controlName: String, val builder: RelatedDataMappingBuilder) : RelationMapping()
+
+
+// --- Główny Builder ---
 
 class DataLoaderBuilder(private val dataAccess: DataAccess) {
     private lateinit var mainTableName: String
@@ -140,17 +142,17 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
         relations.forEach { rel ->
             when (rel) {
                 is SimpleMapping ->
-                    simpleFields.add(selectAs(rel.mapping.dbColumnAlias, rel.mapping.controlName))
+                    simpleFields.add(selectAs(rel.mapping.dbColumn, rel.mapping.controlName))
                 is OneToOneMapping -> {
                     joins.add("LEFT JOIN ${rel.table} ON ${rel.on}")
                     rel.fields.forEach { field ->
-                        simpleFields.add(selectAs(field.dbColumnAlias, field.controlName))
+                        simpleFields.add(selectAs(field.dbColumn, field.controlName))
                     }
                     rel.existenceFlag?.let { flag ->
                         simpleFields.add("CASE WHEN ${flag.checkColumn} IS NOT NULL THEN TRUE ELSE FALSE END AS \"${flag.controlName}\"")
                     }
                 }
-                is RelatedDataMapping -> { /* Ignored in this phase */ }
+                is RelatedDataMapping -> { /* Ignorowane w tej fazie */ }
             }
         }
 
@@ -162,8 +164,11 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
             .toSingle("id" to id)
 
         return when (query) {
-            is DataResult.Success -> query.value?.filterValues { it != null } ?: emptyMap()
-            is DataResult.Failure -> throw query.error
+            is DataResult.Success -> query.value ?: emptyMap()
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(query.error))
+                return emptyMap()
+            }
         }
     }
 
@@ -171,7 +176,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
         val result = mutableMapOf<String, Any?>()
         relations.filterIsInstance<RelatedDataMapping>().forEach { rel ->
             val builder = rel.builder
-            val columns = builder.mappings.map { selectAs(it.dbColumnAlias, it.controlName) }
+            val columns = builder.mappings.map { selectAs(it.dbColumn, it.controlName) }
 
             val relatedQuery = dataAccess.select(*columns.toTypedArray())
                 .from("${builder.fromTable} ${builder.joinClause}")
@@ -180,7 +185,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
 
             when(relatedQuery) {
                 is DataResult.Success -> result[rel.controlName] = relatedQuery.value
-                is DataResult.Failure -> throw relatedQuery.error
+                is DataResult.Failure -> GlobalDialogManager.show(ErrorDialogConfig(relatedQuery.error))
             }
         }
         return result
