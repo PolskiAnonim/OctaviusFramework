@@ -71,6 +71,8 @@ class StringFilter: Filter<StringFilterData>() {
         }
     }
 
+
+
     override fun buildBaseQueryFragment(
         columnName: String,
         data: StringFilterData
@@ -85,32 +87,49 @@ class StringFilter: Filter<StringFilterData>() {
         }
     }
 
+    // Funkcja pomocnicza do "ucieczki" znaków specjalnych dla LIKE
+    fun escapeSqlLike(value: String): String {
+        return value.replace("%", "\\%").replace("_", "\\_")
+    }
+
     private fun buildSingleStringQuery(
         columnName: String,
         searchValue: String,
         filterType: StringFilterDataType,
         caseSensitive: Boolean
     ): Query {
-        val columnRef = if (caseSensitive) columnName else "LOWER($columnName)"
-        val valueRef = if (caseSensitive) searchValue else searchValue.lowercase()
+        // Obsługa przypadków równościowych (=, <>)
+        if (filterType == StringFilterDataType.Exact || filterType == StringFilterDataType.NotExact) {
+            val operator = if (filterType == StringFilterDataType.Exact) "=" else "<>"
 
-        return when (filterType) {
-            StringFilterDataType.Exact -> {
-                Query("$columnRef = :$columnName", mapOf(columnName to valueRef))
-            }
-            StringFilterDataType.StartsWith -> {
-                Query("$columnRef LIKE :$columnName", mapOf(columnName to "$valueRef%"))
-            }
-            StringFilterDataType.EndsWith -> {
-                Query("$columnRef LIKE :$columnName", mapOf(columnName to "%$valueRef"))
-            }
-            StringFilterDataType.Contains -> {
-                Query("$columnRef LIKE :$columnName", mapOf(columnName to "%$valueRef%"))
-            }
-            StringFilterDataType.NotContains -> {
-                Query("$columnRef NOT LIKE :$columnName", mapOf(columnName to "%$valueRef%"))
+            return if (caseSensitive) {
+                // Czułe na wielkość liter: WHERE columnName = 'Wartość'
+                val querySql = "$columnName $operator :$columnName"
+                Query(querySql, mapOf(columnName to searchValue))
+            } else {
+                // Niezależne od wielkości liter: WHERE LOWER(columnName) = 'wartość'
+                val querySql = "LOWER($columnName) $operator :$columnName"
+                // Przekazujemy już zmienioną na małe litery wartość
+                Query(querySql, mapOf(columnName to searchValue.lowercase()))
             }
         }
+
+        // Dla wszystkich wariantów LIKE
+        val operator = if (caseSensitive) "LIKE" else "ILIKE"
+        val notOperator = if (caseSensitive) "NOT LIKE" else "NOT ILIKE"
+
+        val escapedSearchValue = escapeSqlLike(searchValue)
+
+        val pattern = when (filterType) {
+            StringFilterDataType.StartsWith -> "$escapedSearchValue%"
+            StringFilterDataType.EndsWith -> "%$escapedSearchValue"
+            StringFilterDataType.Contains, StringFilterDataType.NotContains -> "%$escapedSearchValue%"
+            else -> throw IllegalStateException("Unexpected filterType: $filterType") // Zabezpieczenie
+        }
+
+        val finalOperator = if (filterType == StringFilterDataType.NotContains) notOperator else operator
+
+        return Query("$columnName $finalOperator :$columnName", mapOf(columnName to pattern))
     }
 
     private fun buildListStringQuery(
@@ -118,49 +137,58 @@ class StringFilter: Filter<StringFilterData>() {
         searchValue: String,
         filterType: StringFilterDataType,
         caseSensitive: Boolean,
-        isAllMode: Boolean
+        isAllMode: Boolean // true = ALL, false = ANY
     ): Query {
-        val valueParam = if (caseSensitive) searchValue else searchValue.lowercase()
+        // 1. Zdefiniujmy operator LIKE/ILIKE na podstawie czułości
+        val likeOperator = if (caseSensitive) "LIKE" else "ILIKE"
+        val notLikeOperator = if (caseSensitive) "NOT LIKE" else "NOT ILIKE"
 
-        return when (filterType) {
-            StringFilterDataType.Exact -> {
-                if (caseSensitive) {
-                    val operator = if (isAllMode) "@>" else "&&"
-                    Query(
-                        "$columnName $operator :$columnName",
-                        mapOf(columnName to listOf(valueParam).withPgType("text[]"))
-                    )
-                } else {
-                    // Jeśli wielkość liter NIE ma znaczenia, musimy użyć UNNEST
-                    val paramMap = mapOf(columnName to valueParam)
-                    if (isAllMode) {
-                        Query("NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE LOWER(elem) <> :$columnName)", paramMap)
-                    } else {
-                        Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE LOWER(elem) = :$columnName)", paramMap)
-                    }
-                }
+        val escapedSearchValue = escapeSqlLike(searchValue)
+
+        // 3. Obsługa przypadków równościowych (Exact, NotExact)
+        if (filterType == StringFilterDataType.Exact || filterType == StringFilterDataType.NotExact) {
+            val operator = if (filterType == StringFilterDataType.Exact) "=" else "<>"
+
+            // Zawsze używamy UNNEST dla spójności logiki `isAllMode`
+            val innerCondition = if (caseSensitive) "elem $operator :$columnName" else "LOWER(elem) $operator :$columnName"
+            val valueParam = if (caseSensitive) searchValue else searchValue.lowercase()
+
+            val querySql = if (isAllMode) {
+                // ALL: Sprawdź, czy NIE ISTNIEJE element, który NIE spełnia warunku.
+                // Dla Exact: "czy nie istnieje element, który jest różny od szukanego" -> "wszystkie są równe"
+                // Dla NotExact: "czy nie istnieje element, który jest równy szukanemu" -> "wszystkie są różne"
+                "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE NOT ($innerCondition))"
+            } else {
+                // ANY: Sprawdź, czy ISTNIEJE element, który spełnia warunek.
+                "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $innerCondition)"
             }
-            StringFilterDataType.StartsWith -> {
-                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition NOT LIKE :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
-                Query(existsType, mapOf(columnName to "$valueParam%"))
-            }
-            StringFilterDataType.EndsWith -> {
-                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition NOT LIKE :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
-                Query(existsType, mapOf(columnName to "%$valueParam"))
-            }
-            StringFilterDataType.Contains -> {
-                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                val existsType = if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition NOT LIKE :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
-                Query(existsType, mapOf(columnName to "%$valueParam%"))
-            }
-            StringFilterDataType.NotContains -> {
-                val condition = if (caseSensitive) "elem" else "LOWER(elem)"
-                val existsType = if (isAllMode) "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)" else "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition LIKE :$columnName)"
-                Query(existsType, mapOf(columnName to "%$valueParam%"))
-            }
+            return Query(querySql, mapOf(columnName to valueParam))
         }
+
+        // 4. Obsługa przypadków z wzorcami (Contains, StartsWith, EndsWith, etc.)
+        val (pattern, currentLikeOperator) = when (filterType) {
+            StringFilterDataType.Contains    -> Pair("%$escapedSearchValue%", likeOperator)
+            StringFilterDataType.StartsWith  -> Pair("$escapedSearchValue%", likeOperator)
+            StringFilterDataType.EndsWith    -> Pair("%$escapedSearchValue", likeOperator)
+            StringFilterDataType.NotContains -> Pair("%$escapedSearchValue%", notLikeOperator)
+            else -> throw IllegalStateException("Nieobsługiwany typ filtra: $filterType")
+        }
+
+        val innerCondition = "elem $currentLikeOperator :$columnName"
+
+        val querySql = if (isAllMode) {
+            // ALL: Czy NIE ISTNIEJE element, który NIE spełnia warunku?
+            // np. dla Contains: "wszystkie elementy zawierają wartość"
+            // np. dla NotContains: "wszystkie elementy nie zawierają wartości" (czyli żaden nie zawiera)
+            "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE NOT ($innerCondition))"
+        } else {
+            // ANY: Czy ISTNIEJE element, który spełnia warunek?
+            // np. dla Contains: "co najmniej jeden element zawiera wartość"
+            // np. dla NotContains: "co najmniej jeden element nie zawiera wartości"
+            "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $innerCondition)"
+        }
+
+        return Query(querySql, mapOf(columnName to pattern))
     }
 
 

@@ -59,8 +59,9 @@
       "caseSensitive": "Uwzględnij wielkość liter",
       "contains": "Zawiera",
       "endsWith": "Kończy się na",
-      "exact": "Dokładnie",
+      "exact": "Równy",
       "notContains": "Nie zawiera",
+      "notExact": "Różny od",
       "startsWith": "Zaczyna się od",
       "value": "Wartość"
     }

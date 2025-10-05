@@ -44,6 +44,7 @@ enum class NumberFilterDataType: EnumWithFormatter<NumberFilterDataType> {
 
 enum class StringFilterDataType: EnumWithFormatter<StringFilterDataType> {
     Exact,       // dokładne dopasowanie
+    NotExact,    // brak dokładnego dopasowania
     StartsWith,  // od początku
     EndsWith,    // od końca
     Contains,    // dowolny fragment
@@ -56,6 +57,7 @@ enum class StringFilterDataType: EnumWithFormatter<StringFilterDataType> {
             EndsWith -> T.get("filter.string.endsWith")
             Contains -> T.get("filter.string.contains")
             NotContains -> T.get("filter.string.notContains")
+            NotExact -> T.get("filter.string.notExact")
         }
     }
 }
