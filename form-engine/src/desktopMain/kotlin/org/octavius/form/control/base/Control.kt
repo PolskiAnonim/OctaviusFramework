@@ -23,7 +23,6 @@ import org.octavius.form.control.validator.DefaultValidator
 abstract class Control<T : Any> internal constructor(
     // --- 1. Konfiguracja i Właściwości ---
     internal val label: String?,
-    internal val columnInfo: ColumnInfo?,
     internal val required: Boolean?,
     internal val dependencies: Map<String, ControlDependency<*>>?,
     internal val validationOptions: ValidationOptions? = null,

@@ -32,7 +32,6 @@ class ButtonControl(
     actions: List<ControlAction<Unit>> // Akcje są kluczowe, więc nie są opcjonalne
 ) : Control<Unit>(
     label = null, // Przyciski nie mają etykiety, tekst jest na nich
-    columnInfo = null, // Nie mapuje się na bazę danych
     required = false, // Nie dotyczy
     dependencies = dependencies,
     hasStandardLayout = false, // Pełna kontrola nad renderowaniem

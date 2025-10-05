@@ -13,7 +13,6 @@ import org.octavius.form.control.validator.number.IntegerValidator
  * Rozszerza PrimitiveNumberControl, dostarczając logikę parsowania dla Int.
  */
 class IntegerControl(
-    columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
@@ -21,7 +20,6 @@ class IntegerControl(
     actions: List<ControlAction<Int>>? = null
 ) : PrimitiveNumberControl<Int>(
     label,
-    columnInfo,
     required,
     dependencies,
     validationOptions = validationOptions,

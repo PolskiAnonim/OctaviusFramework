@@ -13,7 +13,6 @@ import org.octavius.form.control.validator.number.DoubleValidator
  * Rozszerza PrimitiveNumberControl, dostarczając logikę parsowania dla Double.
  */
 class DoubleControl(
-    columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
@@ -21,7 +20,6 @@ class DoubleControl(
     actions: List<ControlAction<Double>>? = null
 ) : PrimitiveNumberControl<Double>(
     label,
-    columnInfo,
     required,
     dependencies,
     validationOptions = validationOptions,

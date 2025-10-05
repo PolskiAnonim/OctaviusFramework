@@ -19,7 +19,6 @@ import org.octavius.ui.theme.FormSpacing
  * wymagalność i komunikaty błędów.
  */
 class StringControl(
-    columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
@@ -27,7 +26,6 @@ class StringControl(
     actions: List<ControlAction<String>>? = null
 ) : Control<String>(
     label,
-    columnInfo,
     required,
     dependencies,
     validationOptions = validationOptions,

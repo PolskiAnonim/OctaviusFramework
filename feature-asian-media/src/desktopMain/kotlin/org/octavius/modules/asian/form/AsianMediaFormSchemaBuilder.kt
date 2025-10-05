@@ -25,7 +25,6 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(
-            ColumnInfo("titles", "id"),
             null
         ),
         "titleInfo" to SectionControl(
@@ -36,13 +35,11 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             label = T.get("asianMedia.form.titleInfo")
         ),
         "titles" to StringListControl(
-            ColumnInfo("titles", "titles"),
             T.get("asianMedia.form.titles"),
             required = true,
             validationOptions = StringListValidation(minItems = 1)
         ),
         "language" to EnumControl(
-            ColumnInfo("titles", "language"),
             T.get("asianMedia.form.originalLanguage"),
             PublicationLanguage::class,
             required = true
@@ -120,15 +117,13 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
 
     private fun createPublicationControls(): Map<String, Control<*>> {
         return mapOf(
-            "id" to IntegerControl(null, null),
+            "id" to IntegerControl(null),
             "publicationType" to EnumControl(
-                null,
                 T.get("asianMedia.form.publicationType"),
                 PublicationType::class,
                 required = true
             ),
             "status" to EnumControl(
-                null,
                 T.get("asianMedia.form.readingStatus"),
                 PublicationStatus::class,
                 required = true,
@@ -143,32 +138,26 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 )
             ),
             "trackProgress" to BooleanControl(
-                null,
                 T.get("asianMedia.form.trackProgress"),
                 required = true
             ),
             "volumes" to IntegerControl(
-                null,
                 T.get("asianMedia.form.volumeCount"),
                 dependencies = visibleWhenTrackProgress()
             ),
             "translatedVolumes" to IntegerControl(
-                null,
                 T.get("asianMedia.form.translatedVolumes"),
                 dependencies = visibleWhenTrackProgress()
             ),
             "chapters" to IntegerControl(
-                null,
                 T.get("asianMedia.form.chapterCount"),
                 dependencies = visibleWhenTrackProgress()
             ),
             "translatedChapters" to IntegerControl(
-                null,
                 T.get("asianMedia.form.translatedChapters"),
                 dependencies = visibleWhenTrackProgress()
             ),
             "originalCompleted" to BooleanControl(
-                null,
                 T.get("asianMedia.form.originalCompleted"),
                 required = true,
                 dependencies = visibleWhenTrackProgress()

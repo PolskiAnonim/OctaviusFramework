@@ -16,14 +16,13 @@ import kotlin.reflect.KClass
  * tekstu wyświetlanego użytkownikowi. Obsługuje wyszukiwanie w opcjach.
  */
 class EnumControl<T>(
-    columnInfo: ColumnInfo?,
     label: String?,
     private val enumClass: KClass<T>,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     actions: List<ControlAction<T>>? = null
 ) : DropdownControlBase<T>(
-    label, columnInfo, required, dependencies, actions
+    label, required, dependencies, actions
 ) where T : Enum<T>, T : EnumWithFormatter<T> {
 
     override fun getDisplayText(value: T?): String? {

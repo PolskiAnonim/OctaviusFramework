@@ -10,13 +10,12 @@ import org.octavius.util.DateTimeAdapter
 
 class DateTimeControl<T : Any>(
     private val adapter: DateTimeAdapter<T>,
-    columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     validationOptions: DateTimeValidation<T>? = null,
     actions: List<ControlAction<T>>? = null
-) : Control<T>(label, columnInfo, required, dependencies, validationOptions, actions) {
+) : Control<T>(label, required, dependencies, validationOptions, actions) {
 
     override val validator: ControlValidator<T> = DateTimeValidator(validationOptions, adapter)
 

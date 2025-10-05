@@ -18,11 +18,9 @@ class GameCategorySchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> =
         mapOf(
             "id" to IntegerControl(
-                ColumnInfo("categories", "id"),
                 null
             ),
             "name" to StringControl(
-                ColumnInfo("categories", "name"),
                 T.get("games.categories.name"),
                 required = true
             ),
