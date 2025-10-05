@@ -25,14 +25,12 @@ import org.octavius.ui.theme.FormSpacing
  * (true/false/null). Obsługuje automatyczne przełączanie między stanami.
  */
 class BooleanControl(
-    columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     actions: List<ControlAction<Boolean>>? = null,
 ) : Control<Boolean>(
     label,
-    columnInfo,
     required,
     dependencies,
     hasStandardLayout = false,

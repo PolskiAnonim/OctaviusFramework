@@ -35,7 +35,6 @@ class RepeatableControl(
     validationOptions: RepeatableValidation? = null
 ) : Control<List<RepeatableRow>>(
     label,
-    null,
     required,
     dependencies,
     hasStandardLayout = false,

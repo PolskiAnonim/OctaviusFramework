@@ -9,14 +9,13 @@ import org.octavius.ui.datetime.PickerTextField
 import kotlin.time.Duration
 
 class IntervalControl(
-    columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     validationOptions: IntervalValidation? = null,
     actions: List<ControlAction<Duration>>? = null
 ) : Control<Duration>(
-    label, columnInfo, required, dependencies, validationOptions, actions
+    label, required, dependencies, validationOptions, actions
 ) {
     override val validator: ControlValidator<Duration> = IntervalValidator(validationOptions)
 

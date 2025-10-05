@@ -42,11 +42,7 @@ class FormHandler(
 
     init {
         setupFormReferences()
-        if (entityId != null) {
-            loadData()
-        } else {
-            clearForm()
-        }
+        loadData()
     }
 
     /**
@@ -82,27 +78,7 @@ class FormHandler(
      * 4. Inicjalizuje stany wszystkich kontrolek
      */
     internal fun loadData() {
-        val initValues = formDataManager.initData(entityId!!, payload)
-        val databaseData = formDataManager.loadEntityData(entityId)
-
-        // Merge danych z priorytetem dla initData
-        val mergedData = mutableMapOf<String, Any?>()
-        formSchema.getAllControls().forEach { (controlName, control) ->
-            mergedData[controlName] = when {
-                initValues.containsKey(controlName) -> initValues[controlName]
-                control.columnInfo != null -> databaseData[control.columnInfo]
-                else -> null
-            }
-        }
-
-        formState.initializeStates(formSchema, mergedData)
-    }
-
-    /**
-     * Czyści formularz i ustawia wartości domyślne dla nowego rekordu.
-     */
-    internal fun clearForm() {
-        val initValues = formDataManager.initData(null, payload)
+        val initValues = formDataManager.initData(entityId, payload)
         formState.initializeStates(formSchema, initValues)
     }
 

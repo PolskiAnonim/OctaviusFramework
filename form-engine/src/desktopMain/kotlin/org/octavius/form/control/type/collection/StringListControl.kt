@@ -25,13 +25,12 @@ import org.octavius.ui.theme.FormSpacing
  * elementów poprzez dedykowane pole oraz usuwanie istniejących elementów.
  */
 class StringListControl(
-    columnInfo: ColumnInfo,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     validationOptions: StringListValidation? = null
 ) : Control<List<String>>(
-    label, columnInfo, required, dependencies, validationOptions = validationOptions, hasStandardLayout = false
+    label, required, dependencies, validationOptions = validationOptions, hasStandardLayout = false
 ) {
     override val validator: ControlValidator<List<String>> = StringListValidator(validationOptions)
 

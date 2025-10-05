@@ -33,7 +33,7 @@ class SectionControl(
     val columns: Int = 1,
     label: String,
     dependencies: Map<String, ControlDependency<*>>? = null
-) : Control<Unit>(label, null, false, dependencies, hasStandardLayout = false) {
+) : Control<Unit>(label, false, dependencies, hasStandardLayout = false) {
 
     override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
         ctrls.forEach { childControlName ->

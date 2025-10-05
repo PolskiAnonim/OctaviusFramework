@@ -21,7 +21,6 @@ import org.octavius.form.control.type.selection.dropdown.DropdownOption
  * jako tekst wyboru, a zwraca ID wybranego rekordu.
  */
 class DatabaseControl(
-    columnInfo: ColumnInfo?,
     label: String?,
     private val relatedTable: String,
     private val displayColumn: String,
@@ -30,7 +29,7 @@ class DatabaseControl(
     dependencies: Map<String, ControlDependency<*>>? = null,
     actions: List<ControlAction<Int>>? = null,
 ) : DropdownControlBase<Int>(
-    label, columnInfo, required, dependencies, actions
+    label, required, dependencies, actions
 ), KoinComponent {
     override val supportSearch = true
     override val supportPagination = true

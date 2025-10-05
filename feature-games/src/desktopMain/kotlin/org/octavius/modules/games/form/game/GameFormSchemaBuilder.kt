@@ -21,13 +21,10 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         // Podstawowe dane
         "visibleCharactersSection" to BooleanControl(
-            null,
             T.get("games.form.visibleCharacterSection"),
             required = true
         ),
-        "playTimeExists" to BooleanControl(
-            null, null
-        ),
+        "playTimeExists" to BooleanControl(null),
         "ratingsExists" to BooleanControl(
             null, null
         ),
@@ -36,18 +33,15 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
         ),
         // Sekcja podstawowych informacji
         "name" to StringControl(
-            ColumnInfo("games", "name"),
             T.get("games.general.gameName"),
             required = true
         ),
         "series" to DatabaseControl(
-            ColumnInfo("games", "series"),
             label = T.get("games.form.series"),
             relatedTable = "series",
             displayColumn = "name"
         ),
         "status" to EnumControl(
-            ColumnInfo("games", "status"),
             T.get("games.form.status"),
             GameStatus::class,
             required = true
@@ -61,12 +55,10 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
         ),
         // Sekcja czasu gry
         "playTimeHours" to DoubleControl(
-            ColumnInfo("play_time", "play_time_hours"),
             T.get("games.form.playTimeHours"),
             validationOptions = DoubleValidation(min = 0.0, decimalPlaces = 2)
         ),
         "completionCount" to IntegerControl(
-            ColumnInfo("play_time", "completion_count"),
             T.get("games.form.playCount"),
             required = true, // Automatycznie pomijana walidacja jak niewidoczna kontrolka
             dependencies = mapOf(
@@ -100,18 +92,15 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
         ),
         // Sekcja ocen
         "storyRating" to IntegerControl(
-            ColumnInfo("ratings", "story_rating"),
             T.get("games.form.storyRating"),
             validationOptions = IntegerValidation(min = 0, max = 10)
         ),
         "gameplayRating" to IntegerControl(
-            ColumnInfo("ratings", "gameplay_rating"),
             T.get("games.form.gameplayRating"),
             required = true,
             validationOptions = IntegerValidation(min = 0, max = 10)
         ),
         "atmosphereRating" to IntegerControl(
-            ColumnInfo("ratings", "atmosphere_rating"),
             T.get("games.form.atmosphereRating"),
             validationOptions = IntegerValidation(min = 0, max = 10)
         ),
@@ -132,17 +121,14 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
         ),
         // Sekcja postaci
         "hasDistinctiveCharacter" to BooleanControl(
-            ColumnInfo("characters", "has_distinctive_character"),
             T.get("games.form.distinctiveCharacters"),
             required = true
         ),
         "hasDistinctiveProtagonist" to BooleanControl(
-            ColumnInfo("characters", "has_distinctive_protagonist"),
             T.get("games.form.distinctiveProtagonist"),
             required = true
         ),
         "hasDistinctiveAntagonist" to BooleanControl(
-            ColumnInfo("characters", "has_distinctive_antagonist"),
             T.get("games.form.distinctiveAntagonist"),
             required = true
         ),
@@ -165,7 +151,6 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
         "categories" to RepeatableControl(
             rowControls = mapOf(
                 "category" to DatabaseControl(
-                    columnInfo = null,
                     label = T.getPlural("games.form.category", 1),
                     relatedTable = "categories",
                     displayColumn = "name",

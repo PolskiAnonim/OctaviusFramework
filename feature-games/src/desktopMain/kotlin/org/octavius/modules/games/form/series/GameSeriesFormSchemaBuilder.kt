@@ -17,7 +17,6 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> =
         mapOf(
             "name" to StringControl(
-                ColumnInfo("series", "name"),
                 T.get("games.series.name"),
                 required = true
             ),

@@ -35,13 +35,11 @@ import org.octavius.ui.theme.FormSpacing
  */
 abstract class DropdownControlBase<T : Any>(
     label: String?,
-    columnInfo: ColumnInfo?,
     required: Boolean?,
     dependencies: Map<String, ControlDependency<*>>?,
     actions: List<ControlAction<T>>?
 ) : Control<T>(
     label,
-    columnInfo,
     required,
     dependencies,
     hasStandardLayout = false,

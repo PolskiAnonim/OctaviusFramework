@@ -14,7 +14,6 @@ import java.math.BigDecimal
  * Rozszerza PrimitiveNumberControl, dostarczając logikę parsowania dla BigDecimal.
  */
 class BigDecimalControl(
-    columnInfo: ColumnInfo?,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
@@ -22,7 +21,6 @@ class BigDecimalControl(
     actions: List<ControlAction<BigDecimal>>? = null
 ) : PrimitiveNumberControl<BigDecimal>(
     label,
-    columnInfo,
     required,
     dependencies,
     validationOptions = validationOptions,

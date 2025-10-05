@@ -10,14 +10,17 @@ import org.octavius.form.component.TableRelation
 import org.octavius.form.control.base.FormResultData
 
 class GameSeriesFormDataManager : FormDataManager() {
-    override fun defineTableRelations(): List<TableRelation> {
-        return listOf(
-            TableRelation("series") // Główna tabela
-        )
+    private fun loadData(loadedId: Int?) = loadData(loadedId) {
+        from("games.series", "s")
+        map("name")
     }
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
-        return emptyMap() // Tylko nazwa, brak domyślnych wartości
+    override fun initData(
+        loadedId: Int?,
+        payload: Map<String, Any?>?
+    ): Map<String, Any?> {
+        val loadedData = loadData(loadedId)
+        return loadedData + (payload ?: emptyMap())
     }
 
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {

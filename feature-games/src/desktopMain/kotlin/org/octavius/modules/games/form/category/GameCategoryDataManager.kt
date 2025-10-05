@@ -10,12 +10,21 @@ import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
 
 class GameCategoryDataManager : FormDataManager() {
+
+    private fun loadData(loadedId: Int?) = loadData(loadedId) {
+        from("games.categories", "ctg")
+        map("name")
+    }
+
     override fun initData(
         loadedId: Int?,
         payload: Map<String, Any?>?
-    ): Map<String, Any?> = emptyMap()
+    ): Map<String, Any?> {
+        val loadedData = loadData(loadedId)
+        return loadedData + (payload ?: emptyMap())
+    }
 
-    override fun defineTableRelations(): List<TableRelation> = listOf(TableRelation("games.categories"))
+
 
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
         return mapOf(
