@@ -1,10 +1,9 @@
-package org.octavius.form.component.loader
+package org.octavius.form.component
 
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toList
 import org.octavius.data.builder.toSingle
-import org.octavius.dialog.DialogConfig
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.util.Converters
