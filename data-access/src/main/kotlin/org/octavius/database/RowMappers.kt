@@ -1,7 +1,6 @@
 package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.ColumnInfo
 import org.octavius.data.toDataObject
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.exception.DataMappingException
@@ -17,31 +16,6 @@ import kotlin.reflect.KClass
 internal class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
     companion object {
         private val logger = KotlinLogging.logger {}
-    }
-
-
-    /**
-     * Mapper mapujący na `Map<ColumnInfo, Any?>`.
-     * Przechowuje nazwę tabeli i kolumny. Używany głównie w formularzach,
-     * aby rozróżnić kolumny o tej samej nazwie z różnych tabel połączonych JOIN-em.
-     */
-    fun ColumnInfoMapper() : RowMapper<Map<ColumnInfo, Any?>> = RowMapper { rs, _ ->
-        val data = mutableMapOf<ColumnInfo, Any?>()
-        val metaData = rs.metaData as PgResultSetMetaData
-
-        logger.trace { "Mapping row with ${metaData.columnCount} columns using ColumnInfoMapper" }
-        for (i in 1..metaData.columnCount) {
-            val columnName = metaData.getColumnName(i)
-            val tableName = metaData.getTableName(i)
-            val columnType = metaData.getColumnTypeName(i)
-
-            val rawValue = rs.getString(i)
-
-            val convertedValue = typesConverter.convertToDomainType(rawValue, columnType)
-            data[ColumnInfo(tableName, columnName)] = convertedValue
-        }
-
-        data
     }
 
     /**

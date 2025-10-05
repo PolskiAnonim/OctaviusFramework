@@ -12,7 +12,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
-import org.octavius.data.ColumnInfo
 import org.octavius.form.control.base.*
 import org.octavius.form.control.layout.RenderCheckboxLabel
 import org.octavius.ui.theme.FormSpacing

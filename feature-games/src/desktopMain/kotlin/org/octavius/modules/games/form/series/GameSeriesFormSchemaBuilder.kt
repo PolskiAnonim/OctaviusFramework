@@ -1,6 +1,5 @@
 package org.octavius.modules.games.form.series
 
-import org.octavius.data.ColumnInfo
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlAction

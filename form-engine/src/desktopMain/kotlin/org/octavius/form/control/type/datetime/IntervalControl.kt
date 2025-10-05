@@ -1,7 +1,6 @@
 package org.octavius.form.control.type.datetime
 
 import androidx.compose.runtime.*
-import org.octavius.data.ColumnInfo
 import org.octavius.form.control.base.*
 import org.octavius.form.control.validator.datetime.IntervalValidator
 import org.octavius.ui.datetime.IntervalPickerDialog

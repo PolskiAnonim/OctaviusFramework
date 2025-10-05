@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.data.ColumnInfo
 import org.octavius.form.control.base.*
 import org.octavius.form.control.validator.collection.StringListValidator
 import org.octavius.localization.T

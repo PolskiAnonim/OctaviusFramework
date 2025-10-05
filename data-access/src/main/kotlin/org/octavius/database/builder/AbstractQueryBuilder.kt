@@ -1,7 +1,6 @@
 package org.octavius.database.builder
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.ColumnInfo
 import org.octavius.data.DataResult
 import org.octavius.data.builder.StepBuilderMethods
 import org.octavius.database.RowMappers
@@ -148,11 +147,6 @@ internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
             @Suppress("UNCHECKED_CAST")
             DataResult.Success(it as List<T?>)
         }
-    }
-
-    /** Wykonuje zapytanie i zwraca pojedynczy wiersz jako `Map<ColumnInfo, Any?>?`. */
-    fun toSingleWithColumnInfo(params: Map<String, Any?>): DataResult<Map<ColumnInfo, Any?>?> {
-        return executeReturningQuery(params, rowMappers.ColumnInfoMapper()) { DataResult.Success(it.firstOrNull()) }
     }
 
     /** Zwraca wygenerowany string SQL bez wykonywania zapytania. */

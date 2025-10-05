@@ -1,6 +1,5 @@
 package org.octavius.modules.games.form.game
 
-import org.octavius.data.ColumnInfo
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*

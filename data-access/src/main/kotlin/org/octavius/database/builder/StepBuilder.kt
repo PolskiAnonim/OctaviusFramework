@@ -1,6 +1,5 @@
 package org.octavius.database.builder
 
-import org.octavius.data.ColumnInfo
 import org.octavius.data.builder.StepBuilderMethods
 import org.octavius.data.transaction.TransactionStep
 import kotlin.reflect.KClass
@@ -61,15 +60,6 @@ internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R):
         return TransactionStep(
             builderState = builder,
             terminalMethod = builder::toColumn,
-            params = params
-        )
-    }
-
-    /** Tworzy TransactionStep z metodą toSingleWithColumnInfo */
-    override fun toSingleWithColumnInfo(params: Map<String, Any?>): TransactionStep<Map<ColumnInfo, Any?>?> {
-        return TransactionStep(
-            builderState = builder,
-            terminalMethod = builder::toSingleWithColumnInfo,
             params = params
         )
     }
