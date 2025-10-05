@@ -8,6 +8,7 @@ import org.octavius.data.DataResult
 import org.octavius.data.builder.toSingleWithColumnInfo
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.form.component.loader.DataLoaderBuilder
 import org.octavius.form.control.base.FormResultData
 
 /**
@@ -31,6 +32,11 @@ abstract class FormDataManager: KoinComponent {
 
     protected val dataAccess: DataAccess by inject()
 
+    fun loadData(id: Int?, dataAccess: DataAccess, block: DataLoaderBuilder.() -> Unit): Map<String, Any?> {
+        val builder = DataLoaderBuilder(dataAccess).apply(block)
+        return builder.execute(id)
+    }
+
     /**
      * Dostarcza wartości początkowe dla kontrolek formularza.
      *
@@ -38,46 +44,6 @@ abstract class FormDataManager: KoinComponent {
      * @return mapa kontrolka->wartość z wartościami domyślnymi lub obliczonymi
      */
     abstract fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?>
-
-    /**
-     * Definiuje relacje między tabelami potrzebne do załadowania pełnych danych encji.
-     *
-     * @return lista relacji tabel z warunkami JOIN dla DatabaseManager
-     */
-    abstract fun defineTableRelations(): List<TableRelation>
-
-    /**
-     * Ładuje kompletne dane encji z bazy danych używając zdefiniowanych relacji.
-     *
-     * @param id ID encji do załadowania
-     * @return mapa kolumn->wartości z wszystkich powiązanych tabel
-     */
-    internal fun loadEntityData(id: Int): Map<ColumnInfo, Any?> {
-        val tableRelations = defineTableRelations()
-
-        if (tableRelations.isEmpty()) {
-            throw IllegalArgumentException("Lista relacji tabel nie może być pusta")
-        }
-
-        val mainTable = tableRelations.first().tableName
-        val tables = StringBuilder(mainTable)
-
-        for (i in 1 until tableRelations.size) {
-            val relation = tableRelations[i]
-            tables.append(" LEFT JOIN ${relation.tableName} ON ${relation.joinCondition}")
-        }
-
-        val entity = dataAccess.select("*").from(tables.toString()).where("$mainTable.id = :id")
-            .toSingleWithColumnInfo("id" to id)
-
-        return when (entity) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(entity.error))
-                mapOf()
-            }
-            is DataResult.Success<Map<ColumnInfo, Any?>?> -> entity.value ?: mapOf()
-        }
-    }
 
     /**
     * Definiuje logikę dla wszystkich akcji formularza (Zapisz, Anuluj, Usuń, etc.).

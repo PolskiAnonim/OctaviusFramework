@@ -10,68 +10,42 @@ import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
-import org.octavius.form.component.TableRelation
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class AsianMediaFormDataManager : FormDataManager() {
 
-    override fun defineTableRelations(): List<TableRelation> {
-        return listOf(
-            TableRelation("titles"),
-        )
+    private fun loadAsianMediaData(loadedId: Int?) = loadData(loadedId, dataAccess) {
+        from("asian_media.titles", "t")
+
+        // Proste mapowania z tabeli 'titles'
+        map("id")
+        map("titles")
+        map("language")
+
+        // Relacja 1-do-N z 'categories'
+        mapMany("publications").asRelatedList {
+            from("asian_media.publications", "p")
+            join("LEFT JOIN asian_media.publication_volumes pv ON pv.publication_id = p.id")
+            where("p.title_id = :id")
+            map("id")
+            map("publicationType")
+            map("status")
+            map("trackProgress")
+            map("volumes")
+            map("translatedVolumes")
+            map("chapters")
+            map("translatedChapters")
+            map("originalCompleted")
+        }
     }
 
     override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
-        val initialData = mutableMapOf<String, Any?>()
+        val loadedData = loadAsianMediaData(loadedId)
 
-        if (loadedId != null) {
-            initialData.putAll(loadPublications(loadedId))
-        } else {
-            initialData["publications"] = emptyList<Map<String, Any?>>()
-        }
-
-        return if (payload != null) {
-            initialData + payload
-        } else {
-            initialData
-        }
-    }
-
-    /**
-     * Prywatna metoda pomocnicza do ładowania powiązanych publikacji.
-     * Utrzymuje metodę initData w czystości.
-     */
-    private fun loadPublications(titleId: Int): Map<String, Any?> {
-        val result = dataAccess.select(
-            "p.id, p.publication_type, p.status, p.track_progress, pv.volumes, pv.translated_volumes, pv.chapters, pv.translated_chapters, pv.original_completed"
-        ).from("publications p LEFT JOIN publication_volumes pv ON p.id = pv.publication_id"
-        ).where("p.title_id = :title").toList("title" to titleId)
-
-        return when (result) {
-            is DataResult.Success -> {
-                val publications = result.value.map { row ->
-                    buildMap {
-                        put("id", row["id"])
-                        put("publicationType", row["publication_type"])
-                        put("status", row["status"])
-                        put("trackProgress", row["track_progress"])
-                        put("volumes", row["volumes"])
-                        put("translatedVolumes", row["translated_volumes"])
-                        put("chapters", row["chapters"])
-                        put("translatedChapters", row["translated_chapters"])
-                        put("originalCompleted", row["original_completed"])
-                    }
-                }
-
-                mapOf("publications" to publications)
-            }
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                mapOf("publications" to emptyList<Map<String, Any?>>())
-            }
-        }
+        // Kolejność łączenia: Załadowane z DB -> Payload (nadpisuje wszystko)
+        return loadedData + (payload ?: emptyMap())
     }
 
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {

@@ -2,8 +2,6 @@ package org.octavius.modules.games.form.game
 
 import org.octavius.data.DataResult
 import org.octavius.data.toDatabaseValue
-import org.octavius.data.builder.toList
-import org.octavius.data.builder.toSingle
 import org.octavius.data.transaction.DatabaseValue
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
@@ -11,76 +9,64 @@ import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
-import org.octavius.form.component.TableRelation
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class GameFormDataManager : FormDataManager() {
-    override fun defineTableRelations(): List<TableRelation> {
-        return listOf(
-            TableRelation("games"), // Główna tabela
-            TableRelation("characters", "games.id = characters.game_id"), // Powiązana tabela
-            TableRelation("play_time", "games.id = play_time.game_id"), // Powiązana tabela
-            TableRelation("ratings", "games.id = ratings.game_id"), // Powiązana tabela
-        )
+
+    private fun loadGameData(loadedId: Int?) = loadData(loadedId, dataAccess) {
+        from("games", "g")
+
+        // Proste mapowania z tabeli 'games'
+        map("name")
+        map("series")
+        map("status")
+
+        // Relacja 1-do-1 z 'play_time'
+        mapOneToOne(existenceControl = "playTimeExists") {
+            from("play_time", "pt")
+            on("g.id = pt.game_id")
+            map("playTimeHours")
+            map("completionCount")
+        }
+
+        // Relacja 1-do-1 z 'ratings'
+        mapOneToOne(existenceControl = "ratingsExists") {
+            from("ratings", "r")
+            on("g.id = r.game_id")
+            map("storyRating")
+            map("gameplayRating")
+            map("atmosphereRating")
+        }
+
+        // Relacja 1-do-1 z 'characters'
+        mapOneToOne(existenceControl = "charactersExists") {
+            from("characters", "c")
+            on("g.id = c.game_id")
+            map("hasDistinctiveCharacter")
+            map("hasDistinctiveProtagonist")
+            map("hasDistinctiveAntagonist")
+        }
+
+        // Relacja 1-do-N z 'categories'
+        mapMany("categories").asRelatedList {
+            from("categories_to_games", "ctg")
+            where("ctg.game_id = :id")
+            map("category", "category_id")
+        }
     }
 
     override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
-        // Domyślne wartości dla nowej gry
-        return if (loadedId == null) {
-            mapOf(
-                "visibleCharactersSection" to false,
-                "playTimeExists" to false,
-                "ratingsExists" to false,
-                "charactersExists" to false,
-                "categories" to emptyList<Map<String, Any?>>()
-            )
+        val loadedData = loadGameData(loadedId)
+
+        val defaultData = if (loadedId == null) {
+            mapOf("visibleCharactersSection" to false, "categories" to emptyList<Map<String, Any?>>())
         } else {
-            val dataExists = dataAccess.select(
-                """CASE WHEN pt.game_id IS NULL THEN FALSE ELSE TRUE END AS play_time_exists,
-                CASE WHEN c.game_id IS NULL THEN FALSE ELSE TRUE END AS characters_exists,
-                CASE WHEN r.game_id IS NULL THEN FALSE ELSE TRUE END AS ratings_exists
-                """
-            ).from(
-                """games g 
-                    LEFT JOIN characters c ON c.game_id = g.id
-                    LEFT JOIN play_time pt ON pt.game_id = g.id 
-                    LEFT JOIN ratings r ON r.game_id = g.id""",
-            ).where("g.id = :id").toSingle("id" to loadedId)
-
-            val game: Map<String, Any?>
-            when (dataExists) {
-                is DataResult.Failure -> throw IllegalArgumentException("Game not found")
-                is DataResult.Success<Map<String, Any?>?> -> {
-                    game = dataExists.value ?: throw IllegalArgumentException("Game not found")
-                }
-            }
-
-            // Załaduj kategorie dla tej gry
-            val catResult = dataAccess.select(
-                "ctg.category_id as category"
-            ).from(
-                "categories_to_games ctg JOIN categories c ON ctg.category_id = c.id"
-            ).where("ctg.game_id = :gameId").toList("gameId" to loadedId)
-
-            val categories: List<Map<String, Any?>>
-
-            when (catResult) {
-                is DataResult.Failure -> throw IllegalArgumentException("Game not found")
-                is DataResult.Success<List<Map<String, Any?>>> -> {
-                    categories =
-                        catResult.value.map { it.mapKeys { (key, _) -> if (key == "original_category") "originalCategory" else key } }
-                }
-            }
-
-            mapOf(
-                "visibleCharactersSection" to game["characters_exists"]!!,
-                "charactersExists" to game["characters_exists"]!!,
-                "playTimeExists" to game["play_time_exists"]!!,
-                "ratingsExists" to game["ratings_exists"]!!,
-                "categories" to categories,
-            )
+            mapOf("visibleCharactersSection" to (loadedData["charactersExists"] as Boolean))
         }
+
+        // Kolejność łączenia: Domyślne -> Załadowane z DB -> Payload (nadpisuje wszystko)
+        return defaultData + loadedData + (payload ?: emptyMap())
     }
 
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
