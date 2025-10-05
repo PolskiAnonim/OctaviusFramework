@@ -10,7 +10,7 @@ import org.octavius.form.component.TableRelation
 import org.octavius.form.control.base.FormResultData
 
 class GameSeriesFormDataManager : FormDataManager() {
-    private fun loadData(loadedId: Int?) = loadData(loadedId, dataAccess) {
+    private fun loadData(loadedId: Int?) = loadData(loadedId) {
         from("games.series", "s")
         map("name")
     }

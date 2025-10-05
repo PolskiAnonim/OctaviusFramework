@@ -14,7 +14,7 @@ import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class GameFormDataManager : FormDataManager() {
 
-    private fun loadGameData(loadedId: Int?) = loadData(loadedId, dataAccess) {
+    private fun loadGameData(loadedId: Int?) = loadData(loadedId) {
         from("games", "g")
 
         // Proste mapowania z tabeli 'games'
@@ -23,35 +23,38 @@ class GameFormDataManager : FormDataManager() {
         map("status")
 
         // Relacja 1-do-1 z 'play_time'
-        mapOneToOne(existenceControl = "playTimeExists") {
+        mapOneToOne {
             from("play_time", "pt")
             on("g.id = pt.game_id")
+            existenceFlag("playTimeExists", "pt.game_id")
             map("playTimeHours")
             map("completionCount")
         }
 
         // Relacja 1-do-1 z 'ratings'
-        mapOneToOne(existenceControl = "ratingsExists") {
+        mapOneToOne {
             from("ratings", "r")
             on("g.id = r.game_id")
+            existenceFlag("ratingsExists", "r.game_id")
             map("storyRating")
             map("gameplayRating")
             map("atmosphereRating")
         }
 
         // Relacja 1-do-1 z 'characters'
-        mapOneToOne(existenceControl = "charactersExists") {
+        mapOneToOne {
             from("characters", "c")
             on("g.id = c.game_id")
+            existenceFlag("charactersExists", "c.game_id")
             map("hasDistinctiveCharacter")
             map("hasDistinctiveProtagonist")
             map("hasDistinctiveAntagonist")
         }
 
         // Relacja 1-do-N z 'categories'
-        mapMany("categories").asRelatedList {
+        mapRelatedList("categories") {
             from("categories_to_games", "ctg")
-            where("ctg.game_id = :id")
+            linkedBy("ctg.game_id")
             map("category", "category_id")
         }
     }

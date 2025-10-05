@@ -16,7 +16,7 @@ import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class AsianMediaFormDataManager : FormDataManager() {
 
-    private fun loadAsianMediaData(loadedId: Int?) = loadData(loadedId, dataAccess) {
+    private fun loadAsianMediaData(loadedId: Int?) = loadData(loadedId) {
         from("asian_media.titles", "t")
 
         // Proste mapowania z tabeli 'titles'
@@ -25,10 +25,10 @@ class AsianMediaFormDataManager : FormDataManager() {
         map("language")
 
         // Relacja 1-do-N z 'categories'
-        mapMany("publications").asRelatedList {
+        mapRelatedList("publications") {
             from("asian_media.publications", "p")
             join("LEFT JOIN asian_media.publication_volumes pv ON pv.publication_id = p.id")
-            where("p.title_id = :id")
+            linkedBy("p.title_id")
             map("id")
             map("publicationType")
             map("status")

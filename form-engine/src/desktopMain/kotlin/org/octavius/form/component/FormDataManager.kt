@@ -32,7 +32,7 @@ abstract class FormDataManager: KoinComponent {
 
     protected val dataAccess: DataAccess by inject()
 
-    fun loadData(id: Int?, dataAccess: DataAccess, block: DataLoaderBuilder.() -> Unit): Map<String, Any?> {
+    fun loadData(id: Int?, block: DataLoaderBuilder.() -> Unit): Map<String, Any?> {
         val builder = DataLoaderBuilder(dataAccess).apply(block)
         return builder.execute(id)
     }

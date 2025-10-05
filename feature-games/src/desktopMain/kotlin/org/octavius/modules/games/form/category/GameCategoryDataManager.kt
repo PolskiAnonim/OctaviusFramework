@@ -11,7 +11,7 @@ import org.octavius.form.control.base.getCurrent
 
 class GameCategoryDataManager : FormDataManager() {
 
-    private fun loadData(loadedId: Int?) = loadData(loadedId, dataAccess) {
+    private fun loadData(loadedId: Int?) = loadData(loadedId) {
         from("games.categories", "ctg")
         map("name")
     }
