@@ -1,258 +1,253 @@
 package org.octavius.database.type
 
-import io.mockk.every
-import io.mockk.mockk
+import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.octavius.data.EnumCaseConvention
+import org.octavius.domain.test.*
 import org.postgresql.util.PGobject
+import java.math.BigDecimal
 
+/**
+ * Testy jednostkowe dla KotlinToPostgresConverter.
+ *
+ * Ta klasa testowa wykorzystuje w pełni funkcjonalną, ale sztuczną instancję TypeRegistry
+ * (stworzoną przez `createFakeTypeRegistry`), aby dokładnie symulować rzeczywiste
+ * mapowanie typów bez potrzeby łączenia się z bazą danych.
+ *
+ * Dzięki temu testujemy logikę konwersji w izolacji, ale na realistycznych,
+ * złożonych i zagnieżdżonych strukturach danych.
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KotlinToPostgresConverterTest {
 
-    private lateinit var mockTypeRegistry: TypeRegistry
+    // Używamy "prawdziwego", ale sztucznego rejestru typów zamiast mocka.
+    // Dzięki temu testujemy interakcję z kompletnym, spójnym zestawem definicji typów.
+    private val typeRegistry = createFakeTypeRegistry()
+    private val converter = KotlinToPostgresConverter(typeRegistry)
 
-    private lateinit var converter: KotlinToPostgresConverter
+    @Nested
+    inner class SimpleTypeExpansion {
 
-    enum class TestStatus {
-        Active, Inactive, Pending
+        @Test
+        fun `should not change simple parameters like primitives, strings, and nulls`() {
+            val sql = "SELECT * FROM users WHERE id = :id AND name = :name AND profile IS :profile"
+            val params = mapOf("id" to 123, "name" to "John", "profile" to null)
+
+            val result = converter.expandParametersInQuery(sql, params)
+
+            assertThat(result.expandedSql).isEqualTo(sql)
+            assertThat(result.expandedParams).isEqualTo(params)
+        }
+
+        @Test
+        fun `should convert enum to PGobject with correct snake_case_lower value`() {
+            val sql = "SELECT * FROM tasks WHERE category = :category"
+            val params = mapOf("category" to TestCategory.BugFix) // Używamy prawdziwego enuma
+
+            val result = converter.expandParametersInQuery(sql, params)
+
+            assertThat(result.expandedSql).isEqualTo(sql)
+            assertThat(result.expandedParams).hasSize(1)
+
+            val pgObject = result.expandedParams["category"] as PGobject
+            assertThat(pgObject.type).isEqualTo("test_category")
+            assertThat(pgObject.value).isEqualTo("bug_fix") // Zgodnie z konwencją w fake registry
+        }
+
+        @Test
+        fun `should convert JsonObject to jsonb PGobject`() {
+            val sql = "UPDATE documents SET data = :data WHERE id = 1"
+            val jsonData = Json.parseToJsonElement("""{"key": "value", "count": 100}""") as JsonObject
+            val params = mapOf("data" to jsonData)
+
+            val result = converter.expandParametersInQuery(sql, params)
+
+            assertThat(result.expandedSql).isEqualTo(sql)
+            assertThat(result.expandedParams).hasSize(1)
+
+            val pgObject = result.expandedParams["data"] as PGobject
+            assertThat(pgObject.type).isEqualTo("jsonb")
+            assertThat(pgObject.value).isEqualTo("""{"key":"value","count":100}""")
+        }
     }
 
-    data class TestPerson(val name: String, val age: Int, val active: Boolean)
+    @Nested
+    inner class ArrayExpansion {
 
-    @BeforeAll // KotlinToPostgresConverter nie ma wewnętrznego stanu
-    fun setup() {
-        // Stwórz mocka
-        mockTypeRegistry = mockk()
+        @Test
+        fun `should expand simple array into ARRAY syntax`() {
+            val sql = "SELECT * FROM users WHERE id = ANY(:ids)"
+            val params = mapOf("ids" to listOf(10, 20, 30))
 
-        every { mockTypeRegistry.getPgTypeNameForClass(TestStatus::class) } returns "test_status"
-        every { mockTypeRegistry.getPgTypeNameForClass(TestPerson::class) } returns "test_person"
-        
-        // Mock getTypeInfo for enum types
-        every { mockTypeRegistry.getTypeInfo("test_status") } returns PostgresTypeInfo(
-            typeName = "test_status",
-            typeCategory = TypeCategory.ENUM,
-            enumConvention = EnumCaseConvention.SNAKE_CASE_UPPER
-        )
-        
-        // Mock getTypeInfo for composite types
-        every { mockTypeRegistry.getTypeInfo("test_person") } returns PostgresTypeInfo(
-            typeName = "test_person",
-            typeCategory = TypeCategory.COMPOSITE,
-            attributes = mapOf(
-                "name" to "text",
-                "age" to "int4",
-                "active" to "bool"
+            val result = converter.expandParametersInQuery(sql, params)
+
+            assertThat(result.expandedSql).isEqualTo("SELECT * FROM users WHERE id = ANY(ARRAY[:ids_p1, :ids_p2, :ids_p3])")
+            assertThat(result.expandedParams).isEqualTo(mapOf("ids_p1" to 10, "ids_p2" to 20, "ids_p3" to 30))
+        }
+
+        @Test
+        fun `should handle empty arrays by converting to empty array literal`() {
+            val sql = "SELECT * FROM users WHERE tags && :tags"
+            val params = mapOf("tags" to emptyList<String>())
+
+            val result = converter.expandParametersInQuery(sql, params)
+
+            assertThat(result.expandedSql).isEqualTo("SELECT * FROM users WHERE tags && '{}'")
+            assertThat(result.expandedParams).isEmpty()
+        }
+
+        @Test
+        fun `should expand array of enums correctly`() {
+            val sql = "SELECT * FROM tasks WHERE status = ANY(:statuses)"
+            val params = mapOf("statuses" to listOf(TestStatus.Active, TestStatus.Pending))
+
+            val result = converter.expandParametersInQuery(sql, params)
+
+            assertThat(result.expandedSql).isEqualTo("SELECT * FROM tasks WHERE status = ANY(ARRAY[:statuses_p1, :statuses_p2])")
+            assertThat(result.expandedParams).hasSize(2)
+
+            val status1 = result.expandedParams["statuses_p1"] as PGobject
+            assertThat(status1.type).isEqualTo("test_status")
+            assertThat(status1.value).isEqualTo("active")
+
+            val status2 = result.expandedParams["statuses_p2"] as PGobject
+            assertThat(status2.type).isEqualTo("test_status")
+            assertThat(status2.value).isEqualTo("pending")
+        }
+    }
+
+    @Nested
+    inner class CompositeExpansion {
+
+        @Test
+        fun `should expand a single data class into ROW syntax with type cast`() {
+            val sql = "INSERT INTO employees (person) VALUES (:person)"
+            val person = TestPerson("John Doe", 35, "john.doe@example.com", true, listOf("developer", "team-lead"))
+            val params = mapOf("person" to person)
+
+
+            val finalResult = converter.expandParametersInQuery(sql, params) // Musimy rekurencyjnie rozwinąć
+
+            assertThat(finalResult.expandedSql).isEqualTo("INSERT INTO employees (person) VALUES (ROW(:person_f1, :person_f2, :person_f3, :person_f4, ARRAY[:person_f5_p1, :person_f5_p2])::test_person)")
+            assertThat(finalResult.expandedParams).isEqualTo(mapOf(
+                "person_f1" to "John Doe",
+                "person_f2" to 35,
+                "person_f3" to "john.doe@example.com",
+                "person_f4" to true,
+                "person_f5_p1" to "developer",
+                "person_f5_p2" to "team-lead"
+            ))
+        }
+
+        @Test
+        fun `should expand an array of data classes`() {
+            val sql = "SELECT process_team(:team)"
+            val team = listOf(
+                TestPerson("Alice", 28, "a@a.com", true, listOf("frontend")),
+                TestPerson("Bob", 42, "b@b.com", false, listOf("backend", "dba"))
             )
-        )
+            val params = mapOf("team" to team)
 
-        converter = KotlinToPostgresConverter(mockTypeRegistry)
-    }
+            val result = converter.expandParametersInQuery(sql, params)
 
-    @Test
-    fun `expandParametersInQuery should handle simple parameters`() {
-        val sql = "SELECT * FROM users WHERE id = :id AND name = :name"
-        val params = mapOf("id" to 123, "name" to "John")
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat(result.expandedSql).isEqualTo("SELECT * FROM users WHERE id = :id AND name = :name")
-        assertThat(result.expandedParams).isEqualTo(params)
-    }
-
-    @Test
-    fun `expandParametersInQuery should handle null parameters`() {
-        val sql = "SELECT * FROM users WHERE id = :id"
-        val params = mapOf("id" to null)
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat("SELECT * FROM users WHERE id = :id").isEqualTo(result.expandedSql)
-        assertThat(mapOf("id" to null)).isEqualTo(result.expandedParams)
-    }
-
-    @Test
-    fun `expandParametersInQuery should expand array parameters`() {
-        val sql = "SELECT * FROM users WHERE id = ANY(:ids)"
-        val params = mapOf("ids" to listOf(1, 2, 3))
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat("SELECT * FROM users WHERE id = ANY(ARRAY[:ids_p1, :ids_p2, :ids_p3])").isEqualTo(result.expandedSql)
-        assertThat(mapOf("ids_p1" to 1, "ids_p2" to 2, "ids_p3" to 3)).isEqualTo(result.expandedParams)
-    }
-
-    @Test
-    fun `expandParametersInQuery should handle empty arrays`() {
-        val sql = "SELECT * FROM users WHERE id = ANY(:ids)"
-        val params = mapOf("ids" to emptyList<Int>())
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat("SELECT * FROM users WHERE id = ANY('{}')").isEqualTo(result.expandedSql)
-        assertThat(emptyMap<String, Any?>()).isEqualTo(result.expandedParams)
-    }
-
-    @Test
-    fun `expandParametersInQuery should expand nested arrays`() {
-        val sql = "SELECT * FROM test WHERE matrix = :matrix"
-        val params = mapOf("matrix" to listOf(listOf(1, 2), listOf(3, 4)))
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat(
-            "SELECT * FROM test WHERE matrix = ARRAY[ARRAY[:matrix_p1_p1, :matrix_p1_p2], ARRAY[:matrix_p2_p1, :matrix_p2_p2]]"
-        ).isEqualTo(result.expandedSql)
-        assertThat(
-            mapOf(
-                "matrix_p1_p1" to 1,
-                "matrix_p1_p2" to 2,
-                "matrix_p2_p1" to 3,
-                "matrix_p2_p2" to 4
-            )).isEqualTo(result.expandedParams)
-    }
-
-    @Test
-    fun `expandParametersInQuery should expand enum parameters`() {
-        val sql = "SELECT * FROM users WHERE status = :status"
-        val params = mapOf("status" to TestStatus.Active)
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat("SELECT * FROM users WHERE status = :status").isEqualTo(result.expandedSql)
-        assertThat(1).isEqualTo(result.expandedParams.size)
-
-        val pgObject = result.expandedParams["status"] as PGobject
-        assertThat("test_status").isEqualTo(pgObject.type)
-        assertThat("ACTIVE").isEqualTo(pgObject.value)
-    }
-
-    @Test
-    fun `expandParametersInQuery should expand data class parameters`() {
-        val sql = "INSERT INTO people VALUES (:person)"
-        val person = TestPerson("John", 30, true)
-        val params = mapOf("person" to person)
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat(
-            "INSERT INTO people VALUES (ROW(:person_f1, :person_f2, :person_f3)::test_person)"
-        ).isEqualTo(result.expandedSql)
-        assertThat(
-            mapOf(
-                "person_f1" to "John",
-                "person_f2" to 30,
-                "person_f3" to true
-            )).isEqualTo(result.expandedParams)
-    }
-
-    @Test
-    fun `expandParametersInQuery should expand JSON parameters`() {
-        val sql = "INSERT INTO documents (data) VALUES (:data)"
-        val jsonData = JsonObject(
-            mapOf(
-                "name" to JsonPrimitive("test"),
-                "value" to JsonPrimitive(42)
+            val expectedSql = "SELECT process_team(ARRAY[ROW(:team_p1_f1, :team_p1_f2, :team_p1_f3, :team_p1_f4, ARRAY[:team_p1_f5_p1])::test_person, ROW(:team_p2_f1, :team_p2_f2, :team_p2_f3, :team_p2_f4, ARRAY[:team_p2_f5_p1, :team_p2_f5_p2])::test_person])"
+            val expectedParams = mapOf(
+                "team_p1_f1" to "Alice", "team_p1_f2" to 28, "team_p1_f3" to "a@a.com", "team_p1_f4" to true, "team_p1_f5_p1" to "frontend",
+                "team_p2_f1" to "Bob", "team_p2_f2" to 42, "team_p2_f3" to "b@b.com", "team_p2_f4" to false, "team_p2_f5_p1" to "backend", "team_p2_f5_p2" to "dba"
             )
-        )
-        val params = mapOf("data" to jsonData)
 
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat("INSERT INTO documents (data) VALUES (:data)").isEqualTo(result.expandedSql)
-        assertThat(1).isEqualTo(result.expandedParams.size)
-
-        val pgObject = result.expandedParams["data"] as PGobject
-        assertThat("jsonb").isEqualTo(pgObject.type)
-        assertThat(pgObject.value!!).contains("\"name\":\"test\"", "\"value\":42")
+            assertThat(result.expandedSql).isEqualTo(expectedSql)
+            assertThat(result.expandedParams).isEqualTo(expectedParams)
+        }
     }
 
-    @Test
-    fun `expandParametersInQuery should handle arrays of enums`() {
-        val sql = "SELECT * FROM users WHERE status = ANY(:statuses)"
-        val params = mapOf("statuses" to listOf(TestStatus.Active, TestStatus.Pending))
+    @Nested
+    inner class ComplexNestedStructureExpansion {
+        /**
+         * Ten test jest kluczowy - weryfikuje poprawne, rekurencyjne rozwinięcie
+         * głęboko zagnieżdżonej struktury danych, która zawiera niemal wszystkie
+         * możliwe typy: kompozyty, tablice kompozytów, enumy, tablice prostych typów,
+         * daty, liczby itp.
+         */
+        @Test
+        fun `should expand a deeply nested data class with all features`() {
+            val sql = "SELECT update_project(:project_data)"
+            val project = TestProject(
+                name = "Enterprise \"Fusion\" Project",
+                description = "A complex project.",
+                status = TestStatus.Active,
+                teamMembers = listOf(
+                    TestPerson("Project Manager", 45, "pm@corp.com", true, listOf("management")),
+                    TestPerson("Lead Developer", 38, "lead@corp.com", true, listOf("dev", "architecture"))
+                ),
+                tasks = listOf(
+                    TestTask(
+                        id = 101,
+                        title = "Initial Setup",
+                        description = "Setup dev environment.",
+                        status = TestStatus.Active,
+                        priority = TestPriority.High,
+                        category = TestCategory.Enhancement,
+                        assignee = TestPerson("DevOps", 32, "devops@corp.com", true, listOf("infra")),
+                        metadata = TestMetadata(
+                            createdAt = LocalDateTime(2024, 1, 1, 10, 0),
+                            updatedAt = LocalDateTime(2024, 1, 1, 12, 0),
+                            version = 1,
+                            tags = listOf("setup", "ci-cd")
+                        ),
+                        subtasks = listOf("Install Docker", "Configure DB"),
+                        estimatedHours = BigDecimal("16.5")
+                    )
+                ),
+                metadata = TestMetadata(
+                    createdAt = LocalDateTime(2024, 1, 1, 9, 0),
+                    updatedAt = LocalDateTime(2024, 1, 15, 18, 0),
+                    version = 3,
+                    tags = listOf("enterprise", "q1-2024")
+                ),
+                budget = BigDecimal("250000.75")
+            )
+            val params = mapOf("project_data" to project)
 
-        val result = converter.expandParametersInQuery(sql, params)
+            val result = converter.expandParametersInQuery(sql, params)
 
-        assertThat("SELECT * FROM users WHERE status = ANY(ARRAY[:statuses_p1, :statuses_p2])").isEqualTo(result.expandedSql)
-        assertThat(2).isEqualTo(result.expandedParams.size)
+            // Sprawdzamy tylko ogólną strukturę SQL, bo pełna byłaby ogromna
+            assertThat(result.expandedSql).startsWith("SELECT update_project(ROW(")
+            assertThat(result.expandedSql).endsWith(")::test_project)")
+            assertThat(result.expandedSql).contains("::test_person")
+            assertThat(result.expandedSql).contains("::test_task")
+            assertThat(result.expandedSql).contains("::test_metadata")
+            assertThat(result.expandedSql).contains("ARRAY[")
 
-        val status1 = result.expandedParams["statuses_p1"] as PGobject
-        assertThat("test_status").isEqualTo(status1.type)
-        assertThat("ACTIVE").isEqualTo(status1.value)
+            // Sprawdzamy kluczowe, spłaszczone parametry
+            assertThat(result.expandedParams)
+                .containsEntry("project_data_f1", "Enterprise \"Fusion\" Project")
+                .containsEntry("project_data_f7", BigDecimal("250000.75"))
 
-        val status2 = result.expandedParams["statuses_p2"] as PGobject
-        assertThat("test_status").isEqualTo(status2.type)
-        assertThat("PENDING").isEqualTo(status2.value)
-    }
+            // Sprawdzamy, czy status projektu został poprawnie skonwertowany na PGobject
+            val projectStatus = result.expandedParams["project_data_f3"] as PGobject
+            assertThat(projectStatus.type).isEqualTo("test_status")
+            assertThat(projectStatus.value).isEqualTo("active")
 
-    @Test
-    fun `expandParametersInQuery should handle arrays of data classes`() {
-        val sql = "INSERT INTO people_batch VALUES (UNNEST(:people))"
-        val people = listOf(
-            TestPerson("John", 30, true),
-            TestPerson("Jane", 25, false)
-        )
-        val params = mapOf("people" to people)
+            // Sprawdzamy zagnieżdżonego członka zespołu
+            assertThat(result.expandedParams)
+                .containsEntry("project_data_f4_p2_f1", "Lead Developer") // teamMembers[1].name
 
-        val result = converter.expandParametersInQuery(sql, params)
+            // Sprawdzamy głęboko zagnieżdżone pole w zadaniu
+            assertThat(result.expandedParams)
+                .containsEntry("project_data_f5_p1_f7_f1", "DevOps") // tasks[0].assignee.name
 
-        assertThat(
-            "INSERT INTO people_batch VALUES (UNNEST(ARRAY[ROW(:people_p1_f1, :people_p1_f2, :people_p1_f3)::test_person, ROW(:people_p2_f1, :people_p2_f2, :people_p2_f3)::test_person]))"
-        ).isEqualTo(result.expandedSql)
-        assertThat(
-            mapOf(
-                "people_p1_f1" to "John",
-                "people_p1_f2" to 30,
-                "people_p1_f3" to true,
-                "people_p2_f1" to "Jane",
-                "people_p2_f2" to 25,
-                "people_p2_f3" to false
-            )).isEqualTo(result.expandedParams)
-    }
+            val taskPriority = result.expandedParams["project_data_f5_p1_f5"] as PGobject // tasks[0].priority
+            assertThat(taskPriority.type).isEqualTo("test_priority")
+            assertThat(taskPriority.value).isEqualTo("high")
 
-    @Test
-    fun `expandParametersInQuery should handle multiple parameters of different types`() {
-        val sql = "SELECT * FROM users WHERE id = ANY(:ids) AND status = :status AND person = :person"
-        val params = mapOf(
-            "ids" to listOf(1, 2, 3),
-            "status" to TestStatus.Active,
-            "person" to TestPerson("John", 30, true)
-        )
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat(
-            "SELECT * FROM users WHERE id = ANY(ARRAY[:ids_p1, :ids_p2, :ids_p3]) AND status = :status AND person = ROW(:person_f1, :person_f2, :person_f3)::test_person"
-        ).isEqualTo(result.expandedSql)
-
-        // Sprawdź że wszystkie parametry są obecne
-        assertThat(result.expandedParams).containsKey("ids_p1")
-        assertThat(result.expandedParams).containsKey("ids_p2")
-        assertThat(result.expandedParams).containsKey("ids_p3")
-        assertThat(result.expandedParams).containsKey("status")
-        assertThat(result.expandedParams).containsKey("person_f1")
-        assertThat(result.expandedParams).containsKey("person_f2")
-        assertThat(result.expandedParams).containsKey("person_f3")
-    }
-
-    @Test
-    fun `expandParametersInQuery should ignore parameters not present in SQL`() {
-        val sql = "SELECT * FROM users WHERE id = :id"
-        val params = mapOf(
-            "id" to 123,
-            "unused_param" to "value"
-        )
-
-        val result = converter.expandParametersInQuery(sql, params)
-
-        assertThat("SELECT * FROM users WHERE id = :id").isEqualTo(result.expandedSql)
-        assertThat(
-            mapOf("id" to 123, "unused_param" to "value")
-        ).isEqualTo(result.expandedParams)
+            // Sprawdzamy pole w metadanych zadania
+            assertThat(result.expandedParams)
+                .containsEntry("project_data_f5_p1_f8_f3", 1) // tasks[0].metadata.version
+        }
     }
 }

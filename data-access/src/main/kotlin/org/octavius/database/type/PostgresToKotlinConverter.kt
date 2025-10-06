@@ -67,7 +67,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @throws TypeRegistryException jeśli typ jest nieznany lub nie ma typu bazowego.
      * @throws DataConversionException jeśli konwersja się nie powiedzie.
      */
-    fun convertToDomainType(value: String?, pgTypeName: String): Any? {
+    fun convert(value: String?, pgTypeName: String): Any? {
         if (value == null) {
             logger.trace { "Converting null value for type: $pgTypeName" }
             return null
@@ -102,7 +102,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                     ?: throw TypeRegistryException("Domena '${typeInfo.typeName}' nie ma zdefiniowanego typu bazowego w TypeRegistry.")
                 logger.trace { "Converting domain value '$value' using base type: $baseTypeName" }
                 // Wywołujemy tę samą funkcję, ale już dla typu bazowego (np. 'int4', 'bool').
-                convertToDomainType(value, baseTypeName)
+                convert(value, baseTypeName)
             }
         }
     }
@@ -271,7 +271,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             // W przeciwnym razie, kontynuujemy standardową logikę z elementType.
             val typeNameToUse = if (isNestedArray) typeInfo.typeName else elementType
 
-            convertToDomainType(elementValue, typeNameToUse)
+            convert(elementValue, typeNameToUse)
         }
     }
 
@@ -314,7 +314,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
 
         logger.trace { "Converting ${dbAttributes.size} composite fields" }
         val constructorArgsMap = dbAttributes.mapIndexed { index, (dbAttributeName, dbAttributeType) ->
-            val convertedValue = convertToDomainType(fieldValues[index], dbAttributeType)
+            val convertedValue = convert(fieldValues[index], dbAttributeType)
             dbAttributeName to convertedValue
         }.toMap()
 

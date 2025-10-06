@@ -32,7 +32,7 @@ internal class RowMappers(private val typesConverter: PostgresToKotlinConverter)
             val columnType = metaData.getColumnTypeName(i)
             val rawValue = rs.getString(i)
             // Konwersja przez typesConverter z uwzględnieniem typu PostgreSQL
-            data[columnName] = typesConverter.convertToDomainType(rawValue, columnType)
+            data[columnName] = typesConverter.convert(rawValue, columnType)
         }
         data
     }
@@ -44,7 +44,7 @@ internal class RowMappers(private val typesConverter: PostgresToKotlinConverter)
     fun SingleValueMapper(): RowMapper<Any?> = RowMapper { rs, _ ->
         val columnType = (rs.metaData as PgResultSetMetaData).getColumnTypeName(1)
         val rawValue = rs.getString(1)
-        typesConverter.convertToDomainType(rawValue, columnType)
+        typesConverter.convert(rawValue, columnType)
     }
 
     /**

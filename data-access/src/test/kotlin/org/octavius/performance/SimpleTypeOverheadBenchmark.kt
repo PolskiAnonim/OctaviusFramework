@@ -168,7 +168,7 @@ private class FrameworkRowMapper(private val converter: PostgresToKotlinConverte
             val columnName = metaData.getColumnName(i)
             val columnType = metaData.getColumnTypeName(i)
             val rawValue = rs.getString(i)
-            data[columnName] = converter.convertToDomainType(rawValue, columnType)
+            data[columnName] = converter.convert(rawValue, columnType)
         }
         return data
     }
