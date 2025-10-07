@@ -2,7 +2,9 @@ package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import org.octavius.data.EnumCaseConvention
 import org.octavius.data.toDataObject
 import org.octavius.exception.DataConversionException
@@ -58,13 +60,12 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     /**
      * Główna funkcja konwertująca, delegująca do specjalistycznych handlerów.
      *
-     * Obsługuje wszystkie kategorie typów: STANDARD, ENUM, ARRAY i COMPOSITE.
-     * Dla typów domenowych rekurencyjnie deleguje do typu bazowego.
+     * Obsługuje wszystkie kategorie typów: STANDARD, ENUM, ARRAY, COMPOSITE i DYNAMIC.
      *
      * @param value Wartość z bazy danych jako `String` (może być `null`).
-     * @param pgTypeName Nazwa typu w PostgreSQL (np. "int4", "my_enum", "_text").
+     * @param pgTypeName Nazwa typu w PostgreSQL (np. "int4", "my_enum", "dynamic_dto").
      * @return Przekonwertowana wartość lub `null` jeśli `value` było `null`.
-     * @throws TypeRegistryException jeśli typ jest nieznany lub nie ma typu bazowego.
+     * @throws TypeRegistryException jeśli typ jest nieznany.
      * @throws DataConversionException jeśli konwersja się nie powiedzie.
      */
     fun convert(value: String?, pgTypeName: String): Any? {
@@ -96,6 +97,48 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                 logger.trace { "Converting standard value '$value' for type $pgTypeName" }
                 convertStandardType(value, pgTypeName)
             }
+
+            TypeCategory.DYNAMIC -> {
+                logger.trace { "Converting dynamic DTO value for type $pgTypeName" }
+                convertDynamicType(value)
+            }
+        }
+    }
+
+    /**
+     * Deserializuje specjalny typ `dynamic_dto` na odpowiednią klasę Kotlina.
+     *
+     * @param value Surowa wartość z bazy w formacie kompozytu `("typeName", "jsonData")`.
+     * @return Instancja odpowiedniej `data class` z adnotacją `@DynamicallyMappable`.
+     */
+    @OptIn(InternalSerializationApi::class)
+    private fun convertDynamicType(value: String): Any? {
+        val parts: List<String?>
+        try {
+            parts = parsePostgresComposite(value)
+        } catch (e: Exception) {
+            throw DataConversionException("Błąd parsowania dynamic_dto", value, "dynamic_dto", e)
+        }
+
+        if (parts.size != 2) {
+            throw DataConversionException("Nieprawidłowy format dynamic_dto: oczekiwano 2 pól", value, "dynamic_dto")
+        }
+
+        val typeName = parts[0]
+        val jsonDataString = parts[1]
+
+        if (typeName == null || jsonDataString == null) {
+            throw DataConversionException("Nieprawidłowy format dynamic_dto: pola nie mogą być puste", value, "dynamic_dto")
+        }
+
+        // Użyj TypeRegistry do bezpiecznego znalezienia KClass
+        val kClass = typeRegistry.getDynamicMappableClass(typeName)
+            ?: throw DataMappingException("Nie znaleziono zarejestrowanej klasy dla dynamicznego typu '$typeName'", typeName, mapOf("json" to jsonDataString))
+
+        return try {
+            Json.decodeFromString(kClass.serializer(), jsonDataString)
+        } catch (e: Exception) {
+            throw DataMappingException("Nie udało się zdeserializować JSON dla dynamicznego typu '$typeName'", kClass.qualifiedName!!, mapOf("json" to jsonDataString), e)
         }
     }
 

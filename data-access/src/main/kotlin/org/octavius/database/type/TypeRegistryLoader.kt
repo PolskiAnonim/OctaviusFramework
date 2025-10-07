@@ -5,22 +5,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.octavius.data.DynamicallyMappable
 import org.octavius.data.EnumCaseConvention
 import org.octavius.data.PgType
 import org.octavius.database.DatabaseConfig
 import org.octavius.exception.TypeRegistryException
 import org.octavius.util.Converters
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import kotlin.reflect.KClass
 
-/**
- * Buduje instancję [TypeRegistry] poprzez RÓWNOLEGŁE skanowanie bazy danych i klas domenowych.
- *
- * Ta klasa jest odpowiedzialna za łączenie się z bazą danych,
- * wykonywanie zapytań do katalogów systemowych PostgreSQL oraz skanowanie classpath
- * w poszukiwaniu adnotacji. Używa korutyn do maksymalizacji wydajności.
- *
- * @param namedParameterJdbcTemplate Template JDBC do odpytywania bazy danych.
- */
 internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
 
     // Klasy pomocnicze do przetwarzania wyników z bazy
@@ -36,44 +29,48 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
         val pgTypeName: String,
         val enumConvention: EnumCaseConvention?
     )
+    private data class KotlinDynamicTypeMapping(val typeName: String, val kClass: KClass<*>)
 
-    /**
-     * Główna metoda, która wykonuje wszystkie kroki i zwraca gotowy,
-     * w pełni skonfigurowany [TypeRegistry]. Jest to funkcja zawieszająca (suspend).
-     */
+    // klasa-kontener na wyniki z jednego skanowania
+    private data class AnnotationScanResults(
+        val pgTypeMappings: List<KotlinPgTypeMapping>,
+        val dynamicTypeMappings: List<KotlinDynamicTypeMapping>
+    )
+
     suspend fun load(): TypeRegistry {
         try {
             logger.info { "Starting TypeRegistry loading..." }
 
-            // Używamy coroutineScope, aby zapewnić, że funkcja nie zakończy się,
-            // dopóki wszystkie wewnętrzne korutyny (async) nie zakończą pracy.
-            val (kotlinTypeMappings, processedDbTypes) = coroutineScope {
-                // Krok 1: Uruchom skanowanie classpathu i zapytania do bazy RÓWNOLEGLE
+            // Zmiana: teraz mamy tylko DWA równoległe zadania
+            val (scanResults, processedDbTypes) = coroutineScope {
                 logger.debug { "Starting parallel execution of classpath scan and database query." }
-                val kotlinMappingsJob = async(Dispatchers.IO) { scanDomainClasses() }
+                // JEDNO skanowanie classpathu
+                val annotationScanJob = async(Dispatchers.IO) { scanForAnnotations() }
                 val dbTypesJob = async(Dispatchers.IO) { loadAllCustomTypesFromDb() }
 
-                // Krok 2: Poczekaj na wyniki obu operacji
-                val mappings = kotlinMappingsJob.await()
+                val scanRes = annotationScanJob.await()
                 val rawDbData = dbTypesJob.await()
                 logger.debug { "Classpath scan and database query completed." }
 
-                // Krok 3: Przetwórz surowe dane z bazy
-                val processed = processRawDbTypes(rawDbData, mappings)
+                val processed = processRawDbTypes(rawDbData, scanRes.pgTypeMappings)
 
-                mappings to processed
+                scanRes to processed
             }
 
             val postgresTypeMap = buildPostgresTypeMap(processedDbTypes)
-            val (classToPgMap, pgToClassMap) = buildBidirectionalClassMaps(kotlinTypeMappings)
+            // Rozpakowujemy wyniki ze zunifikowanego skanowania
+            val (classToPgMap, pgToClassMap) = buildBidirectionalClassMaps(scanResults.pgTypeMappings)
+            val dynamicTypeMap = scanResults.dynamicTypeMappings.associate { it.typeName to it.kClass }
 
             logger.info { "TypeRegistry loaded successfully. Found ${postgresTypeMap.size} total PG types." }
-            logger.debug { "Kotlin class mappings found: ${kotlinTypeMappings.size}" }
+            logger.debug { "Static @PgType mappings found: ${scanResults.pgTypeMappings.size}" }
+            logger.debug { "Dynamic @DynamicallyMappable mappings found: ${scanResults.dynamicTypeMappings.size}" }
 
             return TypeRegistry(
                 postgresTypeMap = postgresTypeMap,
                 classFullPathToPgTypeNameMap = classToPgMap,
-                pgTypeNameToClassFullPathMap = pgToClassMap
+                pgTypeNameToClassFullPathMap = pgToClassMap,
+                dynamicTypeNameToKClassMap = dynamicTypeMap
             )
         } catch (e: Exception) {
             logger.error(e) { "FATAL: Failed to load TypeRegistry. Application state is inconsistent!" }
@@ -82,8 +79,49 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
     }
 
     /**
-     * Wykonuje jedno, zunifikowane zapytanie do bazy, aby pobrać wszystkie potrzebne metadane.
+     * Wykonuje JEDNO skanowanie classpathu i wyszukuje klasy z obiema adnotacjami.
      */
+    private fun scanForAnnotations(): AnnotationScanResults {
+        val pgMappings = mutableListOf<KotlinPgTypeMapping>()
+        val dynamicMappings = mutableListOf<KotlinDynamicTypeMapping>()
+
+        try {
+            ClassGraph()
+                .enableAllInfo() // Upewnij się, że adnotacje są włączone
+                .acceptPackages("org.octavius")
+                .scan().use { scanResult ->
+                    // Przetwarzamy klasy z @PgType
+                    scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->
+                        val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
+                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
+                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank { Converters.toSnakeCase(classInfo.simpleName) }
+
+                        var convention: EnumCaseConvention? = null
+                        if (classInfo.isEnum) {
+                            val conventionEnumValue = annotationInfo.parameterValues.getValue("enumConvention") as? io.github.classgraph.AnnotationEnumValue
+                            convention = conventionEnumValue?.loadClassAndReturnEnumValue() as? EnumCaseConvention
+                        }
+                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, convention))
+                    }
+
+                    // Przetwarzamy klasy z @DynamicallyMappable
+                    scanResult.getClassesWithAnnotation(DynamicallyMappable::class.java).forEach { classInfo ->
+                        val annotationInfo = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
+                        val typeName = annotationInfo.parameterValues.getValue("typeName") as String
+                        dynamicMappings.add(KotlinDynamicTypeMapping(typeName, classInfo.loadClass().kotlin))
+                    }
+                }
+        } catch (e: Exception) {
+            val ex = TypeRegistryException("Błąd podczas skanowania adnotacji na classpath", e)
+            logger.error(ex) { ex.message }
+            throw ex
+        }
+        return AnnotationScanResults(pgMappings, dynamicMappings)
+    }
+
+    // Reszta klasy (loadAllCustomTypesFromDb, processRawDbTypes, etc.) pozostaje bez zmian.
+    // Poniżej wklejam całą klasę dla spójności.
+
     private fun loadAllCustomTypesFromDb(): List<DbTypeRawInfo> {
         logger.debug { "Executing unified query for all custom DB types..." }
         val params = mapOf("schemas" to DatabaseConfig.dbSchemas.toTypedArray())
@@ -127,7 +165,8 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
         }
 
         val compositeTypes = composites.mapValues { (typeName, attrs) ->
-            PostgresTypeInfo(typeName, TypeCategory.COMPOSITE, attributes = attrs)
+            val category = if (typeName == "dynamic_dto") TypeCategory.DYNAMIC else TypeCategory.COMPOSITE
+            PostgresTypeInfo(typeName, category, attributes = attrs)
         }
 
         return ProcessedDbTypes(enumTypes, compositeTypes)
@@ -152,36 +191,6 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
         val classToPg = mappings.associate { it.classFullPath to it.pgTypeName }
         val pgToClass = mappings.associate { it.pgTypeName to it.classFullPath }
         return classToPg to pgToClass
-    }
-
-    private fun scanDomainClasses(): List<KotlinPgTypeMapping> {
-        val mappings = mutableListOf<KotlinPgTypeMapping>()
-
-        try {
-            ClassGraph()
-                .enableAllInfo()
-                .acceptPackages("org.octavius")
-                .scan().use { scanResult ->
-                    scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->
-                        val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
-                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
-                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank { Converters.toSnakeCase(classInfo.simpleName) }
-
-                        var convention: EnumCaseConvention? = null
-                        if (classInfo.isEnum) {
-                            val conventionEnumValue = annotationInfo.parameterValues.getValue("enumConvention") as? io.github.classgraph.AnnotationEnumValue
-                            convention = conventionEnumValue?.loadClassAndReturnEnumValue() as? EnumCaseConvention
-                        }
-
-                        mappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, convention))
-                    }
-                }
-        } catch (e: Exception) {
-            val ex = TypeRegistryException("FATAL: Failed to load TypeRegistry. Application state is inconsistent!", e)
-            logger.error(ex) { "Błąd podczas skanowania klas z adnotacją @PgType" }
-            throw ex
-        }
-        return mappings
     }
 
     private fun loadStandardTypes(): Map<String, PostgresTypeInfo> {

@@ -25,10 +25,23 @@ import kotlin.reflect.KClass
 internal class TypeRegistry(
     private val postgresTypeMap: Map<String, PostgresTypeInfo>,
     private val classFullPathToPgTypeNameMap: Map<String, String>,
-    private val pgTypeNameToClassFullPathMap: Map<String, String>
+    private val pgTypeNameToClassFullPathMap: Map<String, String>,
+    private val dynamicTypeNameToKClassMap: Map<String, KClass<*>>
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}
+    }
+
+    /**
+     * Zwraca klasę Kotlina (KClass) powiązaną z danym kluczem dynamicznego typu.
+     *
+     * @param dynamicTypeName Klucz (nazwa) z adnotacji @DynamicallyMappable.
+     * @return KClass<?> lub null, jeśli nie znaleziono mapowania.
+     */
+    fun getDynamicMappableClass(dynamicTypeName: String): KClass<*>? {
+        val kClass = dynamicTypeNameToKClassMap[dynamicTypeName]
+        logger.trace { "Looking up dynamic mappable class for key '$dynamicTypeName': ${kClass?.simpleName ?: "not found"}" }
+        return kClass
     }
 
 
@@ -92,7 +105,9 @@ internal enum class TypeCategory {
     /** Typ kompozytowy (CREATE TYPE ... AS) */
     COMPOSITE,
     /** Standardowy typ PostgreSQL (int4, text, bool, itp.) */
-    STANDARD
+    STANDARD,
+    /* Typ tworzony w locie w zapytaniach przez dynamic_dto */
+    DYNAMIC
 }
 
 /**

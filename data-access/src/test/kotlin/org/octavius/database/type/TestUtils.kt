@@ -79,5 +79,5 @@ internal fun createFakeTypeRegistry(): TypeRegistry {
     // Mapa 3: Nazwa typu PG -> Pełna ścieżka klasy
     val pgToClassMap = classToPgMap.entries.associate { (k, v) -> v to k }
 
-    return TypeRegistry(postgresTypeMap, classToPgMap, pgToClassMap)
+    return TypeRegistry(postgresTypeMap, classToPgMap, pgToClassMap, mapOf())
 }

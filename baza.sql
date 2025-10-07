@@ -1,4 +1,21 @@
 -- PUBLIC
+-- ponieważ postgres jest niemiły i nie zwraca metadanych dla dynamicznego ROW
+-- a domeny nie mogą służyć za prosty wskaźnik do metadanych trzeba radzić sobie inaczej
+-- i samemu dostarczyć metadane
+-- !!!!!!! Ten kompozyt zastępuje dynamiczny ROW() w zapytaniach SQL z aplikacji który to nie jest obsługiwany
+-- !!! Powienien być używany w absolutnej ostateczności, prawdopodobnie w 90% przypadków dedykowany typ COMPOSITE będzie lepszy
+CREATE TYPE dynamic_dto AS (
+    type_name text,
+    data jsonb
+);
+
+CREATE OR REPLACE FUNCTION dynamic_dto(p_type_name TEXT, p_data JSONB)
+    RETURNS dynamic_dto AS $$
+BEGIN
+    RETURN ROW(p_type_name, p_data)::dynamic_dto;
+END;
+$$ LANGUAGE plpgsql;
+
 ---------- TRIGGER
 
 CREATE FUNCTION public.update_modified_column() RETURNS trigger
