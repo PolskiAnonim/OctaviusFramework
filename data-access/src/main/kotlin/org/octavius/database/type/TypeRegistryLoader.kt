@@ -27,8 +27,7 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
     private data class DbTypeRawInfo(val infoType: String, val typeName: String, val col1: String?, val col2: String?)
     private data class ProcessedDbTypes(
         val enums: Map<String, PostgresTypeInfo>,
-        val composites: Map<String, PostgresTypeInfo>,
-        val domains: Map<String, PostgresTypeInfo>
+        val composites: Map<String, PostgresTypeInfo>
     )
 
     // Klasa pomocnicza do przechowywania zmapowanych informacji o klasach Kotlina.
@@ -112,13 +111,11 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
 
         val enums = mutableMapOf<String, MutableList<String>>()
         val composites = mutableMapOf<String, MutableMap<String, String>>()
-        val domains = mutableMapOf<String, String>()
 
         rawInfo.forEach {
             when (it.infoType) {
                 "enum" -> enums.getOrPut(it.typeName) { mutableListOf() }.add(it.col1!!)
                 "composite" -> composites.getOrPut(it.typeName) { mutableMapOf() }[it.col1!!] = it.col2!!
-                "domain" -> domains[it.typeName] = it.col1!!
             }
         }
 
@@ -133,11 +130,7 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
             PostgresTypeInfo(typeName, TypeCategory.COMPOSITE, attributes = attrs)
         }
 
-        val domainTypes = domains.mapValues { (typeName, baseType) ->
-            PostgresTypeInfo(typeName, TypeCategory.DOMAIN, baseTypeName = baseType)
-        }
-
-        return ProcessedDbTypes(enumTypes, compositeTypes, domainTypes)
+        return ProcessedDbTypes(enumTypes, compositeTypes)
     }
 
     private fun buildPostgresTypeMap(processedDbTypes: ProcessedDbTypes): Map<String, PostgresTypeInfo> {
@@ -145,7 +138,6 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
             putAll(loadStandardTypes())
             putAll(processedDbTypes.enums)
             putAll(processedDbTypes.composites)
-            putAll(processedDbTypes.domains)
 
             // Array types muszą być dodane na końcu, na podstawie już istniejących typów
             val existingKeys = keys.toList()
@@ -253,29 +245,11 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
                 AND n.nspname = ANY(:schemas)
         """
 
-        private const val SQL_QUERY_DOMAIN_TYPES = """
-            SELECT
-                'domain' AS info_type,
-                t.typname as type_name,
-                bt.typname as col1,
-                NULL AS col2,
-                1 AS sort_order -- Kluczowa zmiana: stała wartość, bo nie ma wewnętrznej kolejności
-            FROM
-                pg_type t
-                JOIN pg_namespace n ON n.oid = t.typnamespace
-                JOIN pg_type bt ON t.typbasetype = bt.oid
-            WHERE
-                t.typtype = 'd' -- 'd' for domain
-                AND n.nspname = ANY(:schemas)
-        """
-
         // Jedno zapytanie, by rządzić wszystkimi!
         private const val SQL_QUERY_ALL_TYPES = """
             $SQL_QUERY_ENUM_TYPES
             UNION ALL
             $SQL_QUERY_COMPOSITE_TYPES
-            UNION ALL
-            $SQL_QUERY_DOMAIN_TYPES
             ORDER BY
                 type_name, sort_order
         """

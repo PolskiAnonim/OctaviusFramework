@@ -17,7 +17,6 @@ import kotlin.reflect.KClass
  * - ENUM - typy wyliczeniowe z automatyczną konwersją konwencji nazw
  * - ARRAY - typy tablicowe z rekurencyjnym przetwarzaniem elementów
  * - COMPOSITE - typy kompozytowe mapowane na data class
- * - DOMAIN - typy domenowe delegujące do typów bazowych
  *
  * @property postgresTypeMap Mapa nazw typów PostgreSQL na szczegółowe informacje o typach
  * @property classFullPathToPgTypeNameMap Mapa pełnych ścieżek klas Kotlina na nazwy typów PostgreSQL
@@ -93,9 +92,7 @@ internal enum class TypeCategory {
     /** Typ kompozytowy (CREATE TYPE ... AS) */
     COMPOSITE,
     /** Standardowy typ PostgreSQL (int4, text, bool, itp.) */
-    STANDARD,
-    /** Typ domenowy, obsługiwany podobnie jak standardowy typ ale jest potrzebna informacja o nim */
-    DOMAIN
+    STANDARD
 }
 
 /**
@@ -107,7 +104,6 @@ internal enum class TypeCategory {
  * @param enumConvention Konwencja konwersji nazw enum
  * @param elementType Typ elementu dla typów tablicowych (null dla innych typów)
  * @param attributes Mapa atrybutów dla typów kompozytowych (pusta dla innych typów)
- * @param baseTypeName podstawowy typ dla typu DOMAIN (null dla innych typów)
  */
 internal data class PostgresTypeInfo(
     val typeName: String,
@@ -115,6 +111,5 @@ internal data class PostgresTypeInfo(
     val enumValues: List<String> = emptyList(),
     val enumConvention: EnumCaseConvention = EnumCaseConvention.SNAKE_CASE_LOWER,
     val elementType: String? = null,
-    val attributes: Map<String, String> = emptyMap(),
-    val baseTypeName: String? = null
+    val attributes: Map<String, String> = emptyMap()
 )

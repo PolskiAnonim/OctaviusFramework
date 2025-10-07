@@ -205,16 +205,4 @@ class PostgresToKotlinConverterUnitTest {
         assertThat(result[1].teamMembers[0].name).isEqualTo("Researcher 'The Innovator'")
     }
 
-    @Test
-    fun `should convert domain types by delegating to their base type`() {
-        // Domena 'test_email' oparta na 'text'
-        val emailResult = converter.convert(GOLDEN_STRING_USER_EMAIL, "test_email")
-        assertThat(emailResult).isInstanceOf(String::class.java)
-        assertThat(emailResult).isEqualTo("valid.email@example.com")
-
-        // Domena 'positive_integer' oparta na 'int4'
-        val countResult = converter.convert(GOLDEN_STRING_ITEM_COUNT, "positive_integer")
-        assertThat(countResult).isEqualTo(150)
-    }
-
 }

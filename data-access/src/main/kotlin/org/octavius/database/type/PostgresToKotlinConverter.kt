@@ -58,7 +58,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     /**
      * Główna funkcja konwertująca, delegująca do specjalistycznych handlerów.
      *
-     * Obsługuje wszystkie kategorie typów: STANDARD, ENUM, ARRAY, COMPOSITE i DOMAIN.
+     * Obsługuje wszystkie kategorie typów: STANDARD, ENUM, ARRAY i COMPOSITE.
      * Dla typów domenowych rekurencyjnie deleguje do typu bazowego.
      *
      * @param value Wartość z bazy danych jako `String` (może być `null`).
@@ -95,14 +95,6 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             TypeCategory.STANDARD -> {
                 logger.trace { "Converting standard value '$value' for type $pgTypeName" }
                 convertStandardType(value, pgTypeName)
-            }
-
-            TypeCategory.DOMAIN -> {
-                val baseTypeName = typeInfo.baseTypeName
-                    ?: throw TypeRegistryException("Domena '${typeInfo.typeName}' nie ma zdefiniowanego typu bazowego w TypeRegistry.")
-                logger.trace { "Converting domain value '$value' using base type: $baseTypeName" }
-                // Wywołujemy tę samą funkcję, ale już dla typu bazowego (np. 'int4', 'bool').
-                convert(value, baseTypeName)
             }
         }
     }
