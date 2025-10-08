@@ -1,7 +1,7 @@
 package org.octavius.modules.games.form.game
 
 import org.octavius.data.DataResult
-import org.octavius.data.toDatabaseValue
+import org.octavius.data.transaction.toDatabaseValue
 import org.octavius.data.transaction.DatabaseValue
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig

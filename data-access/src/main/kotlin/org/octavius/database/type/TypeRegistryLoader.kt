@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.octavius.data.DynamicallyMappable
 import org.octavius.data.EnumCaseConvention
+import org.octavius.data.PgStandardType
 import org.octavius.data.PgType
 import org.octavius.database.DatabaseConfig
 import org.octavius.exception.TypeRegistryException
@@ -194,26 +195,9 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
     }
 
     private fun loadStandardTypes(): Map<String, PostgresTypeInfo> {
-// Mapowanie standardowych typów PostgreSQL
-        return listOf(
-            // Typy stałoprzecinkowe
-            "serial", "bigserial", "smallserial", "int4", "int8", "int2",
-            // Typy zmiennoprzecinkowe
-            "float4", "float8", "numeric",
-            // Typy tekstowe
-            "text", "varchar", "char",
-            // Data i czas
-            "date", "timestamp", "timestamptz", "time", "timetz",
-            // Json
-            "json",
-            "jsonb",
-            // Inne
-            "bool",
-            "uuid",
-            "interval"
-        ).associateWith { typeName ->
-            PostgresTypeInfo(typeName, TypeCategory.STANDARD)
-        }
+        // Mapowanie standardowych typów PostgreSQL
+        return PgStandardType.entries.filter { !it.isArray }
+            .associate { it.typeName to PostgresTypeInfo(it.typeName, TypeCategory.STANDARD) }
     }
 
     companion object {
