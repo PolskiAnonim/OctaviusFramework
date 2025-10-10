@@ -7,6 +7,7 @@ import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.exception.DatabaseException
 import org.octavius.exception.QueryExecutionException
+import org.springframework.jdbc.core.RowCallbackHandler
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
@@ -146,6 +147,52 @@ internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
         return executeReturningQuery(params, rowMappers.SingleValueMapper()) {
             @Suppress("UNCHECKED_CAST")
             DataResult.Success(it as List<T?>)
+        }
+    }
+
+    fun forEachRow(params: Map<String, Any?>, action: (row: Map<String, Any?>) -> Unit): DataResult<Unit> {
+        // Sprawdzamy te same warunki co dla toList()
+        if (!canReturnResultsByDefault && returningClause == null) {
+            throw IllegalStateException("Nie można wywołać forEachRow() na zapytaniu modyfikującym bez klauzuli RETURNING.")
+        }
+
+        val sql = buildSql()
+
+        return execute(sql, params) { expandedSql, expandedParams ->
+
+            val rowMapper = rowMappers.ColumnNameMapper()
+
+            jdbcTemplate.query(expandedSql, expandedParams, RowCallbackHandler { rs ->
+                // Ta lambda jest ciałem metody processRow. Spring wywoła ją dla każdego wiersza.
+                // Numer wiersza nie jest potrzebny, więc można przekazać 0.
+                val mappedRow = rowMapper.mapRow(rs, 0)
+
+                // Wywołujemy akcję użytkownika na zmapowanym wierszu
+                action(mappedRow)
+            })
+
+            // Jeśli pętla się zakończyła bez wyjątku, operacja się powiodła.
+            DataResult.Success(Unit)
+        }
+    }
+
+    fun <T : Any> forEachRowOf(kClass: KClass<T>, params: Map<String, Any?>, action: (obj: T) -> Unit): DataResult<Unit> {
+        if (!canReturnResultsByDefault && returningClause == null) {
+            throw IllegalStateException("Nie można wywołać forEachRowOf() na zapytaniu modyfikującym bez klauzuli RETURNING.")
+        }
+
+        val sql = buildSql()
+
+        return execute(sql, params) { expandedSql, expandedParams ->
+
+            val rowMapper = rowMappers.DataObjectMapper(kClass)
+
+            jdbcTemplate.query(expandedSql, expandedParams) { rs ->
+                val mappedObject = rowMapper.mapRow(rs, 0)
+                action(mappedObject)
+            }
+
+            DataResult.Success(Unit)
         }
     }
 
