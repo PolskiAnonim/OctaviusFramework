@@ -13,10 +13,10 @@ plugins {
 
 kotlin {
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -52,6 +52,7 @@ kotlin {
             // Implementacja loggera
             implementation(libs.logback.classic)
         }
+        desktopMain.resources.srcDir(layout.buildDirectory.dir("generated/translations"))
     }
 }
 
@@ -88,6 +89,9 @@ fun mergeJsonMaps(target: MutableMap<String, Any?>, source: Map<String, Any?>) {
 }
 
 val mergeTranslations by tasks.registering {
+    group = "build"
+    description = "Merges translation files from all modules."
+
     val outputDir = project.layout.buildDirectory.dir("generated/translations")
     outputs.dir(outputDir)
 
@@ -105,6 +109,7 @@ val mergeTranslations by tasks.registering {
                             val lang = entry.name.substringAfter("translations_").substringBefore(".json")
                             val content = jar.getInputStream(entry).readBytes().toString(Charsets.UTF_8)
                             if (content.isNotBlank()) {
+                                logger.info("Found translation for '$lang' in ${file.name}")
                                 val sourceMap: Map<String, Any?> = gson.fromJson(content, mapType)
                                 val targetMap = mergedByLang.getOrPut(lang) { mutableMapOf() }
                                 mergeJsonMaps(targetMap, sourceMap)
@@ -122,18 +127,11 @@ val mergeTranslations by tasks.registering {
             val finalJsonString = gson.toJson(mergedMap)
             val outputFile = outputDir.get().file("translations_$lang.json").asFile
             outputFile.writeText(finalJsonString, StandardCharsets.UTF_8)
+            logger.lifecycle("Successfully merged and wrote translations for '$lang' to ${outputFile.path}")
         }
     }
 }
 
-tasks.withType<Jar>().configureEach {
-
+tasks.named("desktopProcessResources") {
     dependsOn(mergeTranslations)
-    // Po prostu dodajemy nasze scalone pliki do JAR-a.
-    // Ponieważ ta akcja jest dodawana na końcu, powinna nadpisać pliki
-    // o tych samych nazwach, które zostały dodane wcześniej z modułów.
-    from(mergeTranslations.map { it.outputs.files }) {
-        into("/")
-    }
-
 }
