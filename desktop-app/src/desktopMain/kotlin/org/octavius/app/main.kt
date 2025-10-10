@@ -14,11 +14,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.context.startKoin
 import org.octavius.api.server.EmbeddedServer
 import org.octavius.contract.FeatureModule
@@ -91,14 +88,25 @@ fun main() {
                 Triple(tabs, apiModules, screenFactories)
             }
 
-            // Inicjalizacja serwera
-            LaunchedEffect(Unit) {
+
+            val server = remember { EmbeddedServer(apiModules) }
+
+            DisposableEffect(Unit) {
                 AppRouter.initialize(tabs)
 
-                // Uruchomienie serwera w tle
-                launch(Dispatchers.Default) {
-                    val server = EmbeddedServer(apiModules)
-                    server.run()
+                println("Starting Ktor server in background...")
+
+                // Uruchamiamy serwer w korutynie w tle
+                val serverScope = CoroutineScope(Dispatchers.IO)
+                val job = serverScope.launch {
+                    server.start()
+                }
+
+                onDispose {
+                    println("onDispose triggered. Shutting down server.")
+                    server.stop() // Grzecznie zatrzymujemy serwer
+                    job.cancel() // Anulujemy korutynę na wszelki wypadek
+                    serverScope.cancel() // Czyścimy cały scope
                 }
             }
 

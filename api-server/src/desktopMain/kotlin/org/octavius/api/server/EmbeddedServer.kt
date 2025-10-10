@@ -13,30 +13,31 @@ import org.octavius.api.contract.ApiModule
 
 class EmbeddedServer(private val apiModules: List<ApiModule>) {
 
-    val server = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+    private val engine = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         install(ContentNegotiation) {
             json()
         }
 
         install(CORS) {
-
             allowMethod(HttpMethod.Get)
             allowMethod(HttpMethod.Post)
-
-            // Przeglądarki często wysyłają zapytanie OPTIONS przed właściwym żądaniem (preflight)
             allowMethod(HttpMethod.Options)
-
-            // Pozwól na nagłówek Content-Type, który jest wysyłany przy POST z JSON-em
             allowHeader(HttpHeaders.ContentType)
-
             anyHost()
         }
-
         module(apiModules)
     }
 
-    fun run() {
-        server.start(wait = true)
+    fun start() {
+        engine.start(wait = true)
+    }
+
+    fun stop() {
+        println("Stopping Ktor server gracefully...")
+        // Dajemy serwerowi 1 sekundę na dokończenie aktywnych żądań
+        // i maksymalnie 5 sekund na całkowite zamknięcie.
+        engine.stop(1000, 5000)
+        println("Ktor server stopped.")
     }
 }
 
