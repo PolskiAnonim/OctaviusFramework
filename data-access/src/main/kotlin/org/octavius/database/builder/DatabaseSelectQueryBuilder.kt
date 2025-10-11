@@ -104,7 +104,7 @@ internal class DatabaseSelectQueryBuilder(
                 throw IllegalStateException("WHERE, GROUP BY, or ORDER BY clauses require a FROM clause.")
             }
         }
-        if (havingClause != null && groupByClause == null) {
+        if (!havingClause.isNullOrBlank() && groupByClause.isNullOrBlank()) {
             throw IllegalStateException("HAVING clause requires a GROUP BY clause.")
         }
 

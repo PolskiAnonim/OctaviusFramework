@@ -147,8 +147,8 @@ class ReportDataManager(
         }
 
         val dataResult = dataAccess.select("*").fromSubquery(query.sql)
-            .where(filterClause.takeIf { it.isNotBlank() })
-            .orderBy(orderClause.takeIf { it.isNotBlank() })
+            .where(filterClause) // builder grzecznie nie weźmie pustych wartości
+            .orderBy(orderClause)
             .page(reportState.pagination.currentPage, reportState.pagination.pageSize)
             .toList(params)
 
