@@ -1,10 +1,10 @@
 package org.octavius.modules.asian.form
 
 import org.octavius.data.DataResult
-import org.octavius.data.transaction.toDatabaseValue
-import org.octavius.data.transaction.DatabaseValue
+import org.octavius.data.transaction.TransactionValue
 import org.octavius.data.transaction.StepReference
 import org.octavius.data.transaction.TransactionPlan
+import org.octavius.data.transaction.toTransactionValue
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormActionResult
@@ -76,7 +76,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         // =================================================================================
         // Główna encja 'titles' i jej referencja ID
         // =================================================================================
-        val titleIdRef: DatabaseValue // Zamiast Any?, używamy docelowego typu
+        val titleIdRef: TransactionValue // Zamiast Any?, używamy docelowego typu
 
         val titleData = mapOf(
             "titles" to formResultData.getCurrent("titles"),
@@ -85,7 +85,7 @@ class AsianMediaFormDataManager : FormDataManager() {
 
         if (loadedId != null) {
             // TRYB EDYCJI: ID jest znane.
-            titleIdRef = loadedId.toDatabaseValue()
+            titleIdRef = loadedId.toTransactionValue()
             plan.update(
                 tableName = "titles",
                 data = titleData,
@@ -120,7 +120,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             // --- Zmodyfikowane publikacje ---
             publicationsResult.modifiedRows.forEach { rowData ->
                 val pubId = rowData["id"]!!.initialValue as Int
-                val publicationIdRef = pubId.toDatabaseValue() // ID tej publikacji jest znane.
+                val publicationIdRef = pubId.toTransactionValue() // ID tej publikacji jest znane.
                 val publicationData = mapOf(
                     "publication_type" to rowData["publicationType"]!!.currentValue,
                     "status" to rowData["status"]!!.currentValue,
@@ -201,7 +201,7 @@ class AsianMediaFormDataManager : FormDataManager() {
     private fun addPublicationVolumesUpdateOperation(
         plan: TransactionPlan,
         rowData: FormResultData,
-        publicationIdRef: DatabaseValue
+        publicationIdRef: TransactionValue
     ) {
         if (rowData["trackProgress"]!!.currentValue == true) {
             val volumesData = mapOf(

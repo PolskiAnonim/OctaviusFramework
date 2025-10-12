@@ -89,7 +89,7 @@ class DataMappingException(
 }
 
 /**
- * Rzucany, gdy referencja do wyniku z poprzedniego kroku (`DatabaseValue.FromStep`)
+ * Rzucany, gdy referencja do wyniku z poprzedniego kroku (`TransactionValue.FromStep`)
  * jest nieprawidłowa i nie może zostać rozwiązana.
  *
  * @param message Komunikat błędu.

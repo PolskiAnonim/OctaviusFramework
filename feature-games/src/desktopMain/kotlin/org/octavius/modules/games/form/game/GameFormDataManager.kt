@@ -1,9 +1,9 @@
 package org.octavius.modules.games.form.game
 
 import org.octavius.data.DataResult
-import org.octavius.data.transaction.toDatabaseValue
-import org.octavius.data.transaction.DatabaseValue
 import org.octavius.data.transaction.TransactionPlan
+import org.octavius.data.transaction.TransactionValue
+import org.octavius.data.transaction.toTransactionValue
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus
@@ -84,7 +84,7 @@ class GameFormDataManager : FormDataManager() {
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
 
         // =================================================================================
-        val gameIdRef: DatabaseValue
+        val gameIdRef: TransactionValue
 
         // Dane dla głównej tabeli 'games'.
         val gameData = mapOf(
@@ -98,7 +98,7 @@ class GameFormDataManager : FormDataManager() {
         if (loadedId != null) {
             // === TRYB EDYCJI ===
             // ID gry jest znane, więc używamy stałej wartości.
-            gameIdRef = loadedId.toDatabaseValue()
+            gameIdRef = loadedId.toTransactionValue()
 
             // Operacja 0: Aktualizuj grę. Nie potrzebujemy niczego zwracać.
             plan.update(
@@ -238,7 +238,7 @@ class GameFormDataManager : FormDataManager() {
         conditionMet: Boolean,
         tableName: String,
         data: Map<String, Any?>,
-        gameIdRef: DatabaseValue
+        gameIdRef: TransactionValue
     ) {
         if (exists) {
             if (conditionMet) {

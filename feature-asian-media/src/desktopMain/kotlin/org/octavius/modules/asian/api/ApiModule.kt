@@ -13,7 +13,7 @@ import org.octavius.api.contract.asian.PublicationCheckResponse
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toSingle
-import org.octavius.data.transaction.DatabaseValue
+import org.octavius.data.transaction.TransactionValue
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.data.withPgType
@@ -112,7 +112,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
             val plan = TransactionPlan(dataAccess)
             plan.insert("titles", newTitle, returning = listOf("id"))
             plan.insert("publications", newPublication +
-                    mapOf("title_id" to DatabaseValue.FromStep(0, "id")))
+                    mapOf("title_id" to TransactionValue.FromStep(0, "id")))
 
 
             val result = dataAccess.executeTransactionPlan(plan.build())

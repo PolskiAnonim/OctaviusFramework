@@ -2,7 +2,7 @@ package org.octavius.database.transaction
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.DataResult
-import org.octavius.data.transaction.DatabaseValue
+import org.octavius.data.transaction.TransactionValue
 import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.data.transaction.TransactionStep
 import org.octavius.exception.BatchStepExecutionException
@@ -25,7 +25,7 @@ import org.springframework.transaction.support.TransactionTemplate
  * @param transactionManager Menedżer transakcji Spring.
  *
  * @see TransactionStep
- * @see DatabaseValue
+ * @see TransactionValue
  * @see org.octavius.database.type.KotlinToPostgresConverter
  */
 internal class TransactionPlanExecutor(
@@ -47,8 +47,8 @@ internal class TransactionPlanExecutor(
      * Przykład z zależnościami:
      * ```kotlin
      * val steps = listOf(
-     *     DatabaseStep.Insert("users", mapOf("name" to "John".toDatabaseValue()), returning = listOf("id")),
-     *     DatabaseStep.Insert("profiles", mapOf("user_id" to DatabaseValue.FromStep(0, "id")))
+     *     TransactionStep.Insert("users", mapOf("name" to "John".toTransactionValue()), returning = listOf("id")),
+     *     TransactionStep.Insert("profiles", mapOf("user_id" to TransactionValue.FromStep(0, "id")))
      * )
      * val results = batchExecutor.execute(steps)
      * ```
@@ -72,7 +72,7 @@ internal class TransactionPlanExecutor(
                             // Rozwiązuj referencje w parametrach
                             val resolvedParams = operation.params.mapValues { (_, value) ->
                                 when (value) {
-                                    is DatabaseValue -> resolveReference(value, allResults)
+                                    is TransactionValue -> resolveReference(value, allResults)
                                     else -> value
                                 }
                             }
@@ -147,10 +147,10 @@ internal class TransactionPlanExecutor(
         }
     }
 
-    private fun resolveReference(ref: DatabaseValue, resultsContext: Map<Int, List<Map<String, Any?>>>): Any? {
+    private fun resolveReference(ref: TransactionValue, resultsContext: Map<Int, List<Map<String, Any?>>>): Any? {
         return when (ref) {
-            is DatabaseValue.Value -> ref.value
-            is DatabaseValue.FromStep -> {
+            is TransactionValue.Value -> ref.value
+            is TransactionValue.FromStep -> {
                 logger.trace { "Resolving reference from step ${ref.stepIndex}, key '${ref.resultKey}'" }
                 val previousResultList = resultsContext[ref.stepIndex]
                     ?: throw StepDependencyException(
