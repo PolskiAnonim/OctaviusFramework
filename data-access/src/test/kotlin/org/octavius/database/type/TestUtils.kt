@@ -1,6 +1,6 @@
 package org.octavius.database.type
 
-import org.octavius.data.EnumCaseConvention
+import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.domain.test.* // Importuj swoje klasy domenowe
 
 /**

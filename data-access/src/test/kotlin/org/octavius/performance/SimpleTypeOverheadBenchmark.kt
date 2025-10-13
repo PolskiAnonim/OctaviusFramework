@@ -41,9 +41,9 @@ class SimpleTypeOverheadBenchmark {
     @BeforeAll
     fun setup() {
         println("--- KONFIGURACJA BENCHMARKU NARZUTU DLA PROSTYCH TYPÓW ---")
-        DatabaseConfig.loadFromFile("test-database.properties")
+        val databaseConfig = DatabaseConfig.loadFromFile("test-database.properties")
         // 2. KRYTYCZNE ZABEZPIECZENIE (ASSERTION GUARD)
-        val connectionUrl = DatabaseConfig.dbUrl
+        val connectionUrl = databaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/") // Wyciągamy nazwę bazy z URL-a
 
         // Sprawdzamy zarówno URL, jak i nazwę bazy, aby być podwójnie pewnym.
@@ -56,9 +56,9 @@ class SimpleTypeOverheadBenchmark {
         }
         println("Safety guard passed. Connected to the correct test database: $dbName")
         val hikariDataSource = HikariDataSource().apply {
-            jdbcUrl = DatabaseConfig.dbUrl
-            username = DatabaseConfig.dbUsername
-            password = DatabaseConfig.dbPassword
+            jdbcUrl = databaseConfig.dbUrl
+            username = databaseConfig.dbUsername
+            password = databaseConfig.dbPassword
             maximumPoolSize = 5 // Mała pula wystarczy, test jest jednowątkowy
         }
 
@@ -66,12 +66,18 @@ class SimpleTypeOverheadBenchmark {
 
         // Potrzebujemy konwertera dla `FrameworkRowMapper`
         val typeRegistry = runBlocking {
-            TypeRegistryLoader(jdbcTemplate).load()
+            TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas).load()
         }
         typesConverter = PostgresToKotlinConverter(typeRegistry)
 
         try {
-            val initSql = String(Files.readAllBytes(Paths.get(this::class.java.classLoader.getResource("init-simple-test-db.sql")!!.toURI())))
+            val initSql = String(
+                Files.readAllBytes(
+                    Paths.get(
+                        this::class.java.classLoader.getResource("init-simple-test-db.sql")!!.toURI()
+                    )
+                )
+            )
             jdbcTemplate.jdbcTemplate.execute(initSql)
             println("Complex test DB schema and data initialized successfully.")
         } catch (e: Exception) {

@@ -1,7 +1,7 @@
 package org.octavius.domain.test
 
 import kotlinx.serialization.Serializable
-import org.octavius.data.DynamicallyMappable
+import org.octavius.data.annotation.DynamicallyMappable
 
 // Główny obiekt, który będzie "konsumował" dynamiczne DTO
 data class UserWithDynamicProfile(

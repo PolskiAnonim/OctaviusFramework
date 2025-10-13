@@ -1,8 +1,8 @@
 package org.octavius.domain.test
 
 import kotlinx.datetime.LocalDateTime
-import org.octavius.data.EnumCaseConvention
-import org.octavius.data.PgType
+import org.octavius.data.annotation.EnumCaseConvention
+import org.octavius.data.annotation.PgType
 import java.math.BigDecimal
 
 @PgType(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)

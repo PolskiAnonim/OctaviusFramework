@@ -6,7 +6,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.octavius.data.DataAccess
-import org.octavius.data.PgType
+import org.octavius.data.annotation.PgType
 import org.octavius.database.DatabaseAccess
 import org.octavius.database.DatabaseConfig
 import org.octavius.database.RowMappers
@@ -50,8 +50,8 @@ class ComprehensiveBulkInsertBenchmark {
         println("--- ROZPOCZYNANIE KONFIGURACJI BENCHMARKU ---")
 
         // --- Krok 1: Bezpieczna konfiguracja połączenia ---
-        DatabaseConfig.loadFromFile("test-database.properties")
-        val connectionUrl = DatabaseConfig.dbUrl
+        val databaseConfig = DatabaseConfig.loadFromFile("test-database.properties")
+        val connectionUrl = databaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/")
         if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException("ABORTING TEST! Safety guard failed. Connection URL: '$connectionUrl'")
@@ -59,20 +59,22 @@ class ComprehensiveBulkInsertBenchmark {
         println("Safety guard passed. Connected to: $dbName")
 
         val hikariDataSource = HikariDataSource().apply {
-            jdbcUrl = DatabaseConfig.dbUrl + "?reWriteBatchedInserts=true"
-            username = DatabaseConfig.dbUsername
-            password = DatabaseConfig.dbPassword
+            jdbcUrl = databaseConfig.dbUrl + "?reWriteBatchedInserts=true"
+            username = databaseConfig.dbUsername
+            password = databaseConfig.dbPassword
         }
         this.dataSource = hikariDataSource
         val jdbcTemplate = NamedParameterJdbcTemplate(hikariDataSource)
 
         // --- Krok 2: Stworzenie tabeli testowej ---
         jdbcTemplate.jdbcTemplate.execute("DROP TABLE IF EXISTS performance_test CASCADE;")
-        jdbcTemplate.jdbcTemplate.execute("""
+        jdbcTemplate.jdbcTemplate.execute(
+            """
             CREATE TABLE performance_test (id SERIAL PRIMARY KEY, val1 INT, val2 VARCHAR(50));
-        """.trimIndent())
+        """.trimIndent()
+        )
         // --- Krok 3: Inicjalizacja frameworka ---
-        val loader = TypeRegistryLoader(jdbcTemplate)
+        val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas)
         val typeRegistry = runBlocking { loader.load() }
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         val postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
