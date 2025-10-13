@@ -6,7 +6,7 @@ import org.octavius.data.builder.toList
 import org.octavius.data.builder.toSingle
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.util.Converters
+import org.octavius.data.util.Converters
 
 // --- Główne klasy DSL ---
 

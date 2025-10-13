@@ -1,6 +1,6 @@
 package org.octavius.data
 
-import org.octavius.exception.DatabaseException
+import org.octavius.data.exception.DatabaseException
 
 /**
  * Kontener na wynik operacji bazodanowej, który może zakończyć się sukcesem lub porażką.

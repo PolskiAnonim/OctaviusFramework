@@ -1,4 +1,4 @@
-package org.octavius.util
+package org.octavius.data
 
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.UtcOffset
@@ -14,8 +14,8 @@ data class OffsetTime(val time: LocalTime, val offset: UtcOffset) {
 
     companion object {
         fun parse(value: String): OffsetTime {
-            val time = LocalTime.parse(value.take(8))
-            val offset = UtcOffset.parse(value.substring(9))
+            val time = LocalTime.Companion.parse(value.take(8))
+            val offset = UtcOffset.Companion.parse(value.substring(9))
             return OffsetTime(time, offset)
         }
     }

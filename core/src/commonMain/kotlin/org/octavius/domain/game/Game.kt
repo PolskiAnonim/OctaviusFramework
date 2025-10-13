@@ -1,6 +1,6 @@
 package org.octavius.domain.game
 
-import org.octavius.data.PgType
+import org.octavius.data.annotation.PgType
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.T
 

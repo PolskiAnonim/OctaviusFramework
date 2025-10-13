@@ -2,7 +2,7 @@ package org.octavius.report
 
 import androidx.compose.ui.unit.Dp
 import org.octavius.domain.EnumWithFormatter
-import org.octavius.exception.DatabaseException
+import org.octavius.data.exception.DatabaseException
 import org.octavius.localization.T
 
 

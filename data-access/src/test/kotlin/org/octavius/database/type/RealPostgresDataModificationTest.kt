@@ -12,7 +12,6 @@ import org.junit.jupiter.api.TestInstance
 import org.octavius.database.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.domain.test.*
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.math.BigDecimal
 import java.nio.file.Files

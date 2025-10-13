@@ -1,6 +1,6 @@
 package org.octavius.modules.games.statistics.model
 
-import org.octavius.data.PgType
+import org.octavius.data.annotation.PgType
 import org.octavius.domain.game.GameStatus
 import java.math.BigDecimal
 

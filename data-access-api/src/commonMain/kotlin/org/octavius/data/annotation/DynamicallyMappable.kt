@@ -1,4 +1,4 @@
-package org.octavius.data
+package org.octavius.data.annotation
 
 /**
  * Oznacza klasę `data class` jako cel dla dynamicznego mapowania z typu `dynamic_dto`

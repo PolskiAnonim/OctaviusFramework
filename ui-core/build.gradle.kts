@@ -24,6 +24,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core) // ui-core może zależeć od core
             implementation(libs.kotlinx.datetime)
+            implementation(projects.dataAccessApi)
         }
 
         // Zależności tylko dla desktopu (jeśli jakieś są)

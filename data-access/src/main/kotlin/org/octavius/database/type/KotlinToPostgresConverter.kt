@@ -3,12 +3,11 @@ package org.octavius.database.type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
 import kotlinx.serialization.json.JsonObject
-import org.octavius.data.EnumCaseConvention
+import org.octavius.data.OffsetTime
 import org.octavius.data.PgTyped
+import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.toMap
-import org.octavius.exception.TypeRegistryException
-import org.octavius.util.Converters
-import org.octavius.util.OffsetTime
+import org.octavius.data.util.Converters
 import org.postgresql.util.PGobject
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -237,7 +236,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
      * @param paramName Nazwa parametru bazowego.
      * @param compositeValue Instancja data class do konwersji.
      * @return Para: placeholder ROW(...)::type_name i mapa parametrów pól.
-     * @throws TypeRegistryException jeśli klasa nie jest zarejestrowana.
+     * @throws org.octavius.data.exception.TypeRegistryException jeśli klasa nie jest zarejestrowana.
      */
     private fun expandRowParameter(paramName: String, compositeValue: Any): Pair<String, Map<String, Any?>> {
         val kClass = compositeValue::class

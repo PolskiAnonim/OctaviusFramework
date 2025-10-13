@@ -5,13 +5,13 @@ import kotlinx.datetime.*
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.octavius.data.EnumCaseConvention
+import org.octavius.data.OffsetTime
+import org.octavius.data.annotation.EnumCaseConvention
+import org.octavius.data.exception.DataConversionException
+import org.octavius.data.exception.DataMappingException
+import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.toDataObject
-import org.octavius.exception.DataConversionException
-import org.octavius.exception.DataMappingException
-import org.octavius.exception.TypeRegistryException
-import org.octavius.util.Converters
-import org.octavius.util.OffsetTime
+import org.octavius.data.util.Converters
 import java.lang.reflect.Method
 import java.text.ParseException
 import java.time.format.DateTimeFormatter
@@ -65,8 +65,8 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @param value Wartość z bazy danych jako `String` (może być `null`).
      * @param pgTypeName Nazwa typu w PostgreSQL (np. "int4", "my_enum", "dynamic_dto").
      * @return Przekonwertowana wartość lub `null` jeśli `value` było `null`.
-     * @throws TypeRegistryException jeśli typ jest nieznany.
-     * @throws DataConversionException jeśli konwersja się nie powiedzie.
+     * @throws org.octavius.data.exception.TypeRegistryException jeśli typ jest nieznany.
+     * @throws org.octavius.data.exception.DataConversionException jeśli konwersja się nie powiedzie.
      */
     fun convert(value: String?, pgTypeName: String): Any? {
         if (value == null) {
@@ -156,7 +156,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @param value Wartość z bazy danych jako String.
      * @param pgTypeName Nazwa standardowego typu PostgreSQL.
      * @return Przekonwertowana wartość.
-     * @throws DataConversionException jeśli konwersja się nie powiedzie.
+     * @throws org.octavius.data.exception.DataConversionException jeśli konwersja się nie powiedzie.
      */
     @OptIn(ExperimentalTime::class)
     private fun convertStandardType(value: String, pgTypeName: String): Any? {
@@ -272,8 +272,8 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @param value String reprezentujący tablicę PostgreSQL (format: {elem1,elem2,...}).
      * @param typeInfo Informacje o typie tablicowym z TypeRegistry.
      * @return Lista przekonwertowanych elementów.
-     * @throws TypeRegistryException jeśli brak informacji o typie elementu.
-     * @throws DataConversionException jeśli parsowanie się nie powiedzie.
+     * @throws org.octavius.data.exception.TypeRegistryException jeśli brak informacji o typie elementu.
+     * @throws org.octavius.data.exception.DataConversionException jeśli parsowanie się nie powiedzie.
      */
     private fun convertArray(value: String, typeInfo: PostgresTypeInfo): List<Any?> {
         val elementType = typeInfo.elementType

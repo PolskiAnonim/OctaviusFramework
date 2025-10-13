@@ -1,4 +1,4 @@
-package org.octavius.exception
+package org.octavius.data.exception
 
 import org.octavius.data.transaction.TransactionStep
 
@@ -14,7 +14,7 @@ sealed class DatabaseException(message: String, cause: Throwable? = null) : Runt
  * Błędy związane z ładowaniem lub używaniem TypeRegistry.
  *
  * Rzucane gdy:
- * - Nie można znaleźć klasy oznaczonej @PgType
+ * - Nie można znaleźć klasy oznaczonej @PgStandardType.kt
  * - Brak mapowania między typem PostgreSQL a klasą Kotlin
  * - Błąd podczas skanowania classpath lub bazy danych
  */

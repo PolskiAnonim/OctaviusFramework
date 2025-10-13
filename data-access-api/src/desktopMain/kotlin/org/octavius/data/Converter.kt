@@ -1,6 +1,6 @@
 package org.octavius.data
 
-import org.octavius.util.Converters
+import org.octavius.data.util.Converters
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction

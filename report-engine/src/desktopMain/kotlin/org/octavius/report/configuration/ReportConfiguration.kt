@@ -1,7 +1,7 @@
 package org.octavius.report.configuration
 
 import kotlinx.serialization.json.JsonObject
-import org.octavius.data.PgType
+import org.octavius.data.annotation.PgType
 
 data class ReportConfiguration(
     val id: Int? = null,

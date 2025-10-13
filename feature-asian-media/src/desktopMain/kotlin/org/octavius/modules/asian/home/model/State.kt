@@ -1,6 +1,6 @@
 package org.octavius.modules.asian.home.model
 
-import org.octavius.data.PgType
+import org.octavius.data.annotation.PgType
 
 @PgType
 data class DashboardItem(

@@ -59,7 +59,7 @@ class ComprehensiveBulkInsertBenchmark {
         println("Safety guard passed. Connected to: $dbName")
 
         val hikariDataSource = HikariDataSource().apply {
-            jdbcUrl = DatabaseConfig.dbUrl
+            jdbcUrl = DatabaseConfig.dbUrl + "?reWriteBatchedInserts=true"
             username = DatabaseConfig.dbUsername
             password = DatabaseConfig.dbPassword
         }

@@ -1,7 +1,7 @@
 package org.octavius.dialog
 
 import androidx.compose.ui.graphics.Color
-import org.octavius.exception.DatabaseException
+import org.octavius.data.exception.DatabaseException
 import org.octavius.localization.T
 
 /**

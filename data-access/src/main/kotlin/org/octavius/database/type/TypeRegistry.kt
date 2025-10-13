@@ -1,15 +1,15 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.EnumCaseConvention
-import org.octavius.exception.TypeRegistryException
+import org.octavius.data.annotation.EnumCaseConvention
+import org.octavius.data.exception.TypeRegistryException
 import kotlin.reflect.KClass
 
 /**
  * Rejestr typów - mapowanie między typami PostgreSQL a klasami Kotlina.
  *
  * Niemutowalny rejestr przechowujący metadane o typach z bazy danych oraz mapowania
- * na klasy domenowe oznaczone adnotacją @PgType. Inicjalizowany przez [TypeRegistryLoader]
+ * na klasy domenowe oznaczone adnotacją @PgStandardType.kt. Inicjalizowany przez [TypeRegistryLoader]
  * na podstawie skanowania bazy danych i classpath.
  *
  * Obsługiwane kategorie typów:
@@ -50,7 +50,7 @@ internal class TypeRegistry(
      *
      * @param pgTypeName Nazwa typu w PostgreSQL.
      * @return Informacje o typie.
-     * @throws TypeRegistryException jeśli typ nie został znaleziony w rejestrze.
+     * @throws org.octavius.data.exception.TypeRegistryException jeśli typ nie został znaleziony w rejestrze.
      */
     fun getTypeInfo(pgTypeName: String): PostgresTypeInfo {
         val typeInfo = postgresTypeMap[pgTypeName]
@@ -61,14 +61,14 @@ internal class TypeRegistry(
     /**
      * Zwraca nazwę typu PostgreSQL powiązaną z daną klasą Kotlina.
      *
-     * @param clazz Klasa Kotlina (KClass) oznaczona adnotacją @PgType.
+     * @param clazz Klasa Kotlina (KClass) oznaczona adnotacją @PgStandardType.kt.
      * @return Nazwa typu w PostgreSQL.
-     * @throws TypeRegistryException jeśli klasa nie jest zarejestrowanym typem PostgreSQL.
+     * @throws org.octavius.data.exception.TypeRegistryException jeśli klasa nie jest zarejestrowanym typem PostgreSQL.
      */
     fun getPgTypeNameForClass(clazz: KClass<*>): String {
         val pgTypeName = classFullPathToPgTypeNameMap[clazz.qualifiedName]
         logger.trace { "Looking up PostgreSQL type for class '${clazz.qualifiedName}': ${pgTypeName ?: "not found"}" }
-        return pgTypeName ?: throw TypeRegistryException("Klasa ${clazz.qualifiedName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgType?")
+        return pgTypeName ?: throw TypeRegistryException("Klasa ${clazz.qualifiedName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgStandardType.kt?")
     }
 
     /**

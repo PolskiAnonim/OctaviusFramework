@@ -16,6 +16,7 @@ import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.DateTimeFilter
 import org.octavius.util.*
+import org.octavius.data.OffsetTime
 import kotlin.reflect.KClass
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant

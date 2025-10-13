@@ -13,12 +13,15 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kotlinx.datetime)
-                implementation(projects.dataAccessApi)
+                api(libs.kotlinx.serialization.json) // @DynamicallyMappable opiera się na kotlinx.serialization
+                api(libs.kotlinx.datetime)
             }
         }
-        val desktopMain by getting
+        val desktopMain by getting {
+            dependencies {
+                implementation(libs.kotlin.reflect)
+            }
+        }
         val jsMain by getting
     }
 }

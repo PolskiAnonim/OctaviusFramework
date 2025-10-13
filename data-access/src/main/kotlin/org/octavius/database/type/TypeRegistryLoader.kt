@@ -5,13 +5,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import org.octavius.data.DynamicallyMappable
-import org.octavius.data.EnumCaseConvention
 import org.octavius.data.PgStandardType
-import org.octavius.data.PgType
+import org.octavius.data.annotation.DynamicallyMappable
+import org.octavius.data.annotation.EnumCaseConvention
+import org.octavius.data.annotation.PgType
+import org.octavius.data.exception.TypeRegistryException
+import org.octavius.data.util.Converters
 import org.octavius.database.DatabaseConfig
-import org.octavius.exception.TypeRegistryException
-import org.octavius.util.Converters
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
 
@@ -64,7 +64,7 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
             val dynamicTypeMap = scanResults.dynamicTypeMappings.associate { it.typeName to it.kClass }
 
             logger.info { "TypeRegistry loaded successfully. Found ${postgresTypeMap.size} total PG types." }
-            logger.debug { "Static @PgType mappings found: ${scanResults.pgTypeMappings.size}" }
+            logger.debug { "Static @PgStandardType.kt mappings found: ${scanResults.pgTypeMappings.size}" }
             logger.debug { "Dynamic @DynamicallyMappable mappings found: ${scanResults.dynamicTypeMappings.size}" }
 
             return TypeRegistry(
@@ -91,7 +91,7 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
                 .enableAllInfo() // Upewnij się, że adnotacje są włączone
                 .acceptPackages("org.octavius")
                 .scan().use { scanResult ->
-                    // Przetwarzamy klasy z @PgType
+                    // Przetwarzamy klasy z @PgStandardType.kt
                     scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->
                         val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
                         val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String

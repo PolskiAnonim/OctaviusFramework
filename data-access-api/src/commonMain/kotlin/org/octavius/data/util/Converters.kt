@@ -1,4 +1,4 @@
-package org.octavius.util
+package org.octavius.data.util
 
 /**
  * Narzędzia do konwersji konwencji nazewniczych między camelCase a snake_case.

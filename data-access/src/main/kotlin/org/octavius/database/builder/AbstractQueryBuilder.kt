@@ -3,10 +3,10 @@ package org.octavius.database.builder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.DataResult
 import org.octavius.data.builder.StepBuilderMethods
+import org.octavius.data.exception.DatabaseException
+import org.octavius.data.exception.QueryExecutionException
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
-import org.octavius.exception.DatabaseException
-import org.octavius.exception.QueryExecutionException
 import org.springframework.jdbc.core.RowCallbackHandler
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
