@@ -21,18 +21,18 @@ class GoldenStringExporterTest {
     @Disabled("Użyj tylko do jednorazowego wygenerowania danych testowych!")
     fun exportAllGoldenStrings() {
         // --- 1. Konfiguracja połączenia ---
-        DatabaseConfig.loadFromFile("test-database.properties")
+        val databaseConfig = DatabaseConfig.loadFromFile("test-database.properties")
         // Guard bezpieczeństwa
-        val connectionUrl = DatabaseConfig.dbUrl
+        val connectionUrl = databaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/")
         if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException("ABORTING! Próba uruchomienia na bazie innej niż testowa: $connectionUrl")
         }
 
         val hikariConfig = HikariConfig().apply {
-            jdbcUrl = DatabaseConfig.dbUrl
-            username = DatabaseConfig.dbUsername
-            password = DatabaseConfig.dbPassword
+            jdbcUrl = databaseConfig.dbUrl
+            username = databaseConfig.dbUsername
+            password = databaseConfig.dbPassword
         }
         val dataSource = HikariDataSource(hikariConfig)
         val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)

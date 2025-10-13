@@ -11,9 +11,9 @@ import org.koin.core.component.inject
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toSingleOf
+import org.octavius.data.exception.DatabaseException
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import org.octavius.data.exception.DatabaseException
 
 class GameStatisticsHandler : KoinComponent {
     private val dataAccess: DataAccess by inject()

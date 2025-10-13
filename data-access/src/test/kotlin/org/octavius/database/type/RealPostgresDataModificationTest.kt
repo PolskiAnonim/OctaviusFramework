@@ -39,9 +39,9 @@ class RealPostgresDataModificationTest {
 
     @BeforeAll
     fun setup() {
-        DatabaseConfig.loadFromFile("test-database.properties")
+        val databaseConfig = DatabaseConfig.loadFromFile("test-database.properties")
 
-        val connectionUrl = DatabaseConfig.dbUrl
+        val connectionUrl = databaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/")
         if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException(
@@ -52,21 +52,33 @@ class RealPostgresDataModificationTest {
 
         // --- Krok 2: Połączenie i inicjalizacja schematu ---
         val hikariConfig = HikariConfig().apply {
-            jdbcUrl = DatabaseConfig.dbUrl
-            username = DatabaseConfig.dbUsername
-            password = DatabaseConfig.dbPassword
+            jdbcUrl = databaseConfig.dbUrl
+            username = databaseConfig.dbUsername
+            password = databaseConfig.dbPassword
         }
         val dataSource = HikariDataSource(hikariConfig)
         jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
 
         jdbcTemplate.jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
         jdbcTemplate.jdbcTemplate.execute("CREATE SCHEMA public;")
-        val initSql = String(Files.readAllBytes(Paths.get(this::class.java.classLoader.getResource("init-complex-test-db.sql")!!.toURI())))
+        val initSql = String(
+            Files.readAllBytes(
+                Paths.get(
+                    this::class.java.classLoader.getResource("init-complex-test-db.sql")!!.toURI()
+                )
+            )
+        )
         jdbcTemplate.jdbcTemplate.execute(initSql)
         println("Complex test DB schema and data initialized successfully.")
 
         // --- Krok 3: Inicjalizacja obu konwerterów ---
-        val typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate).load() }
+        val typeRegistry = runBlocking {
+            TypeRegistryLoader(
+                jdbcTemplate,
+                databaseConfig.packagesToScan,
+                databaseConfig.dbSchemas
+            ).load()
+        }
         kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         mappers = RowMappers(PostgresToKotlinConverter(typeRegistry))
     }

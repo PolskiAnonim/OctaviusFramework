@@ -16,76 +16,86 @@ import kotlin.time.measureTime
 /**
  * System zarządzania bazą danych - centralny punkt dostępu do usług bazodanowych.
  *
+ * Przyjmuje obiekt konfiguracyjny i na jego podstawie inicjalizuje wszystkie
+ * niezbędne komponenty do pracy z bazą danych.
+ *
  * Odpowiada za:
  * - Konfigurację puli połączeń HikariCP z PostgreSQL
  * - Inicjalizację menedżera transakcji Spring
  * - Automatyczne ładowanie rejestru typów z bazy danych i classpath
  * - Udostępnienie usług dostępu do danych przez interfejs [DataAccess]
- * 
- * Singleton inicjalizowany przy pierwszym dostępie, konfiguruje wszystkie komponenty
- * wymagane do pracy z wieloschemtową bazą PostgreSQL (public, asian_media, games).
+ *
+ * @param config Konfiguracja bazy danych wczytana z pliku properties.
  */
-class DatabaseSystem {
+class DatabaseSystem(private val config: DatabaseConfig) {
     companion object {
         private val logger = KotlinLogging.logger {}
     }
 
-    
+
     /** Pula połączeń HikariCP z konfiguracją dla PostgreSQL */
     private val dataSource: HikariDataSource
     private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
     private val datasourceTransactionManager: DataSourceTransactionManager
     private val typeRegistry: TypeRegistry
-    private val typesConverter: PostgresToKotlinConverter
-    private val rowMappers: RowMappers
-    private val kotlinToPostgresConverter: KotlinToPostgresConverter
 
     /** Usługa do wykonywania zapytań */
     val dataAccess: DataAccess
 
-
     init {
-        logger.info { "Initializing DatabaseSystem" }
-        
-        logger.debug { "Configuring HikariCP datasource with URL: ${DatabaseConfig.dbUrl}" }
-        val config = HikariConfig().apply {
-            jdbcUrl = DatabaseConfig.dbUrl
-            username = DatabaseConfig.dbUsername
-            password = DatabaseConfig.dbPassword
-            maximumPoolSize = 10
-            connectionInitSql = "SET search_path TO public, asian_media, games"
+        logger.info { "Initializing DatabaseSystem..." }
+
+        // 1. Zależne od konfiguracji ustawienie `connectionInitSql`
+        val connectionInitSql = if (config.setSearchPath && config.dbSchemas.isNotEmpty()) {
+            val schemas = config.dbSchemas.joinToString(", ")
+            logger.debug { "Setting connectionInitSql to 'SET search_path TO $schemas'" }
+            "SET search_path TO $schemas"
+        } else {
+            logger.debug { "connectionInitSql will not be set." }
+            null
         }
-        dataSource = HikariDataSource(config)
-        logger.debug { "HikariCP datasource initialized with pool size: ${config.maximumPoolSize}" }
+
+        logger.debug { "Configuring HikariCP datasource with URL: ${config.dbUrl}" }
+        val hikariConfig = HikariConfig().apply {
+            jdbcUrl = config.dbUrl
+            username = config.dbUsername
+            password = config.dbPassword
+            maximumPoolSize = 10
+            this.connectionInitSql = connectionInitSql
+        }
+        dataSource = HikariDataSource(hikariConfig)
+        logger.debug { "HikariCP datasource initialized with pool size: ${hikariConfig.maximumPoolSize}" }
 
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         datasourceTransactionManager = DataSourceTransactionManager(dataSource)
 
-        logger.debug { "Loading type registry from database" }
+        logger.debug { "Loading type registry from database..." }
         val typeRegistryLoadTime = measureTime {
-            val loader = TypeRegistryLoader(namedParameterJdbcTemplate)
+            // 2. Przekazanie konfiguracji do TypeRegistryLoader
+            val loader = TypeRegistryLoader(
+                namedParameterJdbcTemplate,
+                packagesToScan = config.packagesToScan,
+                dbSchemas = config.dbSchemas
+            )
             typeRegistry = runBlocking {
                 loader.load()
             }
         }
-        logger.debug { "Type registry loaded successfully in ${typeRegistryLoadTime.inWholeMilliseconds}ms" } // Dodany czas
+        logger.debug { "Type registry loaded successfully in ${typeRegistryLoadTime.inWholeMilliseconds}ms" }
 
         logger.debug { "Initializing converters and mappers" }
-        typesConverter = PostgresToKotlinConverter(typeRegistry)
-        kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
-        rowMappers = RowMappers(typesConverter)
+        val typesConverter = PostgresToKotlinConverter(typeRegistry)
+        val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
+        val rowMappers = RowMappers(typesConverter)
 
         logger.debug { "Initializing database services" }
-
-        val concreteDataAccess = DatabaseAccess(
+        dataAccess = DatabaseAccess(
             namedParameterJdbcTemplate,
             datasourceTransactionManager,
             rowMappers,
             kotlinToPostgresConverter
         )
 
-        dataAccess = concreteDataAccess
-        
         logger.info { "DatabaseSystem initialization completed" }
     }
 }

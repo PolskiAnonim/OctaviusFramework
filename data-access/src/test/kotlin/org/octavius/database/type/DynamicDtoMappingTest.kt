@@ -30,8 +30,8 @@ class DynamicDtoMappingTest {
     @BeforeAll
     fun setup() {
         // --- Krok 1: Konfiguracja i zabezpieczenia ---
-        DatabaseConfig.loadFromFile("test-database.properties")
-        val connectionUrl = DatabaseConfig.dbUrl
+        val databaseConfig = DatabaseConfig.loadFromFile("test-database.properties")
+        val connectionUrl = databaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/")
         if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException("ABORTING TEST! Attempting to run on a non-test database. URL: '$connectionUrl'")
@@ -40,9 +40,9 @@ class DynamicDtoMappingTest {
 
         // --- Krok 2: Inicjalizacja bazy i DAL-a ---
         val dataSource = HikariDataSource(HikariConfig().apply {
-            jdbcUrl = DatabaseConfig.dbUrl
-            username = DatabaseConfig.dbUsername
-            password = DatabaseConfig.dbPassword
+            jdbcUrl = databaseConfig.dbUrl
+            username = databaseConfig.dbUsername
+            password = databaseConfig.dbPassword
         })
         val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         val transactionManager = DataSourceTransactionManager(dataSource)
@@ -54,7 +54,7 @@ class DynamicDtoMappingTest {
         println("Dynamic DTO test DB schema initialized successfully.")
 
         // --- Krok 3: Załadowanie TypeRegistry i stworzenie pełnego DAL-a ---
-        typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate).load() }
+        typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate,databaseConfig.packagesToScan, databaseConfig.dbSchemas).load() }
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         val postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
         val rowMappers = RowMappers(postgresToKotlinConverter)

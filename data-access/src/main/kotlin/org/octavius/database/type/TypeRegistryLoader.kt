@@ -11,13 +11,15 @@ import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.annotation.PgType
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.util.Converters
-import org.octavius.database.DatabaseConfig
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
 
-internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
+internal class TypeRegistryLoader(
+    private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
+    private val packagesToScan: List<String>,
+    private val dbSchemas: List<String>
+) {
 
-    // Klasy pomocnicze do przetwarzania wyników z bazy
     private data class DbTypeRawInfo(val infoType: String, val typeName: String, val col1: String?, val col2: String?)
     private data class ProcessedDbTypes(
         val enums: Map<String, PostgresTypeInfo>,
@@ -87,11 +89,12 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
         val dynamicMappings = mutableListOf<KotlinDynamicTypeMapping>()
 
         try {
+            logger.debug { "Scanning packages for annotations: ${packagesToScan.joinToString()}" }
             ClassGraph()
-                .enableAllInfo() // Upewnij się, że adnotacje są włączone
-                .acceptPackages("org.octavius")
+                .enableAllInfo()
+                .acceptPackages(*packagesToScan.toTypedArray())
                 .scan().use { scanResult ->
-                    // Przetwarzamy klasy z @PgStandardType.kt
+                    // Przetwarzamy klasy z @PgType
                     scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->
                         val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
                         val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
@@ -120,12 +123,11 @@ internal class TypeRegistryLoader(private val namedParameterJdbcTemplate: NamedP
         return AnnotationScanResults(pgMappings, dynamicMappings)
     }
 
-    // Reszta klasy (loadAllCustomTypesFromDb, processRawDbTypes, etc.) pozostaje bez zmian.
-    // Poniżej wklejam całą klasę dla spójności.
 
     private fun loadAllCustomTypesFromDb(): List<DbTypeRawInfo> {
         logger.debug { "Executing unified query for all custom DB types..." }
-        val params = mapOf("schemas" to DatabaseConfig.dbSchemas.toTypedArray())
+        // Używamy schematów przekazanych w konstruktorze
+        val params = mapOf("schemas" to dbSchemas.toTypedArray())
         return namedParameterJdbcTemplate.query(SQL_QUERY_ALL_TYPES, params) { rs, _ ->
             DbTypeRawInfo(
                 infoType = rs.getString("info_type"),

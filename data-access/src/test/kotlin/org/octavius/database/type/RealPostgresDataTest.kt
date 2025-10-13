@@ -27,10 +27,10 @@ class RealPostgresDataTest {
     @BeforeAll
     fun setup() {
         // 1. Ładujemy konfigurację
-        DatabaseConfig.loadFromFile("test-database.properties")
+        val databaseConfig = DatabaseConfig.loadFromFile("test-database.properties")
 
         // 2. KRYTYCZNE ZABEZPIECZENIE (ASSERTION GUARD)
-        val connectionUrl = DatabaseConfig.dbUrl
+        val connectionUrl = databaseConfig.dbUrl
         val dbName = connectionUrl.substringAfterLast("/") // Wyciągamy nazwę bazy z URL-a
 
         // Sprawdzamy zarówno URL, jak i nazwę bazy, aby być podwójnie pewnym.
@@ -45,9 +45,9 @@ class RealPostgresDataTest {
 
         // 2. Tworzymy DataSource i JdbcTemplate
         val hikariConfig = HikariConfig().apply {
-            jdbcUrl = DatabaseConfig.dbUrl
-            username = DatabaseConfig.dbUsername
-            password = DatabaseConfig.dbPassword
+            jdbcUrl = databaseConfig.dbUrl
+            username = databaseConfig.dbUsername
+            password = databaseConfig.dbPassword
         }
         val dataSource = HikariDataSource(hikariConfig)
         jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
@@ -59,7 +59,13 @@ class RealPostgresDataTest {
             jdbcTemplate.jdbcTemplate.execute("CREATE SCHEMA public;")
 
             // Wczytujemy i wykonujemy cały skrypt SQL (łącznie z INSERT)
-            val initSql = String(Files.readAllBytes(Paths.get(this::class.java.classLoader.getResource("init-complex-test-db.sql")!!.toURI())))
+            val initSql = String(
+                Files.readAllBytes(
+                    Paths.get(
+                        this::class.java.classLoader.getResource("init-complex-test-db.sql")!!.toURI()
+                    )
+                )
+            )
             jdbcTemplate.jdbcTemplate.execute(initSql)
             println("Complex test DB schema and data initialized successfully.")
         } catch (e: Exception) {
@@ -68,7 +74,7 @@ class RealPostgresDataTest {
         }
 
         // 4. Inicjalizujemy zależności dla konwerterów
-        val loader = TypeRegistryLoader(jdbcTemplate)
+        val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas)
         val typeRegistry = runBlocking {
             loader.load()
         }
@@ -94,7 +100,11 @@ class RealPostgresDataTest {
         assertThat(result["single_status"]).isEqualTo(TestStatus.Active)
 
         // Sprawdzamy tablicę enumów
-        assertThat(result["status_array"] as List<*>).containsExactly(TestStatus.Active, TestStatus.Pending, TestStatus.NotStarted)
+        assertThat(result["status_array"] as List<*>).containsExactly(
+            TestStatus.Active,
+            TestStatus.Pending,
+            TestStatus.NotStarted
+        )
 
         // Sprawdzamy pojedynczy kompozyt
         val person = result["single_person"] as TestPerson

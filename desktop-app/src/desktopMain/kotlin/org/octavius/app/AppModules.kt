@@ -1,6 +1,7 @@
 package org.octavius.app
 
 import org.koin.dsl.module
+import org.octavius.database.DatabaseConfig
 import org.octavius.database.DatabaseSystem
 
 /**
@@ -16,7 +17,18 @@ import org.octavius.database.DatabaseSystem
  */
 val databaseModule = module {
     // 1. Zarejestruj DatabaseSystem jako singleton.
-    single { DatabaseSystem() }
+    single {
+        DatabaseSystem(
+            DatabaseConfig(
+                dbUrl = "jdbc:postgresql://localhost:5432/octavius",
+                dbUsername = "postgres",
+                dbPassword = "1234",
+                dbSchemas = listOf("public", "asian_media", "games"),
+                setSearchPath = true,
+                packagesToScan = listOf("org.octavius")
+            )
+        )
+    }
 
     // 2. Udostępnij jego komponenty przez interfejsy.
     // get() automatycznie pobierze instancję DatabaseSystem z definicji powyżej.
