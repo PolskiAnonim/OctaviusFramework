@@ -98,7 +98,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                 data = titleData,
                 returning = listOf("id")
             )
-            titleIdRef = titleInsertStep.get("id")
+            titleIdRef = titleInsertStep.field("id")
         }
 
         // =================================================================================
@@ -154,7 +154,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                     tableName = "publications",
                     data = publicationData,
                     returning = listOf("id")
-                ).get("id")
+                ).field("id")
                 // Warunkowo zaktualizuj 'publication_volumes' (które stworzył trigger) używając nowego ID.
                 addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
             }
@@ -174,7 +174,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                     tableName = "publications",
                     data = publicationData,
                     returning = listOf("id")
-                ).get("id")
+                ).field("id")
 
                 addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
             }

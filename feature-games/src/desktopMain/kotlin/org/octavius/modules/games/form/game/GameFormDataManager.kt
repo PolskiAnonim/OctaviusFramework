@@ -113,7 +113,7 @@ class GameFormDataManager : FormDataManager() {
                 tableName = "games",
                 data = gameData,
                 returning = listOf("id")
-            ).get("id")
+            ).field("id")
         }
 
         // Od tego momentu wszystkie operacje na tabelach zależnych używają `gameIdRef`,

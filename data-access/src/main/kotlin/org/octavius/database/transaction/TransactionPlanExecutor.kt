@@ -2,7 +2,7 @@ package org.octavius.database.transaction
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.DataResult
-import org.octavius.data.exception.BatchStepExecutionException
+import org.octavius.data.exception.TransactionStepExecutionException
 import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
 import org.octavius.data.exception.StepDependencyException
@@ -63,64 +63,57 @@ internal class TransactionPlanExecutor(
                 val allResults = mutableMapOf<Int, List<Map<String, Any?>>>()
 
                 try {
-                    for ((index, operation) in transactionSteps.withIndex()) {
+                    for ((index, step) in transactionSteps.withIndex()) {
                         try {
-                            logger.debug { "Executing step $index/${transactionSteps.size - 1}: ${operation.builderState::class.simpleName}" }
+                            logger.debug { "Executing step $index/${transactionSteps.size - 1}: ${step.builderState::class.simpleName}" }
 
-                            val result: List<Map<String, Any?>>
+                            // Krok 1: Rozwiąż wszystkie referencje do wartości
+                            val resolvedValues = step.params.mapValues { (_, value) ->
+                                resolveReference(value, allResults)
+                            }
 
-                            // Rozwiązuj referencje w parametrach
-                            val resolvedParams = operation.params.mapValues { (_, value) ->
-                                when (value) {
-                                    is TransactionValue -> resolveReference(value, allResults)
-                                    else -> value
+                            // Krok 2: Zbuduj finalną mapę parametrów, obsługując "rozsmarowanie" wierszy (FromRow)
+                            val finalParams = mutableMapOf<String, Any?>()
+                            resolvedValues.forEach { key, resolvedValue ->
+                                val originalParam = step.params[key]
+                                if (originalParam is TransactionValue.FromStep.Row && resolvedValue is Map<*, *>) {
+                                    // Jeśli parametr był typu Row i wynikiem jest mapa,
+                                    // dodaj jej zawartość do głównych parametrów
+                                    @Suppress("UNCHECKED_CAST")
+                                    finalParams.putAll(resolvedValue as Map<String, Any?>)
+                                } else {
+                                    // W przeciwnym razie, dodaj normalnie
+                                    finalParams[key] = resolvedValue
                                 }
                             }
 
-                            logger.trace { "--> FromBuilder params: $resolvedParams" }
+                            logger.trace { "--> Final params for step $index: $finalParams" }
 
-                            // Wywołaj metodę terminalną buildera
-                            val buildResult = operation.terminalMethod(resolvedParams)
+                            val resultList: List<Map<String,Any?>>
+                            // Krok 3: Wykonaj krok z finalnymi parametrami
+                            val buildResult = step.terminalMethod(finalParams)
                             when (buildResult) {
                                 is DataResult.Success -> {
-                                    val data = buildResult.value
-                                    when (data) {
-                                        is List<*> -> {
-                                            // Jeśli wynik to już lista map, użyj jej
-                                            @Suppress("UNCHECKED_CAST")
-                                            result = data as List<Map<String, Any?>>
-                                        }
-
-                                        is Map<*, *> -> {
-                                            // Jeśli wynik to pojedyncza mapa, opakuj w listę
-                                            @Suppress("UNCHECKED_CAST")
-                                            result = listOf(data as Map<String, Any?>)
-                                        }
-
-                                        else -> {
-                                            // Dla innych typów, stwórz mapę z wartością
-                                            result = listOf(mapOf("result" to data))
-                                        }
+                                    @Suppress("UNCHECKED_CAST") // Fakt że klucze to String wynika z builderów
+                                    resultList = when (val data = buildResult.value) {
+                                        is List<*> -> data as List<Map<String, Any?>>
+                                        is Map<*, *> -> listOf(data as Map<String, Any?>)
+                                        else -> listOf(mapOf("result" to data))
                                     }
                                 }
-
                                 is DataResult.Failure -> {
                                     throw buildResult.error
                                 }
                             }
-                            allResults[index] = result
+                            allResults[index] = resultList
                         } catch (e: DatabaseException) { // Niemożliwy jest inny wyjątek
-                            throw BatchStepExecutionException(
-                                stepIndex = index,
-                                failedStep = operation,
-                                cause = e
-                            )
+                            throw TransactionStepExecutionException(stepIndex = index, failedStep = step, cause = e)
                         }
                     }
                 } catch (e: Exception) { // Ten blok łapie wyjątki z całej pętli
                     status.setRollbackOnly()
                     logger.error(e) { "Error during transaction execution, rolling back. Failed step details in exception." }
-                    throw e // Rzucamy dalej (teraz będzie to BatchStepExecutionException)
+                    throw e // Rzucamy dalej (teraz będzie to TransactionStepExecutionException)
                 }
 
                 allResults
@@ -147,34 +140,71 @@ internal class TransactionPlanExecutor(
         }
     }
 
-    private fun resolveReference(ref: TransactionValue, resultsContext: Map<Int, List<Map<String, Any?>>>): Any? {
-        return when (ref) {
-            is TransactionValue.Value -> ref.value
-            is TransactionValue.FromStep -> {
-                logger.trace { "Resolving reference from step ${ref.stepIndex}, key '${ref.resultKey}'" }
-                val previousResultList = resultsContext[ref.stepIndex]
-                    ?: throw StepDependencyException(
-                        message = "Cannot resolve reference: Result for step ${ref.stepIndex} not found.",
-                        referencedStepIndex = ref.stepIndex
-                    )
+    private fun resolveReference(value: Any?, resultsContext: TransactionPlanResults): Any? {
+        // Jeśli wartość nie jest TransactionValue, po prostu ją zwróć
+        if (value !is TransactionValue) return value
 
-                if (previousResultList.isEmpty()) {
+        return when (value) {
+            is TransactionValue.Value -> value.value
+            is TransactionValue.FromStep.Field -> {
+                logger.trace { "Resolving Field from step ${value.stepIndex}, key '${value.columnName}', row ${value.rowIndex}" }
+                val sourceResult = getResultList(resultsContext, value.stepIndex)
+
+                if (sourceResult.size <= value.rowIndex) {
                     throw StepDependencyException(
-                        message = "Cannot resolve reference: Step ${ref.stepIndex} returned no rows.",
-                        referencedStepIndex = ref.stepIndex
+                        message = "Cannot resolve Field: Step ${value.stepIndex} returned only ${sourceResult.size} rows, but tried to access index ${value.rowIndex}.",
+                        referencedStepIndex = value.stepIndex
                     )
                 }
-                if (!previousResultList.first().containsKey(ref.resultKey)) {
+                val row = sourceResult[value.rowIndex]
+                if (!row.containsKey(value.columnName)) {
                     throw StepDependencyException(
-                        message = "Cannot resolve reference: Key '${ref.resultKey}' not found in result of step ${ref.stepIndex}.",
-                        referencedStepIndex = ref.stepIndex,
-                        missingKey = ref.resultKey
+                        message = "Cannot resolve Field: Key '${value.columnName}' not found in result of step ${value.stepIndex}.",
+                        referencedStepIndex = value.stepIndex,
+                        missingKey = value.columnName
                     )
                 }
-                val resolvedValue = previousResultList.first()[ref.resultKey]
-                logger.trace { "Reference resolved to value: $resolvedValue" }
-                resolvedValue
+                row[value.columnName]
+            }
+            is TransactionValue.FromStep.Column -> {
+                logger.trace { "Resolving Column from step ${value.stepIndex}, key '${value.columnName}'" }
+                val sourceResult = getResultList(resultsContext, value.stepIndex)
+
+                val column = sourceResult.map { row ->
+                    if (!row.containsKey(value.columnName)) {
+                        throw StepDependencyException(
+                            message = "Cannot resolve Column: Key '${value.columnName}' not found in at least one row from step ${value.stepIndex}.",
+                            referencedStepIndex = value.stepIndex,
+                            missingKey = value.columnName
+                        )
+                    }
+                    row[value.columnName]
+                }
+                if (value.asTypedArray)
+                    column.toTypedArray()
+                else
+                    column
+            }
+            is TransactionValue.FromStep.Row -> {
+                logger.trace { "Resolving Row from step ${value.stepIndex}, row ${value.rowIndex}" }
+                val sourceResult = getResultList(resultsContext, value.stepIndex)
+
+                if (sourceResult.size <= value.rowIndex) {
+                    throw StepDependencyException(
+                        message = "Cannot resolve Row: Step ${value.stepIndex} returned only ${sourceResult.size} rows, but tried to access index ${value.rowIndex}.",
+                        referencedStepIndex = value.stepIndex
+                    )
+                }
+                sourceResult[value.rowIndex]
             }
         }
+    }
+
+    private fun getResultList(resultsContext: TransactionPlanResults, stepIndex: Int): List<Map<String, Any?>> {
+        return resultsContext[stepIndex]
+            ?: throw StepDependencyException(
+                message = "Cannot resolve reference: Result for step $stepIndex not found. It may not have been executed yet.",
+                referencedStepIndex = stepIndex
+            )
     }
 }

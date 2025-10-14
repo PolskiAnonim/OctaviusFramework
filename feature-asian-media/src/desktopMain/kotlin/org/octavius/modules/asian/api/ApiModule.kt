@@ -112,7 +112,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
             val plan = TransactionPlan(dataAccess)
             plan.insert("titles", newTitle, returning = listOf("id"))
             plan.insert("publications", newPublication +
-                    mapOf("title_id" to TransactionValue.FromStep(0, "id")))
+                    mapOf("title_id" to TransactionValue.FromStep.Field(0, "id")))
 
 
             val result = dataAccess.executeTransactionPlan(plan.build())

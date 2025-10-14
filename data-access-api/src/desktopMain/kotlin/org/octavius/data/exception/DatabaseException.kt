@@ -119,7 +119,7 @@ class StepDependencyException(
  * @param failedStep Sam obiekt kroku, który się nie powiódł, dla celów diagnostycznych.
  * @param cause Oryginalny wyjątek, który spowodował błąd.
  */
-class BatchStepExecutionException(
+class TransactionStepExecutionException(
     val stepIndex: Int,
     val failedStep: TransactionStep<*>,
     override val cause: Throwable

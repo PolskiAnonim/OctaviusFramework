@@ -4,11 +4,8 @@ import org.octavius.data.DataResult
 
 /**
  * Reprezentuje wartość w kroku transakcyjnym.
- *
  * Umożliwia przekazywanie zarówno stałych wartości, jak i dynamicznych referencji
  * do wyników poprzednich kroków w tej samej transakcji.
- *
- * @see TransactionStep
  */
 sealed class TransactionValue {
     /**
@@ -18,12 +15,58 @@ sealed class TransactionValue {
     data class Value(val value: Any?) : TransactionValue()
 
     /**
-     * Referencja do wyniku z poprzedniego kroku w tej samej transakcji.
-     *
-     * @param stepIndex Indeks (0-based) kroku, którego wynik ma być użyty.
-     * @param resultKey Nazwa kolumny (np. "id") w wyniku tego kroku.
+     * Referencja do wyniku z poprzedniego kroku. Ta klasa jest bazą dla
+     * bardziej specyficznych typów referencji.
      */
-    data class FromStep(val stepIndex: Int, val resultKey: String) : TransactionValue()
+    sealed class FromStep(open val stepIndex: Int) : TransactionValue() {
+        /**
+         * Pobiera pojedynczą wartość z konkretnej komórki (`wiersz`, `kolumna`).
+         * Idealne do pobierania ID z właśnie wstawionego wiersza.
+         *
+         * @param stepIndex Indeks kroku źródłowego.
+         * @param columnName Nazwa kolumny, z której ma być pobrana wartość.
+         * @param rowIndex Indeks wiersza (domyślnie 0, czyli pierwszy).
+         */
+        data class Field(
+            override val stepIndex: Int,
+            val columnName: String,
+            val rowIndex: Int = 0
+        ) : FromStep(stepIndex)
+
+        /**
+         * Pobiera wszystkie wartości z jednej kolumny jako listę lub tablicę typowaną.
+         *
+         * Używane głównie do przekazywania wyników jednego zapytania jako parametrów
+         * dla kolejnego, np. w klauzulach `WHERE id = ANY(:ids)` lub `INSERT ... SELECT ... FROM UNNEST(...)`.
+         *
+         * @param stepIndex Indeks (0-based) kroku, z którego pochodzą dane.
+         * @param columnName Nazwa kolumny, której wartości mają zostać pobrane.
+         * @param asTypedArray Jeśli `true`, wynik zostanie przekształcony w tablicę typowaną
+         *                     (np. `IntArray`, `Array<String>`). Jest to kluczowa optymalizacja
+         *                     wydajności dla masowego przekazywania typów prostych, ponieważ
+         *                     sterownik JDBC może wysłać je jako pojedynczy, binarny parametr.
+         *                     Domyślnie `false` (wynikiem jest `List<Any?>`).
+         */
+        data class Column(
+            override val stepIndex: Int,
+            val columnName: String,
+            val asTypedArray: Boolean = false
+        ) : FromStep(stepIndex)
+
+        /**
+         * Pobiera cały wiersz jako `Map<String, Any?>`.
+         * Użyteczne, gdy chcesz przekazać wiele pól z jednego wyniku jako parametry
+         * do kolejnego kroku (np. kopiowanie wiersza z modyfikacjami).
+         * Executor specjalnie obsługuje ten typ, "rozsmarowując" mapę na parametry.
+         *
+         * @param stepIndex Indeks kroku źródłowego.
+         * @param rowIndex Indeks wiersza (domyślnie 0, czyli pierwszy).
+         */
+        data class Row(
+            override val stepIndex: Int,
+            val rowIndex: Int = 0
+        ) : FromStep(stepIndex)
+    }
 }
 
 /**
