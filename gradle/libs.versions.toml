@@ -1,6 +1,6 @@
 [versions]
-classgraph = "4.8.181"
-compose-multiplatform = "1.10.0-alpha01"
+classgraph = "4.8.184"
+compose-multiplatform = "1.10.0-alpha02"
 kotlin = "2.2.20"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
@@ -10,14 +10,14 @@ postgres = "42.7.8"
 hikari = "7.0.2"
 spring-jdbc = "7.0.0-M9"
 # api-server
-ktor = "3.3.0"
+ktor = "3.3.1"
 # koin
-koin = "4.1.0"
+koin = "4.1.1"
 #test/log
-junit = "6.0.0-RC3"
+junit = "6.0.0"
 assertj-core = "4.0.0-M1"
-mockk = "1.14.5"
-logback = "1.5.18"
+mockk = "1.14.6"
+logback = "1.5.19"
 kotlin-logging = "7.0.13"
 [libraries]
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
