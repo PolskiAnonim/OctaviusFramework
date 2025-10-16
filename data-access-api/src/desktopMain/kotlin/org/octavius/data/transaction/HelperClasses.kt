@@ -1,6 +1,7 @@
 package org.octavius.data.transaction
 
 import org.octavius.data.DataResult
+import org.octavius.data.builder.QueryBuilder
 
 /**
  * Reprezentuje wartość w kroku transakcyjnym.
@@ -18,20 +19,22 @@ sealed class TransactionValue {
      * Referencja do wyniku z poprzedniego kroku. Ta klasa jest bazą dla
      * bardziej specyficznych typów referencji.
      */
-    sealed class FromStep(open val stepIndex: Int) : TransactionValue() {
+    sealed class FromStep(open val handle: StepHandle<*>) : TransactionValue() {
         /**
          * Pobiera pojedynczą wartość z konkretnej komórki (`wiersz`, `kolumna`).
          * Idealne do pobierania ID z właśnie wstawionego wiersza.
          *
-         * @param stepIndex Indeks kroku źródłowego.
+         * @param handle Uchwyt do kroku, z którego pochodzą dane.
          * @param columnName Nazwa kolumny, z której ma być pobrana wartość.
          * @param rowIndex Indeks wiersza (domyślnie 0, czyli pierwszy).
          */
         data class Field(
-            override val stepIndex: Int,
-            val columnName: String,
+            override val handle: StepHandle<*>,
+            val columnName: String?,
             val rowIndex: Int = 0
-        ) : FromStep(stepIndex)
+        ) : FromStep(handle) {
+            constructor(handle: StepHandle<*>, rowIndex: Int = 0) : this(handle, null, rowIndex)
+        }
 
         /**
          * Pobiera wszystkie wartości z jednej kolumny jako listę lub tablicę typowaną.
@@ -39,7 +42,7 @@ sealed class TransactionValue {
          * Używane głównie do przekazywania wyników jednego zapytania jako parametrów
          * dla kolejnego, np. w klauzulach `WHERE id = ANY(:ids)` lub `INSERT ... SELECT ... FROM UNNEST(...)`.
          *
-         * @param stepIndex Indeks (0-based) kroku, z którego pochodzą dane.
+         * @param handle Uchwyt do kroku, z którego pochodzą dane.
          * @param columnName Nazwa kolumny, której wartości mają zostać pobrane.
          * @param asTypedArray Jeśli `true`, wynik zostanie przekształcony w tablicę typowaną
          *                     (np. `IntArray`, `Array<String>`). Jest to kluczowa optymalizacja
@@ -48,10 +51,12 @@ sealed class TransactionValue {
          *                     Domyślnie `false` (wynikiem jest `List<Any?>`).
          */
         data class Column(
-            override val stepIndex: Int,
-            val columnName: String,
+            override val handle: StepHandle<*>,
+            val columnName: String?,
             val asTypedArray: Boolean = false
-        ) : FromStep(stepIndex)
+        ) : FromStep(handle) {
+            constructor(handle: StepHandle<*>, asTypedArray: Boolean) : this(handle, null, asTypedArray)
+        }
 
         /**
          * Pobiera cały wiersz jako `Map<String, Any?>`.
@@ -59,22 +64,20 @@ sealed class TransactionValue {
          * do kolejnego kroku (np. kopiowanie wiersza z modyfikacjami).
          * Executor specjalnie obsługuje ten typ, "rozsmarowując" mapę na parametry.
          *
-         * @param stepIndex Indeks kroku źródłowego.
+         * @param handle Uchwyt do kroku, z którego pochodzą dane.
          * @param rowIndex Indeks wiersza (domyślnie 0, czyli pierwszy).
          */
         data class Row(
-            override val stepIndex: Int,
+            override val handle: StepHandle<*>,
             val rowIndex: Int = 0
-        ) : FromStep(stepIndex)
+        ) : FromStep(handle)
     }
 }
 
-/**
- * Reprezentuje pojedynczą operację w transakcji bazodanowej.
- */
 class TransactionStep<T>(
-    val builderState: Any, // Będzie to konkretny builder (DatabaseSelectQueryBuilder, etc.)
-    val terminalMethod: (Map<String, Any?>) -> DataResult<T>,
+    // Wszystkie pola muszą być publiczne, aby Executor miał do nich dostęp
+    val builder: QueryBuilder,
+    val executionLogic: (builder: QueryBuilder, params: Map<String, Any?>) -> DataResult<T>,
     val params: Map<String, Any?>
 )
 

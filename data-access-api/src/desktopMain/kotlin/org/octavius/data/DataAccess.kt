@@ -1,6 +1,8 @@
 package org.octavius.data
 
 import org.octavius.data.builder.*
+import org.octavius.data.transaction.TransactionPlan
+import org.octavius.data.transaction.TransactionPlanResult
 import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.data.transaction.TransactionStep
 
@@ -71,12 +73,10 @@ interface DataAccess : QueryOperations {
      * Idealne rozwiązanie dla scenariuszy, gdzie kroki transakcji są budowane dynamicznie,
      * np. na podstawie danych z formularza.
      *
-     * @param steps Lista kroków transakcji do wykonania.
-     * @return [DataResult] zawierający [TransactionPlanResults] w przypadku sukcesu lub błąd w razie niepowodzenia.
+     * @return [DataResult] zawierający [TransactionPlanResult] w przypadku sukcesu lub błąd w razie niepowodzenia.
      *         Transakcja jest automatycznie wycofywana w przypadku błędu.
      */
-    fun executeTransactionPlan(steps: List<TransactionStep<*>>): DataResult<TransactionPlanResults>
-
+    fun executeTransactionPlan(plan: TransactionPlan): DataResult<TransactionPlanResult>
     /**
      * Wykonuje podany blok kodu w ramach nowej, zarządzanej transakcji.
      *

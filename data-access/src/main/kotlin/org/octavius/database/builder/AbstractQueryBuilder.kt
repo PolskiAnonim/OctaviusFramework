@@ -2,6 +2,7 @@ package org.octavius.database.builder
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.DataResult
+import org.octavius.data.builder.QueryBuilder
 import org.octavius.data.builder.StepBuilderMethods
 import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
@@ -25,7 +26,7 @@ internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
     private val kotlinToPostgresConverter: KotlinToPostgresConverter,
     protected val rowMappers: RowMappers,
     protected val table: String? = null,
-) {
+): QueryBuilder {
     companion object {
         private val logger = KotlinLogging.logger {}
     }
@@ -290,7 +291,7 @@ internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
      * Konwertuje ten builder na StepBuilder, który umożliwia lazy execution w ramach transakcji.
      * Zwraca wrapper z metodami terminalnymi, które tworzą ExtendedDatabaseStep zamiast wykonywać zapytanie.
      */
-    fun asStep(): StepBuilderMethods {
+    override fun asStep(): StepBuilderMethods {
         @Suppress("UNCHECKED_CAST")
         return StepBuilder(this as R)
     }

@@ -7,6 +7,8 @@ import org.octavius.data.QueryOperations
 import org.octavius.data.builder.*
 import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
+import org.octavius.data.transaction.TransactionPlan
+import org.octavius.data.transaction.TransactionPlanResult
 import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.data.transaction.TransactionStep
 import org.octavius.database.builder.*
@@ -47,9 +49,9 @@ internal class DatabaseAccess(
 
     //--- Implementacja zarządzania transakcjami ---
 
-    override fun executeTransactionPlan(steps: List<TransactionStep<*>>): DataResult<TransactionPlanResults> {
+    override fun executeTransactionPlan(plan: TransactionPlan): DataResult<TransactionPlanResult> {
         val transactionPlanExecutor = TransactionPlanExecutor(transactionManager)
-        return transactionPlanExecutor.execute(steps)
+        return transactionPlanExecutor.execute(plan)
     }
 
     override fun <T> transaction(block: (tx: QueryOperations) -> DataResult<T>): DataResult<T> {

@@ -181,8 +181,6 @@ inline fun <reified T : Any> StepBuilderMethods.toSingleOf(vararg params: Pair<S
 inline fun <reified T : Any> StepBuilderMethods.toSingleOf(params: Map<String, Any?> = emptyMap()): TransactionStep<T?> =
     toSingleOf(T::class, params)
 
-/** Interfejs oznaczający że builder może być konwertowany na StepBuilder */
-interface StepConvertible {
-    /** Konwertuje builder na StepBuilder dla wykonania jako kroku transackcji */
+interface QueryBuilder {
     fun asStep(): StepBuilderMethods
 }
