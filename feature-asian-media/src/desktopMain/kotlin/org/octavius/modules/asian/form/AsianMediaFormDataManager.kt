@@ -1,8 +1,8 @@
 package org.octavius.modules.asian.form
 
 import org.octavius.data.DataResult
+import org.octavius.data.builder.execute
 import org.octavius.data.transaction.TransactionValue
-import org.octavius.data.transaction.StepReference
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.toTransactionValue
 import org.octavius.dialog.ErrorDialogConfig
@@ -11,6 +11,8 @@ import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
+import org.octavius.form.control.base.getCurrentAs
+import org.octavius.form.control.base.getInitialAs
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class AsianMediaFormDataManager : FormDataManager() {
@@ -50,33 +52,37 @@ class AsianMediaFormDataManager : FormDataManager() {
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
         return mapOf(
             "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "delete" to { formData, loadedId -> processDelete(loadedId) },
+            "delete" to { _, loadedId -> processDelete(loadedId!!) /* Istnienie ID zapewnia logika ukrywania przycisku */ },
             "cancel" to { _, _ -> FormActionResult.CloseScreen }
         )
     }
 
-    fun processDelete(loadedId: Int?): FormActionResult {
+    fun processDelete(loadedId: Int): FormActionResult {
         // Wykorzystanie CASCADE
-        val plan = TransactionPlan(dataAccess)
-        plan.delete("titles", mapOf("id" to loadedId))
-        val result = dataAccess.executeTransactionPlan(plan.build())
-        when (result) {
+        val plan = TransactionPlan()
+        plan.add(
+            dataAccess.deleteFrom("asian_media.titles")
+                .where("id = :id")
+                .asStep()
+                .execute("id" to loadedId)
+        )
+
+        return when (val result = dataAccess.executeTransactionPlan(plan)) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return FormActionResult.Failure
+                FormActionResult.Failure
             }
-            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+            is DataResult.Success -> FormActionResult.CloseScreen
         }
     }
 
     fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
-        // 1. Stwórz plan transakcji
-        val plan = TransactionPlan(dataAccess)
+        val plan = TransactionPlan()
 
         // =================================================================================
-        // Główna encja 'titles' i jej referencja ID
+        // KROK 1: Główna encja 'titles'
         // =================================================================================
-        val titleIdRef: TransactionValue // Zamiast Any?, używamy docelowego typu
+        val titleIdRef: TransactionValue
 
         val titleData = mapOf(
             "titles" to formResultData.getCurrent("titles"),
@@ -86,124 +92,103 @@ class AsianMediaFormDataManager : FormDataManager() {
         if (loadedId != null) {
             // TRYB EDYCJI: ID jest znane.
             titleIdRef = loadedId.toTransactionValue()
-            plan.update(
-                tableName = "titles",
-                data = titleData,
-                filter = mapOf("id" to titleIdRef)
+            plan.add(
+                dataAccess.update("asian_media.titles")
+                    .setValues(titleData)
+                    .where("id = :id")
+                    .asStep()
+                    .execute(titleData + mapOf("id" to titleIdRef))
             )
         } else {
-            // TRYB TWORZENIA: Tworzymy krok i od razu dostajemy bezpieczną referencję.
-            val titleInsertStep: StepReference = plan.insert(
-                tableName = "titles",
-                data = titleData,
-                returning = listOf("id")
-            )
-            titleIdRef = titleInsertStep.field("id")
+            titleIdRef = plan.add(
+                dataAccess.insertInto("asian_media.titles")
+                    .values(titleData)
+                    .returning("id")
+                    .asStep()
+                    .toField<Int>(titleData)
+            ).field()
         }
 
         // =================================================================================
-        // KROK 2: Obsługa pod-encji 'publications' (Repeatable Field)
+        // KROK 2: Obsługa pod-encji 'publications'
         // =================================================================================
-        val publicationsResult = formResultData["publications"]!!.currentValue as RepeatableResultValue
+        val publicationsResult = formResultData.getCurrentAs<RepeatableResultValue>("publications")
 
+        // --- TRYB EDYCJI: Rozpatrujemy zmiany ---
         if (loadedId != null) {
-            // --- Usunięte publikacje ---
+            // Usunięte publikacje
             publicationsResult.deletedRows.forEach { rowData ->
-                val pubId = rowData["id"]!!.initialValue as Int
-                // Usuwamy publikację. Tabela 'publication_volumes' zostanie usunięta kaskadowo przez DB.
-                plan.delete(
-                        tableName = "publications",
-                        filter = mapOf("id" to pubId)
-                    )
+                val pubId = rowData.getInitialAs<Int>("id")
+                plan.add(
+                    dataAccess.deleteFrom("asian_media.publications")
+                        .where("id = :id")
+                        .asStep()
+                        .execute("id" to pubId)
+                )
             }
 
-            // --- Zmodyfikowane publikacje ---
+            // Zmodyfikowane publikacje
             publicationsResult.modifiedRows.forEach { rowData ->
-                val pubId = rowData["id"]!!.initialValue as Int
-                val publicationIdRef = pubId.toTransactionValue() // ID tej publikacji jest znane.
+                val pubId = rowData.getInitialAs<Int>("id")
+                val publicationIdRef = pubId.toTransactionValue()
                 val publicationData = mapOf(
-                    "publication_type" to rowData["publicationType"]!!.currentValue,
-                    "status" to rowData["status"]!!.currentValue,
-                    "track_progress" to rowData["trackProgress"]!!.currentValue
+                    "publication_type" to rowData.getCurrent("publicationType"),
+                    "status" to rowData.getCurrent("status"),
+                    "track_progress" to rowData.getCurrent("trackProgress")
                 )
 
-                // Zaktualizuj samą publikację
-                plan.update(
-                        tableName = "publications",
-                        data = publicationData,
-                        filter = mapOf("id" to publicationIdRef)
-                    )
-
+                plan.add(
+                    dataAccess.update("asian_media.publications")
+                        .setValues(publicationData)
+                        .where("id = :id")
+                        .asStep()
+                        .execute(publicationData + mapOf("id" to publicationIdRef))
+                )
 
                 // Warunkowo zaktualizuj powiązane 'publication_volumes'
                 addPublicationVolumesUpdateOperation(plan, rowData, publicationIdRef)
             }
-
-            // --- Dodane publikacje ---
-            publicationsResult.addedRows.forEach { rowData ->
-                val publicationData = mapOf(
-                    "publication_type" to rowData["publicationType"]!!.currentValue,
-                    "status" to rowData["status"]!!.currentValue,
-                    "track_progress" to rowData["trackProgress"]!!.currentValue,
-                    // Używamy referencji do ID głównego tytułu (czy to nowego, czy edytowanego)
-                    "title_id" to titleIdRef
-                )
-
-                // Wstaw nową publikację i ZWRÓĆ JEJ ID, bo będzie potrzebne w kolejnym kroku.
-                val newPublicationIdRef = plan.insert(
-                    tableName = "publications",
-                    data = publicationData,
-                    returning = listOf("id")
-                ).field("id")
-                // Warunkowo zaktualizuj 'publication_volumes' (które stworzył trigger) używając nowego ID.
-                addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
-            }
-        } else {
-            // --- TRYB TWORZENIA ---
-            // Ignorujemy podział na dodane/zmienione/usunięte.
-            // Wszystkie wiersze z formularza traktujemy jako NOWE.
-            publicationsResult.allCurrentRows.forEach { rowData ->
-                val publicationData = mapOf(
-                    "publication_type" to rowData.getCurrent("publicationType"),
-                    "status" to rowData.getCurrent("status"),
-                    "track_progress" to rowData.getCurrent("trackProgress"),
-                    "title_id" to titleIdRef // Używamy referencji do ID nowo tworzonego tytułu
-                )
-
-                val newPublicationIdRef = plan.insert(
-                    tableName = "publications",
-                    data = publicationData,
-                    returning = listOf("id")
-                ).field("id")
-
-                addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
-            }
         }
 
-        val result = dataAccess.executeTransactionPlan(plan.build())
-        when (result) {
+        // --- TRYB TWORZENIA lub DODAWANIA NOWYCH (wspólna logika) ---
+        // W trybie tworzenia `allCurrentRows` = `addedRows`
+        val rowsToAdd = if (loadedId == null) publicationsResult.allCurrentRows else publicationsResult.addedRows
+
+        rowsToAdd.forEach { rowData ->
+            val publicationData = mapOf(
+                "publication_type" to rowData.getCurrent("publicationType"),
+                "status" to rowData.getCurrent("status"),
+                "track_progress" to rowData.getCurrent("trackProgress"),
+                "title_id" to titleIdRef
+            )
+
+            val newPublicationIdRef = plan.add(
+                dataAccess.insertInto("asian_media.publications")
+                    .values(publicationData)
+                    .returning("id")
+                    .asStep()
+                    .toField<Int>(publicationData)
+            ).field()
+
+            addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
+        }
+
+        // Wykonanie całego planu
+        return when (val result = dataAccess.executeTransactionPlan(plan)) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return FormActionResult.Failure
+                FormActionResult.Failure
             }
-            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+            is DataResult.Success -> FormActionResult.CloseScreen
         }
     }
 
-    /**
-     * Metoda pomocnicza, która hermetyzuje logikę aktualizacji 'publication_volumes'.
-     * Działa zarówno dla znanych ID (edycja), jak i dla referencji do przyszłych ID (dodawanie).
-     *
-     * @param plan Plan transakcji
-     * @param rowData Dane z wiersza, z których pobieramy informacje o wolumenach i fladze 'track_progress'.
-     * @param publicationIdRef Referencja do ID publikacji (może być Value lub FromResult).
-     */
     private fun addPublicationVolumesUpdateOperation(
         plan: TransactionPlan,
         rowData: FormResultData,
         publicationIdRef: TransactionValue
     ) {
-        if (rowData["trackProgress"]!!.currentValue == true) {
+        if (rowData.getCurrentAs<Boolean>("trackProgress")) {
             val volumesData = mapOf(
                 "volumes" to rowData.getCurrent("volumes"),
                 "translated_volumes" to rowData.getCurrent("translatedVolumes"),
@@ -212,11 +197,12 @@ class AsianMediaFormDataManager : FormDataManager() {
                 "original_completed" to rowData.getCurrent("originalCompleted")
             )
 
-            plan.update(
-                tableName = "publication_volumes",
-                data = volumesData,
-                // Filtrujemy po ID publikacji, używając przekazanej referencji.
-                filter = mapOf("publication_id" to publicationIdRef)
+            plan.add(
+                dataAccess.update("asian_media.publication_volumes")
+                    .setValues(volumesData)
+                    .where("publication_id = :publication_id")
+                    .asStep()
+                    .execute(volumesData + mapOf("publication_id" to publicationIdRef))
             )
         }
     }

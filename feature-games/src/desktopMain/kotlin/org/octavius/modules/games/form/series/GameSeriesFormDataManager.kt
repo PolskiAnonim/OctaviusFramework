@@ -7,6 +7,7 @@ import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.getCurrent
 
 class GameSeriesFormDataManager : FormDataManager() {
     private fun loadData(loadedId: Int?) = loadData(loadedId) {
@@ -31,14 +32,19 @@ class GameSeriesFormDataManager : FormDataManager() {
 
     private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
         val seriesData = mutableMapOf<String, Any?>()
-        seriesData["name"] = formResultData["name"]!!.currentValue
-        val plan = TransactionPlan(dataAccess)
+        seriesData["name"] = formResultData.getCurrent("name")
+        val plan = TransactionPlan()
         if (loadedId != null) {
-            plan.update("series", seriesData, mapOf("id" to loadedId))
+            plan.add(
+                dataAccess.update("games.series").setValues(seriesData).where("id = :id").asStep()
+                    .execute(seriesData + mapOf("id" to loadedId))
+            )
         } else {
-            plan.insert("series", seriesData)
+            plan.add(
+                dataAccess.insertInto("games.series").values(seriesData).asStep().execute()
+            )
         }
-        val result = dataAccess.executeTransactionPlan(plan.build())
+        val result = dataAccess.executeTransactionPlan(plan)
         when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))

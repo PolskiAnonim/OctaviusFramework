@@ -4,11 +4,13 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
+import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.builder.toListOf
 import org.octavius.data.builder.toSingleOf
 import org.octavius.data.toMap
 import org.octavius.data.transaction.TransactionPlan
+import org.octavius.data.transaction.TransactionPlanResult
 import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
@@ -31,27 +33,25 @@ class ReportConfigurationManager : KoinComponent {
 
         val flatValueMap = configuration.toMap(includeNulls = false)
 
-        val plan = TransactionPlan(dataAccess)
+        val plan = TransactionPlan()
 
         if (configId != null) {
-            plan.update(
-                tableName = "report_configurations",
-                data = flatValueMap,
-                filter = mapOf("id" to configId)
+            plan.add(
+                dataAccess.update("report_configurations").setValues(flatValueMap).where("id = :id").asStep()
+                    .execute(flatValueMap)
             )
         } else {
-            plan.insert(
-                tableName = "report_configurations",
-                data = flatValueMap,
+            plan.add(
+                dataAccess.insertInto("report_configurations").values(flatValueMap).asStep().execute(flatValueMap)
             )
         }
-        val result = dataAccess.executeTransactionPlan(plan.build())
+        val result = dataAccess.executeTransactionPlan(plan)
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
-            is DataResult.Success<TransactionPlanResults> -> true
+            is DataResult.Success<TransactionPlanResult> -> true
         }
     }
 
@@ -86,10 +86,13 @@ class ReportConfigurationManager : KoinComponent {
     }
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
-        val plan = TransactionPlan(dataAccess)
-        plan.delete("report_configurations", mapOf("name" to name, "report_name" to reportName))
+        val plan = TransactionPlan()
 
-        val result = dataAccess.executeTransactionPlan(plan.build())
+        val ref = plan.add(
+            dataAccess.deleteFrom("report_configurations").where("name = :name AND report_name = :report_name").asStep().execute("name" to name, "report_name" to reportName)
+        )
+
+        val result = dataAccess.executeTransactionPlan(plan)
 
         when(result) {
             is DataResult.Failure -> {
@@ -97,9 +100,8 @@ class ReportConfigurationManager : KoinComponent {
                 return false
             }
             is DataResult.Success -> {
-                val firstStepResult = result.value[0]!!
-                val firstStepFirstResult = firstStepResult.first()
-                return firstStepFirstResult["result"] as Int > 0
+                val firstStepResult = result.value.get(ref)
+                return firstStepResult > 0
             }
         }
     }

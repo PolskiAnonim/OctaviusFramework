@@ -1,6 +1,7 @@
 package org.octavius.modules.games.form.game
 
 import org.octavius.data.DataResult
+import org.octavius.data.builder.execute
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionValue
 import org.octavius.data.transaction.toTransactionValue
@@ -10,6 +11,9 @@ import org.octavius.domain.game.GameStatus
 import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.getCurrent
+import org.octavius.form.control.base.getCurrentAs
+import org.octavius.form.control.base.getInitialAs
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class GameFormDataManager : FormDataManager() {
@@ -80,17 +84,18 @@ class GameFormDataManager : FormDataManager() {
     }
 
     fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
-        val plan = TransactionPlan(dataAccess)
+        val plan = TransactionPlan()
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
 
         // =================================================================================
+        // KROK 1: Główna encja 'games'
+        // =================================================================================
         val gameIdRef: TransactionValue
 
-        // Dane dla głównej tabeli 'games'.
         val gameData = mapOf(
-            "name" to formResultData["name"]!!.currentValue,
-            "series" to formResultData["series"]!!.currentValue,
-            "status" to formResultData["status"]!!.currentValue
+            "name" to formResultData.getCurrent("name"),
+            "series" to formResultData.getCurrent("series"),
+            "status" to formResultData.getCurrent("status")
         )
 
         // W zależności od tego, czy tworzymy nową grę, czy edytujemy istniejącą,
@@ -99,40 +104,40 @@ class GameFormDataManager : FormDataManager() {
             // === TRYB EDYCJI ===
             // ID gry jest znane, więc używamy stałej wartości.
             gameIdRef = loadedId.toTransactionValue()
-
-            // Operacja 0: Aktualizuj grę. Nie potrzebujemy niczego zwracać.
-            plan.update(
-                tableName = "games",
-                data = gameData,
-                filter = mapOf("id" to gameIdRef),
+            // Zaktualizuj grę, przekazując wszystkie parametry
+            plan.add(
+                dataAccess.update("games.games")
+                    .setValues(gameData)
+                    .where("id = :id")
+                    .asStep()
+                    .execute(gameData + mapOf("id" to gameIdRef))
             )
         } else {
-            // === TRYB TWORZENIA ===
-            // Operacja 0: Wstaw nową grę i zwróć jej wygenerowane 'id'.
-            gameIdRef = plan.insert(
-                tableName = "games",
-                data = gameData,
-                returning = listOf("id")
-            ).field("id")
+            // Wstaw nową grę i pobierz jej ID jako referencję
+            gameIdRef = plan.add(
+                dataAccess.insertInto("games.games")
+                    .values(gameData)
+                    .returning("id")
+                    .asStep()
+                    .toField<Int>(gameData) // Używamy toField, bo chcemy pojedynczą wartość
+            ).field()
         }
 
-        // Od tego momentu wszystkie operacje na tabelach zależnych używają `gameIdRef`,
-
-        val status = formResultData["status"]!!.currentValue as GameStatus
+        val status = formResultData.getCurrentAs<GameStatus>("status")
 
         // =================================================================================
-        // KROK 2: Obsługa tabel zależnych (1-do-1)
+        // KROK 2: Obsługa tabel zależnych 1-do-1
         // =================================================================================
 
         // --- Obsługa Play Time ---
         handleDependentTable(
             plan = plan,
-            exists = formResultData["playTimeExists"]!!.currentValue as Boolean,
+            exists = formResultData.getCurrentAs("playTimeExists"),
             conditionMet = status in statusesWithDetails,
-            tableName = "play_time",
+            tableName = "games.play_time",
             data = mapOf(
-                "play_time_hours" to formResultData["playTimeHours"]!!.currentValue,
-                "completion_count" to formResultData["completionCount"]!!.currentValue
+                "play_time_hours" to formResultData.getCurrent("playTimeHours"),
+                "completion_count" to formResultData.getCurrent("completionCount")
             ),
             gameIdRef = gameIdRef
         )
@@ -140,13 +145,13 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Ratings ---
         handleDependentTable(
             plan = plan,
-            exists = formResultData["ratingsExists"]!!.currentValue as Boolean,
+            exists = formResultData.getCurrentAs("ratingsExists"),
             conditionMet = status in statusesWithDetails,
-            tableName = "ratings",
+            tableName = "games.ratings",
             data = mapOf(
-                "story_rating" to formResultData["storyRating"]!!.currentValue,
-                "gameplay_rating" to formResultData["gameplayRating"]!!.currentValue,
-                "atmosphere_rating" to formResultData["atmosphereRating"]!!.currentValue
+                "story_rating" to formResultData.getCurrent("storyRating"),
+                "gameplay_rating" to formResultData.getCurrent("gameplayRating"),
+                "atmosphere_rating" to formResultData.getCurrent("atmosphereRating")
             ),
             gameIdRef = gameIdRef
         )
@@ -154,77 +159,78 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Characters ---
         handleDependentTable(
             plan = plan,
-            exists = formResultData["charactersExists"]!!.currentValue as Boolean,
-            conditionMet = formResultData["visibleCharactersSection"]!!.currentValue as Boolean,
-            tableName = "characters",
+            exists = formResultData.getCurrentAs("charactersExists"),
+            conditionMet = formResultData.getCurrentAs("visibleCharactersSection"),
+            tableName = "games.characters",
             data = mapOf(
-                "has_distinctive_character" to formResultData["hasDistinctiveCharacter"]!!.currentValue,
-                "has_distinctive_protagonist" to formResultData["hasDistinctiveProtagonist"]!!.currentValue,
-                "has_distinctive_antagonist" to formResultData["hasDistinctiveAntagonist"]!!.currentValue
+                "has_distinctive_character" to formResultData.getCurrent("hasDistinctiveCharacter"),
+                "has_distinctive_protagonist" to formResultData.getCurrent("hasDistinctiveProtagonist"),
+                "has_distinctive_antagonist" to formResultData.getCurrent("hasDistinctiveAntagonist")
             ),
             gameIdRef = gameIdRef
         )
 
         // =================================================================================
-        // KROK 3: Obsługa tabeli łączącej (many-to-many)
+        // KROK 3: Obsługa tabeli łączącej many-to-many
         // =================================================================================
 
-        val categoriesResult = formResultData["categories"]!!.currentValue as RepeatableResultValue
+        val categoriesResult = formResultData.getCurrentAs<RepeatableResultValue>("categories")
 
         // Usunięte kategorie
         categoriesResult.deletedRows.forEach { rowData ->
-            val categoryId = rowData["category"]!!.initialValue as Int
-            plan.delete(
-                tableName = "categories_to_games",
-                filter = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to categoryId
-                )
+            val categoryId = rowData.getInitialAs<Int>("category")
+            plan.add(
+                dataAccess.deleteFrom("games.categories_to_games")
+                    .where("game_id = :game_id AND category_id = :category_id")
+                    .asStep()
+                    .execute("game_id" to gameIdRef, "category_id" to categoryId)
             )
         }
 
         // Zmodyfikowane kategorie (DELETE + INSERT)
         categoriesResult.modifiedRows.forEach { rowData ->
-            val oldCategoryId = rowData["category"]!!.initialValue as Int
-            val newCategoryId = rowData["category"]!!.currentValue
+            val oldCategoryId = rowData.getInitialAs<Int>("category")
+            val newCategoryId = rowData.getCurrent("category")
+
             // Usuń stare powiązanie
-            plan.delete(
-                tableName = "categories_to_games",
-                filter = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to oldCategoryId
-                )
+            plan.add(
+                dataAccess.deleteFrom("games.categories_to_games")
+                    .where("game_id = :game_id AND category_id = :category_id")
+                    .asStep()
+                    .execute("game_id" to gameIdRef, "category_id" to oldCategoryId)
             )
+
             // Dodaj nowe powiązanie
-            plan.insert(
-                tableName = "categories_to_games",
-                data = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to newCategoryId
-                )
+            val insertData = mapOf("game_id" to gameIdRef, "category_id" to newCategoryId)
+            plan.add(
+                dataAccess.insertInto("games.categories_to_games")
+                    .values(insertData)
+                    .asStep()
+                    .execute(insertData)
             )
         }
 
         // Dodane kategorie
         categoriesResult.addedRows.forEach { rowData ->
-            val categoryId = rowData["category"]!!.currentValue
-            plan.insert(
-                tableName = "categories_to_games",
-                data = mapOf(
-                    "game_id" to gameIdRef,
-                    "category_id" to categoryId
-                )
+            val categoryId = rowData.getCurrent("category")
+            val insertData = mapOf("game_id" to gameIdRef, "category_id" to categoryId)
+            plan.add(
+                dataAccess.insertInto("games.categories_to_games")
+                    .values(insertData)
+                    .asStep()
+                    .execute(insertData)
             )
         }
 
-        val result = dataAccess.executeTransactionPlan(plan.build())
-        when (result) {
+        // Wykonanie całego planu
+        val result = dataAccess.executeTransactionPlan(plan)
+        return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return FormActionResult.Failure
+                FormActionResult.Failure
             }
 
-            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+            is DataResult.Success -> FormActionResult.CloseScreen
         }
     }
 
@@ -241,27 +247,30 @@ class GameFormDataManager : FormDataManager() {
         gameIdRef: TransactionValue
     ) {
         if (exists) {
-            if (conditionMet) {
-                // Rekord istnieje i warunek jest spełniony -> UPDATE
-                plan.update(
-                    tableName = tableName,
-                    data = data,
-                    filter = mapOf("game_id" to gameIdRef)
+            if (conditionMet) { // UPDATE
+                val allParams = data + mapOf("game_id" to gameIdRef)
+                plan.add(
+                    dataAccess.update(tableName)
+                        .setValues(data)
+                        .where("game_id = :game_id")
+                        .asStep()
+                        .execute(allParams)
                 )
-            } else {
-                // Rekord istnieje, ale warunek nie jest spełniony -> DELETE
-                plan.delete(
-                    tableName = tableName,
-                    filter = mapOf("game_id" to gameIdRef)
+            } else { // DELETE
+                plan.add(
+                    dataAccess.deleteFrom(tableName)
+                        .where("game_id = :game_id")
+                        .asStep()
+                        .execute("game_id" to gameIdRef)
                 )
             }
-        } else if (conditionMet) {
-            // Rekord nie istnieje, ale warunek jest spełniony -> INSERT
-            // Klucz obcy `game_id` jest częścią danych do wstawienia.
-            val dataWithFk = data + mapOf("game_id" to gameIdRef)
-            plan.insert(
-                tableName = tableName,
-                data = dataWithFk
+        } else if (conditionMet) { // INSERT
+            val allParams = data + mapOf("game_id" to gameIdRef)
+            plan.add(
+                dataAccess.insertInto(tableName)
+                    .values(allParams)
+                    .asStep()
+                    .execute(allParams)
             )
         }
     }

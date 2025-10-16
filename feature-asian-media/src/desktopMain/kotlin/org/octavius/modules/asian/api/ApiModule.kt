@@ -12,6 +12,7 @@ import org.octavius.api.contract.asian.PublicationCheckRequest
 import org.octavius.api.contract.asian.PublicationCheckResponse
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
+import org.octavius.data.PgStandardType
 import org.octavius.data.builder.toSingle
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResults
@@ -47,29 +48,29 @@ class AsianMediaApi : ApiModule, KoinComponent {
     private fun Route.checkPublicationExistence() {
         post("/check") {
             val request = call.receive<PublicationCheckRequest>()
-            val titles = request.titles
-            if (titles.isEmpty()) {
+            if (request.titles.isEmpty()) {
                 call.respond(PublicationCheckResponse(found = false))
                 return@post
             }
 
-            // Używamy operatora && (overlap) z PostgreSQL do sprawdzenia,
-            // czy tablica tytułów w bazie ma jakikolwiek wspólny element z listą z zapytania.
-            val result = dataAccess.select("id, titles").from("titles").where("titles && :titles")
-                .toSingle("titles" to titles.withPgType("text[]"))
-
+            val result = dataAccess.select("id", "titles")
+                .from("asian_media.titles")
+                .where("titles && :titles")
+                .toSingle("titles" to request.titles.withPgType(PgStandardType.TEXT_ARRAY))
 
             when (result) {
-                is DataResult.Failure -> call.respond(PublicationCheckResponse(found = false)) // TODO error
-                is DataResult.Success<Map<String, Any?>?> -> {
-                    val value = result.value
-                    if (value != null) {
-                        val titleId = value["id"] as Int
+                is DataResult.Failure -> {
+                    call.respond(PublicationCheckResponse(found = false)) // TODO Error
+                }
+                is DataResult.Success -> {
+                    val row = result.value
+                    if (row != null) {
+                        val titleId = row["id"] as Int
 
                         @Suppress("UNCHECKED_CAST")
-                        val dbTitles = value["titles"] as List<String>
-                        // Znajdź, który konkretnie tytuł pasował
-                        val matchedTitle = titles.firstOrNull { it in dbTitles }
+                        val dbTitles = row["titles"] as List<String>
+
+                        val matchedTitle = request.titles.firstOrNull { it in dbTitles }
 
                         call.respond(
                             PublicationCheckResponse(
@@ -83,8 +84,6 @@ class AsianMediaApi : ApiModule, KoinComponent {
                     }
                 }
             }
-
-
         }
     }
 
@@ -97,25 +96,37 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             val request = call.receive<PublicationAddRequest>()
 
-            // Przygotuj operacje bazodanowe w jednej transakcji
-            val newTitle = mapOf(
-                "titles" to request.titles,
+            val plan = TransactionPlan()
+
+            // Krok 1: Wstaw tytuł i uzyskaj bezpieczny uchwyt do jego przyszłego ID
+            val titleData = mapOf(
+                "titles" to request.titles.withPgType(PgStandardType.TEXT_ARRAY),
                 "language" to request.language
             )
-            // Domyślnie dodajemy publikację ze statusem NotReading
-            val newPublication = mapOf(
-                "publication_type" to request.type,
-                "status" to PublicationStatus.NotReading,
-                "track_progress" to false
+            val titleIdHandle = plan.add(
+                dataAccess.insertInto("asian_media.titles")
+                    .values(titleData)
+                    .returning("id")
+                    .asStep()
+                    .toField<Int>(titleData)
             )
 
-            val plan = TransactionPlan(dataAccess)
-            plan.insert("titles", newTitle, returning = listOf("id"))
-            plan.insert("publications", newPublication +
-                    mapOf("title_id" to TransactionValue.FromStep.Field(0, "id")))
+            // Krok 2: Wstaw publikację, używając referencji do ID z kroku 1
+            val publicationData = mapOf(
+                "publication_type" to request.type,
+                "status" to PublicationStatus.NotReading,
+                "track_progress" to false,
+                "title_id" to titleIdHandle.field()
+            )
+            plan.add(
+                dataAccess.insertInto("asian_media.publications")
+                    .values(publicationData)
+                    .asStep()
+                    .execute(publicationData)
+            )
 
-
-            val result = dataAccess.executeTransactionPlan(plan.build())
+            // Wykonanie planu
+            val result = dataAccess.executeTransactionPlan(plan)
 
             when (result) {
                 is DataResult.Failure -> {
@@ -126,21 +137,17 @@ class AsianMediaApi : ApiModule, KoinComponent {
                         )
                     )
                 }
-
-                is DataResult.Success<TransactionPlanResults> -> {
-                    val newId = result.value[0]?.first()?.get("id") as? Int
+                is DataResult.Success -> {
+                    // Pobierz wynik z pierwszego kroku, używając bezpiecznego uchwytu
+                    val newId = result.value.get(titleIdHandle)
 
                     if (newId != null) {
-                        // === NOWA LOGIKA - WYSYŁANIE ZDARZENIA ===
                         println("API: Pomyślnie dodano tytuł z ID: $newId. Wysyłanie zdarzenia nawigacyjnego...")
 
-                        // Przygotuj payload dla formularza
                         val payload = mapOf("entityId" to newId)
-
-                        // Wyślij zdarzenie do magistrali
                         NavigationEventBus.post(
                             NavigationEvent.NavigateToScreen(
-                                screenId = AsianMediaFeature.ASIAN_MEDIA_FORM_SCREEN_ID, // Użyjemy stałej
+                                screenId = AsianMediaFeature.ASIAN_MEDIA_FORM_SCREEN_ID,
                                 payload = payload
                             )
                         )
