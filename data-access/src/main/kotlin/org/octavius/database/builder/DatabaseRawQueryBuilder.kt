@@ -14,7 +14,19 @@ internal class DatabaseRawQueryBuilder(
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     private val sql: String
-) : AbstractQueryBuilder<DatabaseRawQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), RawQueryBuilder {
+) : AbstractQueryBuilder<RawQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), RawQueryBuilder {
     override val canReturnResultsByDefault = true
     override fun buildSql(): String = sql
+
+    // UWAGA! Ta funkcja nie ma realnie żadnego zastosowania i zwraca technicznie taki sam obiekt jaki był
+    override fun copy(): DatabaseRawQueryBuilder {
+        val newBuilder = DatabaseRawQueryBuilder(
+            jdbcTemplate,
+            kotlinToPostgresConverter,
+            rowMappers,
+            sql = this.sql
+        )
+        // Nie kopiujemy stanu bazowego ze względu na fakt że interfejs uniemożliwia nawet jego wykorzystanie
+        return newBuilder
+    }
 }

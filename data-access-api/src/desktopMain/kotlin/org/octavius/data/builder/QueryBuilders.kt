@@ -3,7 +3,7 @@ package org.octavius.data.builder
 /**
  * Definiuje publiczne API do budowania zapytań SQL SELECT.
  */
-interface SelectQueryBuilder: TerminalReturningMethods, QueryBuilder {
+interface SelectQueryBuilder: TerminalReturningMethods, QueryBuilder<SelectQueryBuilder> {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): SelectQueryBuilder
@@ -51,7 +51,7 @@ interface SelectQueryBuilder: TerminalReturningMethods, QueryBuilder {
 /**
  * Definiuje publiczne API do budowania zapytań SQL DELETE.
  */
-interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder {
+interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<DeleteQueryBuilder> {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): DeleteQueryBuilder
@@ -75,7 +75,7 @@ interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMet
 /**
  * Definiuje publiczne API do budowania zapytań SQL UPDATE.
  */
-interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder {
+interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<UpdateQueryBuilder> {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): UpdateQueryBuilder
@@ -121,7 +121,7 @@ interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMet
 /**
  * Definiuje publiczne API do budowania zapytań SQL INSERT.
  */
-interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder {
+interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<InsertQueryBuilder> {
 
     /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
     fun with(name: String, query: String): InsertQueryBuilder
@@ -201,6 +201,6 @@ interface OnConflictClauseBuilder {
 /**
  * Definiuje publiczne API do przekazania pełnego zapytania.
  */
-interface RawQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder {
+interface RawQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<RawQueryBuilder> {
     // Tylko metody terminalne które są brane z innych interfejsów
 }

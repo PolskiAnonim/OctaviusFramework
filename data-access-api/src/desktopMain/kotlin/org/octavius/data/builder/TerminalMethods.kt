@@ -181,6 +181,13 @@ inline fun <reified T : Any> StepBuilderMethods.toSingleOf(vararg params: Pair<S
 inline fun <reified T : Any> StepBuilderMethods.toSingleOf(params: Map<String, Any?> = emptyMap()): TransactionStep<T?> =
     toSingleOf(T::class, params)
 
-interface QueryBuilder {
+interface QueryBuilder<T : QueryBuilder<T>> {
     fun asStep(): StepBuilderMethods
+
+    /**
+     * Tworzy i zwraca głęboką kopię tego buildera.
+     * Zwraca konkretny typ buildera (np. SelectQueryBuilder),
+     * zachowując płynność API.
+     */
+    fun copy(): T
 }

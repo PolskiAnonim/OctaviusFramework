@@ -15,7 +15,7 @@ internal class DatabaseSelectQueryBuilder(
     rowMappers: RowMappers,
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     private val selectClause: String
-) : AbstractQueryBuilder<DatabaseSelectQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), SelectQueryBuilder {
+) : AbstractQueryBuilder<SelectQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), SelectQueryBuilder {
     override val canReturnResultsByDefault = true
     //------------------------------------------------------------------------------------------------------------------
     //                                    STAN WEWNĘTRZNY KLAUZULI SELECT
@@ -120,5 +120,34 @@ internal class DatabaseSelectQueryBuilder(
         offsetValue?.takeIf { it >= 0 }?.let { sqlBuilder.append("OFFSET ").append(it).append(" ") }
 
         return sqlBuilder.toString().trim()
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    //                                          KOPIA
+    //------------------------------------------------------------------------------------------------------------------
+
+    override fun copy(): DatabaseSelectQueryBuilder {
+        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        val newBuilder = DatabaseSelectQueryBuilder(
+            this.jdbcTemplate,
+            this.rowMappers,
+            this.kotlinToPostgresConverter,
+            this.selectClause
+        )
+
+        // 2. Skopiuj stan z klasy bazowej używając metody pomocniczej
+        newBuilder.copyBaseStateFrom(this)
+
+        // 3. Skopiuj stan specyficzny dla TEJ klasy
+        newBuilder.fromClause = this.fromClause
+        newBuilder.whereCondition = this.whereCondition
+        newBuilder.groupByClause = this.groupByClause
+        newBuilder.havingClause = this.havingClause
+        newBuilder.orderByClause = this.orderByClause
+        newBuilder.limitValue = this.limitValue
+        newBuilder.offsetValue = this.offsetValue
+
+        // 4. Zwróć w pełni skonfigurowaną kopię
+        return newBuilder
     }
 }

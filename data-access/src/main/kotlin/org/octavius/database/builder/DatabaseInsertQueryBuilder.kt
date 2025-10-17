@@ -12,7 +12,7 @@ internal class DatabaseInsertQueryBuilder(
     rowMappers: RowMappers,
     table: String,
     private val columns: List<String>
-) : AbstractQueryBuilder<DatabaseInsertQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), InsertQueryBuilder {
+) : AbstractQueryBuilder<InsertQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), InsertQueryBuilder {
     override val canReturnResultsByDefault = false
     private val valuePlaceholders = mutableMapOf<String, String>()
     private var selectSource: String? = null
@@ -39,7 +39,7 @@ internal class DatabaseInsertQueryBuilder(
         return this.valueExpression(column, ":$column")
     }
 
-     override fun fromSelect(query: String): InsertQueryBuilder = apply {
+    override fun fromSelect(query: String): InsertQueryBuilder = apply {
         if (valuePlaceholders.isNotEmpty()) {
             throw IllegalStateException("Cannot use fromSelect() when values() has already been called.")
         }
@@ -99,37 +99,77 @@ internal class DatabaseInsertQueryBuilder(
 
         return sql.toString()
     }
+
+    //------------------------------------------------------------------------------------------------------------------
+    //                                          KOPIA
+    //------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Tworzy i zwraca głęboką kopię tego buildera.
+     * Umożliwia bezpieczne tworzenie wariantów zapytania bez modyfikowania oryginału.
+     */
+    override fun copy(): DatabaseInsertQueryBuilder {
+        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        val newBuilder = DatabaseInsertQueryBuilder(
+            this.jdbcTemplate,
+            this.kotlinToPostgresConverter,
+            this.rowMappers,
+            this.table!!, // Wiemy, że table nie jest nullem dla INSERT
+            this.columns
+        )
+
+        newBuilder.copyBaseStateFrom(this)
+
+        newBuilder.valuePlaceholders.putAll(this.valuePlaceholders) // Kopiujemy zawartość mapy, a nie referencję!
+        newBuilder.selectSource = this.selectSource
+        // Kopiujemy także onConflictBuilder, jeśli istnieje! Używamy jego własnej metody copy().
+        newBuilder.onConflictBuilder = this.onConflictBuilder?.copy()
+
+        // 4. Zwróć w pełni skonfigurowaną kopię
+        return newBuilder
+    }
+
 }
 
-internal class DatabaseOnConflictClauseBuilder: OnConflictClauseBuilder {
-        internal var target: String? = null
-        internal var action: String? = null
+internal class DatabaseOnConflictClauseBuilder : OnConflictClauseBuilder {
+    internal var target: String? = null
+    internal var action: String? = null
 
-        /** Definiuje cel konfliktu (kolumny). */
-        override fun onColumns(vararg columns: String) {
-            target = columns.joinToString(", ")
-        }
-
-        /** Definiuje cel konfliktu (nazwa ograniczenia). */
-        override fun onConstraint(constraintName: String) {
-            target = "ON CONSTRAINT $constraintName"
-        }
-
-        /** Definiuje akcję DO NOTHING. */
-        override fun doNothing() {
-            action = "DO NOTHING"
-        }
-
-        /**
-         * Definiuje akcję DO UPDATE.
-         * @param setExpression Wyrażenie SET, np. "name = EXCLUDED.name, updated_at = NOW()"
-         * @param whereCondition Opcjonalny warunek WHERE, np. "target_table.version < EXCLUDED.version"
-         */
-        override fun doUpdate(setExpression: String, whereCondition: String?) {
-            val updateAction = StringBuilder("DO UPDATE SET $setExpression")
-            whereCondition?.let {
-                updateAction.append(" WHERE $it")
-            }
-            action = updateAction.toString()
-        }
+    /** Definiuje cel konfliktu (kolumny). */
+    override fun onColumns(vararg columns: String) {
+        target = columns.joinToString(", ")
     }
+
+    /** Definiuje cel konfliktu (nazwa ograniczenia). */
+    override fun onConstraint(constraintName: String) {
+        target = "ON CONSTRAINT $constraintName"
+    }
+
+    /** Definiuje akcję DO NOTHING. */
+    override fun doNothing() {
+        action = "DO NOTHING"
+    }
+
+    /**
+     * Definiuje akcję DO UPDATE.
+     * @param setExpression Wyrażenie SET, np. "name = EXCLUDED.name, updated_at = NOW()"
+     * @param whereCondition Opcjonalny warunek WHERE, np. "target_table.version < EXCLUDED.version"
+     */
+    override fun doUpdate(setExpression: String, whereCondition: String?) {
+        val updateAction = StringBuilder("DO UPDATE SET $setExpression")
+        whereCondition?.let {
+            updateAction.append(" WHERE $it")
+        }
+        action = updateAction.toString()
+    }
+
+    /**
+     * Tworzy kopię tego buildera klauzuli ON CONFLICT.
+     */
+    fun copy(): DatabaseOnConflictClauseBuilder {
+        val newBuilder = DatabaseOnConflictClauseBuilder()
+        newBuilder.target = this.target
+        newBuilder.action = this.action
+        return newBuilder
+    }
+}

@@ -10,7 +10,7 @@ internal class DatabaseDeleteQueryBuilder(
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     table: String
-) : AbstractQueryBuilder<DatabaseDeleteQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), DeleteQueryBuilder {
+) : AbstractQueryBuilder<DeleteQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), DeleteQueryBuilder {
     override val canReturnResultsByDefault = false
     private var whereClause: String? = null
     private var usingClause: String? = null
@@ -35,5 +35,25 @@ internal class DatabaseDeleteQueryBuilder(
         sql.append(buildReturningClause())
 
         return sql.toString()
+    }
+
+    override fun copy(): DatabaseDeleteQueryBuilder {
+        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        val newBuilder = DatabaseDeleteQueryBuilder(
+            this.jdbcTemplate,
+            this.kotlinToPostgresConverter,
+            this.rowMappers,
+            this.table!! // Wynika z faktu że w AbstractQueryBuilder jest to własność nullowalna
+        )
+
+        // 2. Skopiuj stan z klasy bazowej używając metody pomocniczej
+        newBuilder.copyBaseStateFrom(this)
+
+        // 3. Skopiuj stan specyficzny dla TEJ klasy
+        newBuilder.whereClause = this.whereClause
+        newBuilder.usingClause = this.usingClause
+
+        // 4. Zwróć w pełni skonfigurowaną kopię
+        return newBuilder
     }
 }

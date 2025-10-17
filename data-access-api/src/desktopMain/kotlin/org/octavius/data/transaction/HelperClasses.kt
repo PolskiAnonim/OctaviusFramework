@@ -76,8 +76,8 @@ sealed class TransactionValue {
 
 class TransactionStep<T>(
     // Wszystkie pola muszą być publiczne, aby Executor miał do nich dostęp
-    val builder: QueryBuilder,
-    val executionLogic: (builder: QueryBuilder, params: Map<String, Any?>) -> DataResult<T>,
+    val builder: QueryBuilder<*>,
+    val executionLogic: (builder: QueryBuilder<*>, params: Map<String, Any?>) -> DataResult<T>,
     val params: Map<String, Any?>
 )
 

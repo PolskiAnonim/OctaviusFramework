@@ -21,12 +21,12 @@ import kotlin.reflect.KClass
  * zapytań z klauzulą WITH (Common Table Expressions). Używa generyków, aby zapewnić płynny
  * interfejs (fluent API) w podklasach.
  */
-internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
+internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     protected val jdbcTemplate: NamedParameterJdbcTemplate,
-    private val kotlinToPostgresConverter: KotlinToPostgresConverter,
+    protected val kotlinToPostgresConverter: KotlinToPostgresConverter,
     protected val rowMappers: RowMappers,
     protected val table: String? = null,
-): QueryBuilder {
+): QueryBuilder<R> {
     companion object {
         private val logger = KotlinLogging.logger {}
     }
@@ -293,6 +293,24 @@ internal abstract class AbstractQueryBuilder<R : AbstractQueryBuilder<R>>(
      */
     override fun asStep(): StepBuilderMethods {
         @Suppress("UNCHECKED_CAST")
-        return StepBuilder(this as R)
+        return StepBuilder(this)
     }
+
+    //------------------------------------------------------------------------------------------------------------------
+    //                                          KOPIA BUILDERA
+    //------------------------------------------------------------------------------------------------------------------
+
+
+    /**
+     * Kopiuje stan z innego buildera tego samego typu.
+     * Używane przez metody `copy()` w klasach pochodnych.
+     */
+    protected fun copyBaseStateFrom(source: AbstractQueryBuilder<R>) {
+        this.returningClause = source.returningClause
+        this.withClauses.clear()
+        this.withClauses.addAll(source.withClauses)
+        this.recursiveWith = source.recursiveWith
+    }
+
+    abstract override fun copy(): R
 }

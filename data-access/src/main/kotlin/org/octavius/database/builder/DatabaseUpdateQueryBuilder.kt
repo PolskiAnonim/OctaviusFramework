@@ -10,7 +10,7 @@ internal class DatabaseUpdateQueryBuilder(
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     table: String
-) : AbstractQueryBuilder<DatabaseUpdateQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), UpdateQueryBuilder {
+) : AbstractQueryBuilder<UpdateQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, table), UpdateQueryBuilder {
     override val canReturnResultsByDefault = false
     private val setClauses = mutableMapOf<String, String>()
     private var fromClause: String? = null
@@ -63,5 +63,26 @@ internal class DatabaseUpdateQueryBuilder(
         sql.append(buildReturningClause())
 
         return sql.toString()
+    }
+
+    override fun copy(): DatabaseUpdateQueryBuilder {
+        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        val newBuilder = DatabaseUpdateQueryBuilder(
+            this.jdbcTemplate,
+            this.kotlinToPostgresConverter,
+            this.rowMappers,
+            this.table!! // Wynika z faktu że w AbstractQueryBuilder jest to własność nullowalna
+        )
+
+        // 2. Skopiuj stan z klasy bazowej używając metody pomocniczej
+        newBuilder.copyBaseStateFrom(this)
+
+        // 3. Skopiuj stan specyficzny dla TEJ klasy
+        newBuilder.fromClause = this.fromClause
+        newBuilder.whereClause = this.whereClause
+        newBuilder.setClauses.putAll(setClauses)
+
+        // 4. Zwróć w pełni skonfigurowaną kopię
+        return newBuilder
     }
 }

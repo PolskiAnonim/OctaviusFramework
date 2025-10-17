@@ -8,14 +8,13 @@ import kotlin.reflect.KClass
  * Wrapper który zapewnia te same metody terminalne co AbstractQueryBuilder,
  * ale zamiast wykonywać zapytania tworzy TransactionStep dla BatchExecutor.
  */
-@Suppress("UNCHECKED_CAST")
-internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R): StepBuilderMethods {
+internal class StepBuilder(private val builder: AbstractQueryBuilder<*>): StepBuilderMethods {
 
     /** Tworzy TransactionStep z metodą toList */
     override fun toList(params: Map<String, Any?>): TransactionStep<List<Map<String, Any?>>> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as R).toList(p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toList(p) },
             params = params
         )
     }
@@ -24,7 +23,7 @@ internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R):
     override fun toSingle(params: Map<String, Any?>): TransactionStep<Map<String, Any?>?> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as R).toSingle(p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toSingle(p) },
             params = params
         )
     }
@@ -33,7 +32,7 @@ internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R):
     override fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?>): TransactionStep<List<T>> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as R).toListOf(kClass, p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toListOf(kClass, p) },
             params = params
         )
     }
@@ -42,7 +41,7 @@ internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R):
     override fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?>): TransactionStep<T?> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as R).toSingleOf(kClass, p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toSingleOf(kClass, p) },
             params = params
         )
     }
@@ -51,7 +50,7 @@ internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R):
     override fun <T: Any> toField(params: Map<String, Any?>): TransactionStep<T?> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as R).toField(p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toField(p) },
             params = params
         )
     }
@@ -60,7 +59,7 @@ internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R):
     override fun <T: Any> toColumn(params: Map<String, Any?>): TransactionStep<List<T?>> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as R).toColumn(p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toColumn(p) },
             params = params
         )
     }
@@ -69,7 +68,7 @@ internal class StepBuilder<R : AbstractQueryBuilder<R>>(private val builder: R):
     override fun execute(params: Map<String, Any?>): TransactionStep<Int> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as R).execute(p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).execute(p) },
             params = params
         )
     }
