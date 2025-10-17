@@ -66,6 +66,26 @@ internal class TransactionPlanExecutor(
         // Krok 1: Stwórz mapę do szybkiego tłumaczenia uchwytów na indeksy
         val handleToIndexMap = stepsWithHandles.withIndex().associate { (index, pair) -> pair.first to index }
 
+        // --- Walidacja (niepoprawna kolejność jest możliwa tylko za pomocą funkcji addPlan) ----
+        for ((currentIndex, pair) in stepsWithHandles.withIndex()) {
+            val step = pair.second
+            for (paramValue in step.params.values) {
+                if (paramValue is TransactionValue.FromStep) {
+                    // Znajdź indeks kroku, od którego zależy ten parametr
+                    val sourceIndex = handleToIndexMap[paramValue.handle]
+                        ?: throw IllegalStateException("Validation failed: Found a handle that doesn't exist in the plan. This should never happen.")
+
+                    // KLUCZOWY WARUNEK: Indeks źródła danych musi być mniejszy niż indeks bieżącego kroku.
+                    if (sourceIndex >= currentIndex) {
+                        throw StepDependencyException(
+                            "Validation failed: Step $currentIndex attempts to use a result from a future or current step $sourceIndex.",
+                            currentIndex
+                        )
+                    }
+                }
+            }
+        }
+
         logger.info { "Executing transaction plan with ${stepsWithHandles.size} steps." }
 
         val transactionTemplate = TransactionTemplate(transactionManager)
