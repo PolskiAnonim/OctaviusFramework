@@ -1,4 +1,4 @@
-package org.octavius.performance // Możesz przenieść do innego pakietu jeśli chcesz
+package org.octavius.performance
 
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
