@@ -3,8 +3,6 @@ package org.octavius.data
 import org.octavius.data.builder.*
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResult
-import org.octavius.data.transaction.TransactionPlanResults
-import org.octavius.data.transaction.TransactionStep
 
 /**
  * Definiuje kontrakt dla podstawowych operacji na bazie danych (CRUD i zapytania surowe).

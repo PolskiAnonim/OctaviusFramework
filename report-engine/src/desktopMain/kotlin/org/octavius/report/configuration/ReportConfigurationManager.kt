@@ -11,7 +11,6 @@ import org.octavius.data.builder.toSingleOf
 import org.octavius.data.toMap
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResult
-import org.octavius.data.transaction.TransactionPlanResults
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 

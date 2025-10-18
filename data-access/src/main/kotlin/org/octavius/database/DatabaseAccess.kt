@@ -9,8 +9,6 @@ import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResult
-import org.octavius.data.transaction.TransactionPlanResults
-import org.octavius.data.transaction.TransactionStep
 import org.octavius.database.builder.*
 import org.octavius.database.transaction.TransactionPlanExecutor
 import org.octavius.database.type.KotlinToPostgresConverter

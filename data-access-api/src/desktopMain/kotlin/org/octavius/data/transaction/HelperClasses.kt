@@ -81,8 +81,6 @@ class TransactionStep<T>(
     val params: Map<String, Any?>
 )
 
-typealias TransactionPlanResults = Map<Int, List<Map<String, Any?>>>
-
 /**
  * Konwertuje dowolną wartość (także null) na instancję [TransactionValue.Value].
  *
