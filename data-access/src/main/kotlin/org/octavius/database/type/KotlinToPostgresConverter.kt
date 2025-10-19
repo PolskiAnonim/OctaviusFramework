@@ -6,7 +6,8 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.data.OffsetTime
 import org.octavius.data.PgTyped
 import org.octavius.data.annotation.EnumCaseConvention
-import org.octavius.data.exception.DataConversionException
+import org.octavius.data.exception.ConversionException
+import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toMap
 import org.octavius.data.util.Converters
 import org.postgresql.util.PGobject
@@ -127,11 +128,13 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
         val componentType = arrayValue::class.java.componentType?.kotlin
 
         if (componentType != null && isComplexComponentType(componentType)) {
-            throw IllegalArgumentException(
-                "Parameter ':$paramName' cannot be passed as a typed array. " +
-                        "The component type '${componentType.simpleName}' is a data class or collection, which is not supported for native JDBC array binding. " +
-                        "If you want to pass an array of composite types, use a List<DataClass> without `asTypedArray=true`."
+            val ex = ConversionException(
+                ConversionExceptionMessage.UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY,
+                arrayValue,
+                targetType = componentType.qualifiedName ?: componentType.simpleName ?: "unknown"
             )
+            logger.error(ex) { ex }
+            throw ex
         }
 
         // Jeśli walidacja przejdzie, traktujemy to jak prosty parametr - sterownik JDBC go obsłuży.

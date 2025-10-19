@@ -1,7 +1,6 @@
 package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.exception.DataMappingException
 import org.octavius.data.toDataObject
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.postgresql.jdbc.PgResultSetMetaData
@@ -64,18 +63,9 @@ internal class RowMappers(private val typesConverter: PostgresToKotlinConverter)
                 val result = map.toDataObject(kClass)
                 logger.trace { "Successfully mapped row to ${kClass.simpleName}" }
                 result
-            } catch (e: Exception) {
-                // Najbogatszy kontekst: co, na co i z czego próbowaliśmy mapować.
-                val mappingEx = DataMappingException(
-                    message = "Failed to map row to ${kClass.simpleName}",
-                    targetClass = kClass.qualifiedName ?: kClass.simpleName ?: "unknown class",
-                    rowData = map,
-                    cause = e
-                )
-                logger.error(mappingEx) {
-                    "Failed to map row to ${mappingEx.targetClass}. Problematic row data: ${mappingEx.rowData}"
-                }
-                throw mappingEx
+            } catch (e: Exception) { // To powinien być zawsze ConversionException
+                logger.error(e) { e }
+                throw e
             }
         }
     }

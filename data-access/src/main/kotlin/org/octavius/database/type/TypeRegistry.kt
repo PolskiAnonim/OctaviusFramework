@@ -38,10 +38,10 @@ internal class TypeRegistry(
      * @param dynamicTypeName Klucz (nazwa) z adnotacji @DynamicallyMappable.
      * @return KClass<?> lub null, jeśli nie znaleziono mapowania.
      */
-    fun getDynamicMappableClass(dynamicTypeName: String): KClass<*>? {
+    fun getDynamicMappableClass(dynamicTypeName: String): KClass<*> {
         val kClass = dynamicTypeNameToKClassMap[dynamicTypeName]
         logger.trace { "Looking up dynamic mappable class for key '$dynamicTypeName': ${kClass?.simpleName ?: "not found"}" }
-        return kClass
+        return kClass ?: throw TypeRegistryException("Nie znaleziono zarejestrowanej klasy dla dynamicznego typu '$dynamicTypeName'")
     }
 
 
@@ -77,10 +77,10 @@ internal class TypeRegistry(
      * @param pgTypeName Nazwa typu w PostgreSQL.
      * @return Pełna ścieżka klasy (np. "org.example.MyEnum") lub null.
      */
-    fun getClassFullPathForPgTypeName(pgTypeName: String): String? {
+    fun getClassFullPathForPgTypeName(pgTypeName: String): String {
         val classPath = pgTypeNameToClassFullPathMap[pgTypeName]
         logger.trace { "Looking up class for PostgreSQL type '$pgTypeName': ${classPath ?: "not found"}" }
-        return classPath
+        return classPath ?: throw TypeRegistryException("Nie znaleziono klasy dla typu PostgreSQL '${pgTypeName}'.")
     }
 
     /**
@@ -100,7 +100,7 @@ internal class TypeRegistry(
 internal enum class TypeCategory {
     /** Typ wyliczeniowy (CREATE TYPE ... AS ENUM) */
     ENUM,
-    /** Typ tablicowy (prefikś "_" w nazwie typu) */
+    /** Typ tablicowy (prefiks "_" w nazwie typu) */
     ARRAY,
     /** Typ kompozytowy (CREATE TYPE ... AS) */
     COMPOSITE,

@@ -21,28 +21,6 @@ sealed class DatabaseException(message: String, cause: Throwable? = null) : Runt
 class TypeRegistryException(message: String, cause: Throwable? = null) : DatabaseException(message, cause)
 
 /**
- * Błędy podczas konwersji danych między typami Kotlin a PostgreSQL.
- *
- * Zawiera szczegółowe informacje o wartości, która nie mogła być skonwertowana,
- * oraz docelowym typie. Rzucane podczas:
- * - Konwersji wartości z bazy na typy Kotlin
- * - Ekspansji parametrów Kotlin na konstrukcje SQL
- */
-class DataConversionException(
-    message: String,
-    val value: Any?,
-    val targetType: String,
-    cause: Throwable? = null
-) : DatabaseException(message, cause) {
-    override fun toString(): String {
-        return """${super.toString()}
-        |   Original Value: $value
-        |   Target Type: $targetType
-        """.trimMargin()
-    }
-}
-
-/**
  * Błędy podczas wykonywania zapytań SQL.
  *
  * Zawiera pełny kontekst błędu: zapytanie SQL i parametry.
@@ -61,29 +39,6 @@ class QueryExecutionException(
         return """${super.toString()}
         |   SQL: $sql
         |   Params: $params
-        """.trimMargin()
-    }
-}
-
-/**
- * Błędy podczas mapowania wiersza ResultSet na obiekt data class.
- *
- * Zawiera informacje o klasie docelowej i danych wiersza, które nie mogły być zmapowane.
- * Rzucane gdy:
- * - Brak odpowiedniego konstruktora w data class
- * - Niezgodność typów między kolumnami a właściwościami klasy
- * - Błąd podczas tworzenia instancji obiektu
- */
-class DataMappingException(
-    message: String,
-    val targetClass: String,
-    val rowData: Map<String, Any?>, // Mapa z danymi wiersza, który się nie powiódł
-    cause: Throwable? = null
-) : DatabaseException(message, cause) {
-    override fun toString(): String {
-        return """${super.toString()}
-        |   Target Class: $targetClass
-        |   Problematic Row Data: $rowData
         """.trimMargin()
     }
 }
