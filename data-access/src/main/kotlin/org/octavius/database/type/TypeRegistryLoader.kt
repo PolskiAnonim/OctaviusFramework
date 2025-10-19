@@ -10,6 +10,7 @@ import org.octavius.data.annotation.DynamicallyMappable
 import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.annotation.PgType
 import org.octavius.data.exception.TypeRegistryException
+import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.util.Converters
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
@@ -32,6 +33,7 @@ internal class TypeRegistryLoader(
         val pgTypeName: String,
         val enumConvention: EnumCaseConvention?
     )
+
     private data class KotlinDynamicTypeMapping(val typeName: String, val kClass: KClass<*>)
 
     // klasa-kontener na wyniki z jednego skanowania
@@ -75,9 +77,13 @@ internal class TypeRegistryLoader(
                 pgTypeNameToClassFullPathMap = pgToClassMap,
                 dynamicTypeNameToKClassMap = dynamicTypeMap
             )
+        } catch (e: TypeRegistryException) {
+            // Jeśli już jest to nasz typ, po prostu go rzuć dalej
+            throw e
         } catch (e: Exception) {
             logger.error(e) { "FATAL: Failed to load TypeRegistry. Application state is inconsistent!" }
-            throw TypeRegistryException("Failed to initialize TypeRegistry", e)
+            // Opakuj ogólny błąd
+            throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, cause = e)
         }
     }
 
@@ -98,11 +104,13 @@ internal class TypeRegistryLoader(
                     scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->
                         val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
                         val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
-                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank { Converters.toSnakeCase(classInfo.simpleName) }
+                        val pgTypeName =
+                            pgTypeNameFromAnnotation.ifBlank { Converters.toSnakeCase(classInfo.simpleName) }
 
                         var convention: EnumCaseConvention? = null
                         if (classInfo.isEnum) {
-                            val conventionEnumValue = annotationInfo.parameterValues.getValue("enumConvention") as? io.github.classgraph.AnnotationEnumValue
+                            val conventionEnumValue =
+                                annotationInfo.parameterValues.getValue("enumConvention") as? io.github.classgraph.AnnotationEnumValue
                             convention = conventionEnumValue?.loadClassAndReturnEnumValue() as? EnumCaseConvention
                         }
                         pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, convention))
@@ -116,7 +124,7 @@ internal class TypeRegistryLoader(
                     }
                 }
         } catch (e: Exception) {
-            val ex = TypeRegistryException("Błąd podczas skanowania adnotacji na classpath", e)
+            val ex = TypeRegistryException(TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED, cause = e)
             logger.error(ex) { ex.message }
             throw ex
         }
@@ -125,16 +133,20 @@ internal class TypeRegistryLoader(
 
 
     private fun loadAllCustomTypesFromDb(): List<DbTypeRawInfo> {
-        logger.debug { "Executing unified query for all custom DB types..." }
-        // Używamy schematów przekazanych w konstruktorze
-        val params = mapOf("schemas" to dbSchemas.toTypedArray())
-        return namedParameterJdbcTemplate.query(SQL_QUERY_ALL_TYPES, params) { rs, _ ->
-            DbTypeRawInfo(
-                infoType = rs.getString("info_type"),
-                typeName = rs.getString("type_name"),
-                col1 = rs.getString("col1"),
-                col2 = rs.getString("col2")
-            )
+        try {
+            logger.debug { "Executing unified query for all custom DB types..." }
+            // Używamy schematów przekazanych w konstruktorze
+            val params = mapOf("schemas" to dbSchemas.toTypedArray())
+            return namedParameterJdbcTemplate.query(SQL_QUERY_ALL_TYPES, params) { rs, _ ->
+                DbTypeRawInfo(
+                    infoType = rs.getString("info_type"),
+                    typeName = rs.getString("type_name"),
+                    col1 = rs.getString("col1"),
+                    col2 = rs.getString("col2")
+                )
+            }
+        } catch (e: Exception) {
+            throw TypeRegistryException(TypeRegistryExceptionMessage.DB_QUERY_FAILED, cause = e)
         }
     }
 

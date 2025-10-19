@@ -10,6 +10,7 @@ import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.exception.TypeRegistryException
+import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
 import org.octavius.data.util.Converters
 import java.lang.reflect.Method
@@ -117,7 +118,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
         val parts: List<String?> = parsePostgresComposite(value)
 
         if (parts.size != 2) {
-            throw ConversionException(ConversionExceptionMessage.INVALID_DYNAMIC_DTO_FORMAT, value = value)
+            throw TypeRegistryException(TypeRegistryExceptionMessage.WRONG_FIELD_NUMBER_IN_COMPOSITE, typeName = "dynamic_dto")
         }
 
         val typeName = parts[0]
@@ -297,7 +298,6 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      */
     private fun convertCompositeType(value: String, typeInfo: PostgresTypeInfo): Any? {
         val fullClassName = typeRegistry.getClassFullPathForPgTypeName(typeInfo.typeName)
-            ?: throw TypeRegistryException("Nie znaleziono klasy Kotlina dla typu PostgreSQL '${typeInfo.typeName}'.")
 
         logger.trace { "Converting composite type ${typeInfo.typeName} to class: $fullClassName" }
 
@@ -308,8 +308,8 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
         val dbAttributes = typeInfo.attributes.toList()
 
         if (fieldValues.size != dbAttributes.size) {
-            val ex = TypeRegistryException("Niezgodna liczba pól dla typu kompozytowego ${typeInfo.typeName}: otrzymano ${fieldValues.size}, oczekiwano ${dbAttributes.size}")
-            logger.error(ex) { "Field count mismatch for type ${typeInfo.typeName}: got ${fieldValues.size}, expected ${dbAttributes.size}" }
+            val ex = TypeRegistryException(TypeRegistryExceptionMessage.WRONG_FIELD_NUMBER_IN_COMPOSITE, typeName = typeInfo.typeName)
+            logger.error(ex) { ex }
             throw ex
         }
 
