@@ -6,9 +6,11 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.data.OffsetTime
 import org.octavius.data.PgTyped
 import org.octavius.data.annotation.EnumCaseConvention
+import org.octavius.data.exception.DataConversionException
 import org.octavius.data.toMap
 import org.octavius.data.util.Converters
 import org.postgresql.util.PGobject
+import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -102,7 +104,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
                 val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
                 finalPlaceholder to innerParams
             }
-
+            paramValue is Array<*> -> validateTypedArrayParameter(paramName, paramValue)
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
             paramValue is LocalDate -> createDateParameter(paramName, paramValue)
             paramValue is LocalDateTime -> createTimestampParameter(paramName, paramValue)
@@ -115,6 +117,34 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
             paramValue is Enum<*> -> createEnumParameter(paramName, paramValue)
             else -> ":$paramName" to mapOf(paramName to paramValue)
         }
+    }
+
+    /**
+     * Waliduje tablicę typowaną (`Array<*>`) przeznaczoną do bezpośredniego przekazania do JDBC.
+     * Rzuca wyjątek, jeśli typ elementów nie jest typem prostym.
+     */
+    private fun validateTypedArrayParameter(paramName: String, arrayValue: Array<*>): Pair<String, Map<String, Any?>> {
+        val componentType = arrayValue::class.java.componentType?.kotlin
+
+        if (componentType != null && isComplexComponentType(componentType)) {
+            throw IllegalArgumentException(
+                "Parameter ':$paramName' cannot be passed as a typed array. " +
+                        "The component type '${componentType.simpleName}' is a data class or collection, which is not supported for native JDBC array binding. " +
+                        "If you want to pass an array of composite types, use a List<DataClass> without `asTypedArray=true`."
+            )
+        }
+
+        // Jeśli walidacja przejdzie, traktujemy to jak prosty parametr - sterownik JDBC go obsłuży.
+        return ":$paramName" to mapOf(paramName to arrayValue)
+    }
+
+    /**
+     * Sprawdza, czy KClass reprezentuje typ złożony (np. data class),
+     * który nie może być użyty w tablicy typowanej JDBC.
+     */
+    private fun isComplexComponentType(kClass: KClass<*>): Boolean {
+        // Zwraca true, jeśli typ jest "złożony"
+        return kClass.isData || kClass == Map::class || kClass == List::class
     }
 
     /** Konwertuje `LocalDate` na `java.sql.Date`. */

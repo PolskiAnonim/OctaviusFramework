@@ -89,27 +89,6 @@ class DataMappingException(
 }
 
 /**
- * Rzucany, gdy referencja do wyniku z poprzedniego kroku (`TransactionValue.FromStep`)
- * jest nieprawidłowa i nie może zostać rozwiązana.
- *
- * @param message Komunikat błędu.
- * @param referencedStepIndex Indeks kroku, do którego odnosiła się referencja.
- * @param missingKey Klucz, którego nie udało się znaleźć w wyniku (jeśli dotyczy).
- */
-class StepDependencyException(
-    override val message: String,
-    val referencedStepIndex: Int,
-    val missingKey: String? = null
-) : DatabaseException(message) {
-    override fun toString(): String {
-        return """${super.toString()}
-        |   Step Index: $referencedStepIndex
-        |   Missing Key: $missingKey
-        """.trimMargin()
-    }
-}
-
-/**
  * Wyjątek rzucany, gdy wykonanie konkretnego kroku w ramach transakcji wsadowej nie powiedzie się.
  *
  * Opakowuje oryginalny wyjątek (np. QueryExecutionException), dodając kontekst

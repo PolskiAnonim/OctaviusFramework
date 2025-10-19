@@ -202,6 +202,10 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
         return buildSql()
     }
 
+    override fun toString(): String {
+        return toSql()
+    }
+
     /**
      * Wykonuje zapytanie modyfikujące (bez RETURNING) i zwraca liczbę zmienionych wierszy.
      * Rzuca wyjątek, jeśli klauzula RETURNING została użyta - w takim przypadku należy

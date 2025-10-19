@@ -79,7 +79,20 @@ class TransactionStep<T>(
     val builder: QueryBuilder<*>,
     val executionLogic: (builder: QueryBuilder<*>, params: Map<String, Any?>) -> DataResult<T>,
     val params: Map<String, Any?>
-)
+) {
+    override fun toString(): String {
+        return """
+            TransactionStep{
+                builder: 
+                $builder
+                ------------------------------
+                params: 
+                $params
+            }
+        """.trimIndent()
+
+    }
+}
 
 /**
  * Konwertuje dowolną wartość (także null) na instancję [TransactionValue.Value].
