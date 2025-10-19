@@ -26,10 +26,16 @@ class QueryExecutionException(
     cause: Throwable? = null
 ) : DatabaseException(message, cause) {
     override fun toString(): String {
-        return """${super.toString()}
-        |   SQL: $sql
-        |   Params: $params
-        """.trimMargin()
+        val nestedError = cause.toString()
+        return """
+        -------------------------------
+        |  QUERY EXECUTION FAILED     
+        | message: $message
+        | cause: $nestedError
+        | sql: $sql
+        | params: $params
+        ---------------------------------
+        """.trimIndent()
     }
 }
 
@@ -40,15 +46,25 @@ class QueryExecutionException(
  * o tym, który krok zawiódł.
  *
  * @param stepIndex Indeks (0-based) kroku, który się nie powiódł.
- * @param failedStep Sam obiekt kroku, który się nie powiódł, dla celów diagnostycznych.
  * @param cause Oryginalny wyjątek, który spowodował błąd.
  */
 class TransactionStepExecutionException(
     val stepIndex: Int,
-    val failedStep: TransactionStep<*>,
     override val cause: Throwable
 ) : DatabaseException(
-    // Tworzymy bardziej opisową wiadomość
-    "Execution of transaction step $stepIndex failed. Cause: ${cause.message}",
+    "Execution of transaction step $stepIndex failed",
     cause
-)
+) {
+    override fun toString(): String {
+        val nestedError = cause.toString().prependIndent("|   ")
+
+        return """
+        -------------------------------------
+        | TRANSACTION STEP $stepIndex FAILED
+        -------------------------------------
+        | Szczegóły błędu w kroku:
+        $nestedError
+        -------------------------------------
+        """.trimIndent()
+    }
+}

@@ -111,11 +111,12 @@ internal class TransactionPlanExecutor(
 
                         } catch (e: Exception) {
                             // Krok 6: Opakuj KAŻDY błąd w kontekst kroku
-                            throw TransactionStepExecutionException(
+                            val ex = TransactionStepExecutionException(
                                 stepIndex = index,
-                                failedStep = step, // Użyjemy TransactionStep<*> w definicji wyjątku
                                 cause = e
                             )
+                            logger.error(ex) { ex }
+                            throw ex
                         }
                     }
 
