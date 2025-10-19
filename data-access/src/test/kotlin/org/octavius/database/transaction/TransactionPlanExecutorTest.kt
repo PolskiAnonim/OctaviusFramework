@@ -199,7 +199,7 @@ class TransactionPlanExecutorTest {
         val error = (result as DataResult.Failure).error
         assertThat(error).isInstanceOf(TransactionStepExecutionException::class.java)
         assertThat(error.cause).isInstanceOf(StepDependencyException::class.java)
-        assertThat(error.cause?.message).contains("Key 'non_existent_column' not found")
+        assertThat(error.cause?.message).contains("COLUMN_NOT_FOUND")
     }
 
     @Test

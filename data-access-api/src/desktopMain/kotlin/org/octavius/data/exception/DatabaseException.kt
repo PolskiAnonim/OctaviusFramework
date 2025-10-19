@@ -59,12 +59,13 @@ class TransactionStepExecutionException(
         val nestedError = cause.toString().prependIndent("|   ")
 
         return """
-        -------------------------------------
-        | TRANSACTION STEP $stepIndex FAILED
-        -------------------------------------
-        | Szczegóły błędu w kroku:
-        $nestedError
-        -------------------------------------
-        """.trimIndent()
+
+-------------------------------------
+| TRANSACTION STEP $stepIndex FAILED
+-------------------------------------
+| Szczegóły błędu w kroku:
+$nestedError
+-------------------------------------
+"""
     }
 }
