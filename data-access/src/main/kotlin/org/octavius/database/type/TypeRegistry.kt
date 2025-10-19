@@ -3,6 +3,7 @@ package org.octavius.database.type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.TypeRegistryException
+import org.octavius.data.exception.TypeRegistryExceptionMessage
 import kotlin.reflect.KClass
 
 /**
@@ -38,10 +39,13 @@ internal class TypeRegistry(
      * @param dynamicTypeName Klucz (nazwa) z adnotacji @DynamicallyMappable.
      * @return KClass<?> lub null, jeśli nie znaleziono mapowania.
      */
-    fun getDynamicMappableClass(dynamicTypeName: String): KClass<*>? {
+    fun getDynamicMappableClass(dynamicTypeName: String): KClass<*> {
         val kClass = dynamicTypeNameToKClassMap[dynamicTypeName]
         logger.trace { "Looking up dynamic mappable class for key '$dynamicTypeName': ${kClass?.simpleName ?: "not found"}" }
-        return kClass
+        return kClass ?: throw TypeRegistryException(
+            TypeRegistryExceptionMessage.DYNAMIC_TYPE_NOT_FOUND,
+            typeName = dynamicTypeName
+        )
     }
 
 
@@ -55,7 +59,10 @@ internal class TypeRegistry(
     fun getTypeInfo(pgTypeName: String): PostgresTypeInfo {
         val typeInfo = postgresTypeMap[pgTypeName]
         logger.trace { "Looking up type info for '$pgTypeName': ${if (typeInfo != null) "found" else "not found"}" }
-        return typeInfo ?: throw TypeRegistryException("Nie znaleziono danych typu PostgreSQL.")
+        return typeInfo ?: throw TypeRegistryException(
+            TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND,
+            typeName = pgTypeName
+        )
     }
 
     /**
@@ -68,7 +75,10 @@ internal class TypeRegistry(
     fun getPgTypeNameForClass(clazz: KClass<*>): String {
         val pgTypeName = classFullPathToPgTypeNameMap[clazz.qualifiedName]
         logger.trace { "Looking up PostgreSQL type for class '${clazz.qualifiedName}': ${pgTypeName ?: "not found"}" }
-        return pgTypeName ?: throw TypeRegistryException("Klasa ${clazz.qualifiedName} nie jest zarejestrowanym typem PostgreSQL. Czy ma adnotację @PgStandardType.kt?")
+        return pgTypeName ?: throw TypeRegistryException(
+            TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED,
+            typeName = clazz.qualifiedName ?: clazz.simpleName ?: "unknown"
+        )
     }
 
     /**
@@ -77,10 +87,13 @@ internal class TypeRegistry(
      * @param pgTypeName Nazwa typu w PostgreSQL.
      * @return Pełna ścieżka klasy (np. "org.example.MyEnum") lub null.
      */
-    fun getClassFullPathForPgTypeName(pgTypeName: String): String? {
+    fun getClassFullPathForPgTypeName(pgTypeName: String): String {
         val classPath = pgTypeNameToClassFullPathMap[pgTypeName]
         logger.trace { "Looking up class for PostgreSQL type '$pgTypeName': ${classPath ?: "not found"}" }
-        return classPath
+        return classPath ?: throw TypeRegistryException(
+            TypeRegistryExceptionMessage.PG_TYPE_NOT_MAPPED,
+            typeName = pgTypeName
+        )
     }
 
     /**
@@ -100,7 +113,7 @@ internal class TypeRegistry(
 internal enum class TypeCategory {
     /** Typ wyliczeniowy (CREATE TYPE ... AS ENUM) */
     ENUM,
-    /** Typ tablicowy (prefikś "_" w nazwie typu) */
+    /** Typ tablicowy (prefiks "_" w nazwie typu) */
     ARRAY,
     /** Typ kompozytowy (CREATE TYPE ... AS) */
     COMPOSITE,

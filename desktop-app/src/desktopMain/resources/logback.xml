@@ -3,16 +3,7 @@
     <!-- Appender 1: Logowanie do konsoli (dla developmentu) -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <!-- Format logu: data, wątek, poziom, logger, wiadomość, nowa linia -->
-            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex{full,
-                java.awt.,
-                javax.swing.,
-                androidx.compose.,
-                org.springframework.jdbc.,
-                org.jetbrains.skiko.,
-                kotlinx.coroutines.,
-                kotlin.coroutines.}
-            </pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -26,12 +17,11 @@
             <maxHistory>10</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%rEx{full}</pattern>
         </encoder>
     </appender>
 
     <!-- Ustawienia logowania dla KONKRETNYCH PAKIETÓW -->
-    <!-- Ustaw poziom DEBUG dla swojego kodu, żeby widzieć szczegółowe logi z Twojego systemu -->
     <logger name="org.octavius" level="DEBUG"/>
 
     <!-- Ucisz gadatliwe biblioteki, żeby nie zaśmiecały logów -->

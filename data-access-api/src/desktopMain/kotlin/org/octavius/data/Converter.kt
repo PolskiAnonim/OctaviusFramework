@@ -1,5 +1,7 @@
 package org.octavius.data
 
+import org.octavius.data.exception.ConversionException
+import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.util.Converters
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -105,15 +107,26 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
 
             // Przypadek 4: Parametr jest non-nullable (np. String) i nie ma wartości domyślnej,
             // a klucz nie został znaleziony w mapie. To jest błąd.
-            else -> throw IllegalArgumentException(
-                "Wymagany parametr '${param.name}' (klucz: '$keyName') dla klasy ${kClass.simpleName} " +
-                        "nie został znaleziony w mapie i nie posiada wartości domyślnej."
+            else -> throw ConversionException(
+                messageEnum = ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY,
+                targetType = kClass.qualifiedName,
+                value = keyName, // Używamy klucza mapy jako 'value'
+                propertyName = param.name
             )
         }
     }.associate { it }
 
     // Wywołaj główny konstruktor z przygotowanymi argumentami.
-    return metadata.constructor.callBy(args)
+    try {
+        return metadata.constructor.callBy(args)
+    } catch(e: Exception) {
+        throw ConversionException(
+            messageEnum = ConversionExceptionMessage.OBJECT_MAPPING_FAILED,
+            targetType = kClass.qualifiedName ?: kClass.simpleName ?: "unknown",
+            rowData = this,
+            cause = e
+        )
+    }
 }
 
 
