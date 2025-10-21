@@ -57,7 +57,8 @@ class DynamicDtoMappingTest {
         typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate,databaseConfig.packagesToScan, databaseConfig.dbSchemas).load() }
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         val postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
-        val rowMappers = RowMappers(postgresToKotlinConverter)
+        val extractor = ResultSetValueExtractor(typeRegistry, postgresToKotlinConverter)
+        val rowMappers = RowMappers(extractor)
         // Używamy pełnej implementacji DataAccess, aby testować jak najbliżej rzeczywistości
         dataAccess = DatabaseAccess(jdbcTemplate, transactionManager, rowMappers, kotlinToPostgresConverter)
     }

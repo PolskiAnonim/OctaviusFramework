@@ -80,7 +80,8 @@ class RealPostgresDataModificationTest {
             ).load()
         }
         kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
-        mappers = RowMappers(PostgresToKotlinConverter(typeRegistry))
+        val extractor = ResultSetValueExtractor(typeRegistry, PostgresToKotlinConverter(typeRegistry))
+        mappers = RowMappers(extractor)
     }
 
     @BeforeEach

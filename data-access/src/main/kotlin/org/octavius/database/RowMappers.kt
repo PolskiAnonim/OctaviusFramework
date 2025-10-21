@@ -2,17 +2,18 @@ package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.toDataObject
-import org.octavius.database.type.PostgresToKotlinConverter
-import org.postgresql.jdbc.PgResultSetMetaData
+import org.octavius.database.type.ResultSetValueExtractor
 import org.springframework.jdbc.core.RowMapper
 import kotlin.reflect.KClass
 
 /**
  * Fabryka dostarczająca różne implementacje `RowMapper` do konwersji `ResultSet`.
  *
- * @param typesConverter Konwerter typów PostgreSQL na typy Kotlina, używany przez wszystkie mappery.
+ * @param valueExtractor Odzyskiwacz/wydobywacz wartości z bazy
  */
-internal class RowMappers(private val typesConverter: PostgresToKotlinConverter) {
+internal class RowMappers(
+    private val valueExtractor: ResultSetValueExtractor
+) {
     companion object {
         private val logger = KotlinLogging.logger {}
     }
@@ -23,15 +24,12 @@ internal class RowMappers(private val typesConverter: PostgresToKotlinConverter)
      */
     fun ColumnNameMapper(): RowMapper<Map<String, Any?>> = RowMapper { rs, _ ->
         val data = mutableMapOf<String, Any?>()
-        val metaData = rs.metaData as PgResultSetMetaData
-        
+        val metaData = rs.metaData
+
         logger.trace { "Mapping row with ${metaData.columnCount} columns using ColumnNameMapper" }
         for (i in 1..metaData.columnCount) {
             val columnName = metaData.getColumnName(i)
-            val columnType = metaData.getColumnTypeName(i)
-            val rawValue = rs.getString(i)
-            // Konwersja przez typesConverter z uwzględnieniem typu PostgreSQL
-            data[columnName] = typesConverter.convert(rawValue, columnType)
+            data[columnName] = valueExtractor.extract(rs, i)
         }
         data
     }
@@ -41,9 +39,7 @@ internal class RowMappers(private val typesConverter: PostgresToKotlinConverter)
      * Używany dla zapytań typu `SELECT COUNT(*)`, `SELECT id FROM ...` itp.
      */
     fun SingleValueMapper(): RowMapper<Any?> = RowMapper { rs, _ ->
-        val columnType = (rs.metaData as PgResultSetMetaData).getColumnTypeName(1)
-        val rawValue = rs.getString(1)
-        typesConverter.convert(rawValue, columnType)
+        valueExtractor.extract(rs, 1)
     }
 
     /**

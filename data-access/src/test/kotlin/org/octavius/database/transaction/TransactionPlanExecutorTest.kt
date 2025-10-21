@@ -20,6 +20,7 @@ import org.octavius.database.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.database.type.ResultSetValueExtractor
 import org.octavius.database.type.TypeRegistryLoader
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -56,7 +57,8 @@ class TransactionPlanExecutorTest {
         val typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate, dbConfig.packagesToScan, dbConfig.dbSchemas).load() }
         val kotlinToPg = KotlinToPostgresConverter(typeRegistry)
         val pgToKotlin = PostgresToKotlinConverter(typeRegistry)
-        val mappers = RowMappers(pgToKotlin)
+        val valueExecutor = ResultSetValueExtractor(typeRegistry, pgToKotlin)
+        val mappers = RowMappers(valueExecutor)
         val txManager = DataSourceTransactionManager(dataSource)
         dataAccess = DatabaseAccess(jdbcTemplate, txManager, mappers, kotlinToPg)
     }

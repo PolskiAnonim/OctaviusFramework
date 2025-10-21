@@ -9,19 +9,25 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.database.DatabaseConfig
 import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.database.type.TypeCategory
+import org.octavius.database.type.TypeRegistry
 import org.octavius.database.type.TypeRegistryLoader
+import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.ResultSet
+import java.util.*
 import kotlin.system.measureTimeMillis
 
 /**
  * Benchmark porównujący wydajność mapowania prostych typów.
  *
- * Mierzy narzut (overhead) wprowadzany przez `PostgresToKotlinConverter` (strategia getString())
- * w porównaniu do bezpośredniego użycia natywnych metod JDBC (getInt(), getTimestamp() itd.).
+ * Porównuje 3 strategie:
+ * 1. Raw JDBC - linia bazowa, najszybsza możliwa implementacja.
+ * 2. Old Framework (getString) - narzut związany z konwersją wszystkiego przez String.
+ * 3. Optimized Framework (Fast Path) - nowa, zoptymalizowana wersja z "szybką ścieżką".
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SimpleTypeOverheadBenchmark {
@@ -32,22 +38,21 @@ class SimpleTypeOverheadBenchmark {
     private val WARMUP_ITERATIONS = 10
 
     // --- Wyniki ---
-    private val frameworkTimings = mutableListOf<Long>()
     private val rawJdbcTimings = mutableListOf<Long>()
+    private val oldFrameworkTimings = mutableListOf<Long>()
+    private val optimizedFrameworkTimings = mutableListOf<Long>() // NOWA LISTA
 
     private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
     private lateinit var typesConverter: PostgresToKotlinConverter
+    private lateinit var typeRegistry: TypeRegistry
+    private lateinit var valueExtractor: ResultSetValueExtractor // NOWY EKSTRAKTOR
 
     @BeforeAll
     fun setup() {
         println("--- KONFIGURACJA BENCHMARKU NARZUTU DLA PROSTYCH TYPÓW ---")
         val databaseConfig = DatabaseConfig.loadFromFile("test-database.properties")
-        // 2. KRYTYCZNE ZABEZPIECZENIE (ASSERTION GUARD)
         val connectionUrl = databaseConfig.dbUrl
-        val dbName = connectionUrl.substringAfterLast("/") // Wyciągamy nazwę bazy z URL-a
-
-        // Sprawdzamy zarówno URL, jak i nazwę bazy, aby być podwójnie pewnym.
-        // Można też sprawdzić hosta, port etc.
+        val dbName = connectionUrl.substringAfterLast("/")
         if (!connectionUrl.contains("localhost:5432") || dbName != "octavius_test") {
             throw IllegalStateException(
                 "ABORTING TEST! Attempting to run destructive tests on a non-test database. " +
@@ -59,16 +64,18 @@ class SimpleTypeOverheadBenchmark {
             jdbcUrl = databaseConfig.dbUrl
             username = databaseConfig.dbUsername
             password = databaseConfig.dbPassword
-            maximumPoolSize = 5 // Mała pula wystarczy, test jest jednowątkowy
+            maximumPoolSize = 5
         }
 
         jdbcTemplate = NamedParameterJdbcTemplate(hikariDataSource)
 
-        // Potrzebujemy konwertera dla `FrameworkRowMapper`
-        val typeRegistry = runBlocking {
+        typeRegistry = runBlocking {
             TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas).load()
         }
         typesConverter = PostgresToKotlinConverter(typeRegistry)
+        // --- NOWOŚĆ: Inicjalizujemy ekstraktor ---
+        valueExtractor = ResultSetValueExtractor(typeRegistry, typesConverter)
+
 
         try {
             val initSql = String(
@@ -79,7 +86,7 @@ class SimpleTypeOverheadBenchmark {
                 )
             )
             jdbcTemplate.jdbcTemplate.execute(initSql)
-            println("Complex test DB schema and data initialized successfully.")
+            println("Simple test DB schema and data initialized successfully.")
         } catch (e: Exception) {
             e.printStackTrace()
             throw e
@@ -90,13 +97,15 @@ class SimpleTypeOverheadBenchmark {
     fun `run full benchmark comparison`() {
         val sql = "SELECT * FROM simple_type_benchmark LIMIT $TOTAL_ROWS_TO_FETCH"
         val rawMapper = RawJdbcRowMapper()
-        val frameworkMapper = FrameworkRowMapper(typesConverter)
+        val oldFrameworkMapper = OldFrameworkRowMapper(typesConverter)
+        val optimizedFrameworkMapper = OptimizedFrameworkRowMapper(valueExtractor) // NOWY MAPPER
 
         // --- WARM-UP ---
         println("\n--- ROZGRZEWKA (x$WARMUP_ITERATIONS iteracji, wyniki ignorowane) ---")
         repeat(WARMUP_ITERATIONS) {
             jdbcTemplate.query(sql, rawMapper)
-            jdbcTemplate.query(sql, frameworkMapper)
+            jdbcTemplate.query(sql, oldFrameworkMapper)
+            jdbcTemplate.query(sql, optimizedFrameworkMapper) // Rozgrzewamy też nowy
         }
         println("--- ROZGRZEWKA ZAKOŃCZONA ---\n")
 
@@ -106,16 +115,13 @@ class SimpleTypeOverheadBenchmark {
             print("Iteracja ${i + 1}/$ITERATIONS...\r")
 
             // Mierz Raw JDBC
-            val rawTime = measureTimeMillis {
-                jdbcTemplate.query(sql, rawMapper)
-            }
-            rawJdbcTimings.add(rawTime)
+            rawJdbcTimings.add(measureTimeMillis { jdbcTemplate.query(sql, rawMapper) })
 
-            // Mierz Framework
-            val frameworkTime = measureTimeMillis {
-                jdbcTemplate.query(sql, frameworkMapper)
-            }
-            frameworkTimings.add(frameworkTime)
+            // Mierz Stary Framework
+            oldFrameworkTimings.add(measureTimeMillis { jdbcTemplate.query(sql, oldFrameworkMapper) })
+
+            // Mierz Nowy, Zoptymalizowany Framework
+            optimizedFrameworkTimings.add(measureTimeMillis { jdbcTemplate.query(sql, optimizedFrameworkMapper) })
         }
         println("\n--- POMIAR ZAKOŃCZONY ---\n")
     }
@@ -123,34 +129,37 @@ class SimpleTypeOverheadBenchmark {
     @AfterAll
     fun printResults() {
         val avgRaw = rawJdbcTimings.average()
-        val avgFramework = frameworkTimings.average()
-        val overheadMs = avgFramework - avgRaw
-        val overheadPercent = (overheadMs / avgRaw) * 100
+        val avgOld = oldFrameworkTimings.average()
+        val avgOptimized = optimizedFrameworkTimings.average()
+
+        val overheadOldMs = avgOld - avgRaw
+        val overheadOldPercent = (overheadOldMs / avgRaw) * 100
+
+        val overheadOptimizedMs = avgOptimized - avgRaw
+        val overheadOptimizedPercent = (overheadOptimizedMs / avgRaw) * 100
 
         println("\n--- OSTATECZNE WYNIKI PORÓWNANIA (średnia z $ITERATIONS iteracji) ---")
-        println("=======================================================================")
+        println("==================================================================================")
         println("  Pobieranie i mapowanie $TOTAL_ROWS_TO_FETCH wierszy:")
-        println("-----------------------------------------------------------------------")
-        println("  - Raw JDBC (linia bazowa):  ${String.format("%.2f", avgRaw)} ms")
-        println("  - Framework (getString()):    ${String.format("%.2f", avgFramework)} ms")
-        println("-----------------------------------------------------------------------")
-        println("  - Narzut (Overhead):        +${String.format("%.2f", overheadMs)} ms")
-        println("  - Narzut procentowy:        +${String.format("%.1f", overheadPercent)}%")
-        println("=======================================================================")
-        println("\nInterpretacja: Narzut to dodatkowy czas, jaki abstrakcja potrzebuje")
-        println("w porównaniu do najbardziej optymalnego, surowego kodu JDBC.")
+        println("----------------------------------------------------------------------------------")
+        println("  1. Raw JDBC (linia bazowa):      ${String.format("%7.2f", avgRaw)} ms")
+        println("  2. Stary Framework (getString):    ${String.format("%7.2f", avgOld)} ms")
+        println("  3. Nowy Framework (Optimized):   ${String.format("%7.2f", avgOptimized)} ms")
+        println("----------------------------------------------------------------------------------")
+        println("  Narzut Starego Frameworka:   +${String.format("%.2f", overheadOldMs)} ms (+${String.format("%.1f", overheadOldPercent)}%)")
+        println("  Narzut Nowego Frameworka:    +${String.format("%.2f", overheadOptimizedMs)} ms (+${String.format("%.1f", overheadOptimizedPercent)}%)")
+        println("==================================================================================")
     }
 }
 
+// --- Implementacje Mapperów i klas pomocniczych ---
+
 /**
- * RowMapper implementujący podejście "surowego" JDBC.
- * Używa specyficznych metod `get<Type>()` dla każdej kolumny po indeksie.
- * Służy jako punkt odniesienia (linia bazowa) do pomiaru narzutu.
+ * Linia bazowa - najszybszy możliwy kod.
  */
 private class RawJdbcRowMapper : RowMapper<Map<String, Any?>> {
     override fun mapRow(rs: ResultSet, rowNum: Int): Map<String, Any?> {
         val data = mutableMapOf<String, Any?>()
-        // Używamy indeksów kolumn - to najszybsza metoda
         data["id"] = rs.getInt(1)
         data["int_val"] = rs.getInt(2)
         data["long_val"] = rs.getLong(3)
@@ -163,13 +172,12 @@ private class RawJdbcRowMapper : RowMapper<Map<String, Any?>> {
 }
 
 /**
- * RowMapper implementujący podejście frameworka Octavius.
- * Używa `getString()` dla wszystkich kolumn i deleguje konwersję do `PostgresToKotlinConverter`.
+ * Mapper implementujący starą strategię frameworka (wszystko przez getString).
  */
-private class FrameworkRowMapper(private val converter: PostgresToKotlinConverter) : RowMapper<Map<String, Any?>> {
+private class OldFrameworkRowMapper(private val converter: PostgresToKotlinConverter) : RowMapper<Map<String, Any?>> {
     override fun mapRow(rs: ResultSet, rowNum: Int): Map<String, Any?> {
         val data = mutableMapOf<String, Any?>()
-        val metaData = rs.metaData
+        val metaData = rs.metaData as PgResultSetMetaData
         for (i in 1..metaData.columnCount) {
             val columnName = metaData.getColumnName(i)
             val columnType = metaData.getColumnTypeName(i)
@@ -177,5 +185,77 @@ private class FrameworkRowMapper(private val converter: PostgresToKotlinConverte
             data[columnName] = converter.convert(rawValue, columnType)
         }
         return data
+    }
+}
+
+/**
+ * NOWY Mapper implementujący zoptymalizowaną strategię z "szybką ścieżką".
+ */
+private class OptimizedFrameworkRowMapper(private val extractor: ResultSetValueExtractor) : RowMapper<Map<String, Any?>> {
+    override fun mapRow(rs: ResultSet, rowNum: Int): Map<String, Any?> {
+        val data = mutableMapOf<String, Any?>()
+        val metaData = rs.metaData
+        for (i in 1..metaData.columnCount) {
+            val columnName = metaData.getColumnName(i)
+            data[columnName] = extractor.extract(rs, i)
+        }
+        return data
+    }
+}
+
+
+/**
+ * NOWA KLASA: Inteligentnie wyodrębnia wartości z ResultSet.
+ * Używa "szybkiej ścieżki" dla typów standardowych i deleguje do konwertera dla reszty.
+ */
+private class ResultSetValueExtractor(
+    private val typeRegistry: TypeRegistry,
+    private val stringConverter: PostgresToKotlinConverter
+) {
+    fun extract(rs: ResultSet, columnIndex: Int): Any? {
+        // Najpierw sprawdzamy SQL NULL - rs.getObject() jest do tego najlepszy.
+        // Wywołanie np. rs.getInt() na kolumnie z NULLem zwróci 0, co jest błędem.
+        if (rs.getObject(columnIndex) == null) {
+            return null
+        }
+
+        val pgTypeName = (rs.metaData as PgResultSetMetaData).getColumnTypeName(columnIndex)
+
+        val typeCategory = typeRegistry.getTypeInfo(pgTypeName).typeCategory
+
+        return when (typeCategory) {
+            TypeCategory.STANDARD -> extractStandardType(rs, columnIndex, pgTypeName)
+            else -> {
+                // Wolna ścieżka dla ENUM, COMPOSITE, ARRAY, DYNAMIC
+                val rawValue = rs.getString(columnIndex)
+                stringConverter.convert(rawValue, pgTypeName)
+            }
+        }
+    }
+
+    /**
+     * Szybka ścieżka dla typów standardowych.
+     */
+    private fun extractStandardType(rs: ResultSet, columnIndex: Int, pgTypeName: String): Any? {
+        return when (pgTypeName) {
+            "int4", "serial", "int2", "smallserial" -> rs.getInt(columnIndex)
+            "int8", "bigserial" -> rs.getLong(columnIndex)
+            "float4" -> rs.getFloat(columnIndex)
+            "float8" -> rs.getDouble(columnIndex)
+            "numeric" -> rs.getBigDecimal(columnIndex)
+            "bool" -> rs.getBoolean(columnIndex)
+            "uuid" -> rs.getObject(columnIndex) as UUID
+            "date" -> rs.getDate(columnIndex).toLocalDate()
+            "timestamp" -> rs.getTimestamp(columnIndex).toLocalDateTime()
+
+            // Dla tych typów konwersja ze Stringa jest wystarczająco dobra lub konieczna.
+            // Delegujemy do specjalisty, żeby nie duplikować logiki.
+            "timestamptz", "time", "timetz", "interval", "json", "jsonb" -> {
+                val rawValue = rs.getString(columnIndex)
+                stringConverter.convert(rawValue, pgTypeName)
+            }
+            // text, varchar, char etc.
+            else -> rs.getString(columnIndex)
+        }
     }
 }

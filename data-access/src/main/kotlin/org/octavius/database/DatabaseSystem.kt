@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.octavius.data.DataAccess
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.database.type.ResultSetValueExtractor
 import org.octavius.database.type.TypeRegistry
 import org.octavius.database.type.TypeRegistryLoader
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -86,7 +87,8 @@ class DatabaseSystem(private val config: DatabaseConfig) {
         logger.debug { "Initializing converters and mappers" }
         val typesConverter = PostgresToKotlinConverter(typeRegistry)
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
-        val rowMappers = RowMappers(typesConverter)
+        val resultSetValueExtractor = ResultSetValueExtractor(typeRegistry,typesConverter)
+        val rowMappers = RowMappers(resultSetValueExtractor)
 
         logger.debug { "Initializing database services" }
         dataAccess = DatabaseAccess(

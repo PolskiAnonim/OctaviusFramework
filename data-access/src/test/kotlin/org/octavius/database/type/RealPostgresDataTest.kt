@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.octavius.database.DatabaseAccess
 import org.octavius.database.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.domain.test.TestPerson
@@ -23,6 +24,7 @@ class RealPostgresDataTest {
     // Te pola będą dostępne we wszystkich testach w tej klasie
     private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
     private lateinit var postgresToKotlinConverter: PostgresToKotlinConverter
+    private lateinit var typeRegistry: TypeRegistry
 
     @BeforeAll
     fun setup() {
@@ -75,7 +77,7 @@ class RealPostgresDataTest {
 
         // 4. Inicjalizujemy zależności dla konwerterów
         val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas)
-        val typeRegistry = runBlocking {
+        typeRegistry = runBlocking {
             loader.load()
         }
         postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
@@ -91,8 +93,8 @@ class RealPostgresDataTest {
         val result: Map<String, Any?> = jdbcTemplate.queryForObject(
             "SELECT * FROM complex_test_data WHERE id = 1",
             emptyMap<String, Any>(),
-            RowMappers(postgresToKotlinConverter).ColumnNameMapper()
-        )!!
+            RowMappers(ResultSetValueExtractor(typeRegistry, postgresToKotlinConverter)).ColumnNameMapper()
+        )
 
 // Then: Sprawdzamy każdy przekonwertowany obiekt
         assertThat(result["simple_text"]).isEqualTo("Test \"quoted\" text with special chars: ąćęłńóśźż")

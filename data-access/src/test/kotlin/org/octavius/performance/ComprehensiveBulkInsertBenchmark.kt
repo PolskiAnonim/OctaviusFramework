@@ -12,6 +12,7 @@ import org.octavius.database.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.database.type.ResultSetValueExtractor
 import org.octavius.database.type.TypeRegistryLoader
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -78,7 +79,8 @@ class ComprehensiveBulkInsertBenchmark {
         val typeRegistry = runBlocking { loader.load() }
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         val postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
-        val rowMappers = RowMappers(postgresToKotlinConverter)
+        val extractor = ResultSetValueExtractor(typeRegistry, postgresToKotlinConverter)
+        val rowMappers = RowMappers(extractor)
         val transactionManager = DataSourceTransactionManager(hikariDataSource)
         this.dataAccess = DatabaseAccess(jdbcTemplate, transactionManager, rowMappers, kotlinToPostgresConverter)
         println("Performance test table and composite type created.")
