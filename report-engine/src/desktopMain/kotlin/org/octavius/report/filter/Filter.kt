@@ -39,7 +39,7 @@ abstract class Filter<T : FilterData> {
 
     /**
      * Tworzy domyślny, pusty obiekt danych dla tego filtra.
-     * 
+     *
      * @return Nowa instancja FilterData z wartościami domyślnymi.
      */
     abstract fun createDefaultData(): T
@@ -147,9 +147,11 @@ abstract class Filter<T : FilterData> {
             RadioButton(
                 selected = filterData.nullHandling == NullHandling.Include,
                 onClick = {
-                    ReportEvent.FilterChanged(
-                        columnKey,
-                        filterData.withNullHandling(NullHandling.Include)
+                    onEvent.invoke(
+                        ReportEvent.FilterChanged(
+                            columnKey,
+                            filterData.withNullHandling(NullHandling.Include)
+                        )
                     )
                 }
             )
