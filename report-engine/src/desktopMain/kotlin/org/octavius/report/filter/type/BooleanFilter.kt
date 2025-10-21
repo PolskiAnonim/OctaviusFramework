@@ -78,7 +78,7 @@ class BooleanFilter(
         columnName: String,
         data: BooleanFilterData
     ): Query? {
-        val booleanValue = data.value!!
+        val booleanValue = data.value ?: return null
 
         return when (data.mode) {
             FilterMode.Single -> {

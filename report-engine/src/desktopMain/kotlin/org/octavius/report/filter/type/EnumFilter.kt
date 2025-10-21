@@ -93,6 +93,7 @@ class EnumFilter<E>(private val enumClass: KClass<E>): Filter<EnumFilterData<E>>
         columnName: String,
         data: EnumFilterData<E>
     ): Query? {
+        if (data.values.isEmpty()) return null
         val values = data.values
         val include = data.include
         return when (data.mode) {

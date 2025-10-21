@@ -123,6 +123,7 @@ class IntervalFilter : Filter<IntervalFilterData>() {
         columnName: String,
         data: IntervalFilterData
     ): Query? {
+        if (data.value == null && data.minValue == null && data.maxValue == null) return null
         val singleValue = data.value
         val min = data.minValue
         val max = data.maxValue

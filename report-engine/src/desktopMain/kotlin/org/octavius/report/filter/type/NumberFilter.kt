@@ -117,6 +117,7 @@ class NumberFilter<T : Number>(
         columnName: String,
         data: NumberFilterData<T>
     ): Query? {
+        if (data.minValue == null && data.maxValue == null) return null
         val min = data.minValue
         val max = data.maxValue
         val filterType = data.filterType

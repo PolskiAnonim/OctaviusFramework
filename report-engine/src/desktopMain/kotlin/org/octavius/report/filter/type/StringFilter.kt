@@ -77,6 +77,7 @@ class StringFilter: Filter<StringFilterData>() {
         data: StringFilterData
     ): Query? {
         val value = data.value.trim()
+        if (value.isEmpty()) return null
         val filterType = data.filterType
         val caseSensitive = data.caseSensitive
         return when (data.mode) {

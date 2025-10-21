@@ -108,6 +108,7 @@ class DateTimeFilter<T : Any>(
     }
 
     override fun buildBaseQueryFragment(columnName: String, data: DateTimeFilterData<T>): Query? {
+        if (data.value == null && data.minValue == null && data.maxValue == null) return null
         val value = data.value
         val min = data.minValue
         val max = data.maxValue
