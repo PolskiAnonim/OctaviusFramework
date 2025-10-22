@@ -18,15 +18,9 @@ internal class DatabaseRawQueryBuilder(
     override val canReturnResultsByDefault = true
     override fun buildSql(): String = sql
 
-    // UWAGA! Ta funkcja nie ma realnie żadnego zastosowania i zwraca technicznie taki sam obiekt jaki był
+    // UWAGA! Ta funkcja nie ma realnie żadnego zastosowania
+    // ze względu na fakt iż ten builder jest niemutowalny
     override fun copy(): DatabaseRawQueryBuilder {
-        val newBuilder = DatabaseRawQueryBuilder(
-            jdbcTemplate,
-            kotlinToPostgresConverter,
-            rowMappers,
-            sql = this.sql
-        )
-        // Nie kopiujemy stanu bazowego ze względu na fakt że interfejs uniemożliwia nawet jego wykorzystanie
-        return newBuilder
+        return this
     }
 }
