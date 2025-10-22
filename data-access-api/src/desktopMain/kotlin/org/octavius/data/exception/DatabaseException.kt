@@ -26,16 +26,19 @@ class QueryExecutionException(
     cause: Throwable? = null
 ) : DatabaseException(message, cause) {
     override fun toString(): String {
-        val nestedError = cause.toString()
+        val nestedError = cause.toString().prependIndent("|   ")
         return """
-        -------------------------------
-        |  QUERY EXECUTION FAILED     
-        | message: $message
-        | cause: $nestedError
-        | sql: $sql
-        | params: $params
-        ---------------------------------
-        """.trimIndent()
+
+------------------------------------
+|  QUERY EXECUTION FAILED     
+| message: $message
+| sql: $sql
+| params: $params
+-------------------------------------
+| Szczegóły błędu w kroku:
+$nestedError
+-------------------------------------
+"""
     }
 }
 
