@@ -1,5 +1,8 @@
 package org.octavius.data.transaction
 
+import org.octavius.data.exception.StepDependencyException
+import org.octavius.data.exception.StepDependencyExceptionMessage
+
 /**
  * Przechowuje wyniki wykonanego planu transakcji w bezpieczny sposób.
  * Umożliwia pobieranie wyników za pomocą `StepHandle` zamiast indeksów.
@@ -16,7 +19,7 @@ class TransactionPlanResult(private val results: Map<StepHandle<*>, Any?>) {
         return if (results.containsKey(handle)) {
             results[handle] as T
         } else {
-            throw IllegalArgumentException("No step found for handle $handle")
+            throw StepDependencyException(StepDependencyExceptionMessage.UNKNOWN_STEP_HANDLE, -1)
         }
     }
 }
