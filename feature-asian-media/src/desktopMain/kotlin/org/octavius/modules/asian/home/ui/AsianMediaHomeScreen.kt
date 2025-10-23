@@ -9,9 +9,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -28,8 +30,17 @@ import org.octavius.navigation.Screen
 class AsianMediaHomeScreen(override val title: String) : Screen {
     @Composable
     override fun Content() {
-        val handler = remember { AsianMediaHomeHandler() }
+        val composableScope = rememberCoroutineScope()
+
+        val handler = remember(composableScope) {
+            AsianMediaHomeHandler(composableScope)
+        }
+
         val state by handler.state.collectAsState()
+
+        LaunchedEffect(Unit) {
+            handler.loadData()
+        }
 
         Scaffold(
             floatingActionButton = {

@@ -1,11 +1,9 @@
 package org.octavius.modules.asian.home.model
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
@@ -15,16 +13,13 @@ import org.octavius.data.exception.DatabaseException
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
-class AsianMediaHomeHandler : KoinComponent {
+class AsianMediaHomeHandler(
+    private val scope: CoroutineScope
+) : KoinComponent {
     private val dataAccess: DataAccess by inject()
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val _state = MutableStateFlow(AsianMediaHomeState())
     val state = _state.asStateFlow()
-
-    init {
-        loadData()
-    }
 
     fun getSql(): String {
         val totalTitlesSubquery = dataAccess.select("COUNT(*)").from("asian_media.titles").toSql()
@@ -75,34 +70,35 @@ class AsianMediaHomeHandler : KoinComponent {
     }
 
     fun loadData() {
+        val finalSelectClause = getSql()
 
-        scope.launch {
-            val finalSelectClause = getSql()
-
-            when (val result = dataAccess.select(finalSelectClause).toSingleOf<DashboardData>()) {
-                is DataResult.Success -> {
-                    val data = result.value
-                    if (data != null) {
-                        _state.update {
-                            it.copy(
-                                totalTitles = data.totalTitles,
-                                readingCount = data.readingCount,
-                                completedCount = data.completedCount,
-                                currentlyReading = data.currentlyReading.orEmpty(),
-                                recentlyAdded = data.recentlyAdded.orEmpty(),
-                                isLoading = false
-                            )
+        dataAccess.select(finalSelectClause)
+            .async(scope)
+            .toSingleOf<DashboardData> { result ->
+                when (result) {
+                    is DataResult.Success -> {
+                        val data = result.value
+                        if (data != null) {
+                            _state.update {
+                                it.copy(
+                                    totalTitles = data.totalTitles,
+                                    readingCount = data.readingCount,
+                                    completedCount = data.completedCount,
+                                    currentlyReading = data.currentlyReading.orEmpty(),
+                                    recentlyAdded = data.recentlyAdded.orEmpty(),
+                                    isLoading = false
+                                )
+                            }
+                        } else {
+                            _state.update { it.copy(isLoading = false) } // No data
                         }
-                    } else {
-                        _state.update { it.copy(isLoading = false) } // No data
+                    }
+                    is DataResult.Failure -> {
+                        showError(result.error)
+                        _state.update { it.copy(isLoading = false) }
                     }
                 }
-                is DataResult.Failure -> {
-                    showError(result.error)
-                    _state.update { it.copy(isLoading = false) }
-                }
             }
-        }
     }
 
     private fun showError(error: DatabaseException) {
