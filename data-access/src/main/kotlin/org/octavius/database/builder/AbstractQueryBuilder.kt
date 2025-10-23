@@ -1,7 +1,9 @@
 package org.octavius.database.builder
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineScope
 import org.octavius.data.DataResult
+import org.octavius.data.builder.AsyncTerminalMethods
 import org.octavius.data.builder.QueryBuilder
 import org.octavius.data.builder.StepBuilderMethods
 import org.octavius.data.exception.DatabaseException
@@ -288,7 +290,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                          STEP BUILDER CONVERSION
+    //                                          BUILDER CONVERSION
     //------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -298,6 +300,11 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     override fun asStep(): StepBuilderMethods {
         @Suppress("UNCHECKED_CAST")
         return StepBuilder(this)
+    }
+
+
+    override fun async(scope: CoroutineScope): AsyncTerminalMethods {
+        return AsyncQueryBuilder(this, scope)
     }
 
     //------------------------------------------------------------------------------------------------------------------

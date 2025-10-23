@@ -1,5 +1,7 @@
 package org.octavius.data.builder
 
+import kotlinx.coroutines.CoroutineScope
+
 /**
  * Definiuje publiczne API do budowania zapytań SQL SELECT.
  */
@@ -203,4 +205,30 @@ interface OnConflictClauseBuilder {
  */
 interface RawQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<RawQueryBuilder> {
     // Tylko metody terminalne które są brane z innych interfejsów
+}
+
+interface QueryBuilder<T : QueryBuilder<T>> {
+    /**
+     * Konwertuje ten builder na StepBuilder, który umożliwia lazy execution w ramach transakcji.
+     * Zwraca wrapper z metodami terminalnymi, które tworzą TransactionStep zamiast wykonywać zapytanie.
+     */
+    fun asStep(): StepBuilderMethods
+
+    /**
+     * Przełącza builder w tryb asynchroniczny.
+     * Wymaga podania CoroutineScope, w którym operacje zostaną uruchomione.
+     *
+     * @param scope Scope korutyn (zazwyczaj z ViewModelu/Handlera) do zarządzania cyklem życia.
+     * @return Nowa instancja buildera z asynchronicznymi metodami terminalnymi.
+     */
+    fun async(scope: CoroutineScope): AsyncTerminalMethods
+
+    /**
+     * Tworzy i zwraca głęboką kopię tego buildera.
+     * Zwraca konkretny typ buildera (np. SelectQueryBuilder),
+     * zachowując płynność API.
+     */
+    fun copy(): T
+
+
 }

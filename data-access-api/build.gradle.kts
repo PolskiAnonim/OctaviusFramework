@@ -15,6 +15,7 @@ kotlin {
             dependencies {
                 api(libs.kotlinx.serialization.json) // @DynamicallyMappable opiera się na kotlinx.serialization
                 api(libs.kotlinx.datetime)
+                api(libs.kotlinx.coroutines.core)
             }
         }
         val desktopMain by getting {
