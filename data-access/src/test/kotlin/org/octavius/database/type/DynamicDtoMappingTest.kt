@@ -7,8 +7,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertThrows
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toSingle
+import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.toDataObject
 import org.octavius.database.DatabaseAccess
 import org.octavius.database.DatabaseConfig
@@ -75,7 +77,9 @@ class DynamicDtoMappingTest {
         assertThat(statsClass).isNotNull
         assertThat(statsClass).isEqualTo(UserStats::class)
 
-        assertThat(typeRegistry.getDynamicMappableClass("non_existent_dto")).isNull()
+        assertThrows<TypeRegistryException> {
+            typeRegistry.getDynamicMappableClass("non_existent_dto")
+        }
     }
 
     @Test
