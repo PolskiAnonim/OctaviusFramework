@@ -230,7 +230,7 @@ internal class TransactionPlanExecutor(
                 return when (element) {
                     // Wynik toList - ewentualnie może być zwrócona pusta mapa - brak nulli
                     is Map<*, *> -> element as Map<String, Any?>
-                    // toListOf otrzyma błąd wewnątrz konwertera jeżeli jest tam data class niebędąca kompozytem
+                    // toListOf przechodzi - w konwerterze błąd dla niekompozytów
                     // albo toColumn - dany element może być nullem
                     else -> mapOf(SCALAR_RESULT_KEY to element)
                 }
@@ -247,7 +247,7 @@ internal class TransactionPlanExecutor(
                 if (rowIndex > 0) {
                     throw StepDependencyException(StepDependencyExceptionMessage.INVALID_ROW_ACCESS_ON_NON_LIST, stepIndex, rowIndex)
                 }
-                // Wynik toSingleOf (błąd w konwerterze, który jest odpowiedzialny za rozwijanie parametrów)
+                // Wynik toSingleOf (błąd w konwerterze i type registry gdy użyte na niekompozycie)
                 // toField może być nullem, natomiast execute nie
                 return mapOf(SCALAR_RESULT_KEY to this)
             }
