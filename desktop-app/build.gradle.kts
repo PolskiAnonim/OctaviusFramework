@@ -2,7 +2,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import java.nio.charset.StandardCharsets
-import java.util.jar.JarFile
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -90,30 +89,48 @@ fun mergeJsonMaps(target: MutableMap<String, Any?>, source: Map<String, Any?>) {
 
 val mergeTranslations by tasks.registering {
     group = "build"
-    description = "Merges translation files from all modules."
+    description = "Merges translation files from all module dependencies."
 
     val outputDir = project.layout.buildDirectory.dir("generated/translations")
     outputs.dir(outputDir)
+
+    // Definiujemy, że nasze zadanie zależy od plików zasobów wszystkich zależności.
+    // To pomaga Gradle'owi w inteligentnym cache'owaniu.
+    val configuration = project.configurations.getByName("desktopRuntimeClasspath")
+    inputs.files(configuration)
 
     doLast {
         val gson = Gson()
         val mapType = object : TypeToken<Map<String, Any?>>() {}.type
         val mergedByLang = mutableMapOf<String, MutableMap<String, Any?>>()
-        val runtimeClasspath = project.configurations.getByName("desktopRuntimeClasspath")
 
-        runtimeClasspath.forEach { file ->
-            if (file.isFile && file.extension == "jar") {
-                JarFile(file).use { jar ->
-                    jar.entries().asSequence().forEach { entry ->
-                        if (!entry.isDirectory && entry.name.startsWith("translations_") && entry.name.endsWith(".json")) {
-                            val lang = entry.name.substringAfter("translations_").substringBefore(".json")
-                            val content = jar.getInputStream(entry).readBytes().toString(Charsets.UTF_8)
-                            if (content.isNotBlank()) {
-                                logger.info("Found translation for '$lang' in ${file.name}")
-                                val sourceMap: Map<String, Any?> = gson.fromJson(content, mapType)
-                                val targetMap = mergedByLang.getOrPut(lang) { mutableMapOf() }
-                                mergeJsonMaps(targetMap, sourceMap)
-                            }
+        // Zbieramy listę projektów do przeskanowania w sposób zalecany przez Gradle
+        val projectsToScan = mutableSetOf(project) // Zawsze dodajemy bieżący projekt
+        configuration.incoming.resolutionResult.allComponents.forEach { component ->
+            val componentId = component.id
+            // Interesują nas tylko komponenty, które są innymi modułami w naszym projekcie
+            if (componentId is ProjectComponentIdentifier) {
+                val dependencyProject = project.project(componentId.projectPath)
+                projectsToScan.add(dependencyProject)
+            }
+        }
+
+        logger.info("Scanning projects for translations: ${projectsToScan.map { it.name }}")
+
+        projectsToScan.forEach { depProject ->
+            // Przeszukujemy katalog src w każdym module
+            depProject.file("src").walk().forEach { file ->
+                if (file.isFile && file.name.startsWith("translations_") && file.name.endsWith(".json")) {
+                    val lang = file.name.substringAfter("translations_").substringBefore(".json")
+                    val content = file.readText(Charsets.UTF_8)
+                    if (content.isNotBlank()) {
+                        logger.info("Found translation for '$lang' in ${depProject.name}/${file.relativeTo(depProject.projectDir)}")
+                        try {
+                            val sourceMap: Map<String, Any?> = gson.fromJson(content, mapType)
+                            val targetMap = mergedByLang.getOrPut(lang) { mutableMapOf() }
+                            mergeJsonMaps(targetMap, sourceMap)
+                        } catch (e: Exception) {
+                            logger.error("Failed to parse translation file: ${file.path}", e)
                         }
                     }
                 }
@@ -123,11 +140,15 @@ val mergeTranslations by tasks.registering {
         outputDir.get().asFile.deleteRecursively()
         outputDir.get().asFile.mkdirs()
 
-        mergedByLang.forEach { (lang, mergedMap) ->
-            val finalJsonString = gson.toJson(mergedMap)
-            val outputFile = outputDir.get().file("translations_$lang.json").asFile
-            outputFile.writeText(finalJsonString, StandardCharsets.UTF_8)
-            logger.lifecycle("Successfully merged and wrote translations for '$lang' to ${outputFile.path}")
+        if (mergedByLang.isEmpty()) {
+            logger.warn("No translation files were found! The application might not have any text.")
+        } else {
+            mergedByLang.forEach { (lang, mergedMap) ->
+                val finalJsonString = gson.toJson(mergedMap)
+                val outputFile = outputDir.get().file("translations_$lang.json").asFile
+                outputFile.writeText(finalJsonString, StandardCharsets.UTF_8)
+                logger.lifecycle("Successfully merged and wrote translations for '$lang' to ${outputFile.path}")
+            }
         }
     }
 }
