@@ -9,11 +9,13 @@ import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResult
+import org.octavius.data.transaction.TransactionPropagation
 import org.octavius.database.builder.*
 import org.octavius.database.transaction.TransactionPlanExecutor
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionTemplate
 
 internal class DatabaseAccess(
@@ -47,14 +49,26 @@ internal class DatabaseAccess(
 
     //--- Implementacja zarządzania transakcjami ---
 
-    override fun executeTransactionPlan(plan: TransactionPlan): DataResult<TransactionPlanResult> {
+    override fun executeTransactionPlan(
+        plan: TransactionPlan,
+        propagation: TransactionPropagation
+    ): DataResult<TransactionPlanResult> {
         val transactionPlanExecutor = TransactionPlanExecutor(transactionManager)
-        return transactionPlanExecutor.execute(plan)
+        return transactionPlanExecutor.execute(plan, propagation)
     }
 
-    override fun <T> transaction(block: (tx: QueryOperations) -> DataResult<T>): DataResult<T> {
-        val transactionTemplate = TransactionTemplate(transactionManager)
-
+    override fun <T> transaction(
+        propagation: TransactionPropagation,
+        block: (tx: QueryOperations) -> DataResult<T>
+    ): DataResult<T> {
+        // Tworzymy i konfigurujemy szablon transakcji
+        val transactionTemplate = TransactionTemplate(transactionManager).apply {
+            propagationBehavior = when (propagation) {
+                TransactionPropagation.REQUIRED -> TransactionDefinition.PROPAGATION_REQUIRED
+                TransactionPropagation.REQUIRES_NEW -> TransactionDefinition.PROPAGATION_REQUIRES_NEW
+                TransactionPropagation.NESTED -> TransactionDefinition.PROPAGATION_NESTED
+            }
+        }
         return transactionTemplate.execute { status ->
             try {
                 // `this` jest instancją `QueryOperations`, więc przekazujemy go bezpośrednio.

@@ -5,6 +5,7 @@ import org.octavius.data.DataResult
 import org.octavius.data.exception.*
 import org.octavius.data.transaction.*
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionTemplate
 
 /**
@@ -31,7 +32,7 @@ internal class TransactionPlanExecutor(
         private val logger = KotlinLogging.logger {}
     }
 
-    fun execute(plan: TransactionPlan): DataResult<TransactionPlanResult> {
+    fun execute(plan: TransactionPlan, propagation: TransactionPropagation): DataResult<TransactionPlanResult> {
         val stepsWithHandles = plan.steps // Pobieramy listę par (Handle, Step)
         if (stepsWithHandles.isEmpty()) {
             logger.debug { "Executing an empty transaction plan." }
@@ -64,7 +65,13 @@ internal class TransactionPlanExecutor(
 
             logger.info { "Executing transaction plan with ${stepsWithHandles.size} steps." }
 
-            val transactionTemplate = TransactionTemplate(transactionManager)
+            val transactionTemplate = TransactionTemplate(transactionManager).apply {
+                propagationBehavior = when (propagation) {
+                    TransactionPropagation.REQUIRED -> TransactionDefinition.PROPAGATION_REQUIRED
+                    TransactionPropagation.REQUIRES_NEW -> TransactionDefinition.PROPAGATION_REQUIRES_NEW
+                    TransactionPropagation.NESTED -> TransactionDefinition.PROPAGATION_NESTED
+                }
+            }
 
             // `transactionTemplate.execute` wykonuje logikę wewnątrz transakcji
             val finalResultsMap: Map<StepHandle<*>, Any?> = transactionTemplate.execute {

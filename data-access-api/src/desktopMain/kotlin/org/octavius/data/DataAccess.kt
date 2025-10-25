@@ -3,6 +3,7 @@ package org.octavius.data
 import org.octavius.data.builder.*
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResult
+import org.octavius.data.transaction.TransactionPropagation
 
 /**
  * Definiuje kontrakt dla podstawowych operacji na bazie danych (CRUD i zapytania surowe).
@@ -71,10 +72,15 @@ interface DataAccess : QueryOperations {
      * Idealne rozwiązanie dla scenariuszy, gdzie kroki transakcji są budowane dynamicznie,
      * np. na podstawie danych z formularza.
      *
-     * @return [DataResult] zawierający [TransactionPlanResult] w przypadku sukcesu lub błąd w razie niepowodzenia.
-     *         Transakcja jest automatycznie wycofywana w przypadku błędu.
+     * @param plan Plan transakcji do wykonania.
+     * @param propagation Definiuje zachowanie transakcji (np. czy ma dołączyć do istniejącej, czy stworzyć nową).
+     * @return [DataResult] zawierający [TransactionPlanResult] w przypadku sukcesu lub błąd.
      */
-    fun executeTransactionPlan(plan: TransactionPlan): DataResult<TransactionPlanResult>
+    fun executeTransactionPlan(
+        plan: TransactionPlan,
+        propagation: TransactionPropagation = TransactionPropagation.REQUIRED
+    ): DataResult<TransactionPlanResult>
+
     /**
      * Wykonuje podany blok kodu w ramach nowej, zarządzanej transakcji.
      *
@@ -83,9 +89,12 @@ interface DataAccess : QueryOperations {
      * i zwróci [DataResult.Success]. W każdym innym przypadku (zwrócenie [DataResult.Failure]
      * lub rzucenie wyjątku), transakcja zostanie automatycznie wycofana (rollback).
      *
-     * @param block Lambda, która otrzymuje kontekst [QueryOperations] do wykonywania operacji bazodanowych.
-     *              Ten kontekst jest aktywny tylko w ramach tej transakcji.
+     * @param propagation Definiuje zachowanie transakcji (np. czy ma dołączyć do istniejącej, czy stworzyć nową).
+     * @param block Lambda, która otrzymuje kontekst [QueryOperations] do wykonywania operacji.
      * @return [DataResult] z wynikiem operacji z bloku (`T`) lub błędem.
      */
-    fun <T> transaction(block: (tx: QueryOperations) -> DataResult<T>): DataResult<T>
+    fun <T> transaction(
+        propagation: TransactionPropagation = TransactionPropagation.REQUIRED,
+        block: (tx: QueryOperations) -> DataResult<T>
+    ): DataResult<T>
 }
