@@ -8,7 +8,7 @@ import kotlin.reflect.KClass
  * Wrapper który zapewnia te same metody terminalne co AbstractQueryBuilder,
  * ale zamiast wykonywać zapytania tworzy TransactionStep dla BatchExecutor.
  */
-internal class StepBuilder(private val builder: AbstractQueryBuilder<*>): StepBuilderMethods {
+internal class StepBuilder(private val builder: AbstractQueryBuilder<*>) : StepBuilderMethods {
 
     /** Tworzy TransactionStep z metodą toList */
     override fun toList(params: Map<String, Any?>): TransactionStep<List<Map<String, Any?>>> {
@@ -47,19 +47,19 @@ internal class StepBuilder(private val builder: AbstractQueryBuilder<*>): StepBu
     }
 
     /** Tworzy TransactionStep z metodą toField */
-    override fun <T: Any> toField(params: Map<String, Any?>): TransactionStep<T?> {
+    override fun <T : Any> toField(kClass: KClass<T>, params: Map<String, Any?>): TransactionStep<T?> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toField(p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toField(kClass, p) },
             params = params
         )
     }
 
     /** Tworzy TransactionStep z metodą toColumn */
-    override fun <T: Any> toColumn(params: Map<String, Any?>): TransactionStep<List<T?>> {
+    override fun <T : Any> toColumn(kClass: KClass<T>, params: Map<String, Any?>): TransactionStep<List<T?>> {
         return TransactionStep(
             builder = this.builder,
-            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toColumn(p) },
+            executionLogic = { b, p -> (b as AbstractQueryBuilder<*>).toColumn(kClass, p) },
             params = params
         )
     }

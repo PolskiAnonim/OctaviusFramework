@@ -43,12 +43,14 @@ interface AsyncTerminalMethods {
 
     /** Asynchronicznie pobiera pojedynczą wartość z pierwszej kolumny i przekazuje wynik do callbacka onResult. */
     fun <T : Any> toField(
+        kClass: KClass<T>,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<T?>) -> Unit
     ): Job
 
     /** Asynchronicznie pobiera listę wartości z pierwszej kolumny i przekazuje wynik do callbacka onResult. */
     fun <T : Any> toColumn(
+        kClass: KClass<T>,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<List<T?>>) -> Unit
     ): Job
@@ -93,12 +95,23 @@ inline fun <reified T : Any> AsyncTerminalMethods.toSingleOf(
     noinline onResult: (DataResult<T?>) -> Unit
 ): Job = toSingleOf(T::class, params.toMap(), onResult)
 
-fun <T : Any> AsyncTerminalMethods.toField(
-    vararg params: Pair<String, Any?>,
-    onResult: (DataResult<T?>) -> Unit
-): Job = toField(params.toMap(), onResult)
+inline fun <reified T : Any> AsyncTerminalMethods.toField(
+    params: Map<String, Any?> = emptyMap(),
+    noinline onResult: (DataResult<T?>) -> Unit
+): Job = toField(T::class, params, onResult)
 
-fun <T : Any> AsyncTerminalMethods.toColumn(
+inline fun <reified T : Any> AsyncTerminalMethods.toField(
     vararg params: Pair<String, Any?>,
-    onResult: (DataResult<List<T?>>) -> Unit
-): Job = toColumn(params.toMap(), onResult)
+    noinline onResult: (DataResult<T?>) -> Unit
+): Job = toField(T::class, params.toMap(), onResult)
+
+// toColumn
+inline fun <reified T : Any> AsyncTerminalMethods.toColumn(
+    params: Map<String, Any?> = emptyMap(),
+    noinline onResult: (DataResult<List<T?>>) -> Unit
+): Job = toColumn(T::class, params, onResult)
+
+inline fun <reified T : Any> AsyncTerminalMethods.toColumn(
+    vararg params: Pair<String, Any?>,
+    noinline onResult: (DataResult<List<T?>>) -> Unit
+): Job = toColumn(T::class, params.toMap(), onResult)

@@ -27,10 +27,10 @@ interface StepBuilderMethods {
     // --- Zwracanie wartości skalarnych ---
 
     /** Tworzy TransactionStep z metodą toField */
-    fun <T : Any> toField(params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
+    fun <T : Any> toField(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
 
     /** Tworzy TransactionStep z metodą toColumn */
-    fun <T : Any> toColumn(params: Map<String, Any?> = emptyMap()): TransactionStep<List<T?>>
+    fun <T : Any> toColumn(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<List<T?>>
 
     // --- Metoda modyfikująca ---
 
@@ -44,11 +44,21 @@ fun StepBuilderMethods.toList(vararg params: Pair<String, Any?>): TransactionSte
 fun StepBuilderMethods.toSingle(vararg params: Pair<String, Any?>): TransactionStep<Map<String, Any?>?> =
     toSingle(params.toMap())
 
-fun <T : Any> StepBuilderMethods.toField(vararg params: Pair<String, Any?>): TransactionStep<T?> =
-    toField(params.toMap())
+inline fun <reified T : Any> StepBuilderMethods.toField(
+    params: Map<String, Any?> = emptyMap()
+): TransactionStep<T?> = toField(T::class, params)
 
-fun <T : Any> StepBuilderMethods.toColumn(vararg params: Pair<String, Any?>): TransactionStep<List<T?>> =
-    toColumn(params.toMap())
+inline fun <reified T : Any> StepBuilderMethods.toField(
+    vararg params: Pair<String, Any?>
+): TransactionStep<T?> = toField(T::class, params.toMap())
+
+inline fun <reified T : Any> StepBuilderMethods.toColumn(
+    params: Map<String, Any?> = emptyMap()
+): TransactionStep<List<T?>> = toColumn(T::class, params)
+
+inline fun <reified T : Any> StepBuilderMethods.toColumn(
+    vararg params: Pair<String, Any?>
+): TransactionStep<List<T?>> = toColumn(T::class, params.toMap())
 
 fun StepBuilderMethods.execute(vararg params: Pair<String, Any?>): TransactionStep<Int> =
     execute(params.toMap())

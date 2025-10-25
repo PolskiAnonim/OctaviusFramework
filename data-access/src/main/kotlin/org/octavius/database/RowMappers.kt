@@ -1,16 +1,20 @@
 package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.octavius.data.exception.ConversionException
+import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toDataObject
 import org.octavius.database.type.ResultSetValueExtractor
 import org.springframework.jdbc.core.RowMapper
 import kotlin.reflect.KClass
+import kotlin.reflect.full.cast
 
 /**
  * Fabryka dostarczająca różne implementacje `RowMapper` do konwersji `ResultSet`.
  *
  * @param valueExtractor Odzyskiwacz/wydobywacz wartości z bazy
  */
+@Suppress("FunctionName")
 internal class RowMappers(
     private val valueExtractor: ResultSetValueExtractor
 ) {
@@ -38,8 +42,20 @@ internal class RowMappers(
      * Mapper mapujący wynik z pojedynczej kolumny na jego wartość.
      * Używany dla zapytań typu `SELECT COUNT(*)`, `SELECT id FROM ...` itp.
      */
-    fun SingleValueMapper(): RowMapper<Any?> = RowMapper { rs, _ ->
-        valueExtractor.extract(rs, 1)
+    fun <T : Any> SingleValueMapper(kClass: KClass<T>): RowMapper<T?> = RowMapper { rs, _ ->
+        val value = valueExtractor.extract(rs, 1)
+        if (value == null) return@RowMapper null
+
+        try {
+            kClass.cast(value)
+        } catch (e: TypeCastException) {
+            throw ConversionException(
+                messageEnum = ConversionExceptionMessage.VALUE_CONVERSION_FAILED,
+                value = value,
+                targetType = kClass.simpleName,
+                cause = e
+            )
+        }
     }
 
     /**

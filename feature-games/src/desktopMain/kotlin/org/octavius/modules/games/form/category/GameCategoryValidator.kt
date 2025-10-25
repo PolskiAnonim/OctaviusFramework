@@ -1,6 +1,7 @@
 package org.octavius.modules.games.form.category
 
 import org.octavius.data.DataResult
+import org.octavius.data.builder.toField
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator

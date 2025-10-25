@@ -1,10 +1,6 @@
 package org.octavius.database.builder
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.octavius.data.DataResult
 import org.octavius.data.builder.AsyncTerminalMethods
 import kotlin.reflect.KClass
@@ -60,17 +56,19 @@ internal class AsyncQueryBuilder(
     }
 
     override fun <T : Any> toField(
+        kClass: KClass<T>,
         params: Map<String, Any?>,
         onResult: (DataResult<T?>) -> Unit
     ): Job = scope.launch {
-        executeAndInvoke({ builder.toField(params) }, onResult)
+        executeAndInvoke({ builder.toField(kClass, params) }, onResult)
     }
 
     override fun <T : Any> toColumn(
+        kClass: KClass<T>,
         params: Map<String, Any?>,
         onResult: (DataResult<List<T?>>) -> Unit
     ): Job = scope.launch {
-        executeAndInvoke({ builder.toColumn(params) }, onResult)
+        executeAndInvoke({ builder.toColumn(kClass, params) }, onResult)
     }
 
     override fun execute(

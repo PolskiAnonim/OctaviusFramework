@@ -1,6 +1,6 @@
 package org.octavius.data.transaction
 
-import java.util.UUID
+import java.util.*
 
 /**
  * Bezpieczny typowo, unikalny identyfikator dla kroku w transakcji.

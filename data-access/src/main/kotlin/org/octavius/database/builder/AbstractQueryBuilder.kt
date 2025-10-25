@@ -138,18 +138,16 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     // --- Mapowanie do pojedynczych wartości (skalarne) ---
 
     /** Wykonuje zapytanie i zwraca wartość z pierwszej kolumny pierwszego wiersza. */
-    fun <T: Any> toField(params: Map<String, Any?>): DataResult<T?> {
-        return executeReturningQuery(params, rowMappers.SingleValueMapper()) {
-            @Suppress("UNCHECKED_CAST")
+    fun <T: Any> toField(kClass: KClass<T>, params: Map<String, Any?>): DataResult<T?> {
+        return executeReturningQuery(params, rowMappers.SingleValueMapper(kClass)) {
             DataResult.Success(it.firstOrNull() as T?)
         }
     }
 
     /** Wykonuje zapytanie i zwraca listę wartości z pierwszej kolumny wszystkich wierszy. */
-    fun <T: Any> toColumn(params: Map<String, Any?>): DataResult<List<T?>> {
-        return executeReturningQuery(params, rowMappers.SingleValueMapper()) {
-            @Suppress("UNCHECKED_CAST")
-            DataResult.Success(it as List<T?>)
+    fun <T: Any> toColumn(kClass: KClass<T>, params: Map<String, Any?>): DataResult<List<T?>> {
+        return executeReturningQuery(params, rowMappers.SingleValueMapper(kClass)) {
+            DataResult.Success(it)
         }
     }
 

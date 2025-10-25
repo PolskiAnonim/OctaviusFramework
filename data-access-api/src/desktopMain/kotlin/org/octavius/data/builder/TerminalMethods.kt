@@ -32,10 +32,10 @@ interface TerminalReturningMethods {
     // --- Zwracanie wartości skalarnych ---
 
     /** Pobiera pojedynczą wartość z pierwszej kolumny pierwszego wiersza. */
-    fun <T : Any> toField(params: Map<String, Any?> = emptyMap()): DataResult<T?>
+    fun <T : Any> toField(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
     /** Pobiera listę wartości z pierwszej kolumny wszystkich wierszy. */
-    fun <T : Any> toColumn(params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
+    fun <T : Any> toColumn(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
 
     /**
      * Wykonuje zapytanie i przetwarza każdy wiersz indywidualnie za pomocą podanej akcji,
@@ -69,12 +69,21 @@ fun TerminalReturningMethods.toList(vararg params: Pair<String, Any?>): DataResu
 fun TerminalReturningMethods.toSingle(vararg params: Pair<String, Any?>): DataResult<Map<String, Any?>?> =
     toSingle(params.toMap())
 
-fun <T : Any> TerminalReturningMethods.toField(vararg params: Pair<String, Any?>): DataResult<T?> =
-    toField(params.toMap())
+inline fun <reified T : Any> TerminalReturningMethods.toField(
+    params: Map<String, Any?> = emptyMap()
+): DataResult<T?> = toField(T::class, params)
 
-fun <T : Any> TerminalReturningMethods.toColumn(vararg params: Pair<String, Any?>): DataResult<List<T?>> =
-    toColumn(params.toMap())
+inline fun <reified T : Any> TerminalReturningMethods.toField(
+    vararg params: Pair<String, Any?>
+): DataResult<T?> = toField(T::class, params.toMap())
 
+inline fun <reified T : Any> TerminalReturningMethods.toColumn(
+    params: Map<String, Any?> = emptyMap()
+): DataResult<List<T?>> = toColumn(T::class, params)
+
+inline fun <reified T : Any> TerminalReturningMethods.toColumn(
+    vararg params: Pair<String, Any?>
+): DataResult<List<T?>> = toColumn(T::class, params.toMap())
 
 inline fun <reified T : Any> TerminalReturningMethods.toListOf(vararg params: Pair<String, Any?>): DataResult<List<T>> =
     toListOf(T::class, params.toMap())
