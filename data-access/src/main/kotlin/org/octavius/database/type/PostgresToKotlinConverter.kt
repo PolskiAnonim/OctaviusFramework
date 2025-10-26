@@ -12,7 +12,7 @@ import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
-import org.octavius.data.util.Converters
+import org.octavius.data.util.toPascalCase
 import java.lang.reflect.Method
 import java.text.ParseException
 import java.time.format.DateTimeFormatter
@@ -235,10 +235,10 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             }
 
             val enumValueName = when (typeInfo.enumConvention) {
-                EnumCaseConvention.SNAKE_CASE_LOWER -> Converters.toCamelCase(value, true)
-                EnumCaseConvention.SNAKE_CASE_UPPER -> Converters.toCamelCase(value, true)
+                EnumCaseConvention.SNAKE_CASE_LOWER -> value.toPascalCase()
+                EnumCaseConvention.SNAKE_CASE_UPPER -> value.toPascalCase()
                 EnumCaseConvention.PASCAL_CASE -> value
-                EnumCaseConvention.CAMEL_CASE -> Converters.toCamelCase(value, true)
+                EnumCaseConvention.CAMEL_CASE -> value.toPascalCase()
                 EnumCaseConvention.AS_IS -> value
             }
 

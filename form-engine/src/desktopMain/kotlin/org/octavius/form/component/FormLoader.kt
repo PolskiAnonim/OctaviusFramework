@@ -4,7 +4,7 @@ import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toList
 import org.octavius.data.builder.toSingle
-import org.octavius.data.util.Converters
+import org.octavius.data.util.toSnakeCase
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
@@ -28,7 +28,7 @@ abstract class BaseTableMappingBuilder {
     }
 
     fun map(controlName: String, dbColumn: String? = null) {
-        val finalDbColumn = dbColumn ?: Converters.toSnakeCase(controlName)
+        val finalDbColumn = dbColumn ?: controlName.toSnakeCase()
         mappings.add(FieldMapping(controlName, finalDbColumn))
     }
 
@@ -104,7 +104,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
     }
 
     fun map(controlName: String, dbColumn: String? = null) {
-        val finalDbColumn = dbColumn ?: Converters.toSnakeCase(controlName)
+        val finalDbColumn = dbColumn ?: controlName.toSnakeCase()
         relations.add(SimpleMapping(FieldMapping(controlName, finalDbColumn)))
     }
 

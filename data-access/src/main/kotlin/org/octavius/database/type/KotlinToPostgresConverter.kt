@@ -9,7 +9,8 @@ import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toMap
-import org.octavius.data.util.Converters
+import org.octavius.data.util.toCamelCase
+import org.octavius.data.util.toSnakeCase
 import org.postgresql.util.PGobject
 import kotlin.reflect.KClass
 import kotlin.time.Duration
@@ -214,10 +215,10 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
         
         logger.trace { "Converting enum value '${enumValue.name}' using convention: $convention" }
         val finalValue = when (convention) {
-            EnumCaseConvention.SNAKE_CASE_LOWER -> Converters.toSnakeCase(enumValue.name).lowercase()
-            EnumCaseConvention.SNAKE_CASE_UPPER -> Converters.toSnakeCase(enumValue.name).uppercase()
+            EnumCaseConvention.SNAKE_CASE_LOWER -> enumValue.name.toSnakeCase().lowercase()
+            EnumCaseConvention.SNAKE_CASE_UPPER -> enumValue.name.toSnakeCase().uppercase()
             EnumCaseConvention.PASCAL_CASE -> enumValue.name
-            EnumCaseConvention.CAMEL_CASE -> Converters.toCamelCase(enumValue.name, true)
+            EnumCaseConvention.CAMEL_CASE -> enumValue.name.toCamelCase()
             EnumCaseConvention.AS_IS -> enumValue.name
         }
         

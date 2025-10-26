@@ -11,7 +11,7 @@ import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.annotation.PgType
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
-import org.octavius.data.util.Converters
+import org.octavius.data.util.toSnakeCase
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
 
@@ -105,7 +105,7 @@ internal class TypeRegistryLoader(
                         val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
                         val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
                         val pgTypeName =
-                            pgTypeNameFromAnnotation.ifBlank { Converters.toSnakeCase(classInfo.simpleName) }
+                            pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
 
                         var convention: EnumCaseConvention? = null
                         if (classInfo.isEnum) {

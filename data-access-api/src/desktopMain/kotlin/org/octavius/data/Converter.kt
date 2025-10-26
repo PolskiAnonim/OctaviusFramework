@@ -2,7 +2,7 @@ package org.octavius.data
 
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
-import org.octavius.data.util.Converters
+import org.octavius.data.util.toSnakeCase
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -68,7 +68,7 @@ private fun <T : Any> getOrCreateDataObjectMetadata(kClass: KClass<T>): DataObje
                 )
 
             val keyName = property.findAnnotation<MapKey>()?.name
-                ?: Converters.toSnakeCase(param.name!!)
+                ?: param.name!!.toSnakeCase()
 
             Triple(param, property, keyName)
         }
