@@ -56,8 +56,7 @@ class TransactionPlanExecutorTest {
         // --- Krok 3: Stworzenie pełnej instancji DataAccess ---
         val typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate, dbConfig.packagesToScan, dbConfig.dbSchemas).load() }
         val kotlinToPg = KotlinToPostgresConverter(typeRegistry)
-        val pgToKotlin = PostgresToKotlinConverter(typeRegistry)
-        val valueExecutor = ResultSetValueExtractor(typeRegistry, pgToKotlin)
+        val valueExecutor = ResultSetValueExtractor(typeRegistry)
         val mappers = RowMappers(valueExecutor)
         val txManager = DataSourceTransactionManager(dataSource)
         dataAccess = DatabaseAccess(jdbcTemplate, txManager, mappers, kotlinToPg)

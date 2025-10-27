@@ -24,7 +24,7 @@ internal class DatabaseAccess(
     private val rowMappers: RowMappers,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataAccess {
-
+    val transactionPlanExecutor = TransactionPlanExecutor(transactionManager)
     // --- Implementacja QueryOperations (dla pojedynczych zapytań i użycia w transakcji) ---
 
     override fun select(vararg columns: String): SelectQueryBuilder {
@@ -53,7 +53,6 @@ internal class DatabaseAccess(
         plan: TransactionPlan,
         propagation: TransactionPropagation
     ): DataResult<TransactionPlanResult> {
-        val transactionPlanExecutor = TransactionPlanExecutor(transactionManager)
         return transactionPlanExecutor.execute(plan, propagation)
     }
 

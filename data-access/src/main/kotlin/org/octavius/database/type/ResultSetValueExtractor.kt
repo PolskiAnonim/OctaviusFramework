@@ -11,10 +11,9 @@ import java.sql.ResultSet
  * i deleguje do PostgresToKotlinConverter dla typów złożonych (enum, composite, array).
  */
 internal class ResultSetValueExtractor(
-    private val typeRegistry: TypeRegistry,
-    private val stringConverter: PostgresToKotlinConverter // Nazwa zmieniona dla jasności
+    private val typeRegistry: TypeRegistry
 ) {
-
+    private val stringConverter = PostgresToKotlinConverter(typeRegistry)
     @Suppress("IMPLICIT_CAST_TO_ANY")
     fun extract(rs: ResultSet, columnIndex: Int): Any? {
         // Sprawdzenie, czy wartość jest SQL NULL

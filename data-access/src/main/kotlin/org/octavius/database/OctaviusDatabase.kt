@@ -8,40 +8,27 @@ import org.octavius.data.DataAccess
 import org.octavius.database.type.*
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.jdbc.support.JdbcTransactionManager
+import javax.sql.DataSource
 import kotlin.time.measureTime
 
 /**
  * System zarządzania bazą danych - centralny punkt dostępu do usług bazodanowych.
  *
- * Przyjmuje obiekt konfiguracyjny i na jego podstawie inicjalizuje wszystkie
- * niezbędne komponenty do pracy z bazą danych.
+ * Inicjalizuje wszystkie niezbędne komponenty do pracy z bazą danych.
  *
  * Odpowiada za:
- * - Konfigurację puli połączeń HikariCP z PostgreSQL
+ * - Konfigurację puli połączeń HikariCP z PostgreSQL (dla metody fromConfig)
  * - Inicjalizację menedżera transakcji Spring
  * - Automatyczne ładowanie rejestru typów z bazy danych i classpath
  * - Udostępnienie usług dostępu do danych przez interfejs [DataAccess]
  *
- * @param config Konfiguracja bazy danych wczytana z pliku properties.
  */
-class DatabaseSystem(private val config: DatabaseConfig) {
-    companion object {
-        private val logger = KotlinLogging.logger {}
-    }
+object OctaviusDatabase {
+    private val logger = KotlinLogging.logger {}
 
-
-    /** Pula połączeń HikariCP z konfiguracją dla PostgreSQL */
-    private val dataSource: HikariDataSource
-    private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate
-    private val datasourceTransactionManager: DataSourceTransactionManager
-    private val typeRegistry: TypeRegistry
-
-    /** Usługa do wykonywania zapytań */
-    val dataAccess: DataAccess
-
-    init {
-        logger.info { "Initializing DatabaseSystem..." }
-
+    fun fromConfig(config: DatabaseConfig): DataAccess {
+        logger.info { "Initializing DataSource..." }
         // 1. Zależne od konfiguracji ustawienie `connectionInitSql`
         val connectionInitSql = if (config.setSearchPath && config.dbSchemas.isNotEmpty()) {
             val schemas = config.dbSchemas.joinToString(", ")
@@ -60,19 +47,34 @@ class DatabaseSystem(private val config: DatabaseConfig) {
             maximumPoolSize = 10
             this.connectionInitSql = connectionInitSql
         }
-        dataSource = HikariDataSource(hikariConfig)
+        val dataSource = HikariDataSource(hikariConfig)
         logger.debug { "HikariCP datasource initialized with pool size: ${hikariConfig.maximumPoolSize}" }
 
-        namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource)
-        datasourceTransactionManager = DataSourceTransactionManager(dataSource)
+
+        return fromDataSource(
+            dataSource = dataSource,
+            packagesToScan = config.packagesToScan,
+            dbSchemas = config.dbSchemas
+        )
+    }
+
+    fun fromDataSource(
+        dataSource: DataSource,
+        packagesToScan: List<String>,
+        dbSchemas: List<String>
+    ): DataAccess {
+        logger.info { "Initializing OctaviusDatabase..." }
+
+        val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
+        val transactionManager = JdbcTransactionManager(dataSource)
 
         logger.debug { "Loading type registry from database..." }
+        val typeRegistry: TypeRegistry
         val typeRegistryLoadTime = measureTime {
-            // 2. Przekazanie konfiguracji do TypeRegistryLoader
             val loader = TypeRegistryLoader(
-                namedParameterJdbcTemplate,
-                packagesToScan = config.packagesToScan,
-                dbSchemas = config.dbSchemas
+                jdbcTemplate,
+                packagesToScan,
+                dbSchemas
             )
             typeRegistry = runBlocking {
                 loader.load()
@@ -81,19 +83,16 @@ class DatabaseSystem(private val config: DatabaseConfig) {
         logger.debug { "Type registry loaded successfully in ${typeRegistryLoadTime.inWholeMilliseconds}ms" }
 
         logger.debug { "Initializing converters and mappers" }
-        val typesConverter = PostgresToKotlinConverter(typeRegistry)
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
-        val resultSetValueExtractor = ResultSetValueExtractor(typeRegistry,typesConverter)
+        val resultSetValueExtractor = ResultSetValueExtractor(typeRegistry)
         val rowMappers = RowMappers(resultSetValueExtractor)
 
-        logger.debug { "Initializing database services" }
-        dataAccess = DatabaseAccess(
-            namedParameterJdbcTemplate,
-            datasourceTransactionManager,
+        logger.info { "OctaviusDatabase initialization completed" }
+        return DatabaseAccess(
+            jdbcTemplate,
+            transactionManager,
             rowMappers,
             kotlinToPostgresConverter
         )
-
-        logger.info { "DatabaseSystem initialization completed" }
     }
 }

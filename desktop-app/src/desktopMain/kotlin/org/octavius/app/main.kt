@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.context.startKoin
 import org.octavius.api.server.EmbeddedServer
 import org.octavius.contract.FeatureModule
-import org.octavius.database.DatabaseSystem
+import org.octavius.data.DataAccess
 import org.octavius.localization.T
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.modules.games.GamesFeature
@@ -69,7 +69,7 @@ fun main() {
             LaunchedEffect(Unit) {
                 // Wykonaj ciężką pracę w tle
                 withContext(Dispatchers.IO) {
-                    koin.get<DatabaseSystem>()
+                    koin.get<DataAccess>()
                 }
                 // Zmień stan, aby wywołać rekompozycję
                 appState = AppState.Ready
