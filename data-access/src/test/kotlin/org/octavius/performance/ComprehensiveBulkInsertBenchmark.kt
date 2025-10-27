@@ -78,8 +78,7 @@ class ComprehensiveBulkInsertBenchmark {
         val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas)
         val typeRegistry = runBlocking { loader.load() }
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
-        val postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
-        val extractor = ResultSetValueExtractor(typeRegistry, postgresToKotlinConverter)
+        val extractor = ResultSetValueExtractor(typeRegistry)
         val rowMappers = RowMappers(extractor)
         val transactionManager = DataSourceTransactionManager(hikariDataSource)
         this.dataAccess = DatabaseAccess(jdbcTemplate, transactionManager, rowMappers, kotlinToPostgresConverter)

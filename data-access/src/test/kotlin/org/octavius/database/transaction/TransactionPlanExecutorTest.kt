@@ -11,6 +11,7 @@ import org.junit.jupiter.api.TestInstance
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.execute
+import org.octavius.data.builder.toColumn
 import org.octavius.data.builder.toField
 import org.octavius.data.exception.StepDependencyException
 import org.octavius.data.exception.TransactionStepExecutionException

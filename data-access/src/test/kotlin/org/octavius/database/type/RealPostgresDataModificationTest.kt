@@ -80,7 +80,7 @@ class RealPostgresDataModificationTest {
             ).load()
         }
         kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
-        val extractor = ResultSetValueExtractor(typeRegistry, PostgresToKotlinConverter(typeRegistry))
+        val extractor = ResultSetValueExtractor(typeRegistry)
         mappers = RowMappers(extractor)
     }
 
@@ -155,7 +155,7 @@ class RealPostgresDataModificationTest {
         val retrievedTeam = jdbcTemplate.queryForObject(
             "SELECT person_array FROM complex_test_data WHERE id = 1",
             emptyMap<String, Any>(),
-            mappers.SingleValueMapper()
+            mappers.SingleValueMapper(List::class)
         ) as List<TestPerson>
 
         assertThat(retrievedTeam).isEqualTo(newTeam)

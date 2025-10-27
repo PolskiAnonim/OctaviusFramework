@@ -22,7 +22,6 @@ class RealPostgresDataTest {
 
     // Te pola będą dostępne we wszystkich testach w tej klasie
     private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
-    private lateinit var postgresToKotlinConverter: PostgresToKotlinConverter
     private lateinit var typeRegistry: TypeRegistry
 
     @BeforeAll
@@ -79,7 +78,6 @@ class RealPostgresDataTest {
         typeRegistry = runBlocking {
             loader.load()
         }
-        postgresToKotlinConverter = PostgresToKotlinConverter(typeRegistry)
     }
 
     // Nie potrzebujemy @BeforeEach, bo tylko czytamy dane!
@@ -92,7 +90,7 @@ class RealPostgresDataTest {
         val result: Map<String, Any?> = jdbcTemplate.queryForObject(
             "SELECT * FROM complex_test_data WHERE id = 1",
             emptyMap<String, Any>(),
-            RowMappers(ResultSetValueExtractor(typeRegistry, postgresToKotlinConverter)).ColumnNameMapper()
+            RowMappers(ResultSetValueExtractor(typeRegistry)).ColumnNameMapper()
         )
 
 // Then: Sprawdzamy każdy przekonwertowany obiekt
