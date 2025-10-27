@@ -6,6 +6,7 @@ import org.octavius.data.DataResult
 import org.octavius.data.builder.AsyncTerminalMethods
 import org.octavius.data.builder.QueryBuilder
 import org.octavius.data.builder.StepBuilderMethods
+import org.octavius.data.builder.StreamingTerminalMethods
 import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
 import org.octavius.database.RowMappers
@@ -23,9 +24,9 @@ import kotlin.reflect.KClass
  * interfejs (fluent API) w podklasach.
  */
 internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
-    protected val jdbcTemplate: NamedParameterJdbcTemplate,
-    protected val kotlinToPostgresConverter: KotlinToPostgresConverter,
-    protected val rowMappers: RowMappers,
+    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val kotlinToPostgresConverter: KotlinToPostgresConverter,
+    val rowMappers: RowMappers,
     protected val table: String? = null,
 ): QueryBuilder<R> {
     companion object {
@@ -256,6 +257,11 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
 
     override fun async(scope: CoroutineScope): AsyncTerminalMethods {
         return AsyncQueryBuilder(this, scope)
+    }
+
+    override fun asStream(fetchSize: Int): StreamingTerminalMethods {
+        // Po prostu tworzymy i zwracamy nową instancję naszego egzekutora
+        return StreamingQueryBuilder(this, fetchSize)
     }
 
     //------------------------------------------------------------------------------------------------------------------

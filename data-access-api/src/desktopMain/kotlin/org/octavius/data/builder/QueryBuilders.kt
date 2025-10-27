@@ -224,6 +224,16 @@ interface QueryBuilder<T : QueryBuilder<T>> {
     fun async(scope: CoroutineScope): AsyncTerminalMethods
 
     /**
+     * Przełącza builder w tryb streamingowy, optymalny dla dużych zbiorów danych.
+     * Wymaga użycia metod terminalnych specyficznych dla streamingu, jak forEachRow().
+     *
+     * @param fetchSize Liczba wierszy pobierana z bazy danych w jednej paczce.
+     *                  Kluczowe dla uniknięcia ładowania całego wyniku do pamięci.
+     * @return Nowa instancja buildera z metodami do streamingu.
+     */
+    fun asStream(fetchSize: Int = 100): StreamingTerminalMethods
+
+    /**
      * Tworzy i zwraca głęboką kopię tego buildera.
      * Zwraca konkretny typ buildera (np. SelectQueryBuilder),
      * zachowując płynność API.
