@@ -298,19 +298,17 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * Obsługuje cudzysłowy, escapowanie, wartości `NULL` i zagnieżdżenia.
      */
     private fun parseNestedStructure(input: String, startChar: Char, endChar: Char): List<String?> {
-        val trimmed = input.trim()
         // Prosta walidacja na początku
-        if (trimmed.length < 2 || trimmed.first() != startChar || trimmed.last() != endChar) {
-            throw IllegalArgumentException("Nieprawidłowy format struktury: Oczekiwano '$startChar...$endChar', otrzymano: '$input'")
+        if (input.length < 2 || input.first() != startChar || input.last() != endChar) {
+            throw IllegalArgumentException("Nieprawidłowy format struktury: Oczekiwano '$startChar...$endChar', otrzymano: '$input'") // TODO to chyba powinien być błąd rejestru? Albo nie powinno się wydarzyć
         }
-        val content = trimmed.substring(1, trimmed.length - 1)
+        val content = input.substring(1, input.length - 1)
         if (content.isEmpty()) return emptyList()
 
-        val elements = mutableListOf<String>()
+        val elements = mutableListOf<String?>()
         var currentElementStart = 0
         var inQuotes = false
-        var braceLevel = 0 // Poziom zagnieżdżenia nawiasów klamrowych {}
-        var parenLevel = 0 // Poziom zagnieżdżenia nawiasów okrągłych ()
+        var nestingLevel = 0 // Poziom zagnieżdżenia nawiasów
 
         var i = 0
         while (i < content.length) {
@@ -323,14 +321,12 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             } else {
                 when (char) {
                     '"' -> inQuotes = true
-                    '{' -> braceLevel++
-                    '}' -> braceLevel--
-                    '(' -> parenLevel++
-                    ')' -> parenLevel--
+                    '{', '(' -> nestingLevel++
+                    '}', ')' -> nestingLevel--
                     ',' -> {
                         // Przecinek na najwyższym poziomie = separator elementów
-                        if (braceLevel == 0 && parenLevel == 0) {
-                            elements.add(content.substring(currentElementStart, i))
+                        if (nestingLevel == 0) {
+                            elements.add(unescapeValue(content.substring(currentElementStart, i)))
                             currentElementStart = i + 1
                         }
                     }
@@ -338,8 +334,8 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             }
             i++
         }
-        elements.add(content.substring(currentElementStart))
-        return elements.map { unescapeValue(it.trim()) }
+        elements.add(unescapeValue(content.substring(currentElementStart)))
+        return elements
     }
 
     /**
@@ -348,12 +344,11 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * oraz pusty string (reprezentowany jako `""`).
      */
     private fun unescapeValue(raw: String): String? {
-        val trimmed = raw.trim()
 
         // 1. Sprawdzamy, czy wartość jest w cudzysłowach.
-        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+        if (raw.startsWith('"') && raw.endsWith('"')) {
             // Jeśli tak, to jest to jawny string. Nawet jeśli pusty (""), to jest to pusty string, a nie NULL.
-            return trimmed.substring(1, trimmed.length - 1)
+            return raw.substring(1, raw.length - 1)
                 .replace("\"\"", "\"") // PostgreSQL escapuje cudzysłów przez podwojenie go
                 .replace("\\\"", "\"") // Obsługa standardowego escape'owania
                 .replace("\\\\", "\\")
@@ -361,11 +356,11 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
 
         // 2. Jeśli wartość NIE jest w cudzysłowach.
         // Pusty, nieopakowany w cudzysłowy ciąg znaków w kompozycie oznacza NULL.
-        if (trimmed.isEmpty() || trimmed.equals("NULL", ignoreCase = true)) {
+        if (raw.isEmpty() || raw.equals("NULL", ignoreCase = true)) {
             return null
         }
 
         // 3. W każdym innym przypadku jest to zwykła, nieopakowana w cudzysłowy wartość.
-        return trimmed
+        return raw
     }
 }
