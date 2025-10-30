@@ -1,11 +1,9 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.*
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.octavius.data.OffsetTime
 import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
@@ -14,18 +12,11 @@ import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
 import org.octavius.data.util.toPascalCase
 import java.lang.reflect.Method
-import java.text.ParseException
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 /**
  * Konwertuje wartości z PostgreSQL (jako `String`) na odpowiednie typy Kotlina.
@@ -141,69 +132,30 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     /**
      * Konwertuje standardowe typy PostgreSQL na odpowiednie typy Kotlina.
      *
-     * Obsługiwane typy:
-     * - Numeryczne: int4, int8, float4, float8, numeric
-     * - Logiczne: bool (t/f -> Boolean)
-     * - Tekstowe: text, varchar, char (-> String)
-     * - Data/czas: date, timestamp, timestamptz, time, timetz
-     * - JSON: json, jsonb (-> JsonElement)
-     * - Inne: uuid, interval
+     * Deleguje do `StandardTypeMappingRegistry`, które jest jedynym źródłem prawdy.
      *
      * @param value Wartość z bazy danych jako String.
      * @param pgTypeName Nazwa standardowego typu PostgreSQL.
      * @return Przekonwertowana wartość.
      * @throws ConversionException jeśli konwersja się nie powiedzie.
      */
-    @OptIn(ExperimentalTime::class)
     private fun convertStandardType(value: String, pgTypeName: String): Any? {
-        try {
-            return when (pgTypeName) {
-                // Typy numeryczne całkowite
-                "int4", "serial", "int2", "smallserial" -> value.toInt()
-                "int8", "bigserial" -> value.toLong()
+        // 1. Znajdź odpowiedni handler w centralnym rejestrze
+        val handler = StandardTypeMappingRegistry.getHandler(pgTypeName)
 
-                // Typy zmiennoprzecinkowe
-                "float4" -> value.toFloat()
-                "float8" -> value.toDouble()
-                "numeric" -> value.toBigDecimal()
+        if (handler == null) {
+            logger.warn { "No standard type handler found for PostgreSQL type '$pgTypeName'. Returning raw string value." }
+            return value // Domyślne zachowanie: zwróć string, jeśli typ jest nieznany
+        }
 
-                // Wartości logiczne (PostgreSQL używa 't'/'f')
-                "bool" -> value == "t"
-
-                // Typy JSON
-                "json", "jsonb" -> Json.parseToJsonElement(value)
-
-                // UUID
-                "uuid" -> UUID.fromString(value)
-
-                // Interwały czasowe (format HH:MM:SS) TODO obsługa miesięcy/dni (jeżeli zajdzie potrzeba)
-                "interval" -> {
-                    val parts = value.split(":")
-                    parts[0].toLong().hours +
-                            parts[1].toLong().minutes +
-                            parts[2].toLong().seconds
-                }
-
-                // Typy daty i czasu
-                "date" -> LocalDate.parse(value)
-                "timestamp" -> LocalDateTime.parse(value.replace(' ', 'T'))
-                "timestamptz" -> Instant.parse(value.replace(' ', 'T'))
-                "time" -> LocalTime.parse(value)
-                "timetz" -> {
-                    val javaOffsetTime = java.time.OffsetTime.parse(value, POSTGRES_TIMETZ_FORMATTER)
-                    return OffsetTime(
-                        time = javaOffsetTime.toLocalTime().toKotlinLocalTime(),
-                        offset = UtcOffset(seconds = javaOffsetTime.offset.totalSeconds)
-                    )
-                }
-                // Domyślnie wszystkie inne typy (text, varchar, char) jako String
-                else -> value
-            }
+        // 2. Użyj funkcji 'fromString' z handlera do konwersji
+        return try {
+            handler.fromString(value)
         } catch (e: Exception) {
             throw ConversionException(
                 messageEnum = ConversionExceptionMessage.VALUE_CONVERSION_FAILED,
                 value = value,
-                targetType = pgTypeName, // Tu targetType to nazwa typu PG
+                targetType = handler.kotlinClass.simpleName ?: pgTypeName,
                 cause = e
             )
         }
@@ -347,8 +299,9 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      */
     private fun parseNestedStructure(input: String, startChar: Char, endChar: Char): List<String?> {
         val trimmed = input.trim()
-        if (!trimmed.startsWith(startChar) || !trimmed.endsWith(endChar)) {
-            throw ParseException("Nieprawidłowy format: Oczekiwano '$startChar...$endChar'", 0)
+        // Prosta walidacja na początku
+        if (trimmed.length < 2 || trimmed.first() != startChar || trimmed.last() != endChar) {
+            throw IllegalArgumentException("Nieprawidłowy format struktury: Oczekiwano '$startChar...$endChar', otrzymano: '$input'")
         }
         val content = trimmed.substring(1, trimmed.length - 1)
         if (content.isEmpty()) return emptyList()

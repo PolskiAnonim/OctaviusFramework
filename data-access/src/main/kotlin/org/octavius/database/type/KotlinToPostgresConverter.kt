@@ -12,6 +12,7 @@ import org.octavius.data.toMap
 import org.octavius.data.util.toCamelCase
 import org.octavius.data.util.toSnakeCase
 import org.postgresql.util.PGobject
+import java.time.ZoneOffset
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -43,6 +44,32 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
     companion object {
         private val logger = KotlinLogging.logger {}
     }
+
+    @OptIn(ExperimentalTime::class)
+    private val KOTLIN_TO_JDBC_CONVERTERS: Map<KClass<*>, (Any) -> Any> = mapOf(
+        LocalDate::class to { v -> java.sql.Date.valueOf((v as LocalDate).toJavaLocalDate()) },
+        LocalDateTime::class to { v -> java.sql.Timestamp.valueOf((v as LocalDateTime).toJavaLocalDateTime()) },
+        LocalTime::class to { v -> java.sql.Time.valueOf((v as LocalTime).toJavaLocalTime()) },
+        Instant::class to { v -> java.sql.Timestamp.from((v as Instant).toJavaInstant()) },
+        OffsetTime::class to { v ->
+            val ktTime = v as OffsetTime
+            val javaOffset = ZoneOffset.ofTotalSeconds(ktTime.offset.totalSeconds)
+            val javaTime = ktTime.time.toJavaLocalTime()
+            java.time.OffsetTime.of(javaTime, javaOffset)
+        },
+        Duration::class to { v ->
+            PGobject().apply {
+                type = "interval"
+                value = (v as Duration).toIsoString()
+            }
+        },
+        JsonObject::class to { v ->
+            PGobject().apply {
+                type = "jsonb"
+                value = (v as JsonObject).toString()
+            }
+        }
+    )
 
 
     /**
@@ -99,6 +126,14 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
      */
     @OptIn(ExperimentalTime::class)
     private fun expandParameter(paramName: String, paramValue: Any?): Pair<String, Map<String, Any?>> {
+        if (paramValue == null) {
+            return ":$paramName" to mapOf(paramName to null)
+        }
+
+        KOTLIN_TO_JDBC_CONVERTERS[paramValue::class]?.let { converter ->
+            return ":$paramName" to mapOf(paramName to converter(paramValue))
+        }
+
         return when {
             paramValue is PgTyped -> {
                 val (innerPlaceholder, innerParams) = expandParameter(paramName, paramValue.value)
@@ -108,14 +143,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
             }
             paramValue is Array<*> -> validateTypedArrayParameter(paramName, paramValue)
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
-            paramValue is LocalDate -> createDateParameter(paramName, paramValue)
-            paramValue is LocalDateTime -> createTimestampParameter(paramName, paramValue)
-            paramValue is LocalTime -> createTimeParameter(paramName, paramValue)
-            paramValue is Instant -> createInstantParameter(paramName, paramValue)
-            paramValue is OffsetTime -> createOffsetTimeParameter(paramName, paramValue)
-            paramValue is Duration -> createIntervalParameter(paramName, paramValue)
-            isDataClass(paramValue) -> expandRowParameter(paramName, paramValue!!)
-            paramValue is JsonObject -> createJsonParameter(paramName, paramValue)
+            isDataClass(paramValue) -> expandRowParameter(paramName, paramValue)
             paramValue is Enum<*> -> createEnumParameter(paramName, paramValue)
             else -> ":$paramName" to mapOf(paramName to paramValue)
         }
@@ -126,9 +154,9 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
      * Rzuca wyjątek, jeśli typ elementów nie jest typem prostym.
      */
     private fun validateTypedArrayParameter(paramName: String, arrayValue: Array<*>): Pair<String, Map<String, Any?>> {
-        val componentType = arrayValue::class.java.componentType?.kotlin
+        val componentType = arrayValue::class.java.componentType!!.kotlin // To musi być tablica
 
-        if (componentType != null && isComplexComponentType(componentType)) {
+        if (isComplexComponentType(componentType)) {
             val ex = ConversionException(
                 ConversionExceptionMessage.UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY,
                 arrayValue,
@@ -149,58 +177,6 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
     private fun isComplexComponentType(kClass: KClass<*>): Boolean {
         // Zwraca true, jeśli typ jest "złożony"
         return kClass.isData || kClass == Map::class || kClass == List::class
-    }
-
-    /** Konwertuje `LocalDate` na `java.sql.Date`. */
-    private fun createDateParameter(paramName: String, value: LocalDate): Pair<String, Map<String, Any?>> {
-        val sqlDate = java.sql.Date.valueOf(value.toJavaLocalDate())
-        return ":$paramName" to mapOf(paramName to sqlDate)
-    }
-
-    /** Konwertuje `LocalDateTime` na `java.sql.Timestamp`. */
-    private fun createTimestampParameter(paramName: String, value: LocalDateTime): Pair<String, Map<String, Any?>> {
-        val sqlTimestamp = java.sql.Timestamp.valueOf(value.toJavaLocalDateTime())
-        return ":$paramName" to mapOf(paramName to sqlTimestamp)
-    }
-
-    /** Konwertuje `LocalTime` na `java.sql.Time` dla kolumn typu TIME. */
-    private fun createTimeParameter(paramName: String, value: LocalTime): Pair<String, Map<String, Any?>> {
-        val sqlTime = java.sql.Time.valueOf(value.toJavaLocalTime())
-        return ":$paramName" to mapOf(paramName to sqlTime)
-    }
-
-    /** Konwertuje `Instant` na `java.sql.Timestamp`. */
-    @OptIn(ExperimentalTime::class)
-    private fun createInstantParameter(paramName: String, value: Instant): Pair<String, Map<String, Any?>> {
-        val sqlTimestamp = java.sql.Timestamp.from(value.toJavaInstant())
-        return ":$paramName" to mapOf(paramName to sqlTimestamp)
-    }
-
-    /** Konwertuje `KotlinOffsetTime` na `java.time.OffsetTime`, z którym JDBC sobie radzi. */
-    private fun createOffsetTimeParameter(paramName: String, value: OffsetTime): Pair<String, Map<String, Any?>> {
-        val javaOffset = java.time.ZoneOffset.ofTotalSeconds(value.offset.totalSeconds)
-        val javaTime = value.time.toJavaLocalTime()
-        val offsetTime = java.time.OffsetTime.of(javaTime, javaOffset)
-        return ":$paramName" to mapOf(paramName to offsetTime)
-    }
-
-    /** Konwertuje `Duration` na `PGobject` typu `interval`. */
-    @OptIn(ExperimentalTime::class)
-    private fun createIntervalParameter(paramName: String, value: Duration): Pair<String, Map<String, Any?>> {
-        val pgInterval = PGobject().apply {
-            type = "interval"
-            this.value = value.toIsoString() // Format ISO 8601 (np. PT1H30M) jest dobrze obsługiwany przez PG
-        }
-        return ":$paramName" to mapOf(paramName to pgInterval)
-    }
-
-    /** Tworzy parametr `jsonb` z obiektu `JsonObject`. */
-    private fun createJsonParameter(paramName: String, paramValue: JsonObject): Pair<String, Map<String, Any?>> {
-        val pgObject = PGobject().apply {
-            value = paramValue.toString()
-            type = "jsonb"
-        }
-        return ":$paramName" to mapOf(paramName to pgObject)
     }
 
     /** Tworzy parametr dla enuma, mapując `CamelCase` na `snake_case` dla typu i wartości. */
@@ -309,7 +285,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
      * @param obj Obiekt do sprawdzenia.
      * @return true jeśli obj jest instancją data class, false w przeciwnym razie.
      */
-    private fun isDataClass(obj: Any?): Boolean {
-        return obj != null && obj::class.isData
+    private fun isDataClass(obj: Any): Boolean {
+        return obj::class.isData
     }
 }
