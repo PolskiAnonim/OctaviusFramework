@@ -111,6 +111,7 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
                 messageEnum = ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY,
                 targetType = kClass.qualifiedName,
                 value = keyName, // Używamy klucza mapy jako 'value'
+                rowData = this,
                 propertyName = param.name
             )
         }
