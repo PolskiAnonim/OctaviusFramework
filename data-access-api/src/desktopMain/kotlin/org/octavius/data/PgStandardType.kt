@@ -8,12 +8,12 @@ package org.octavius.data
 enum class PgStandardType(val typeName: String, val isArray: Boolean = false) {
     // --- Typy proste ---
     // Typy stałoprzecinkowe
-    SERIAL("serial"),
-    BIGSERIAL("bigserial"),
+    INT2("int2"),
     SMALLSERIAL("smallserial"),
     INT4("int4"),
+    SERIAL("serial"),
     INT8("int8"),
-    INT2("int2"),
+    BIGSERIAL("bigserial"),
     // Typy zmiennoprzecinkowe
     FLOAT4("float4"),
     FLOAT8("float8"),
@@ -28,21 +28,22 @@ enum class PgStandardType(val typeName: String, val isArray: Boolean = false) {
     TIMESTAMPTZ("timestamptz"),
     TIME("time"),
     TIMETZ("timetz"),
+    INTERVAL("interval"),
     // Json
     JSON("json"),
     JSONB("jsonb"),
     // Inne
     BOOL("bool"),
     UUID("uuid"),
-    INTERVAL("interval"),
+    BYTEA("bytea"),
 
     // --- Typy tablicowe (generowane automatycznie) ---
-    SERIAL_ARRAY("_serial", true),
-    BIGSERIAL_ARRAY("_bigserial", true),
+    INT2_ARRAY("_int2", true),
     SMALLSERIAL_ARRAY("_smallserial", true),
     INT4_ARRAY("_int4", true),
+    SERIAL_ARRAY("_serial", true),
     INT8_ARRAY("_int8", true),
-    INT2_ARRAY("_int2", true),
+    BIGSERIAL_ARRAY("_bigserial", true),
     FLOAT4_ARRAY("_float4", true),
     FLOAT8_ARRAY("_float8", true),
     NUMERIC_ARRAY("_numeric", true),
@@ -54,11 +55,12 @@ enum class PgStandardType(val typeName: String, val isArray: Boolean = false) {
     TIMESTAMPTZ_ARRAY("_timestamptz", true),
     TIME_ARRAY("_time", true),
     TIMETZ_ARRAY("_timetz", true),
+    INTERVAL_ARRAY("_interval", true),
     JSON_ARRAY("_json", true),
     JSONB_ARRAY("_jsonb", true),
     BOOL_ARRAY("_bool", true),
     UUID_ARRAY("_uuid", true),
-    INTERVAL_ARRAY("_interval", true);
+    BYTEA_ARRAY("_bytea", true)
 }
 
 /**

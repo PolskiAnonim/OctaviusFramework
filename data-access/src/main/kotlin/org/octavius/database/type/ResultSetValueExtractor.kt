@@ -13,7 +13,6 @@ internal class ResultSetValueExtractor(
 ) {
     private val stringConverter = PostgresToKotlinConverter(typeRegistry)
 
-    @Suppress("IMPLICIT_CAST_TO_ANY")
     fun extract(rs: ResultSet, columnIndex: Int): Any? {
         // Sprawdzenie, czy wartość jest SQL NULL
         if (rs.getObject(columnIndex) == null) {
