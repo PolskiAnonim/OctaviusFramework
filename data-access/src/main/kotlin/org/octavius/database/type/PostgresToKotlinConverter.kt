@@ -12,9 +12,6 @@ import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
 import org.octavius.data.util.toPascalCase
 import java.lang.reflect.Method
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatterBuilder
-import java.time.temporal.ChronoField
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
@@ -36,18 +33,6 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
         // Cache dla Kotlin KClass kompozytowych (data class)
         private val compositeKClassCache = ConcurrentHashMap<String, KClass<*>>()
     }
-
-    val POSTGRES_TIMETZ_FORMATTER: DateTimeFormatter = DateTimeFormatterBuilder()
-        // Parsuj część czasową (godzina, minuta, sekunda)
-        .appendValue(ChronoField.HOUR_OF_DAY, 2)
-        .appendLiteral(':')
-        .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-        .optionalStart() // Sekundy są opcjonalne
-        .appendLiteral(':')
-        .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-        .optionalEnd()
-        .appendPattern("X")
-        .toFormatter()
 
     /**
      * Główna funkcja konwertująca, delegująca do specjalistycznych handlerów.
@@ -298,10 +283,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * Obsługuje cudzysłowy, escapowanie, wartości `NULL` i zagnieżdżenia.
      */
     private fun parseNestedStructure(input: String, startChar: Char, endChar: Char): List<String?> {
-        // Prosta walidacja na początku
-        if (input.length < 2 || input.first() != startChar || input.last() != endChar) {
-            throw IllegalArgumentException("Nieprawidłowy format struktury: Oczekiwano '$startChar...$endChar', otrzymano: '$input'") // TODO to chyba powinien być błąd rejestru? Albo nie powinno się wydarzyć
-        }
+
         val content = input.substring(1, input.length - 1)
         if (content.isEmpty()) return emptyList()
 
