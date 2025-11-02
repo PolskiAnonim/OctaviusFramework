@@ -30,7 +30,7 @@ import org.octavius.navigation.Tab
 fun AppTopBar(
     tabs: List<Tab>,
     currentState: AppNavigationState,
-    onTabSelected: (UShort) -> Unit
+    onTabSelected: (Tab) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth().height(56.dp), color = MaterialTheme.colorScheme.primary
@@ -39,12 +39,12 @@ fun AppTopBar(
             modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically
         ) {
             tabs.forEach { tab ->
-                val isSelected = tab.index == currentState.activeTab.index
+                val isSelected = tab == currentState.activeTab
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clickable { onTabSelected.invoke(tab.index) }
+                        .clickable { onTabSelected.invoke(tab) }
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.primary

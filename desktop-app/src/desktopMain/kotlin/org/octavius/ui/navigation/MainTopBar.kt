@@ -29,7 +29,7 @@ fun MainTopAppBar(
     onBackClicked: () -> Unit,
     onSettingsClicked: () -> Unit
 ) {
-    CenterAlignedTopAppBar( // <-- Zmiana tutaj!
+    CenterAlignedTopAppBar(
         title = {
             // Animujemy treść tytułu, aby przejścia były płynne
             AnimatedContent(targetState = title) { targetTitle ->

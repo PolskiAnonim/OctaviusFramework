@@ -11,14 +11,14 @@ import org.octavius.navigation.Tab
 import org.octavius.navigation.TabOptions
 
 class AsianMediaTab : Tab {
+    override val id = "asian_media"
+
     override val options: TabOptions
         @Composable
         get() = TabOptions(
             title = T.get("tabs.asianMedia"),
             icon = painterResource(Res.drawable.asian_media_icon)
         )
-
-    override val index: UShort = 0u
 
     override fun getInitialScreen(): Screen = AsianMediaHomeScreen.create()
 }

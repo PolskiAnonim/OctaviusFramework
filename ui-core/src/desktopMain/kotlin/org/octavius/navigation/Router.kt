@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
  */
 data class AppNavigationState(
     val activeTab: Tab,
-    val tabStacks: Map<UShort, List<Screen>>
+    val tabStacks: Map<Tab, List<Screen>>
 )
 
 /**
@@ -81,7 +81,7 @@ data class AppNavigationState(
 object AppRouter {
 
     private lateinit var initialTabs: List<Tab>
-
+    private lateinit var tabsById: Map<String, Tab>
     /**
      * Inicjalizuje router z podaną listą zakładek.
      *
@@ -94,11 +94,11 @@ object AppRouter {
      */
     fun initialize(tabs: List<Tab>) {
         require(tabs.isNotEmpty()) { "Lista zakładek nie może być pusta" }
-        
+
         initialTabs = tabs
-        val initialStacks = tabs.associate { tab ->
-            tab.index to listOf(tab.getInitialScreen())
-        }
+        tabsById = tabs.associateBy { it.id }
+
+        val initialStacks = tabs.associateWith { listOf(it.getInitialScreen()) }
 
         _state.value = AppNavigationState(
             activeTab = tabs.first(),
@@ -117,20 +117,22 @@ object AppRouter {
     val state = _state.asStateFlow()
 
     /**
-     * Przełącza na zakładkę o podanym indeksie.
-     *
-     * Zachowuje stos ekranów dla każdej zakładki - po powrocie do zakładki
-     * użytkownik znajdzie się na tym samym ekranie, na którym ją opuścił.
-     *
-     * @param tabIndex Indeks zakładki do aktywacji (0, 1, 2...)
-     * @throws NoSuchElementException jeśli zakładka o podanym indeksie nie istnieje
+     * Przełącza na zakładkę na podstawie jej obiektu.
      */
-    fun switchToTab(tabIndex: UShort) {
+    fun switchToTab(tab: Tab) {
         _state.update { currentState ->
-            currentState?.copy(
-                activeTab = initialTabs.first { it.index == tabIndex }
-            )
+            currentState?.copy(activeTab = tab)
         }
+    }
+
+    /**
+     * Przełącza na zakładkę na podstawie jej tekstowego ID.
+     * Wygodne do użytku z zewnątrz (np. API, event bus).
+     */
+    fun switchToTab(tabId: String) {
+        tabsById[tabId]?.let { tab ->
+            switchToTab(tab)
+        } ?: println("Warning: Nie znaleziono zakładki o ID: $tabId")
     }
 
     /**
@@ -143,49 +145,41 @@ object AppRouter {
      */
     fun navigateTo(screen: Screen) {
         _state.update { currentState ->
-            val activeTabIndex = currentState!!.activeTab.index
-            val currentStack = currentState.tabStacks[activeTabIndex]!!
+            val activeTab = currentState!!.activeTab
+            val currentStack = currentState.tabStacks[activeTab]!!
 
-            // Zabezpieczenie przed duplikatami tego samego typu ekranu
-            if (currentStack.last()::class == screen::class) {
-                return@update currentState
-            }
+            if (currentStack.last()::class == screen::class) return@update currentState
 
             val newStack = currentStack + screen
             currentState.copy(
-                tabStacks = currentState.tabStacks + (activeTabIndex to newStack)
+                tabStacks = currentState.tabStacks + (activeTab to newStack)
             )
         }
     }
 
     /**
-     * Atomowo przełącza zakładkę i nawiguje do nowego ekranu.
+     * Atomowo przełącza zakładkę i nawiguje do nowego ekranu, używając ID zakładki.
      *
-     * Ta metoda najpierw zmienia aktywną zakładkę na tę o podanym `tabIndex`,
-     * a następnie dodaje ekran na szczyt stosu tej zakładki.
-     * Cała operacja jest wykonana w jednym kroku, aby zapobiec niechcianym
-     * stanom pośrednim w UI.
+     * Ta metoda jest preferowanym sposobem nawigacji z zewnętrznych źródeł (np. API).
      *
      * @param screen Nowy ekran do wyświetlenia.
-     * @param tabIndex Indeks zakładki, na której ma się odbyć nawigacja.
+     * @param tabId ID zakładki, na której ma się odbyć nawigacja.
      */
-    fun navigateTo(screen: Screen, tabIndex: UShort) {
+    fun navigateTo(screen: Screen, tabId: String) {
+        val targetTab = tabsById[tabId]
+        if (targetTab == null) {
+            println("Warning: Próba nawigacji do nieistniejącej zakładki o ID: $tabId")
+            return
+        }
         _state.update { currentState ->
-            // Krok 1: Przygotuj stan z nową aktywną zakładką
-            val stateWithSwitchedTab = currentState!!.copy(
-                activeTab = initialTabs.first { it.index == tabIndex }
-            )
+            val stateWithSwitchedTab = currentState!!.copy(activeTab = targetTab)
+            val targetStack = stateWithSwitchedTab.tabStacks[targetTab]!!
 
-            // Krok 2: Dodaj nowy ekran do stosu tej (teraz aktywnej) zakładki
-            val targetStack = stateWithSwitchedTab.tabStacks[tabIndex]!!
-
-            if (targetStack.last()::class == screen::class) {
-                return@update stateWithSwitchedTab // Tylko przełącz zakładkę, nie duplikuj ekranu
-            }
+            if (targetStack.last()::class == screen::class) return@update stateWithSwitchedTab
 
             val newStack = targetStack + screen
             stateWithSwitchedTab.copy(
-                tabStacks = stateWithSwitchedTab.tabStacks + (tabIndex to newStack)
+                tabStacks = stateWithSwitchedTab.tabStacks + (targetTab to newStack)
             )
         }
     }
@@ -198,15 +192,14 @@ object AppRouter {
      */
     fun goBack() {
         _state.update { currentState ->
-            val activeTabIndex = currentState!!.activeTab.index
-            val currentStack = currentState.tabStacks[activeTabIndex]!!
+            val activeTab = currentState!!.activeTab
+            val currentStack = currentState.tabStacks[activeTab]!!
 
-            // Zabezpieczenie - nie pozwalaj opuścić ekranu głównego zakładki
             if (currentStack.size <= 1) return@update currentState
 
             val newStack = currentStack.dropLast(1)
             currentState.copy(
-                tabStacks = currentState.tabStacks + (activeTabIndex to newStack)
+                tabStacks = currentState.tabStacks + (activeTab to newStack)
             )
         }
     }

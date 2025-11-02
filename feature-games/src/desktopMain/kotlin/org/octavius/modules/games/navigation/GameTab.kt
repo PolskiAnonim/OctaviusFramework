@@ -10,14 +10,14 @@ import org.octavius.navigation.Tab
 import org.octavius.navigation.TabOptions
 
 class GameTab : Tab {
+    override val id = "games"
+
     override val options: TabOptions
         @Composable
         get() = TabOptions(
             title = T.get("tabs.games"),
             icon = painterResource(Res.drawable.game_icon)
         )
-
-    override val index: UShort = 1u
 
     override fun getInitialScreen(): Screen = GamesHomeScreen.create()
 }

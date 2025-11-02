@@ -122,14 +122,12 @@ fun main() {
                     NavigationEventBus.events.collectLatest { event ->
                         when (event) {
                             is NavigationEvent.Navigate -> {
-                                // Jeśli screenId jest null, tylko przełączamy zakładkę
                                 if (event.screenId == null) {
-                                    AppRouter.switchToTab(event.tabIndex)
+                                    AppRouter.switchToTab(event.tabId)
                                 } else {
-                                    // Jeśli screenId jest podany, tworzymy ekran i nawigujemy
                                     screenFactories[event.screenId]?.let { factory ->
                                         val screen = factory.create(event.payload)
-                                        AppRouter.navigateTo(screen, event.tabIndex)
+                                        AppRouter.navigateTo(screen, event.tabId)
                                     } ?: println("Error: No factory for screenId: ${event.screenId}")
                                 }
                             }

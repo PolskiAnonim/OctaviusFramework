@@ -6,14 +6,14 @@ import org.octavius.navigation.Tab
 import org.octavius.navigation.TabOptions
 
 class SettingsTab : Tab {
+    override val id = "settings"
+
     // Opcje nie są widoczne bezpośrednio
     override val options: TabOptions
         @Composable
         get() = TabOptions(
             title = "",
         )
-
-    override val index: UShort = 2u
 
     override val isVisibleInNavBar: Boolean
         get() = false

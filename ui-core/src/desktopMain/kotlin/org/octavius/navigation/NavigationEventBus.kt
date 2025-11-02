@@ -13,12 +13,12 @@ sealed interface NavigationEvent {
      * 2. Przełączenie na zakładkę ORAZ nawigację do konkretnego ekranu na tej zakładce
      *    (jeśli `screenId` jest podany).
      *
-     * @property tabIndex Indeks zakładki docelowej.
+     * @property tabId Id zakładki docelowej.
      * @property screenId Opcjonalny, unikalny identyfikator ekranu docelowego.
      * @property payload Opcjonalne dane do przekazania do ekranu docelowego.
      */
     data class Navigate(
-        val tabIndex: UShort,
+        val tabId: String,
         val screenId: String? = null,
         val payload: Map<String, Any>? = null
     ) : NavigationEvent

@@ -3,6 +3,8 @@ package org.octavius.ui.screen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,8 +55,8 @@ object MainScreen {
 
         if (navState == null) return
         val visibleTabs = remember { tabs.filter { it.isVisibleInNavBar } }
-        val currentScreen = navState!!.tabStacks[navState!!.activeTab.index]?.lastOrNull()
-        val screenStackSize = navState!!.tabStacks[navState!!.activeTab.index]?.size ?: 0
+        val currentScreen = navState!!.tabStacks[navState!!.activeTab]?.lastOrNull()
+        val screenStackSize = navState!!.tabStacks[navState!!.activeTab]?.size ?: 0
 
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -69,7 +71,7 @@ object MainScreen {
                     title = currentScreen?.title ?: "",
                     showBackButton = screenStackSize > 1,
                     onBackClicked = { AppRouter.goBack() },
-                    onSettingsClicked = { AppRouter.switchToTab(2U) }
+                    onSettingsClicked = { AppRouter.switchToTab("settings") }
                 )
             },
             snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -78,24 +80,33 @@ object MainScreen {
                 AppTopBar(
                     tabs = visibleTabs,
                     currentState = navState!!,
-                    onTabSelected = { tabIndex -> AppRouter.switchToTab(tabIndex) }
+                    onTabSelected = { tab -> AppRouter.switchToTab(tab) }
                 )
 
                 AnimatedContent(
-                    targetState = navState!!.activeTab.index,
+                    targetState = navState!!.activeTab,
                     transitionSpec = {
-                        // Ta sama logika co w starym TabNavigatorze
-                        val direction = if (targetState > initialState) {
-                            AnimatedContentTransitionScope.SlideDirection.Left
-                        } else {
-                            AnimatedContentTransitionScope.SlideDirection.Right
-                        }
+                        // Znajdź indeksy starego i nowego taba na liście widocznych zakładek
+                        val initialIndex = visibleTabs.indexOf(initialState)
+                        val targetIndex = visibleTabs.indexOf(targetState)
 
-                        slideIntoContainer(
-                            towards = direction, animationSpec = tween(300)
-                        ) togetherWith slideOutOfContainer(
-                            towards = direction, animationSpec = tween(300)
-                        )
+                        // Jeśli któryś tab nie jest na liście (np. ukryty), nie animuj
+                        if (initialIndex == -1 || targetIndex == -1) {
+                            fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+                        } else {
+                            // Użyj znalezionych indeksów do określenia kierunku
+                            val direction = if (targetIndex > initialIndex) {
+                                AnimatedContentTransitionScope.SlideDirection.Left
+                            } else {
+                                AnimatedContentTransitionScope.SlideDirection.Right
+                            }
+
+                            slideIntoContainer(
+                                towards = direction, animationSpec = tween(300)
+                            ) togetherWith slideOutOfContainer(
+                                towards = direction, animationSpec = tween(300)
+                            )
+                        }
                     },
                     modifier = Modifier.fillMaxSize()
                 ) { targetTabIndex ->

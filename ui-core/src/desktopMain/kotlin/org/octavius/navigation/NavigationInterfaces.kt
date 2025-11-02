@@ -113,6 +113,13 @@ data class TabOptions(
  */
 interface Tab {
 
+    /**
+     * Unikalny, stabilny identyfikator tekstowy zakładki.
+     * Używany do identyfikacji w całym systemie, w tym przez zewnętrzne
+     * zdarzenia nawigacyjne (np. z API).
+     * Przykład: "games", "settings".
+     */
+    val id: String
 
     /** 
      * Opcje konfiguracyjne zakładki.
@@ -122,12 +129,7 @@ interface Tab {
     val options: TabOptions
         @Composable get
 
-    /** 
-     * Unikalny indeks zakładki używany przez AppRouter do identyfikacji.
-     * 
-     * Powinien być unikatowy w całej aplikacji (0, 1, 2...).
-     */
-    val index: UShort
+
 
     /** 
      * Zwraca pierwszy ekran wyświetlany po przełączeniu na tę zakładkę.

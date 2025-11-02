@@ -148,7 +148,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
                             NavigationEvent.Navigate(
                                 screenId = AsianMediaFeature.ASIAN_MEDIA_FORM_SCREEN_ID,
                                 payload = payload,
-                                tabIndex = 0u
+                                tabId = "asian_media"
                             )
                         )
 
