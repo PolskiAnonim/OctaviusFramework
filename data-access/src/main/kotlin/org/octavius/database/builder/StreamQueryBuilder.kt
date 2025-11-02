@@ -1,5 +1,6 @@
 package org.octavius.database.builder
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -20,17 +21,26 @@ internal class StreamingQueryBuilder(
     private val fetchSize: Int
 ) : StreamingTerminalMethods {
 
+    companion object {
+        private val logger = KotlinLogging.logger {}
+    }
+
     private fun <T> executeStream(
         params: Map<String, Any?>,
         rowMapper: RowMapper<T>,
         action: (item: T) -> Unit
     ): DataResult<Unit> {
-        // Używamy try-catch, aby opakować wszystko w DataResult, tak jak w głównym builderze
+        // Deklarujemy zmienne na zewnątrz, aby były dostępne w `catch`
+        val originalSql = builder.buildSql()
+        var expandedSql: String? = null
+        var expandedParams: Map<String, Any?>? = null
+
         return try {
-            val sql = builder.buildSql()
-            val expanded = builder.kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-            val expandedSql = expanded.expandedSql
-            val expandedParams = expanded.expandedParams
+            val expanded = builder.kotlinToPostgresConverter.expandParametersInQuery(originalSql, params)
+            expandedSql = expanded.expandedSql
+            expandedParams = expanded.expandedParams
+
+            logger.debug { "Executing streaming query (expanded): $expandedSql with params: $expandedParams" }
 
             // Krok 2: Konwersja z :nazwa na ?
             val parsedSql = NamedParameterUtils.parseSqlStatement(expandedSql)
@@ -59,10 +69,20 @@ internal class StreamingQueryBuilder(
 
             DataResult.Success(Unit)
         } catch (e: DatabaseException) {
+            // Logujemy z pełnym kontekstem
+            logger.error(e) { "Database error executing streaming query: $expandedSql with params: $expandedParams" }
             DataResult.Failure(e)
         } catch (e: Exception) {
-            // Standardowe opakowywanie nieznanych wyjątków
-            DataResult.Failure(QueryExecutionException("Streaming query failed.", "N/A", params, e))
+            // Logujemy i tworzymy wyjątek z pełnym kontekstem
+            logger.error(e) { "Unexpected error executing streaming query: $expandedSql with params: $expandedParams" }
+            DataResult.Failure(
+                QueryExecutionException(
+                    "Streaming query failed.",
+                    sql = expandedSql ?: originalSql,
+                    params = expandedParams ?: params,
+                    cause = e
+                )
+            )
         }
     }
 
@@ -85,8 +105,12 @@ internal class StreamingQueryBuilder(
             // Używamy withContext(Dispatchers.IO), bo operacje JDBC są blokujące
             // i MUSZĄ być wykonane na wątku przeznaczonym do takich operacji.
             withContext(Dispatchers.IO) {
-                executeStream(params, builder.rowMappers.ColumnNameMapper()) { item ->
+                val result = executeStream(params, builder.rowMappers.ColumnNameMapper()) { item ->
                     trySend(item)
+                }
+                // Jeśli executeStream zwróci błąd, zamknij Flow z tym błędem
+                if (result is DataResult.Failure) {
+                    close(result.error)
                 }
             }
         }
@@ -100,8 +124,12 @@ internal class StreamingQueryBuilder(
             // Używamy withContext(Dispatchers.IO), bo operacje JDBC są blokujące
             // i MUSZĄ być wykonane na wątku przeznaczonym do takich operacji.
             withContext(Dispatchers.IO) {
-                executeStream(params, builder.rowMappers.DataObjectMapper(kClass)) { item ->
+                val result = executeStream(params, builder.rowMappers.DataObjectMapper(kClass)) { item ->
                     trySend(item)
+                }
+                // Jeśli executeStream zwróci błąd, zamknij Flow z tym błędem
+                if (result is DataResult.Failure) {
+                    close(result.error)
                 }
             }
         }

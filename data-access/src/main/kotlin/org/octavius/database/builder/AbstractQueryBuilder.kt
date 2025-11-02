@@ -233,7 +233,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
             DataResult.Failure(
                 QueryExecutionException(
                     "Unexpected error during query execution.",
-                    sql = expandedSql ?: "SQL not generated",
+                    sql = expandedSql ?: sql,
                     params = expandedParams ?: params,
                     cause = e
                 )
