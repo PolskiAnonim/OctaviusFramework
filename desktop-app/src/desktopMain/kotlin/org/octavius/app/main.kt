@@ -121,12 +121,17 @@ fun main() {
                 LaunchedEffect(Unit) {
                     NavigationEventBus.events.collectLatest { event ->
                         when (event) {
-                            is NavigationEvent.SwitchToTab -> AppRouter.switchToTab(event.tabIndex)
-                            is NavigationEvent.NavigateToScreen -> {
-                                screenFactories[event.screenId]?.let { factory ->
-                                    val screen = factory.create(event.payload)
-                                    AppRouter.navigateTo(screen)
-                                } ?: println("Error: No factory for screenId: ${event.screenId}")
+                            is NavigationEvent.Navigate -> {
+                                // Jeśli screenId jest null, tylko przełączamy zakładkę
+                                if (event.screenId == null) {
+                                    AppRouter.switchToTab(event.tabIndex)
+                                } else {
+                                    // Jeśli screenId jest podany, tworzymy ekran i nawigujemy
+                                    screenFactories[event.screenId]?.let { factory ->
+                                        val screen = factory.create(event.payload)
+                                        AppRouter.navigateTo(screen, event.tabIndex)
+                                    } ?: println("Error: No factory for screenId: ${event.screenId}")
+                                }
                             }
                         }
 

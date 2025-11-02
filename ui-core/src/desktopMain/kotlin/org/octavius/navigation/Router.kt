@@ -159,6 +159,38 @@ object AppRouter {
     }
 
     /**
+     * Atomowo przełącza zakładkę i nawiguje do nowego ekranu.
+     *
+     * Ta metoda najpierw zmienia aktywną zakładkę na tę o podanym `tabIndex`,
+     * a następnie dodaje ekran na szczyt stosu tej zakładki.
+     * Cała operacja jest wykonana w jednym kroku, aby zapobiec niechcianym
+     * stanom pośrednim w UI.
+     *
+     * @param screen Nowy ekran do wyświetlenia.
+     * @param tabIndex Indeks zakładki, na której ma się odbyć nawigacja.
+     */
+    fun navigateTo(screen: Screen, tabIndex: UShort) {
+        _state.update { currentState ->
+            // Krok 1: Przygotuj stan z nową aktywną zakładką
+            val stateWithSwitchedTab = currentState!!.copy(
+                activeTab = initialTabs.first { it.index == tabIndex }
+            )
+
+            // Krok 2: Dodaj nowy ekran do stosu tej (teraz aktywnej) zakładki
+            val targetStack = stateWithSwitchedTab.tabStacks[tabIndex]!!
+
+            if (targetStack.last()::class == screen::class) {
+                return@update stateWithSwitchedTab // Tylko przełącz zakładkę, nie duplikuj ekranu
+            }
+
+            val newStack = targetStack + screen
+            stateWithSwitchedTab.copy(
+                tabStacks = stateWithSwitchedTab.tabStacks + (tabIndex to newStack)
+            )
+        }
+    }
+
+    /**
      * Cofa do poprzedniego ekranu na aktywnej zakładce.
      *
      * Usuwa ostatni ekran ze stosu nawigacji aktywnej zakładki. Jeśli stos zawiera

@@ -4,23 +4,24 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * Kontrakt dla zdarzeń nawigacyjnych, które mogą być wywołane z zewnątrz (np. przez API,
- * inny moduł).
+ * Kontrakt dla zdarzeń nawigacyjnych, które mogą być wywołane z zewnątrz (np. przez API).
  */
 sealed interface NavigationEvent {
     /**
-     * Zdarzenie żądania przełączenia na konkretną zakładkę.
+     * Zdarzenie żądania nawigacji. Może oznaczać:
+     * 1. Przełączenie na zakładkę (jeśli `screenId` jest `null`).
+     * 2. Przełączenie na zakładkę ORAZ nawigację do konkretnego ekranu na tej zakładce
+     *    (jeśli `screenId` jest podany).
+     *
      * @property tabIndex Indeks zakładki docelowej.
-     */
-    data class SwitchToTab(val tabIndex: UShort) : NavigationEvent
-
-    /**
-     * Zdarzenie żądania nawigacji do konkretnego ekranu w ramach stosu nawigacji
-     * aktywnej zakładki.
-     * @property screenId Unikalny identyfikator ekranu docelowego.
+     * @property screenId Opcjonalny, unikalny identyfikator ekranu docelowego.
      * @property payload Opcjonalne dane do przekazania do ekranu docelowego.
      */
-    data class NavigateToScreen(val screenId: String, val payload: Map<String, Any>?) : NavigationEvent
+    data class Navigate(
+        val tabIndex: UShort,
+        val screenId: String? = null,
+        val payload: Map<String, Any>? = null
+    ) : NavigationEvent
 }
 
 /**

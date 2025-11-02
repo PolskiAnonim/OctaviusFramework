@@ -145,9 +145,10 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
                         val payload = mapOf("entityId" to newId)
                         NavigationEventBus.post(
-                            NavigationEvent.NavigateToScreen(
+                            NavigationEvent.Navigate(
                                 screenId = AsianMediaFeature.ASIAN_MEDIA_FORM_SCREEN_ID,
-                                payload = payload
+                                payload = payload,
+                                tabIndex = 0u
                             )
                         )
 
