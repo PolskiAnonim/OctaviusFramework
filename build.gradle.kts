@@ -1,3 +1,7 @@
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.nio.charset.StandardCharsets
+
 plugins {
     // this is necessary to avoid the plugins to be loaded multiple times
     // in each subproject's classloader
@@ -21,6 +25,7 @@ fun extractKeysFromJson(jsonContent: String, prefix: String, keys: MutableSet<St
                     extractKeysFromJson(groovy.json.JsonBuilder(value).toString(), fullKey, keys)
                 }
             }
+
             is String -> {
                 keys.add(fullKey)
             }
@@ -44,7 +49,8 @@ tasks.register("validateTranslations") {
         subprojects.forEach { project ->
             logger.lifecycle("Scanning project: ${project.name}")
 
-            val potentialResourceDirs = listOf("src/desktopMain/resources", "src/commonMain/resources", "src/main/resources")
+            val potentialResourceDirs =
+                listOf("src/desktopMain/resources", "src/commonMain/resources", "src/main/resources")
             val potentialSourceDirs = listOf("src/desktopMain/kotlin", "src/commonMain/kotlin", "src/main/kotlin")
 
             potentialResourceDirs.forEach { dir ->
@@ -131,27 +137,3 @@ tasks.register("validateTranslations") {
     }
 }
 
-tasks.register<Copy>("assembleBrowserExtension") {
-    group = "Octavius Extension"
-    description = "Assembles the final browser extension into build/extension"
-
-    // Krok 1: Wyczyść stary katalog
-    delete(project.buildDir.resolve("extension"))
-
-    // Krok 2: Skopiuj wszystkie pliki z modułu popup
-    from(project(":extension-popup").buildDir.resolve("dist/js/productionExecutable"))
-
-    // Krok 3: Skopiuj tylko plik JS z modułu content-script
-    from(project(":extension-content-script").buildDir.resolve("dist/js/productionExecutable")) {
-        include("extension-content-script.js") // Kopiujemy tylko to, co potrzebne
-    }
-
-    // Krok 4: Zależności - upewnij się, że oba moduły są zbudowane przed kopiowaniem
-    dependsOn(
-        project(":extension-popup").tasks.named("jsBrowserDistribution"),
-        project(":extension-content-script").tasks.named("jsBrowserDistribution")
-    )
-
-    // Krok 5: Określ katalog docelowy
-    into(project.buildDir.resolve("extension"))
-}

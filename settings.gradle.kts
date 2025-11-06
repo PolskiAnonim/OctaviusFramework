@@ -42,6 +42,8 @@ include(
     ":core",
     ":api-contract",
     ":feature-contract",
-    ":extension-content-script",
-    ":extension-popup"
+    ":browser-extension",
+    ":browser-extension:content-script",
+    ":browser-extension:popup",
+    ":browser-extension:chrome-api",
 )
