@@ -19,14 +19,12 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun getReportName(): String = "games"
 
-    override fun buildQuery(): Query = Query(
-        """
-            SELECT games.id, games.name AS game_name, series.name AS series_name, games.status
-            FROM games
-            LEFT JOIN series ON series.id = games.series
-            ORDER BY games.name
-            """.trimIndent()
-    )
+    override fun buildQuery(): Query {
+        val query =
+            dataAccess.select("games.id", "games.name AS game_name", "series.name AS series_name", "games.status")
+                .from("games LEFT JOIN series ON series.id = games.series").toSql()
+        return Query(query)
+    }
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
         "game_name" to StringColumn(T.get("games.general.gameName")),
