@@ -97,7 +97,7 @@ fun App() {
                 // Sekcja kontrolek (stała na dole)
                 var selectedType by remember(detectedType) { mutableStateOf(detectedType) }
                 OutlinedTextField(
-                    value = selectedType.name,
+                    value = selectedType.toDisplayString(),
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Typ publikacji") },
