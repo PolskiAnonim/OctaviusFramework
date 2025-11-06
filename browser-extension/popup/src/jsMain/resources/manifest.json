@@ -11,7 +11,7 @@
         "https://www.mangaupdates.com/*"
       ],
       "js": [
-        "extension-content-script.js"
+        "content-script.js"
       ]
     }
   ],

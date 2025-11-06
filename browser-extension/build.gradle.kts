@@ -1,18 +1,18 @@
 import org.octavius.gradle.registerMergeTranslationsTask
 
-evaluationDependsOn(":extension-popup")
+evaluationDependsOn(":browser-extension:popup")
 
 plugins {
     base
 }
 
 // Pobieramy konfigurację `jsRuntimeClasspath` Z PROJEKTU `:extension-popup`
-val popupConfiguration = project(":extension-popup").configurations.getByName("jsRuntimeClasspath")
+val popupConfiguration = project(":browser-extension:popup").configurations.getByName("jsRuntimeClasspath")
 
 // Rejestrujemy task, przekazując obiekt konfiguracji oraz projekt, który ma być skanowany
 val mergeExtensionTranslations = registerMergeTranslationsTask(
     configuration = popupConfiguration,
-    projectsToScanInitially = setOf(project(":extension-popup"))
+    projectsToScanInitially = setOf(project(":browser-extension:popup"))
 )
 
 // 2. Główny task do składania wtyczki
@@ -22,8 +22,8 @@ tasks.register("assembleBrowserExtension") {
 
     // Zależności: najpierw budujemy JS, potem mergujemy tłumaczenia
     dependsOn(
-        project(":extension-popup").tasks.named("jsBrowserProductionWebpack"),
-        project(":extension-content-script").tasks.named("jsBrowserProductionWebpack"),
+        project(":browser-extension:popup").tasks.named("jsBrowserProductionWebpack"),
+        project(":browser-extension:content-script").tasks.named("jsBrowserProductionWebpack"),
         mergeExtensionTranslations // <--- zależność od taska zdefiniowana poprawnie
     )
 
@@ -40,13 +40,13 @@ tasks.register("assembleBrowserExtension") {
 
         // Użyjmy wbudowanego w Gradle API do kopiowania - jest bardziej zwięzłe
         copy {
-            from(project(":extension-popup").buildDir.resolve("kotlin-webpack/js/productionExecutable"))
+            from(project(":browser-extension:popup").buildDir.resolve("kotlin-webpack/js/productionExecutable"))
             into(extensionDir)
             println("  -> Copied files from popup JS build")
         }
         copy {
-            from(project(":extension-content-script").buildDir.resolve("kotlin-webpack/js/productionExecutable")) {
-                include("extension-content-script.js")
+            from(project(":browser-extension:content-script").buildDir.resolve("kotlin-webpack/js/productionExecutable")) {
+                include("content-script.js")
             }
             into(extensionDir)
             println("  -> Copied files from content-script JS build")
@@ -58,7 +58,7 @@ tasks.register("assembleBrowserExtension") {
             println("  -> Copied merged translations")
         }
         copy {
-            from(project(":extension-popup").file("src/jsMain/resources"))
+            from(project(":browser-extension:popup").file("src/jsMain/resources"))
             into(extensionDir)
             println("  -> Copied static resources")
         }
