@@ -33,6 +33,12 @@ internal class DatabaseUpdateQueryBuilder(
         return this.setExpressions(placeholders)
     }
 
+    override fun setValues(values: List<String>): UpdateQueryBuilder {
+        // Generujemy mapę placeholderów dla istniejącej metody setExpressions
+        val placeholders = values.associateWith { key -> ":$key" }
+        return this.setExpressions(placeholders)
+    }
+
     override fun setValue(column: String): UpdateQueryBuilder {
         return this.setExpression(column, ":$column")
     }

@@ -104,6 +104,12 @@ interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMet
     fun setValues(values: Map<String, Any?>): UpdateQueryBuilder
 
     /**
+     * Ustawia wartości do aktualizacji. Automatycznie generuje placeholdery
+     * w formacie ":value" dla każdej wartości na liście.
+     */
+    fun setValues(values: List<String>): UpdateQueryBuilder
+
+    /**
      * Dodaje do zapytania UPDATE klauzulę FROM.
      */
     fun from(tables: String): UpdateQueryBuilder
@@ -153,6 +159,12 @@ interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMet
      * @param data Mapa danych (kolumna -> wartość).
      */
     fun values(data: Map<String, Any?>): InsertQueryBuilder
+
+    /**
+     * Definiuje wartości do wstawienia, automatycznie generując placeholdery
+     * w formacie ":value" dla każdej wartości na liście.
+     */
+    fun values(values: List<String>): InsertQueryBuilder
 
     /**
      * Definiuje pojedynczą wartość, automatycznie generując placeholder.

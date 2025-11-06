@@ -34,6 +34,12 @@ internal class DatabaseInsertQueryBuilder(
         return this.valuesExpressions(placeholders)
     }
 
+    override fun values(values: List<String>): InsertQueryBuilder {
+        val placeholders = values.associateWith { key -> ":$key" }
+        // Delegujemy do metody niskopoziomowej
+        return this.valuesExpressions(placeholders)
+    }
+
     override fun value(column: String): InsertQueryBuilder {
         // Delegujemy do metody niskopoziomowej
         return this.valueExpression(column, ":$column")
