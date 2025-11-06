@@ -12,6 +12,22 @@
     "save": "Zapisz",
     "select": "Wybierz"
   },
+  "asianMedia": {
+    "publicationLanguage": {
+      "chinese": "Chiński",
+      "japanese": "Japoński",
+      "korean": "Koreański"
+    },
+    "publicationType": {
+      "lightNovel": "Light Novel",
+      "manga": "Manga",
+      "manhua": "Manhua",
+      "manhwa": "Manhwa",
+      "publishedNovel": "Published Novel",
+      "webNovel": "Web Novel",
+      "webtoon": "Webtoon"
+    }
+  },
   "app": {
     "name": "Octavius"
   },
