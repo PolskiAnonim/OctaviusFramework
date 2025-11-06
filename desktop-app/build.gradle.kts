@@ -1,6 +1,7 @@
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.octavius.gradle.registerMergeTranslationsTask
 import java.nio.charset.StandardCharsets
 
 plugins {
@@ -71,88 +72,10 @@ compose.desktop {
     }
 }
 
-// Rekursywna funkcja do głębokiego łączenia obiektów JSON
-fun mergeJsonMaps(target: MutableMap<String, Any?>, source: Map<String, Any?>) {
-    for ((key, sourceValue) in source) {
-        val targetValue = target[key]
-        if (sourceValue is Map<*, *> && targetValue is Map<*, *>) {
-            @Suppress("UNCHECKED_CAST")
-            val newTarget = (targetValue as Map<String, Any?>).toMutableMap()
-            @Suppress("UNCHECKED_CAST")
-            mergeJsonMaps(newTarget, sourceValue as Map<String, Any?>)
-            target[key] = newTarget
-        } else {
-            target[key] = sourceValue
-        }
-    }
-}
-
-val mergeTranslations by tasks.registering {
-    group = "build"
-    description = "Merges translation files from all module dependencies."
-
-    val outputDir = project.layout.buildDirectory.dir("generated/translations")
-    outputs.dir(outputDir)
-
-    // Definiujemy, że nasze zadanie zależy od plików zasobów wszystkich zależności.
-    // To pomaga Gradle'owi w inteligentnym cache'owaniu.
-    val configuration = project.configurations.getByName("desktopRuntimeClasspath")
-    inputs.files(configuration)
-
-    doLast {
-        val gson = Gson()
-        val mapType = object : TypeToken<Map<String, Any?>>() {}.type
-        val mergedByLang = mutableMapOf<String, MutableMap<String, Any?>>()
-
-        // Zbieramy listę projektów do przeskanowania w sposób zalecany przez Gradle
-        val projectsToScan = mutableSetOf(project) // Zawsze dodajemy bieżący projekt
-        configuration.incoming.resolutionResult.allComponents.forEach { component ->
-            val componentId = component.id
-            // Interesują nas tylko komponenty, które są innymi modułami w naszym projekcie
-            if (componentId is ProjectComponentIdentifier) {
-                val dependencyProject = project.project(componentId.projectPath)
-                projectsToScan.add(dependencyProject)
-            }
-        }
-
-        logger.info("Scanning projects for translations: ${projectsToScan.map { it.name }}")
-
-        projectsToScan.forEach { depProject ->
-            // Przeszukujemy katalog src w każdym module
-            depProject.file("src").walk().forEach { file ->
-                if (file.isFile && file.name.startsWith("translations_") && file.name.endsWith(".json")) {
-                    val lang = file.name.substringAfter("translations_").substringBefore(".json")
-                    val content = file.readText(Charsets.UTF_8)
-                    if (content.isNotBlank()) {
-                        logger.info("Found translation for '$lang' in ${depProject.name}/${file.relativeTo(depProject.projectDir)}")
-                        try {
-                            val sourceMap: Map<String, Any?> = gson.fromJson(content, mapType)
-                            val targetMap = mergedByLang.getOrPut(lang) { mutableMapOf() }
-                            mergeJsonMaps(targetMap, sourceMap)
-                        } catch (e: Exception) {
-                            logger.error("Failed to parse translation file: ${file.path}", e)
-                        }
-                    }
-                }
-            }
-        }
-
-        outputDir.get().asFile.deleteRecursively()
-        outputDir.get().asFile.mkdirs()
-
-        if (mergedByLang.isEmpty()) {
-            logger.warn("No translation files were found! The application might not have any text.")
-        } else {
-            mergedByLang.forEach { (lang, mergedMap) ->
-                val finalJsonString = gson.toJson(mergedMap)
-                val outputFile = outputDir.get().file("translations_$lang.json").asFile
-                outputFile.writeText(finalJsonString, StandardCharsets.UTF_8)
-                logger.lifecycle("Successfully merged and wrote translations for '$lang' to ${outputFile.path}")
-            }
-        }
-    }
-}
-
+val mergeTranslations = registerMergeTranslationsTask(
+    configuration = configurations.getByName("desktopRuntimeClasspath")
+)
+// Upewniamy się, że zasoby są procesowane dopiero po zmergowaniu tłumaczeń
 tasks.named("desktopProcessResources") {
     dependsOn(mergeTranslations)
 }

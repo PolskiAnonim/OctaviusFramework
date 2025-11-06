@@ -1,0 +1,68 @@
+import org.octavius.gradle.registerMergeTranslationsTask
+
+evaluationDependsOn(":extension-popup")
+
+plugins {
+    base
+}
+
+// Pobieramy konfigurację `jsRuntimeClasspath` Z PROJEKTU `:extension-popup`
+val popupConfiguration = project(":extension-popup").configurations.getByName("jsRuntimeClasspath")
+
+// Rejestrujemy task, przekazując obiekt konfiguracji oraz projekt, który ma być skanowany
+val mergeExtensionTranslations = registerMergeTranslationsTask(
+    configuration = popupConfiguration,
+    projectsToScanInitially = setOf(project(":extension-popup"))
+)
+
+// 2. Główny task do składania wtyczki
+tasks.register("assembleBrowserExtension") {
+    group = "Octavius Extension"
+    description = "Assembles the final browser extension into build/extension"
+
+    // Zależności: najpierw budujemy JS, potem mergujemy tłumaczenia
+    dependsOn(
+        project(":extension-popup").tasks.named("jsBrowserProductionWebpack"),
+        project(":extension-content-script").tasks.named("jsBrowserProductionWebpack"),
+        mergeExtensionTranslations // <--- zależność od taska zdefiniowana poprawnie
+    )
+
+    val extensionDir = project.layout.buildDirectory.dir("extension")
+    outputs.dir(extensionDir)
+
+    doLast {
+        println(">>>>>> STARTING assembleBrowserExtension <<<<<<")
+
+        // 1. Czyszczenie
+        project.delete(extensionDir) // Użyjmy project.delete dla pewności
+        extensionDir.get().asFile.mkdirs()
+        println("  -> Cleaned destination directory: ${extensionDir.get().asFile.path}")
+
+        // Użyjmy wbudowanego w Gradle API do kopiowania - jest bardziej zwięzłe
+        copy {
+            from(project(":extension-popup").buildDir.resolve("kotlin-webpack/js/productionExecutable"))
+            into(extensionDir)
+            println("  -> Copied files from popup JS build")
+        }
+        copy {
+            from(project(":extension-content-script").buildDir.resolve("kotlin-webpack/js/productionExecutable")) {
+                include("extension-content-script.js")
+            }
+            into(extensionDir)
+            println("  -> Copied files from content-script JS build")
+        }
+        copy {
+            // Używamy `outputs` z naszego taska, żeby mieć pewność, że ścieżka jest poprawna
+            from(mergeExtensionTranslations.get().outputs.files.singleFile)
+            into(extensionDir)
+            println("  -> Copied merged translations")
+        }
+        copy {
+            from(project(":extension-popup").file("src/jsMain/resources"))
+            into(extensionDir)
+            println("  -> Copied static resources")
+        }
+
+        println(">>>>>> FINISHED. Extension is ready in: ${extensionDir.get().asFile.path} <<<<<<")
+    }
+}
