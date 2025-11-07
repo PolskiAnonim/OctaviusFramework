@@ -6,7 +6,7 @@
 -- !!! Powienien być używany w absolutnej ostateczności, prawdopodobnie w 90% przypadków dedykowany typ COMPOSITE będzie lepszy
 CREATE TYPE dynamic_dto AS (
     type_name text,
-    data jsonb
+    data_payload jsonb
 );
 
 CREATE OR REPLACE FUNCTION dynamic_dto(p_type_name TEXT, p_data JSONB)

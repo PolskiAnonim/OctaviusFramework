@@ -89,7 +89,7 @@ inline fun <reified T : Any> TerminalReturningMethods.toSingleOf(params: Map<Str
 /** Interfejs zawierający metodę terminalną modyfikującą*/
 interface TerminalModificationMethods {
     /** Wykonuje zapytanie i zwraca liczbę wierszy która została zaktualizowana */
-    fun execute(params: Map<String, Any?>): DataResult<Int>
+    fun execute(params: Map<String, Any?> = emptyMap()): DataResult<Int>
 }
 
 fun TerminalModificationMethods.execute(vararg params: Pair<String, Any?>): DataResult<Int> =

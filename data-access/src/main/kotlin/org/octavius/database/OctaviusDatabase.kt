@@ -54,14 +54,16 @@ object OctaviusDatabase {
         return fromDataSource(
             dataSource = dataSource,
             packagesToScan = config.packagesToScan,
-            dbSchemas = config.dbSchemas
+            dbSchemas = config.dbSchemas,
+            allowToSaveDynamicallyMappableClassesAsDynamicDto = config.allowToSaveDynamicallyMappableClassesAsDynamicDto
         )
     }
 
     fun fromDataSource(
         dataSource: DataSource,
         packagesToScan: List<String>,
-        dbSchemas: List<String>
+        dbSchemas: List<String>,
+        allowToSaveDynamicallyMappableClassesAsDynamicDto: Boolean = false
     ): DataAccess {
         logger.info { "Initializing OctaviusDatabase..." }
 
@@ -83,7 +85,7 @@ object OctaviusDatabase {
         logger.debug { "Type registry loaded successfully in ${typeRegistryLoadTime.inWholeMilliseconds}ms" }
 
         logger.debug { "Initializing converters and mappers" }
-        val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
+        val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry, allowToSaveDynamicallyMappableClassesAsDynamicDto)
         val resultSetValueExtractor = ResultSetValueExtractor(typeRegistry)
         val rowMappers = RowMappers(resultSetValueExtractor)
 

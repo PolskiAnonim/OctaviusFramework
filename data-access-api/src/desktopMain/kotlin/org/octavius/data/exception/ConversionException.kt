@@ -9,7 +9,8 @@ enum class ConversionExceptionMessage {
     // Błędy mapowania
     OBJECT_MAPPING_FAILED,      // Ogólny błąd podczas tworzenia instancji data class
     MISSING_REQUIRED_PROPERTY,  // Brak w danych klucza dla wymaganego pola w data class
-    JSON_DESERIALIZATION_FAILED // Błąd deserializacji JSONa w dynamic_dto
+    JSON_DESERIALIZATION_FAILED, // Błąd deserializacji JSONa w dynamic_dto
+    JSON_SERIALIZATION_FAILED   // Błąd serializacji obiektu do JSON na potrzeby dynamic_dto
 }
 
 private fun generateDeveloperMessage(
@@ -28,6 +29,8 @@ private fun generateDeveloperMessage(
         ConversionExceptionMessage.UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY ->
             "Natywne tablice JDBC (Array<*>) nie obsługują typów złożonych (np. data class, List, Map). " +
                     "Wykryto typ: '${targetType}'. Użyj List<DataClass>, aby biblioteka mogła wygenerować składnię ARRAY[ROW(...)]."
+        ConversionExceptionMessage.JSON_SERIALIZATION_FAILED -> "Nie udało się zserializować obiektu klasy '$targetType' do formatu JSON. " +
+                "Upewnij się, że klasa i wszystkie jej zagnieżdżone typy mają adnotację @Serializable."
     }
 }
 

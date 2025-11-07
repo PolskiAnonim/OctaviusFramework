@@ -2,7 +2,11 @@ package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.serializer
 import org.octavius.data.OffsetTime
 import org.octavius.data.PgTyped
 import org.octavius.data.annotation.EnumCaseConvention
@@ -13,6 +17,7 @@ import org.octavius.data.util.toCamelCase
 import org.octavius.data.util.toSnakeCase
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
+import kotlin.math.log
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -40,7 +45,9 @@ data class ExpandedQuery(
  * - `JsonObject` -> `JSONB`
  * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
  */
-internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry) {
+internal class KotlinToPostgresConverter(
+    private val typeRegistry: TypeRegistry, private val allowDynamicDtoSerialization: Boolean = false
+) {
     companion object {
         private val logger = KotlinLogging.logger {}
     }
@@ -76,7 +83,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
      * Przetwarza zapytanie SQL, rozszerzając parametry złożone na konstrukcje PostgreSQL.
      *
      * Obsługuje:
-     * - List<T> -> ARRAY[...] 
+     * - List<T> -> ARRAY[...]
      * - data class -> ROW(...)::type_name
      * - Enum -> PGobject z odpowiednią konwencją nazw
      * - JsonObject -> JSONB
@@ -130,22 +137,88 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
             return ":$paramName" to mapOf(paramName to null)
         }
 
+        // Krok 1: Obsługa typów opakowujących, które muszą być przetworzone jako pierwsze.
+        if (paramValue is PgTyped) {
+            val (innerPlaceholder, innerParams) = expandParameter(paramName, paramValue.value)
+            val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
+            return finalPlaceholder to innerParams
+        }
+
+        // Krok 2: Szybka konwersja dla znanych, płaskich typów z kotlinx.datetime, itp.
         KOTLIN_TO_JDBC_CONVERTERS[paramValue::class]?.let { converter ->
             return ":$paramName" to mapOf(paramName to converter(paramValue))
         }
 
         return when {
-            paramValue is PgTyped -> {
-                val (innerPlaceholder, innerParams) = expandParameter(paramName, paramValue.value)
-                // 2. Do wyniku (który może być już np. "ARRAY[:p1, :p2]") doklej rzutowanie.
-                val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
-                finalPlaceholder to innerParams
+            isDataClass(paramValue) -> {
+                // Najpierw spróbuj "diabolicznej" magii jako specjalnego przypadku.
+                tryExpandAsDynamicDto(paramName, paramValue)
+                // Jeśli się nie uda, użyj standardowej konwersji do ROW().
+                    ?: expandRowParameter(paramName, paramValue)
             }
+            // Pozostałe typy złożone
             paramValue is Array<*> -> validateTypedArrayParameter(paramName, paramValue)
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
-            isDataClass(paramValue) -> expandRowParameter(paramName, paramValue)
             paramValue is Enum<*> -> createEnumParameter(paramName, paramValue)
+            // Krok 4: Fallback dla wszystkich innych typów prostych (Int, String, etc.)
             else -> ":$paramName" to mapOf(paramName to paramValue)
+        }
+    }
+
+    /**
+     * Próbuje przekonwertować podaną wartość na wrapper `DynamicDto`, jeśli jest to
+     * dozwolone w konfiguracji i jeśli klasa jest oznaczona adnotacją @DynamicallyMappable.
+     *
+     * @return Wynik ekspansji jako `Pair` lub `null`, jeśli konwersja nie jest możliwa/dozwolona.
+     */
+    @OptIn(InternalSerializationApi::class)
+    private fun tryExpandAsDynamicDto(
+        paramName: String,
+        paramValue: Any
+    ): Pair<String, Map<String, Any?>>? {
+        // Warunek wstępny: funkcja musi być włączona
+        if (!allowDynamicDtoSerialization) {
+            return null
+        }
+
+        // Sprawdź w rejestrze, czy ta klasa jest oznaczona jako @DynamicallyMappable
+        val dynamicTypeName = typeRegistry.getDynamicTypeNameForClass(paramValue::class)
+            ?: return null // Jeśli nie jest, to nie nasza działka
+
+        // Jeśli jest, wykonaj "diaboliczną" magię
+        try {
+            logger.trace { "Dynamically converting ${paramValue::class.simpleName} to dynamic_dto '$dynamicTypeName'" }
+
+
+            // 1. Pobieramy serializer dla konkretnej klasy obiektu.
+            //    To wymaga InternalSerializationApi, co jest OK w kodzie frameworka.
+            val serializer = paramValue::class.serializer()
+
+            // 2. Musimy wykonać rzutowanie, aby kompilator dopasował typy.
+            //    Jest to bezpieczne, bo `paramValue` jest instancją klasy, z której pochodzi serializer.
+            val untypedSerializer = serializer as KSerializer<Any>
+
+            // 3. Wywołujemy `encodeToString` z jawnym serializerem.
+            val jsonString = Json.encodeToString(untypedSerializer, paramValue)
+            val jsonObject = Json.parseToJsonElement(jsonString) as JsonObject
+
+            // Stwórz obiekt-wrapper DynamicDto
+            val dynamicDtoWrapper = DynamicDto(
+                typeName = dynamicTypeName,
+                dataPayload = jsonObject
+            )
+
+            // Rekurencyjnie wywołaj expandParameter na tym wrapperze.
+            // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgType.
+            return expandParameter(paramName, dynamicDtoWrapper)
+        } catch (e: Exception) {
+            val ex = ConversionException(
+                messageEnum = ConversionExceptionMessage.JSON_SERIALIZATION_FAILED,
+                targetType = paramValue::class.qualifiedName,
+                cause = e
+            )
+            logger.error(ex) { ex }
+            throw ex
         }
     }
 
@@ -188,7 +261,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
 
         val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
         val convention = typeInfo.enumConvention
-        
+
         logger.trace { "Converting enum value '${enumValue.name}' using convention: $convention" }
         val finalValue = when (convention) {
             EnumCaseConvention.SNAKE_CASE_LOWER -> enumValue.name.toSnakeCase().lowercase()
@@ -197,7 +270,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
             EnumCaseConvention.CAMEL_CASE -> enumValue.name.toCamelCase()
             EnumCaseConvention.AS_IS -> enumValue.name
         }
-        
+
         logger.trace { "Enum value converted to: '$finalValue' with type: $dbTypeName" }
         val pgObject = PGobject().apply {
             value = finalValue
@@ -218,7 +291,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
      */
     private fun expandArrayParameter(paramName: String, arrayValue: List<*>): Pair<String, Map<String, Any?>> {
         logger.trace { "Expanding array parameter '$paramName' with ${arrayValue.size} elements" }
-        
+
         if (arrayValue.isEmpty()) {
             logger.trace { "Array parameter '$paramName' is empty, using empty array literal" }
             return "'{}'" to emptyMap() // Pusta tablica PostgreSQL
@@ -255,7 +328,7 @@ internal class KotlinToPostgresConverter(private val typeRegistry: TypeRegistry)
         // 1. Pobierz informacje o typie z rejestru (bez zmian)
         val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
         val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
-        
+
         logger.trace { "Found database type '$dbTypeName' with ${typeInfo.attributes.size} attributes" }
 
         val valueMap = compositeValue.toMap()

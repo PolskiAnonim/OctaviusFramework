@@ -97,8 +97,8 @@ internal class TypeRegistryLoader(
         try {
             logger.debug { "Scanning packages for annotations: ${packagesToScan.joinToString()}" }
             ClassGraph()
-                .enableAllInfo()
-                .acceptPackages(*packagesToScan.toTypedArray())
+                .enableAllInfo()                    // DynamicDto
+                .acceptPackages("org.octavius.database.type", *packagesToScan.toTypedArray())
                 .scan().use { scanResult ->
                     // Przetwarzamy klasy z @PgType
                     scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->

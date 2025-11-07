@@ -33,6 +33,19 @@ internal class TypeRegistry(
         private val logger = KotlinLogging.logger {}
     }
 
+    private val classToDynamicTypeNameMap: Map<String, String> =
+        dynamicTypeNameToKClassMap.entries.associate { (name, kClass) ->
+            kClass.qualifiedName!! to name
+        }
+
+    /**
+     * Zwraca nazwę typu dynamicznego (np. "profile_dto") dla danej klasy Kotlina.
+     * Używane do automatycznej konwersji przy zapisie do bazy.
+     */
+    fun getDynamicTypeNameForClass(clazz: KClass<*>): String? {
+        return classToDynamicTypeNameMap[clazz.qualifiedName]
+    }
+
     /**
      * Zwraca klasę Kotlina (KClass) powiązaną z danym kluczem dynamicznego typu.
      *

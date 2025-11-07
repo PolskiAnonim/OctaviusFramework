@@ -15,6 +15,8 @@ import java.util.*
  * @property dbSchemas Lista schematów, które mają być obsługiwane.
  * @property setSearchPath Czy HikariCP ma ustawiać `search_path` przy inicjalizacji połączenia na wszystkie schematy.
  * @property packagesToScan Lista pakietów do przeskanowania przez ClassGraph w poszukiwaniu adnotacji typów.
+ * @property allowToSaveDynamicallyMappableClassesAsDynamicDto Umożliwia rozwijanie i zapis klas oznaczonych jako @DynamicallyMappable
+ * automatycznie zmieniając je na DynamicDto wewnątrz frameworka. Używać z rozwagą
  */
 data class DatabaseConfig(
     val dbUrl: String,
@@ -22,7 +24,8 @@ data class DatabaseConfig(
     val dbPassword: String,
     val dbSchemas: List<String>,
     val setSearchPath: Boolean,
-    val packagesToScan: List<String>
+    val packagesToScan: List<String>,
+    val allowToSaveDynamicallyMappableClassesAsDynamicDto: Boolean = false
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -63,6 +66,7 @@ data class DatabaseConfig(
                 ?: throw IllegalArgumentException("Missing required property 'db.packagesToScan' in '$fileName'")
             val packages = packagesString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
+            val allowToSaveDynamicallyMappableClassesAsDynamicDto = props.getProperty("db.packagesToScan").toBoolean()
 
             logger.info { "Database configuration loaded successfully" }
             logger.debug { "Database URL: '$url'" }
@@ -76,7 +80,8 @@ data class DatabaseConfig(
                 dbPassword = password,
                 dbSchemas = schemas,
                 setSearchPath = setSearchPath,
-                packagesToScan = packages
+                packagesToScan = packages,
+                allowToSaveDynamicallyMappableClassesAsDynamicDto
             )
         }
     }
