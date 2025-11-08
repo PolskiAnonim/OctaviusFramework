@@ -133,14 +133,14 @@ internal class KotlinToPostgresConverter(
      * @return Para: placeholder SQL i mapa spłaszczonych parametrów.
      */
     @OptIn(ExperimentalTime::class)
-    private fun expandParameter(paramName: String, paramValue: Any?): Pair<String, Map<String, Any?>> {
+    private fun expandParameter(paramName: String, paramValue: Any?, appendTypeCastForRow: Boolean = true): Pair<String, Map<String, Any?>> {
         if (paramValue == null) {
             return ":$paramName" to mapOf(paramName to null)
         }
 
         // Krok 1: Obsługa typów opakowujących, które muszą być przetworzone jako pierwsze.
         if (paramValue is PgTyped) {
-            val (innerPlaceholder, innerParams) = expandParameter(paramName, paramValue.value)
+            val (innerPlaceholder, innerParams) = expandParameter(paramName, paramValue.value, appendTypeCastForRow = false)
             val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
             return finalPlaceholder to innerParams
         }
@@ -152,10 +152,14 @@ internal class KotlinToPostgresConverter(
 
         return when {
             isDataClass(paramValue) -> {
-                // Najpierw spróbuj "diabolicznej" magii jako specjalnego przypadku.
-                tryExpandAsDynamicDto(paramName, paramValue)
-                // Jeśli się nie uda, użyj standardowej konwersji do ROW().
-                    ?: expandRowParameter(paramName, paramValue)
+                if (appendTypeCastForRow) {
+                    // Najpierw spróbuj "diabolicznej" magii jako specjalnego przypadku
+                    tryExpandAsDynamicDto(paramName, paramValue)
+                    // Jeśli się nie uda, użyj standardowej konwersji do ROW().
+                        ?: expandRowParameter(paramName, paramValue)
+                } else {
+                    expandRowParameter(paramName, paramValue, appendTypeCastForRow)
+                }
             }
             // Pozostałe typy złożone
             paramValue is Array<*> -> validateTypedArrayParameter(paramName, paramValue)
@@ -300,7 +304,7 @@ internal class KotlinToPostgresConverter(
      * @return Para: placeholder ROW(...)::type_name i mapa parametrów pól.
      * @throws org.octavius.data.exception.TypeRegistryException jeśli klasa nie jest zarejestrowana.
      */
-    private fun expandRowParameter(paramName: String, compositeValue: Any): Pair<String, Map<String, Any?>> {
+    private fun expandRowParameter(paramName: String, compositeValue: Any, appendTypeCast: Boolean = true): Pair<String, Map<String, Any?>> {
         val kClass = compositeValue::class
         logger.trace { "Expanding row parameter '$paramName' for class ${kClass.simpleName}" }
 
@@ -325,7 +329,11 @@ internal class KotlinToPostgresConverter(
             placeholder
         }
 
-        val rowPlaceholder = "ROW(${placeholders.joinToString(", ")})::$dbTypeName"
+        val rowPlaceholder = if (appendTypeCast) {
+            "ROW(${placeholders.joinToString(", ")})::$dbTypeName"
+        } else {
+            "ROW(${placeholders.joinToString(", ")})"
+        }
         logger.trace { "Row parameter '$paramName' expanded to: $rowPlaceholder" }
 
         return rowPlaceholder to expandedParams
