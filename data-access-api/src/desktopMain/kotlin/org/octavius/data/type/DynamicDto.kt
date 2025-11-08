@@ -32,8 +32,9 @@ import kotlin.reflect.full.findAnnotation
  * @property dataPayload Obiekt zserializowany do postaci [JsonObject].
  * @see DynamicallyMappable
  */
+@ConsistentCopyVisibility
 @PgType(name = "dynamic_dto")
-data class DynamicDto(
+data class DynamicDto private constructor(
     val typeName: String,
     val dataPayload: JsonObject
 ) {
@@ -52,6 +53,7 @@ data class DynamicDto(
          *                           lub jeśli wystąpi błąd podczas serializacji JSON.
          */
         fun from(value: Any): DynamicDto {
+            @Suppress("UNCHECKED_CAST")
             val kClass = value::class as KClass<Any>
             val annotation = kClass.findAnnotation<DynamicallyMappable>()
                 ?: throw ConversionException(
@@ -79,6 +81,7 @@ data class DynamicDto(
         @OptIn(InternalSerializationApi::class)
         fun from(value: Any, typeName: String): DynamicDto {
             try {
+                @Suppress("UNCHECKED_CAST")
                 val kClass = value::class as KClass<Any>
                 val serializer = kClass.serializer()
                 val jsonElement = Json.encodeToJsonElement(serializer, value)
