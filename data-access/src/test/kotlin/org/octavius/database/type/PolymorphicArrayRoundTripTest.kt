@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
-import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.database.DatabaseConfig
 import org.octavius.database.OctaviusDatabase

@@ -13,6 +13,7 @@ import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toMap
+import org.octavius.data.type.DynamicDto
 import org.octavius.data.util.toCamelCase
 import org.octavius.data.util.toSnakeCase
 import org.postgresql.util.PGobject
@@ -171,7 +172,6 @@ internal class KotlinToPostgresConverter(
      *
      * @return Wynik ekspansji jako `Pair` lub `null`, jeśli konwersja nie jest możliwa/dozwolona.
      */
-    @OptIn(InternalSerializationApi::class)
     private fun tryExpandAsDynamicDto(
         paramName: String,
         paramValue: Any
@@ -186,40 +186,19 @@ internal class KotlinToPostgresConverter(
             ?: return null // Jeśli nie jest, to nie nasza działka
 
         // Jeśli jest, wykonaj "diaboliczną" magię
+
+        logger.trace { "Dynamically converting ${paramValue::class.simpleName} to dynamic_dto '$dynamicTypeName'" }
+
+        val dynamicDtoWrapper: DynamicDto
         try {
-            logger.trace { "Dynamically converting ${paramValue::class.simpleName} to dynamic_dto '$dynamicTypeName'" }
-
-
-            // 1. Pobieramy serializer dla konkretnej klasy obiektu.
-            //    To wymaga InternalSerializationApi, co jest OK w kodzie frameworka.
-            val serializer = paramValue::class.serializer()
-
-            // 2. Musimy wykonać rzutowanie, aby kompilator dopasował typy.
-            //    Jest to bezpieczne, bo `paramValue` jest instancją klasy, z której pochodzi serializer.
-            val untypedSerializer = serializer as KSerializer<Any>
-
-            // 3. Wywołujemy `encodeToString` z jawnym serializerem.
-            val jsonString = Json.encodeToString(untypedSerializer, paramValue)
-            val jsonObject = Json.parseToJsonElement(jsonString) as JsonObject
-
-            // Stwórz obiekt-wrapper DynamicDto
-            val dynamicDtoWrapper = DynamicDto(
-                typeName = dynamicTypeName,
-                dataPayload = jsonObject
-            )
-
-            // Rekurencyjnie wywołaj expandParameter na tym wrapperze.
-            // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgType.
-            return expandParameter(paramName, dynamicDtoWrapper)
-        } catch (e: Exception) {
-            val ex = ConversionException(
-                messageEnum = ConversionExceptionMessage.JSON_SERIALIZATION_FAILED,
-                targetType = paramValue::class.qualifiedName,
-                cause = e
-            )
+            dynamicDtoWrapper = DynamicDto.from(paramValue, dynamicTypeName)
+        } catch (ex: Exception) { // To zawsze powinien być ConversionException
             logger.error(ex) { ex }
             throw ex
         }
+        // Rekurencyjnie wywołaj expandParameter na tym wrapperze.
+        // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgType.
+        return expandParameter(paramName, dynamicDtoWrapper)
     }
 
     /**
