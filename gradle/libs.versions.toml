@@ -1,7 +1,7 @@
 [versions]
 classgraph = "4.8.184"
 compose-multiplatform = "1.10.0-alpha02"
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
 kotlinx-datetime = "0.7.1"

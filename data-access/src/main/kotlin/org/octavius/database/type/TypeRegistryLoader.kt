@@ -118,9 +118,25 @@ internal class TypeRegistryLoader(
 
                     // Przetwarzamy klasy z @DynamicallyMappable
                     scanResult.getClassesWithAnnotation(DynamicallyMappable::class.java).forEach { classInfo ->
-                        val annotationInfo = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
-                        val typeName = annotationInfo.parameterValues.getValue("typeName") as String
-                        dynamicMappings.add(KotlinDynamicTypeMapping(typeName, classInfo.loadClass().kotlin))
+                        // SPRAWDZENIE 1: Czy klasa ma obie wymagane adnotacje?
+                        val hasSerializable = classInfo.hasAnnotation("kotlinx.serialization.Serializable")
+
+                        if (hasSerializable) {
+                            // Jeśli tak, kontynuuj normalną logikę
+                            val annotationInfo = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
+                            val typeName = annotationInfo.parameterValues.getValue("typeName") as String
+                            dynamicMappings.add(KotlinDynamicTypeMapping(typeName, classInfo.loadClass().kotlin))
+                        } else {
+                            // Jeśli nie, rzuć natychmiastowym, opisowym błędem!
+                            throw TypeRegistryException(
+                                messageEnum = TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
+                                typeName = classInfo.name,
+                                cause = IllegalStateException(
+                                    "Class '${classInfo.name}' is annotated with @DynamicallyMappable " +
+                                            "but is missing the required @Serializable annotation."
+                                )
+                            )
+                        }
                     }
                 }
         } catch (e: Exception) {
