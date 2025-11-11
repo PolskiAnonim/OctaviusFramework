@@ -7,7 +7,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.database.type.TypeCategory
 import org.octavius.database.type.TypeRegistry

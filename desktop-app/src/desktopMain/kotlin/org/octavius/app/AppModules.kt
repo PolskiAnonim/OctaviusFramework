@@ -1,7 +1,7 @@
 package org.octavius.app
 
 import org.koin.dsl.module
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.OctaviusDatabase
 
 /**

@@ -10,8 +10,9 @@ import org.junit.jupiter.api.TestInstance
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toField
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.OctaviusDatabase
+import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.octavius.domain.test.DynamicProfile
 import org.octavius.domain.test.UserStats
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -70,7 +71,7 @@ class PolymorphicArrayRoundTripTest {
             dataSource,
             baseConfig.packagesToScan,
             baseConfig.dbSchemas,
-            allowToSaveDynamicallyMappableClassesAsDynamicDto = true // Kluczowa flaga!
+            DynamicDtoSerializationStrategy.PREFER_DYNAMIC_DTO
         )
     }
 

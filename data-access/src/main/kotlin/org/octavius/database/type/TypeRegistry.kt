@@ -110,6 +110,13 @@ internal class TypeRegistry(
     }
 
     /**
+     * Sprawdza czy dana klasa jest zarejestrowana jako @PgType
+     */
+    fun isPgType(kClass: KClass<*>): Boolean {
+        return classFullPathToPgTypeNameMap.containsKey(kClass.qualifiedName)
+    }
+
+    /**
      * Zwraca wszystkie zarejestrowane typy PostgreSQL.
      *
      * @return Niemodyfikowalna mapa nazw typów na informacje o typach.

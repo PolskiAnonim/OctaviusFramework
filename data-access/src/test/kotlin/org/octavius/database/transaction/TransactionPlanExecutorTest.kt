@@ -17,7 +17,7 @@ import org.octavius.data.exception.StepDependencyException
 import org.octavius.data.exception.TransactionStepExecutionException
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.database.DatabaseAccess
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter

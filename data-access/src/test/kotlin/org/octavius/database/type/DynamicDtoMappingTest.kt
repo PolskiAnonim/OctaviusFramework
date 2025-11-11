@@ -13,7 +13,7 @@ import org.octavius.data.builder.toSingle
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.toDataObject
 import org.octavius.database.DatabaseAccess
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.domain.test.DynamicProfile
 import org.octavius.domain.test.UserStats

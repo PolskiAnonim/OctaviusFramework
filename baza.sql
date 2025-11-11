@@ -1,9 +1,19 @@
 -- PUBLIC
--- ponieważ postgres jest niemiły i nie zwraca metadanych dla dynamicznego ROW
--- a domeny nie mogą służyć za prosty wskaźnik do metadanych trzeba radzić sobie inaczej
--- i samemu dostarczyć metadane
--- !!!!!!! Ten kompozyt zastępuje dynamiczny ROW() w zapytaniach SQL z aplikacji który to nie jest obsługiwany
--- !!! Powienien być używany w absolutnej ostateczności, prawdopodobnie w 90% przypadków dedykowany typ COMPOSITE będzie lepszy
+-- Typ dynamic_dto: Umożliwia obsługę polimorficznych danych w PostgreSQL.
+--
+-- CEL: Służy jako uniwersalny kontener do przesyłania dynamicznych struktur danych,
+-- których typ jest określany w czasie wykonania zapytania, a nie w schemacie bazy.
+--
+-- STRUKTURA:
+--   - type_name: Klucz (np. "profile_dto"), który framework po stronie aplikacji
+--                mapuje na konkretną klasę (np. DynamicProfile).
+--   - data_payload: Właściwe dane w formacie JSONB.
+--
+-- UŻYCIE:
+-- Idealny do agregacji różnych typów danych w jednej kolumnie, np. w JOIN LATERAL
+-- lub w tablicach przechowujących heterogeniczne obiekty.
+-- Dla statycznych, dobrze zdefiniowanych struktur danych, preferowane jest użycie
+-- dedykowanego typu kompozytowego (CREATE TYPE my_static_type AS (...)).
 CREATE TYPE dynamic_dto AS (
     type_name text,
     data_payload jsonb

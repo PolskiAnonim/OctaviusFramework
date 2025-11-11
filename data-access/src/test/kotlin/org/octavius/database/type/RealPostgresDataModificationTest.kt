@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.domain.test.*
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

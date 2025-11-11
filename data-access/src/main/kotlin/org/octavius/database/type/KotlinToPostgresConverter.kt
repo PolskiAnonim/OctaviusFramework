@@ -16,6 +16,7 @@ import org.octavius.data.toMap
 import org.octavius.data.type.DynamicDto
 import org.octavius.data.util.toCamelCase
 import org.octavius.data.util.toSnakeCase
+import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
 import kotlin.math.log
@@ -47,7 +48,7 @@ data class ExpandedQuery(
  * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
  */
 internal class KotlinToPostgresConverter(
-    private val typeRegistry: TypeRegistry, private val allowDynamicDtoSerialization: Boolean = false
+    private val typeRegistry: TypeRegistry, private val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.EXPLICIT_ONLY
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -180,8 +181,12 @@ internal class KotlinToPostgresConverter(
         paramName: String,
         paramValue: Any
     ): Pair<String, Map<String, Any?>>? {
-        // Warunek wstępny: funkcja musi być włączona
-        if (!allowDynamicDtoSerialization) {
+        // 1. Sprawdź, czy strategia w ogóle pozwala na automatyczną konwersję
+        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.EXPLICIT_ONLY) {
+            return null
+        }
+        // 2. Dla strategii "bez dwuznaczności", sprawdź, czy nie ma konfliktu z @PgType
+        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS && typeRegistry.isPgType(paramValue::class)) {
             return null
         }
 

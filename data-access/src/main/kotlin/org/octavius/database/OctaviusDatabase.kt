@@ -5,6 +5,8 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import org.octavius.data.DataAccess
+import org.octavius.database.config.DatabaseConfig
+import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.octavius.database.type.*
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -55,7 +57,7 @@ object OctaviusDatabase {
             dataSource = dataSource,
             packagesToScan = config.packagesToScan,
             dbSchemas = config.dbSchemas,
-            allowToSaveDynamicallyMappableClassesAsDynamicDto = config.allowToSaveDynamicallyMappableClassesAsDynamicDto
+            dynamicDtoStrategy = config.dynamicDtoStrategy
         )
     }
 
@@ -63,7 +65,7 @@ object OctaviusDatabase {
         dataSource: DataSource,
         packagesToScan: List<String>,
         dbSchemas: List<String>,
-        allowToSaveDynamicallyMappableClassesAsDynamicDto: Boolean = false
+        dynamicDtoStrategy: DynamicDtoSerializationStrategy
     ): DataAccess {
         logger.info { "Initializing OctaviusDatabase..." }
 
@@ -85,7 +87,7 @@ object OctaviusDatabase {
         logger.debug { "Type registry loaded successfully in ${typeRegistryLoadTime.inWholeMilliseconds}ms" }
 
         logger.debug { "Initializing converters and mappers" }
-        val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry, allowToSaveDynamicallyMappableClassesAsDynamicDto)
+        val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry, dynamicDtoStrategy)
         val resultSetValueExtractor = ResultSetValueExtractor(typeRegistry)
         val rowMappers = RowMappers(resultSetValueExtractor)
 

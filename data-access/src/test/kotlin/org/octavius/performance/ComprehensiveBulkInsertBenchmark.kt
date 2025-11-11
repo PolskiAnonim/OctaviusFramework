@@ -8,7 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.octavius.data.DataAccess
 import org.octavius.data.annotation.PgType
 import org.octavius.database.DatabaseAccess
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PostgresToKotlinConverter

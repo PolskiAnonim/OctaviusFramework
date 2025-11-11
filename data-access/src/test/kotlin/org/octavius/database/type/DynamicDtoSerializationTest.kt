@@ -10,8 +10,9 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.builder.toSingleOf
 import org.octavius.data.exception.TypeRegistryException
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.OctaviusDatabase
+import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.octavius.domain.test.DynamicProfile // Użyjemy istniejącej klasy
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
@@ -58,9 +59,9 @@ class DynamicDtoSerializationTest {
         // Instancja z WŁĄCZONĄ diaboliczną funkcją
         dataAccessWithFeature = OctaviusDatabase.fromDataSource(
             dataSource,
-            baseConfig.packagesToScan + "org.octavius.database.type", // Dodajemy pakiet z DynamicDto
+            baseConfig.packagesToScan,
             baseConfig.dbSchemas,
-            allowToSaveDynamicallyMappableClassesAsDynamicDto = true
+            DynamicDtoSerializationStrategy.PREFER_DYNAMIC_DTO
         )
 
         // Instancja z WYŁĄCZONĄ diaboliczną funkcją
@@ -68,7 +69,7 @@ class DynamicDtoSerializationTest {
             dataSource,
             baseConfig.packagesToScan + "org.octavius.database.type",
             baseConfig.dbSchemas,
-            allowToSaveDynamicallyMappableClassesAsDynamicDto = false
+            DynamicDtoSerializationStrategy.EXPLICIT_ONLY
         )
     }
 

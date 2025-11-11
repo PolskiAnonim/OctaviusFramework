@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.octavius.database.DatabaseConfig
+import org.octavius.database.config.DatabaseConfig
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
