@@ -5,7 +5,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import org.octavius.data.PgStandardType
+import org.octavius.data.type.PgStandardType
 import org.octavius.data.annotation.DynamicallyMappable
 import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.annotation.PgType

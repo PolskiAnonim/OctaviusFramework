@@ -2,13 +2,9 @@ package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.serializer
 import org.octavius.data.OffsetTime
-import org.octavius.data.PgTyped
+import org.octavius.data.type.PgTyped
 import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
@@ -19,7 +15,6 @@ import org.octavius.data.util.toSnakeCase
 import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
-import kotlin.math.log
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime

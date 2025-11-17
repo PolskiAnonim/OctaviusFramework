@@ -4,7 +4,7 @@ import kotlinx.datetime.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.octavius.data.OffsetTime
-import org.octavius.data.PgStandardType
+import org.octavius.data.type.PgStandardType
 import org.postgresql.util.PGInterval
 import java.math.BigDecimal
 import java.sql.ResultSet

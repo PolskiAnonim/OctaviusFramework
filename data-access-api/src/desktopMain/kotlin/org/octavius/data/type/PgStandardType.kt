@@ -1,4 +1,4 @@
-package org.octavius.data
+package org.octavius.data.type
 
 /**
  * Reprezentuje standardowe, wbudowane typy danych PostgreSQL.
