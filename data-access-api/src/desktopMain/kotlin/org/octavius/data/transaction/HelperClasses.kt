@@ -44,18 +44,12 @@ sealed class TransactionValue {
          *
          * @param handle Uchwyt do kroku, z którego pochodzą dane.
          * @param columnName Nazwa kolumny, której wartości mają zostać pobrane.
-         * @param asTypedArray Jeśli `true`, wynik zostanie przekształcony w tablicę typowaną
-         *                     (np. `IntArray`, `Array<String>`). Jest to kluczowa optymalizacja
-         *                     wydajności dla masowego przekazywania typów prostych, ponieważ
-         *                     sterownik JDBC może wysłać je jako pojedynczy, binarny parametr.
-         *                     Domyślnie `false` (wynikiem jest `List<Any?>`).
          */
         data class Column(
             override val handle: StepHandle<*>,
-            val columnName: String?,
-            val asTypedArray: Boolean = false
+            val columnName: String?
         ) : FromStep(handle) {
-            constructor(handle: StepHandle<*>, asTypedArray: Boolean) : this(handle, null, asTypedArray)
+            constructor(handle: StepHandle<*>) : this(handle, null)
         }
 
         /**
@@ -72,6 +66,18 @@ sealed class TransactionValue {
             val rowIndex: Int = 0
         ) : FromStep(handle)
     }
+
+    /**
+     * Wynik transformacji innej wartości.
+     */
+    class Transformed(
+        val source: TransactionValue,
+        val transform: (Any?) -> Any?
+    ) : TransactionValue()
+}
+
+fun TransactionValue.map(transformation: (Any?) -> Any?): TransactionValue {
+    return TransactionValue.Transformed(this, transformation)
 }
 
 class TransactionStep<T>(

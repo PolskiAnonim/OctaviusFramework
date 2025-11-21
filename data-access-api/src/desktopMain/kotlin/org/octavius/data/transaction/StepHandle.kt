@@ -30,13 +30,13 @@ class StepHandle<T> internal constructor() {
     }
 
     /** Pobiera całą kolumnę z wyniku, który jest listą skalarów (wynik `toColumn()`). */
-    fun column(asTypedArray: Boolean = false): TransactionValue.FromStep.Column {
-        return TransactionValue.FromStep.Column(this, asTypedArray)
+    fun column(): TransactionValue.FromStep.Column {
+        return TransactionValue.FromStep.Column(this)
     }
 
     /** Pobiera wartości z podanej kolumny z wyniku, który jest listą wierszy (wynik `toList()`). */
-    fun column(columnName: String, asTypedArray: Boolean = false): TransactionValue.FromStep.Column {
-        return TransactionValue.FromStep.Column(this, columnName, asTypedArray)
+    fun column(columnName: String): TransactionValue.FromStep.Column {
+        return TransactionValue.FromStep.Column(this, columnName)
     }
 
     fun row(rowIndex: Int = 0): TransactionValue.FromStep.Row {

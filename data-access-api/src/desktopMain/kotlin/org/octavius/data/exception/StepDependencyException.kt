@@ -18,6 +18,8 @@ enum class StepDependencyExceptionMessage {
     // Błędy dostępu do kolumn/pól
     COLUMN_NOT_FOUND,
     SCALAR_NOT_FOUND,
+
+    TRANSFORMATION_FAILED
 }
 
 // Wiadomość do logów
@@ -37,6 +39,7 @@ private fun generateDeveloperMessage(
         StepDependencyExceptionMessage.INVALID_ROW_ACCESS_ON_NON_LIST -> "Cannot access row at index ${args.getOrNull(0)} because the result of step $stepIndex is not a List. Only index 0 is allowed."
         StepDependencyExceptionMessage.COLUMN_NOT_FOUND -> "Column '${args.getOrNull(0)}' not found in the result of step $stepIndex."
         StepDependencyExceptionMessage.SCALAR_NOT_FOUND -> "Attempted to get the default scalar value ('result') from step $stepIndex, but the result is not a scalar or is a map without such a key."
+        StepDependencyExceptionMessage.TRANSFORMATION_FAILED -> "User-defined transformation (.map {}) failed for value derived from step $stepIndex. Cause: ${args.getOrNull(0)}"
     }
 }
 
@@ -51,8 +54,9 @@ private fun generateDeveloperMessage(
 class StepDependencyException(
     val messageEnum: StepDependencyExceptionMessage,
     val referencedStepIndex: Int,
-    vararg val args: Any
-) : DatabaseException(messageEnum.name) {
+    vararg val args: Any,
+    cause: Throwable? = null
+) : DatabaseException(messageEnum.name, cause) {
     constructor(messageEnum: StepDependencyExceptionMessage, stepIndex: Int)
             : this(messageEnum, stepIndex, *emptyArray<Any>())
 

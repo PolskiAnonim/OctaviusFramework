@@ -157,9 +157,41 @@ internal class TransactionPlanExecutor(
         indexedResults: Map<Int, Any?>,
         handleToIndexMap: Map<StepHandle<*>, Int>
     ): Any? {
-        if (value !is TransactionValue.FromStep) {
-            return if (value is TransactionValue.Value) value.value else value
+        // 1. Jeśli to zwykła wartość, zwróć ją (istniejąca logika)
+        if (value !is TransactionValue) {
+            return value // np. String, Int
         }
+
+        // 2. Jeśli to Value wrapper, odpakuj (istniejąca logika)
+        if (value is TransactionValue.Value) {
+            return value.value
+        }
+
+        // 3. Obsługa transformacji
+        if (value is TransactionValue.Transformed) {
+            // Najpierw pobierz "surową" wartość z wnętrza (rekurencja!)
+            val rawValue = resolveReference(value.source, indexedResults, handleToIndexMap)
+
+            // Zastosuj funkcję użytkownika
+            return try {
+                value.transform(rawValue)
+            } catch (e: Exception) {
+                // Musimy ustalić, jakiego kroku dotyczyła ta transformacja.
+                // Ponieważ Transformed opakowuje inną wartość (np. FromStep),
+                // musimy "dokopać się" do uchwytu, żeby podać poprawny stepIndex w błędzie.
+                val rootHandle = extractRootHandle(value.source)
+                val stepIndex = rootHandle?.let { handleToIndexMap[it] } ?: -1
+
+                throw StepDependencyException(
+                    messageEnum = StepDependencyExceptionMessage.TRANSFORMATION_FAILED,
+                    referencedStepIndex = stepIndex,
+                    args = arrayOf(e.message ?: e.toString()), // Przekazujemy tekst błędu jako argument
+                    cause = e
+                )
+            }
+        }
+
+        value as TransactionValue.FromStep // Dla kompilatora
 
         val stepIndex = handleToIndexMap[value.handle]!! // Sprawdzane w początkowej walidacji
 
@@ -212,8 +244,8 @@ internal class TransactionPlanExecutor(
                     sourceList
                 }
 
-                // toListOf otrzyma błąd wewnątrz konwertera jeżeli jest tam data class (dla Array<*>) lub data class niebędąca kompozytem
-                if (value.asTypedArray) columnValues.toTypedArray() else columnValues
+                // toListOf otrzyma błąd wewnątrz konwertera jeżeli jest tam data class niebędąca kompozytem
+                return  columnValues
             }
 
             is TransactionValue.FromStep.Row -> {
@@ -222,6 +254,14 @@ internal class TransactionPlanExecutor(
         }
     }
 
+    // Pomocnicza funkcja, żeby znaleźć "winowajcę" (uchwyt) w głąb zagnieżdżeń
+    private fun extractRootHandle(value: TransactionValue): StepHandle<*>? {
+        return when (value) {
+            is TransactionValue.FromStep -> value.handle
+            is TransactionValue.Transformed -> extractRootHandle(value.source)
+            else -> null
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     // Sygnatura `toRowMap` przyjmuje `Any`, bo `null` jest obsługiwany wcześniej w `resolveReference`.
