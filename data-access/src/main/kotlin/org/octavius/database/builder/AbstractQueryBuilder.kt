@@ -86,8 +86,8 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
      * Oznacza klauzulę WITH jako rekurencyjną.
      */
     @Suppress("UNCHECKED_CAST")
-    fun recursive(recursive: Boolean): R = apply {
-        this.recursiveWith = recursive
+    fun recursive(): R = apply {
+        this.recursiveWith = true
     } as R
 
     /**

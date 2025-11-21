@@ -11,7 +11,7 @@ interface SelectQueryBuilder: TerminalReturningMethods, QueryBuilder<SelectQuery
     fun with(name: String, query: String): SelectQueryBuilder
 
     /** Oznacza klauzulę WITH jako rekurencyjną. */
-    fun recursive(recursive: Boolean = true): SelectQueryBuilder
+    fun recursive(): SelectQueryBuilder
 
     /** Definiuje źródło danych (klauzula FROM). */
     fun from(source: String): SelectQueryBuilder
@@ -59,7 +59,7 @@ interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMet
     fun with(name: String, query: String): DeleteQueryBuilder
 
     /** Oznacza klauzulę WITH jako rekurencyjną.*/
-    fun recursive(recursive: Boolean = true): DeleteQueryBuilder
+    fun recursive(): DeleteQueryBuilder
 
     /** Dodaje klauzulę USING */
     fun using(tables: String): DeleteQueryBuilder
@@ -83,7 +83,7 @@ interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMet
     fun with(name: String, query: String): UpdateQueryBuilder
 
     /** Oznacza klauzulę WITH jako rekurencyjną. */
-    fun recursive(recursive: Boolean = true): UpdateQueryBuilder
+    fun recursive(): UpdateQueryBuilder
 
     /**
      * Definiuje przypisania w klauzuli SET.
@@ -135,7 +135,7 @@ interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMet
     fun with(name: String, query: String): InsertQueryBuilder
 
     /** Oznacza klauzulę WITH jako rekurencyjną. */
-    fun recursive(recursive: Boolean = true): InsertQueryBuilder
+    fun recursive(): InsertQueryBuilder
 
     /**
      * Definiuje wartości do wstawienia jako wyrażenia SQL lub placeholdery.
