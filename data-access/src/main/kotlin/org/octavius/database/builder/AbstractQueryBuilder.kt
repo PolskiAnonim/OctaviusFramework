@@ -62,7 +62,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
      * Buduje fragment SQL dla klauzuli RETURNING.
      */
     protected fun buildReturningClause(): String {
-        return returningClause?.let { " RETURNING $it" } ?: ""
+        return returningClause?.let { "\nRETURNING $it" } ?: ""
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -91,7 +91,8 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     } as R
 
     /**
-     * Tworzy fragment SQL dla klauzuli WITH na podstawie dodanych zapytań.
+     * Tworzy sformatowany fragment SQL dla klauzuli WITH na podstawie dodanych zapytań.
+     * Każde CTE jest w nowej linii dla czytelności.
      */
     protected fun buildWithClause(): String {
         if (withClauses.isEmpty()) return ""
@@ -99,8 +100,10 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
         if (recursiveWith) {
             sb.append("RECURSIVE ")
         }
-        sb.append(withClauses.joinToString(", ") { "${it.first} AS (${it.second})" })
-        sb.append(" ")
+        // Każde CTE w nowej linii z wcięciem
+        sb.append(withClauses.joinToString(",\n  ") { "${it.first} AS (${it.second})" })
+        // Nowa linia oddzielająca WITH od głównego zapytania
+        sb.append("\n")
         return sb.toString()
     }
 

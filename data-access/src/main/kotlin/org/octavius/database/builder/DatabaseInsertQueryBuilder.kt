@@ -82,13 +82,13 @@ internal class DatabaseInsertQueryBuilder(
         val columnsSql = targetColumns.joinToString(", ")
 
         val sql = StringBuilder(buildWithClause())
-        sql.append("INSERT INTO $table ($columnsSql) ")
+        sql.append("INSERT INTO $table ($columnsSql)")
 
         if (hasValues) {
             val placeholders = targetColumns.joinToString(", ") { key -> valuePlaceholders[key]!! }
-            sql.append("VALUES ($placeholders)")
+            sql.append("\nVALUES ($placeholders)")
         } else {
-            sql.append(selectSource!!)
+            sql.append("\n").append(selectSource!!)
         }
 
         onConflictBuilder?.let { builder ->
@@ -98,7 +98,7 @@ internal class DatabaseInsertQueryBuilder(
             // onConstraint już zawiera "ON CONSTRAINT", więc nie dodajemy nawiasów
             val targetSql = if (target.startsWith("ON CONSTRAINT")) target else "($target)"
 
-            sql.append(" ON CONFLICT $targetSql $action")
+            sql.append("\nON CONFLICT $targetSql $action")
         }
 
         sql.append(buildReturningClause())

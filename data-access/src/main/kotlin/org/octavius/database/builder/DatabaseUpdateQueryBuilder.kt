@@ -60,12 +60,14 @@ internal class DatabaseUpdateQueryBuilder(
         }
 
         val sql = StringBuilder(buildWithClause())
-        sql.append("UPDATE $table SET ")
-        sql.append(setClauses.entries.joinToString(", ") { "${it.key} = ${it.value}" })
+        sql.append("UPDATE $table")
 
-        fromClause?.let { sql.append(" FROM $it") }
+        sql.append("\nSET\n  ")
+        sql.append(setClauses.entries.joinToString(",\n  ") { "${it.key} = ${it.value}" })
 
-        sql.append(" WHERE $whereClause")
+        fromClause?.let { sql.append("\nFROM $it") }
+
+        sql.append("\nWHERE $whereClause")
         sql.append(buildReturningClause())
 
         return sql.toString()

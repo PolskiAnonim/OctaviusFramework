@@ -110,16 +110,16 @@ internal class DatabaseSelectQueryBuilder(
 
         val sqlBuilder = StringBuilder(buildWithClause())
 
-        sqlBuilder.append("SELECT ").append(selectClause).append(" ")
-        fromClause?.let { sqlBuilder.append("FROM ").append(it).append(" ") }
-        whereCondition?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("WHERE ").append(it).append(" ") }
-        groupByClause?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("GROUP BY ").append(it).append(" ") }
-        havingClause?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("HAVING ").append(it).append(" ") }
-        orderByClause?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("ORDER BY ").append(it).append(" ") }
-        limitValue?.takeIf { it > 0 }?.let { sqlBuilder.append("LIMIT ").append(it).append(" ") }
-        offsetValue?.takeIf { it >= 0 }?.let { sqlBuilder.append("OFFSET ").append(it).append(" ") }
+        sqlBuilder.append("SELECT ").append(selectClause)
+        fromClause?.let { sqlBuilder.append("\nFROM ").append(it) }
+        whereCondition?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("\nWHERE ").append(it) }
+        groupByClause?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("\nGROUP BY ").append(it) }
+        havingClause?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("\nHAVING ").append(it) }
+        orderByClause?.takeIf { it.isNotBlank() }?.let { sqlBuilder.append("\nORDER BY ").append(it) }
+        limitValue?.takeIf { it > 0 }?.let { sqlBuilder.append("\nLIMIT ").append(it) }
+        offsetValue?.takeIf { it >= 0 }?.let { sqlBuilder.append("\nOFFSET ").append(it) }
 
-        return sqlBuilder.toString().trim()
+        return sqlBuilder.toString()
     }
 
     //------------------------------------------------------------------------------------------------------------------

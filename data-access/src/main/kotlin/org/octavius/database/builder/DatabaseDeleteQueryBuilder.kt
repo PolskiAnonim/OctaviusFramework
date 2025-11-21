@@ -30,8 +30,8 @@ internal class DatabaseDeleteQueryBuilder(
 
         val sql = StringBuilder(buildWithClause())
         sql.append("DELETE FROM $table")
-        usingClause?.let { sql.append(" USING $it") }
-        sql.append(" WHERE $whereClause")
+        usingClause?.let { sql.append("\nUSING $it") }
+        sql.append("\nWHERE $whereClause")
         sql.append(buildReturningClause())
 
         return sql.toString()
