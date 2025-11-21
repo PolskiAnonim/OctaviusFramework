@@ -1,7 +1,7 @@
 package org.octavius.modules.settings.report
 
 import org.octavius.localization.T
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.BooleanColumn
 import org.octavius.report.column.type.IntegerColumn
@@ -12,7 +12,7 @@ class ApiIntegrationsReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun getReportName(): String = "apiIntegrations"
 
-    override fun buildQuery(): Query = Query(
+    override fun buildQuery(): QueryFragment = QueryFragment(
         """
             SELECT id, name, enabled, api_key, endpoint_url, port, last_sync
             FROM api_integrations

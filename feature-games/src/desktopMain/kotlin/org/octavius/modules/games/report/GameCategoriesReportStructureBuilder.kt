@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.Edit
 import org.octavius.localization.T
 import org.octavius.modules.games.form.category.ui.GameCategoryFormScreen
 import org.octavius.navigation.AppRouter
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
@@ -18,7 +18,7 @@ class GameCategoriesReportStructureBuilder : ReportStructureBuilder() {
 
     override fun getReportName(): String = "game_categories"
 
-    override fun buildQuery(): Query = Query(
+    override fun buildQuery(): QueryFragment = QueryFragment(
         sql = """
             SELECT 
                 c.id,

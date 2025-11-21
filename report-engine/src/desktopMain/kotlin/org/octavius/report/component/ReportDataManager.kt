@@ -4,8 +4,9 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
+import org.octavius.data.QueryFragment
 import org.octavius.data.builder.toField
-import org.octavius.report.Query
+import org.octavius.data.join
 import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportPaginationState
 import org.octavius.report.configuration.SortDirection
@@ -38,63 +39,44 @@ class ReportDataManager(
         columnName: String,
         filter: Filter<T>,
         data: FilterData
-    ): Query? {
+    ): QueryFragment? {
         @Suppress("UNCHECKED_CAST")
         val specificData = data as T
 
         return filter.createQueryFragment(columnName, specificData)
     }
 
-    private fun buildFilterClause(reportState: ReportState, params: MutableMap<String, Any>): String {
+    private fun buildFilterClause(reportState: ReportState): QueryFragment {
         val columnFilters = reportState.filterData.mapNotNull { (columnKey, filterData) ->
             val column = reportStructure.getColumn(columnKey)
             getQueryFragment(columnKey, column.filter!!, filterData)
+        }.join(" AND ")
+
+        val searchFilter: QueryFragment = if (!reportState.searchQuery.isBlank()) {
+            reportStructure.getAllColumns()
+                .filter { (_, column) -> column.filterable }
+                .map { (columnKey, _) ->
+                    QueryFragment(
+                        "$columnKey::text ILIKE :searchQuery",
+                        mapOf("searchQuery" to "%${reportState.searchQuery}%")
+                    )
+                }.join(" OR ")
+        } else {
+            QueryFragment("")
         }
 
-        val filterConditions = columnFilters.map { fragment ->
-            fragment.let {
-                params.putAll(it.params)
-                it.sql
-            }
-        }
-
-        val searchConditions = buildSearchConditions(reportState, params)
-
-        return combineConditions(filterConditions, searchConditions)
-    }
-
-    private fun buildSearchConditions(reportState: ReportState, params: MutableMap<String, Any>): List<String> {
-        if (reportState.searchQuery.isBlank()) return emptyList()
-
-        params["searchQuery"] = "%${reportState.searchQuery}%"
-
-        return reportStructure.getAllColumns()
-            .filter { (_, column) -> column.filterable }
-            .map { (columnKey, _) -> "CAST($columnKey AS TEXT) ILIKE :searchQuery" }
-    }
-
-    private fun combineConditions(filterConditions: List<String>, searchConditions: List<String>): String {
-        val parts = mutableListOf<String>()
-
-        if (filterConditions.isNotEmpty()) {
-            parts.add(filterConditions.joinToString(" AND "))
-        }
-
-        if (searchConditions.isNotEmpty()) {
-            parts.add("(${searchConditions.joinToString(" OR ")})")
-        }
-
-        return parts.joinToString(" AND ")
+        return listOf(searchFilter, columnFilters).join(" AND ")
     }
 
     private fun updatePagination(
         reportState: ReportState,
         sourceSql: String,
         filterClause: String,
-        params: Map<String, Any>
+        params: Map<String, Any?>
     ): DataResult<ReportPaginationState> {
 
-        val countResult = dataAccess.select("COUNT(*)").fromSubquery(sourceSql).where(filterClause).toField<Long>(params)
+        val countResult =
+            dataAccess.select("COUNT(*)").fromSubquery(sourceSql).where(filterClause).toField<Long>(params)
 
         return when (countResult) {
             is DataResult.Success -> {
@@ -129,12 +111,13 @@ class ReportDataManager(
 
     fun fetchData(reportState: ReportState): ReportDataResult {
 
-        val query = reportStructure.query
+        val query = reportStructure.queryFragment
         val params = query.params.toMutableMap()
-        val filterClause = buildFilterClause(reportState, params)
+        val filterClause = buildFilterClause(reportState)
+        params.putAll(filterClause.params)
         val orderClause = buildOrderClause(reportState)
 
-        val paginationResult = updatePagination(reportState, query.sql, filterClause, params)
+        val paginationResult = updatePagination(reportState, query.sql, filterClause.sql, params)
 
         val newPaginationState = when (paginationResult) {
             is DataResult.Success -> paginationResult.value
@@ -148,7 +131,7 @@ class ReportDataManager(
         }
 
         val dataResult = dataAccess.select("*").fromSubquery(query.sql)
-            .where(filterClause) // builder grzecznie nie weźmie pustych wartości
+            .where(filterClause.sql) // builder grzecznie nie weźmie pustych wartości
             .orderBy(orderClause)
             .page(reportState.pagination.currentPage, reportState.pagination.pageSize)
             .toList(params)

@@ -16,7 +16,7 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.T
 import org.octavius.report.FilterMode
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.FilterSpacer
@@ -92,33 +92,33 @@ class EnumFilter<E>(private val enumClass: KClass<E>): Filter<EnumFilterData<E>>
     override fun buildBaseQueryFragment(
         columnName: String,
         data: EnumFilterData<E>
-    ): Query? {
+    ): QueryFragment? {
         if (data.values.isEmpty()) return null
         val values = data.values
         val include = data.include
         return when (data.mode) {
             FilterMode.Single -> {
                 if (include) {
-                    Query("$columnName = ANY(:$columnName)", mapOf(columnName to values))
+                    QueryFragment("$columnName = ANY(:$columnName)", mapOf(columnName to values))
                 } else {
-                    Query("$columnName != ALL(:$columnName)", mapOf(columnName to values))
+                    QueryFragment("$columnName != ALL(:$columnName)", mapOf(columnName to values))
                 }
             }
             FilterMode.ListAny -> {
                 if (include) {
-                    Query("$columnName && :$columnName", mapOf(columnName to values))
+                    QueryFragment("$columnName && :$columnName", mapOf(columnName to values))
                 } else {
-                    Query("NOT ($columnName && :$columnName)", mapOf(columnName to values))
+                    QueryFragment("NOT ($columnName && :$columnName)", mapOf(columnName to values))
                 }
             }
             FilterMode.ListAll -> {
                 if (include) {
-                    Query(
+                    QueryFragment(
                         "($columnName @> :$columnName AND $columnName <@ :$columnName)",
                         mapOf(columnName to values)
                     )
                 } else {
-                    Query(
+                    QueryFragment(
                         "NOT ($columnName @> :$columnName AND $columnName <@ :$columnName)",
                         mapOf(columnName to values)
                     )

@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.report.FilterMode
 import org.octavius.report.IntervalFilterDataType
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter
@@ -122,7 +122,7 @@ class IntervalFilter : Filter<IntervalFilterData>() {
     override fun buildBaseQueryFragment(
         columnName: String,
         data: IntervalFilterData
-    ): Query? {
+    ): QueryFragment? {
         if (data.value == null && data.minValue == null && data.maxValue == null) return null
         val singleValue = data.value
         val min = data.minValue
@@ -142,52 +142,52 @@ class IntervalFilter : Filter<IntervalFilterData>() {
         min: Duration?,
         max: Duration?,
         filterType: IntervalFilterDataType
-    ): Query? {
+    ): QueryFragment? {
         // Parametry typu interval w PostgreSQL są obsługiwane bezpośrednio
         return when (filterType) {
             IntervalFilterDataType.Equals -> {
                 if (singleValue != null) {
-                    Query("$columnName = :$columnName", mapOf(columnName to singleValue))
+                    QueryFragment("$columnName = :$columnName", mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.NotEquals -> {
                 if (singleValue != null) {
-                    Query("$columnName != :$columnName", mapOf(columnName to singleValue))
+                    QueryFragment("$columnName != :$columnName", mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.LessThan -> {
                 if (singleValue != null) {
-                    Query("$columnName < :$columnName", mapOf(columnName to singleValue))
+                    QueryFragment("$columnName < :$columnName", mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.LessEquals -> {
                 if (singleValue != null) {
-                    Query("$columnName <= :$columnName", mapOf(columnName to singleValue))
+                    QueryFragment("$columnName <= :$columnName", mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.GreaterThan -> {
                 if (singleValue != null) {
-                    Query("$columnName > :$columnName", mapOf(columnName to singleValue))
+                    QueryFragment("$columnName > :$columnName", mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.GreaterEquals -> {
                 if (singleValue != null) {
-                    Query("$columnName >= :$columnName", mapOf(columnName to singleValue))
+                    QueryFragment("$columnName >= :$columnName", mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.Range -> {
                 when {
                     min != null && max != null -> {
-                        Query(
+                        QueryFragment(
                             "$columnName BETWEEN :${columnName}_min AND :${columnName}_max",
                             mapOf("${columnName}_min" to min, "${columnName}_max" to max)
                         )
                     }
                     min != null -> {
-                        Query("$columnName >= :$columnName", mapOf(columnName to min))
+                        QueryFragment("$columnName >= :$columnName", mapOf(columnName to min))
                     }
                     max != null -> {
-                        Query("$columnName <= :$columnName", mapOf(columnName to max))
+                        QueryFragment("$columnName <= :$columnName", mapOf(columnName to max))
                     }
                     else -> null
                 }
@@ -202,7 +202,7 @@ class IntervalFilter : Filter<IntervalFilterData>() {
         max: Duration?,
         filterType: IntervalFilterDataType,
         isAllMode: Boolean
-    ): Query? {
+    ): QueryFragment? {
         // Dla trybów ListAny/ListAll, używamy konstrukcji z unnest i EXISTS/NOT EXISTS,
         // podobnie jak w NumberFilter, ponieważ operatory `@>` i `&&` działają
         // tylko dla *równości* tablic, a nie dla porównań zakresowych.
@@ -211,41 +211,41 @@ class IntervalFilter : Filter<IntervalFilterData>() {
             IntervalFilterDataType.Equals -> {
                 if (singleValue != null) {
                     val operator = if (isAllMode) "@>" else "&&" // Dla równości tablic można użyć operatorów array
-                    Query("$columnName $operator :$columnName", mapOf(columnName to listOf(singleValue)))
+                    QueryFragment("$columnName $operator :$columnName", mapOf(columnName to listOf(singleValue)))
                 } else null
             }
             IntervalFilterDataType.NotEquals -> {
                 if (singleValue != null) {
                     val operator = if (isAllMode) "@>" else "&&"
-                    Query("NOT ($columnName $operator :$columnName)", mapOf(columnName to listOf(singleValue)))
+                    QueryFragment("NOT ($columnName $operator :$columnName)", mapOf(columnName to listOf(singleValue)))
                 } else null
             }
             IntervalFilterDataType.LessThan -> {
                 if (singleValue != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
-                    Query(existsType, mapOf(columnName to singleValue))
+                    QueryFragment(existsType, mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.LessEquals -> {
                 if (singleValue != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
-                    Query(existsType, mapOf(columnName to singleValue))
+                    QueryFragment(existsType, mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.GreaterThan -> {
                 if (singleValue != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)"
-                    Query(existsType, mapOf(columnName to singleValue))
+                    QueryFragment(existsType, mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.GreaterEquals -> {
                 if (singleValue != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
-                    Query(existsType, mapOf(columnName to singleValue))
+                    QueryFragment(existsType, mapOf(columnName to singleValue))
                 } else null
             }
             IntervalFilterDataType.Range -> {
@@ -253,17 +253,17 @@ class IntervalFilter : Filter<IntervalFilterData>() {
                     min != null && max != null -> {
                         val existsType =
                             if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN :${columnName}_min AND :${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)"
-                        Query(existsType, mapOf("${columnName}_min" to min, "${columnName}_max" to max))
+                        QueryFragment(existsType, mapOf("${columnName}_min" to min, "${columnName}_max" to max))
                     }
                     min != null -> {
                         val existsType =
                             if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
-                        Query(existsType, mapOf(columnName to min))
+                        QueryFragment(existsType, mapOf(columnName to min))
                     }
                     max != null -> {
                         val existsType =
                             if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
-                        Query(existsType, mapOf(columnName to max))
+                        QueryFragment(existsType, mapOf(columnName to max))
                     }
                     else -> null
                 }

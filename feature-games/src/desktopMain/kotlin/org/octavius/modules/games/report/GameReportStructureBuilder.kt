@@ -7,7 +7,7 @@ import org.octavius.localization.T
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
@@ -19,11 +19,11 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun getReportName(): String = "games"
 
-    override fun buildQuery(): Query {
+    override fun buildQuery(): QueryFragment {
         val query =
             dataAccess.select("games.id", "games.name AS game_name", "series.name AS series_name", "games.status")
                 .from("games LEFT JOIN series ON series.id = games.series").toSql()
-        return Query(query)
+        return QueryFragment(query)
     }
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(

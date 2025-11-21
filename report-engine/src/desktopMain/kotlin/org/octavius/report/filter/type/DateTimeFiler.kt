@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.T
 import org.octavius.report.DateTimeFilterDataType
 import org.octavius.report.FilterMode
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter
@@ -107,7 +107,7 @@ class DateTimeFilter<T : Any>(
         }
     }
 
-    override fun buildBaseQueryFragment(columnName: String, data: DateTimeFilterData<T>): Query? {
+    override fun buildBaseQueryFragment(columnName: String, data: DateTimeFilterData<T>): QueryFragment? {
         if (data.value == null && data.minValue == null && data.maxValue == null) return null
         val value = data.value
         val min = data.minValue
@@ -127,25 +127,25 @@ class DateTimeFilter<T : Any>(
         min: T?,
         max: T?,
         filterType: DateTimeFilterDataType
-    ): Query? {
+    ): QueryFragment? {
         val paramName = columnName
         val minParamName = "${columnName}_min"
         val maxParamName = "${columnName}_max"
 
         return when (filterType) {
-            DateTimeFilterDataType.Equals -> value?.let { Query("$columnName = :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.NotEquals -> value?.let { Query("$columnName != :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.Before -> value?.let { Query("$columnName < :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.BeforeEquals -> value?.let { Query("$columnName <= :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.After -> value?.let { Query("$columnName > :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.AfterEquals -> value?.let { Query("$columnName >= :$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.Equals -> value?.let { QueryFragment("$columnName = :$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.NotEquals -> value?.let { QueryFragment("$columnName != :$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.Before -> value?.let { QueryFragment("$columnName < :$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.BeforeEquals -> value?.let { QueryFragment("$columnName <= :$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.After -> value?.let { QueryFragment("$columnName > :$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.AfterEquals -> value?.let { QueryFragment("$columnName >= :$paramName", mapOf(paramName to it)) }
             DateTimeFilterDataType.Range -> when {
-                min != null && max != null -> Query(
+                min != null && max != null -> QueryFragment(
                     "$columnName BETWEEN :$minParamName AND :$maxParamName",
                     mapOf(minParamName to min, maxParamName to max)
                 )
-                min != null -> Query("$columnName >= :$minParamName", mapOf(minParamName to min))
-                max != null -> Query("$columnName <= :$maxParamName", mapOf(maxParamName to max))
+                min != null -> QueryFragment("$columnName >= :$minParamName", mapOf(minParamName to min))
+                max != null -> QueryFragment("$columnName <= :$maxParamName", mapOf(maxParamName to max))
                 else -> null
             }
         }
@@ -158,27 +158,27 @@ class DateTimeFilter<T : Any>(
         max: T?,
         filterType: DateTimeFilterDataType,
         isAllMode: Boolean
-    ): Query? {
+    ): QueryFragment? {
         val paramName = columnName
         val minParamName = "${columnName}_min"
         val maxParamName = "${columnName}_max"
 
-        fun buildExistsQuery(condition: String, paramMap: Map<String, Any>): Query {
+        fun buildExistsQuery(condition: String, paramMap: Map<String, Any>): QueryFragment {
             return if (isAllMode) {
-                Query("NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE NOT ($condition))", paramMap)
+                QueryFragment("NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE NOT ($condition))", paramMap)
             } else {
-                Query("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition)", paramMap)
+                QueryFragment("EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $condition)", paramMap)
             }
         }
 
         return when (filterType) {
             DateTimeFilterDataType.Equals -> value?.let {
                 val operator = if (isAllMode) "@>" else "&&"
-                Query("$columnName $operator :$paramName", mapOf(paramName to listOf(it)))
+                QueryFragment("$columnName $operator :$paramName", mapOf(paramName to listOf(it)))
             }
             DateTimeFilterDataType.NotEquals -> value?.let {
                 val operator = if (isAllMode) "@>" else "&&"
-                Query("NOT ($columnName $operator :$paramName)", mapOf(paramName to listOf(it)))
+                QueryFragment("NOT ($columnName $operator :$paramName)", mapOf(paramName to listOf(it)))
             }
             DateTimeFilterDataType.Before -> value?.let {
                 buildExistsQuery("elem < :$paramName", mapOf(paramName to it))

@@ -16,7 +16,7 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.T
 import org.octavius.report.FilterMode
 import org.octavius.report.NumberFilterDataType
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter
@@ -116,7 +116,7 @@ class NumberFilter<T : Number>(
     override fun buildBaseQueryFragment(
         columnName: String,
         data: NumberFilterData<T>
-    ): Query? {
+    ): QueryFragment? {
         if (data.minValue == null && data.maxValue == null) return null
         val min = data.minValue
         val max = data.maxValue
@@ -134,59 +134,59 @@ class NumberFilter<T : Number>(
         min: T?,
         max: T?,
         filterType: NumberFilterDataType
-    ): Query? {
+    ): QueryFragment? {
         return when (filterType) {
             NumberFilterDataType.Equals -> {
                 if (min != null) {
-                    Query("$columnName = :$columnName", mapOf(columnName to min))
+                    QueryFragment("$columnName = :$columnName", mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.NotEquals -> {
                 if (min != null) {
-                    Query("$columnName != :$columnName", mapOf(columnName to min))
+                    QueryFragment("$columnName != :$columnName", mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.LessThan -> {
                 if (min != null) {
-                    Query("$columnName < :$columnName", mapOf(columnName to min))
+                    QueryFragment("$columnName < :$columnName", mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.LessEquals -> {
                 if (min != null) {
-                    Query("$columnName <= :$columnName", mapOf(columnName to min))
+                    QueryFragment("$columnName <= :$columnName", mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.GreaterThan -> {
                 if (min != null) {
-                    Query("$columnName > :$columnName", mapOf(columnName to min))
+                    QueryFragment("$columnName > :$columnName", mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.GreaterEquals -> {
                 if (min != null) {
-                    Query("$columnName >= :$columnName", mapOf(columnName to min))
+                    QueryFragment("$columnName >= :$columnName", mapOf(columnName to min))
                 } else null
             }
 
             NumberFilterDataType.Range -> {
                 when {
                     min != null && max != null -> {
-                        Query(
+                        QueryFragment(
                             "$columnName BETWEEN :${columnName}_min AND :${columnName}_max",
                             mapOf("${columnName}_min" to min, "${columnName}_max" to max)
                         )
                     }
 
                     min != null -> {
-                        Query("$columnName >= :$columnName", mapOf(columnName to min))
+                        QueryFragment("$columnName >= :$columnName", mapOf(columnName to min))
                     }
 
                     max != null -> {
-                        Query("$columnName <= :$columnName", mapOf(columnName to max))
+                        QueryFragment("$columnName <= :$columnName", mapOf(columnName to max))
                     }
 
                     else -> null
@@ -201,19 +201,19 @@ class NumberFilter<T : Number>(
         max: T?,
         filterType: NumberFilterDataType,
         isAllMode: Boolean
-    ): Query? {
+    ): QueryFragment? {
         return when (filterType) {
             NumberFilterDataType.Equals -> {
                 if (min != null) {
                     val operator = if (isAllMode) "@>" else "&&"
-                    Query("$columnName $operator :$columnName", mapOf(columnName to listOf(min)))
+                    QueryFragment("$columnName $operator :$columnName", mapOf(columnName to listOf(min)))
                 } else null
             }
 
             NumberFilterDataType.NotEquals -> {
                 if (min != null) {
                     val operator = if (isAllMode) "@>" else "&&"
-                    Query("NOT ($columnName $operator :$columnName)", mapOf(columnName to listOf(min)))
+                    QueryFragment("NOT ($columnName $operator :$columnName)", mapOf(columnName to listOf(min)))
                 } else null
             }
 
@@ -221,7 +221,7 @@ class NumberFilter<T : Number>(
                 if (min != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
-                    Query(existsType, mapOf(columnName to min))
+                    QueryFragment(existsType, mapOf(columnName to min))
                 } else null
             }
 
@@ -229,7 +229,7 @@ class NumberFilter<T : Number>(
                 if (min != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
-                    Query(existsType, mapOf(columnName to min))
+                    QueryFragment(existsType, mapOf(columnName to min))
                 } else null
             }
 
@@ -237,7 +237,7 @@ class NumberFilter<T : Number>(
                 if (min != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)"
-                    Query(existsType, mapOf(columnName to min))
+                    QueryFragment(existsType, mapOf(columnName to min))
                 } else null
             }
 
@@ -245,7 +245,7 @@ class NumberFilter<T : Number>(
                 if (min != null) {
                     val existsType =
                         if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
-                    Query(existsType, mapOf(columnName to min))
+                    QueryFragment(existsType, mapOf(columnName to min))
                 } else null
             }
 
@@ -254,19 +254,19 @@ class NumberFilter<T : Number>(
                     min != null && max != null -> {
                         val existsType =
                             if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN :${columnName}_min AND :${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)"
-                        Query(existsType, mapOf("${columnName}_min" to min, "${columnName}_max" to max))
+                        QueryFragment(existsType, mapOf("${columnName}_min" to min, "${columnName}_max" to max))
                     }
 
                     min != null -> {
                         val existsType =
                             if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
-                        Query(existsType, mapOf(columnName to min))
+                        QueryFragment(existsType, mapOf(columnName to min))
                     }
 
                     max != null -> {
                         val existsType =
                             if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
-                        Query(existsType, mapOf(columnName to max))
+                        QueryFragment(existsType, mapOf(columnName to max))
                     }
 
                     else -> null

@@ -8,7 +8,7 @@ import org.octavius.domain.asian.PublicationType
 import org.octavius.localization.T
 import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.navigation.AppRouter
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
@@ -21,7 +21,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun getReportName(): String = "asianMedia"
 
-    override fun buildQuery(): Query {
+    override fun buildQuery(): QueryFragment {
         val query = dataAccess.select(
             "t.id as title_id",
             "t.titles",
@@ -30,7 +30,7 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
             "ARRAY_AGG(p.status ORDER BY p.id) as status"
         ).from("titles t JOIN publications p ON p.title_id = t.id").groupBy("t.id").toSql()
 
-        return Query(query)
+        return QueryFragment(query)
     }
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(

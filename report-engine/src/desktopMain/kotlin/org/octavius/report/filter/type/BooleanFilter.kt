@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.report.FilterMode
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.type.BooleanFilterData
@@ -77,20 +77,20 @@ class BooleanFilter(
     override fun buildBaseQueryFragment(
         columnName: String,
         data: BooleanFilterData
-    ): Query? {
+    ): QueryFragment? {
         val booleanValue = data.value ?: return null
 
         return when (data.mode) {
             FilterMode.Single -> {
-                Query("$columnName = :$columnName", mapOf(columnName to booleanValue))
+                QueryFragment("$columnName = :$columnName", mapOf(columnName to booleanValue))
             }
 
             FilterMode.ListAny -> {
-                Query("$columnName && :$columnName", mapOf(columnName to listOf(booleanValue)))
+                QueryFragment("$columnName && :$columnName", mapOf(columnName to listOf(booleanValue)))
             }
 
             FilterMode.ListAll -> {
-                Query("$columnName @> :$columnName", mapOf(columnName to listOf(booleanValue)))
+                QueryFragment("$columnName @> :$columnName", mapOf(columnName to listOf(booleanValue)))
             }
         }
     }

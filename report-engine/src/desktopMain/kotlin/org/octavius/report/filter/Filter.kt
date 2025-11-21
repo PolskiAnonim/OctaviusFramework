@@ -15,7 +15,7 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.T
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.data.FilterData
 
@@ -77,25 +77,25 @@ abstract class Filter<T : FilterData> {
      * @param data Aktualny stan filtra.
      * @return Query z fragmentem SQL i parametrami lub null.
      */
-    protected abstract fun buildBaseQueryFragment(columnName: String, data: T): Query?
+    protected abstract fun buildBaseQueryFragment(columnName: String, data: T): QueryFragment?
 
-    fun createQueryFragment(columnName: String, data: T): Query? {
+    fun createQueryFragment(columnName: String, data: T): QueryFragment? {
         if (!data.isActive()) return null
 
         val baseQuery = buildBaseQueryFragment(columnName, data)
         return applyNullHandling(columnName, baseQuery, data)
     }
 
-    private fun applyNullHandling(columnName: String, baseQuery: Query?, data: T): Query? {
+    private fun applyNullHandling(columnName: String, baseQueryFragment: QueryFragment?, data: T): QueryFragment? {
         return when (data.nullHandling) {
-            NullHandling.Ignore -> baseQuery
-            NullHandling.Include -> baseQuery?.let {
-                Query("(${it.sql} OR $columnName IS NULL)", it.params)
-            } ?: Query("$columnName IS NULL")
+            NullHandling.Ignore -> baseQueryFragment
+            NullHandling.Include -> baseQueryFragment?.let {
+                QueryFragment("(${it.sql} OR $columnName IS NULL)", it.params)
+            } ?: QueryFragment("$columnName IS NULL")
 
-            NullHandling.Exclude -> baseQuery?.let {
-                Query("(${it.sql} AND $columnName IS NOT NULL)", it.params)
-            } ?: Query("$columnName IS NOT NULL")
+            NullHandling.Exclude -> baseQueryFragment?.let {
+                QueryFragment("(${it.sql} AND $columnName IS NOT NULL)", it.params)
+            } ?: QueryFragment("$columnName IS NOT NULL")
         }
     }
 

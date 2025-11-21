@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.localization.T
 import org.octavius.report.FilterMode
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.StringFilterDataType
 import org.octavius.report.filter.EnumDropdownMenu
@@ -75,7 +75,7 @@ class StringFilter: Filter<StringFilterData>() {
     override fun buildBaseQueryFragment(
         columnName: String,
         data: StringFilterData
-    ): Query? {
+    ): QueryFragment? {
         val value = data.value.trim()
         if (value.isEmpty()) return null
         val filterType = data.filterType
@@ -97,7 +97,7 @@ class StringFilter: Filter<StringFilterData>() {
         searchValue: String,
         filterType: StringFilterDataType,
         caseSensitive: Boolean
-    ): Query {
+    ): QueryFragment {
         // Obsługa przypadków równościowych (=, <>)
         if (filterType == StringFilterDataType.Exact || filterType == StringFilterDataType.NotExact) {
             val operator = if (filterType == StringFilterDataType.Exact) "=" else "<>"
@@ -105,12 +105,12 @@ class StringFilter: Filter<StringFilterData>() {
             return if (caseSensitive) {
                 // Czułe na wielkość liter: WHERE columnName = 'Wartość'
                 val querySql = "$columnName $operator :$columnName"
-                Query(querySql, mapOf(columnName to searchValue))
+                QueryFragment(querySql, mapOf(columnName to searchValue))
             } else {
                 // Niezależne od wielkości liter: WHERE LOWER(columnName) = 'wartość'
                 val querySql = "LOWER($columnName) $operator :$columnName"
                 // Przekazujemy już zmienioną na małe litery wartość
-                Query(querySql, mapOf(columnName to searchValue.lowercase()))
+                QueryFragment(querySql, mapOf(columnName to searchValue.lowercase()))
             }
         }
 
@@ -129,7 +129,7 @@ class StringFilter: Filter<StringFilterData>() {
 
         val finalOperator = if (filterType == StringFilterDataType.NotContains) notOperator else operator
 
-        return Query("$columnName $finalOperator :$columnName", mapOf(columnName to pattern))
+        return QueryFragment("$columnName $finalOperator :$columnName", mapOf(columnName to pattern))
     }
 
     private fun buildListStringQuery(
@@ -138,7 +138,7 @@ class StringFilter: Filter<StringFilterData>() {
         filterType: StringFilterDataType,
         caseSensitive: Boolean,
         isAllMode: Boolean // true = ALL, false = ANY
-    ): Query {
+    ): QueryFragment {
         // 1. Zdefiniujmy operator LIKE/ILIKE na podstawie czułości
         val likeOperator = if (caseSensitive) "LIKE" else "ILIKE"
         val notLikeOperator = if (caseSensitive) "NOT LIKE" else "NOT ILIKE"
@@ -162,7 +162,7 @@ class StringFilter: Filter<StringFilterData>() {
                 // ANY: Sprawdź, czy ISTNIEJE element, który spełnia warunek.
                 "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $innerCondition)"
             }
-            return Query(querySql, mapOf(columnName to valueParam))
+            return QueryFragment(querySql, mapOf(columnName to valueParam))
         }
 
         // 4. Obsługa przypadków z wzorcami (Contains, StartsWith, EndsWith, etc.)
@@ -188,7 +188,7 @@ class StringFilter: Filter<StringFilterData>() {
             "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $innerCondition)"
         }
 
-        return Query(querySql, mapOf(columnName to pattern))
+        return QueryFragment(querySql, mapOf(columnName to pattern))
     }
 
 

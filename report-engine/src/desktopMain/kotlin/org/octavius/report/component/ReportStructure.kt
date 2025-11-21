@@ -3,7 +3,7 @@ package org.octavius.report.component
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
-import org.octavius.report.Query
+import org.octavius.data.QueryFragment
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
@@ -23,7 +23,7 @@ import org.octavius.report.column.type.special.QuickActionColumn
  * - **Zwykłe kolumny**: Definiowane przez developera, mapują dane z bazy
  * - **Kolumny specjalne**: Generowane automatycznie (np. kolumna akcji)
  *
- * @param query Zapytanie SQL do pobrania danych raportu.
+ * @param queryFragment Zapytanie SQL do pobrania danych raportu.
  * @param initColumns Mapa kolumn zdefiniowanych przez developera (klucz = nazwa kolumny w SQL).
  * @param reportName Unikalna nazwa raportu (używana do zapisywania konfiguracji).
  * @param rowActions Lista akcji dostępnych dla każdego wiersza.
@@ -31,7 +31,7 @@ import org.octavius.report.column.type.special.QuickActionColumn
  * @param mainActions Lista akcji głównych (np. "Dodaj nowy").
  */
 class ReportStructure(
-    val query: Query,
+    val queryFragment: QueryFragment,
     private val initColumns: Map<String, ReportColumn>,
     val reportName: String,
     val rowActions: List<ReportRowAction> = emptyList(),
@@ -115,7 +115,7 @@ abstract class ReportStructureBuilder: KoinComponent {
      */
     private fun buildStructure(): ReportStructure {
         return ReportStructure(
-            query = buildQuery(),
+            queryFragment = buildQuery(),
             initColumns = buildColumns(),
             reportName = getReportName(),
             rowActions = buildRowActions(),
@@ -132,7 +132,7 @@ abstract class ReportStructureBuilder: KoinComponent {
     /**
      * Buduje i zwraca obiekt Query dla raportu.
      */
-    abstract fun buildQuery(): Query
+    abstract fun buildQuery(): QueryFragment
 
     /**
      * Buduje i zwraca mapę kolumn dla raportu.

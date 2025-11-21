@@ -6,11 +6,6 @@ import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.T
 
 
-data class Query(
-    val sql: String,
-    val params: Map<String, Any> = emptyMap()
-)
-
 data class ReportPaginationState(
     val currentPage: Long = 0,
     val totalPages: Long = 1,
