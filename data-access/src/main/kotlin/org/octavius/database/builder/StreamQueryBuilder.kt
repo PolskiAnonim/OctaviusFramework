@@ -2,6 +2,7 @@ package org.octavius.database.builder
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.withContext
@@ -11,6 +12,8 @@ import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
 import org.springframework.jdbc.core.PreparedStatementCallback
 import org.springframework.jdbc.core.RowMapper
+import org.springframework.jdbc.core.SqlTypeValue
+import org.springframework.jdbc.core.StatementCreatorUtils
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterUtils
 import java.sql.ResultSet
@@ -53,7 +56,7 @@ internal class StreamingQueryBuilder(
                 ps.fetchSize = this.fetchSize // Ustawiamy streaming!
 
                 for ((index, value) in paramsInOrder.withIndex()) {
-                    ps.setObject(index + 1, value)
+                    StatementCreatorUtils.setParameterValue(ps, index + 1, SqlTypeValue.TYPE_UNKNOWN, value)
                 }
 
                 val rs: ResultSet = ps.executeQuery()
@@ -106,7 +109,7 @@ internal class StreamingQueryBuilder(
             // i MUSZĄ być wykonane na wątku przeznaczonym do takich operacji.
             withContext(Dispatchers.IO) {
                 val result = executeStream(params, builder.rowMappers.ColumnNameMapper()) { item ->
-                    trySend(item)
+                    trySendBlocking(item)
                 }
                 // Jeśli executeStream zwróci błąd, zamknij Flow z tym błędem
                 if (result is DataResult.Failure) {
@@ -125,7 +128,7 @@ internal class StreamingQueryBuilder(
             // i MUSZĄ być wykonane na wątku przeznaczonym do takich operacji.
             withContext(Dispatchers.IO) {
                 val result = executeStream(params, builder.rowMappers.DataObjectMapper(kClass)) { item ->
-                    trySend(item)
+                    trySendBlocking(item)
                 }
                 // Jeśli executeStream zwróci błąd, zamknij Flow z tym błędem
                 if (result is DataResult.Failure) {

@@ -238,6 +238,8 @@ interface QueryBuilder<T : QueryBuilder<T>> {
     /**
      * Przełącza builder w tryb streamingowy, optymalny dla dużych zbiorów danych.
      * Wymaga użycia metod terminalnych specyficznych dla streamingu, jak forEachRow().
+     * WYMAGANA AKTYWNA TRANSAKCJA. Metoda ta musi być wywoływana wewnątrz bloku DataAccess.transaction { ... }.
+     * W przeciwnym razie PostgreSQL zignoruje fetchSize i załaduje wszystko do RAM-u.
      *
      * @param fetchSize Liczba wierszy pobierana z bazy danych w jednej paczce.
      *                  Kluczowe dla uniknięcia ładowania całego wyniku do pamięci.

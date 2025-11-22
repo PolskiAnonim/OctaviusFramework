@@ -147,7 +147,7 @@ fun <T : Any> T.toMap(includeNulls: Boolean = true): Map<String, Any?> {
     val metadata = getOrCreateDataObjectMetadata(this::class)
 
     return metadata.constructorProperties.mapNotNull { (_, property, keyName) ->
-        val value = property.getter.call(this)
+        val value = property.call(this)
         if (!includeNulls && value == null) {
             null
         } else {
