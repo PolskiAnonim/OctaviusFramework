@@ -13,7 +13,7 @@ kotlin {
 
         commonMain.dependencies {
             // Zależności Compose
-            api(projects.dataAccessApi)
+            api(projects.database.api)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.materialIconsExtended)

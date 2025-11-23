@@ -16,6 +16,11 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    versionCatalogs {
+        create("dbLibs") {
+            from(files("database/gradle/libs.versions.toml"))
+        }
+    }
     repositories {
         google {
             mavenContent {
@@ -37,11 +42,13 @@ include(
     ":report-engine",
     ":api-server",
     ":ui-core",
-    ":data-access",
-    "data-access-api",
     ":core",
     ":api-contract",
     ":feature-contract",
+    // Database
+    ":database:core",
+    ":database:api",
+    // Browser extension
     ":browser-extension",
     ":browser-extension:content-script",
     ":browser-extension:popup",

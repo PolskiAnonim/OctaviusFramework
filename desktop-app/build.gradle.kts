@@ -31,7 +31,7 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(projects.core)
-            implementation(projects.dataAccess)
+            implementation(projects.database.core)
             implementation(projects.uiCore)
             implementation(projects.featureContract)
             implementation(projects.formEngine)

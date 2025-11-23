@@ -15,7 +15,7 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
-                implementation(projects.dataAccessApi)
+                implementation(projects.database.api)
             }
         }
         val desktopMain by getting

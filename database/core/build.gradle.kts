@@ -4,19 +4,19 @@ plugins {
 }
 
 dependencies {
-    api(projects.dataAccessApi)
+    api(projects.database.api)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-    implementation(libs.postgres)
-    implementation(libs.hikari)
-    implementation(libs.kotlin.reflect)
-    implementation(libs.spring.jdbc)
-    implementation(libs.classgraph)
-
     implementation(libs.kotlinx.coroutines.core)
-
+    implementation(libs.kotlin.reflect)
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging.jvm)
+
+    // Database-specific dependencies
+    implementation(dbLibs.postgres)
+    implementation(dbLibs.hikari)
+    implementation(dbLibs.spring.jdbc)
+    implementation(dbLibs.classgraph)
 
 
     // Test dependencies - precyzyjnie tylko to co potrzebne
