@@ -1,28 +1,28 @@
 package org.octavius.data.exception
 
 enum class StepDependencyExceptionMessage {
-    // Błędy walidacji planu
+    // Plan validation errors
     DEPENDENCY_ON_FUTURE_STEP,
     UNKNOWN_STEP_HANDLE,
 
-    // Błędy dostępu do wyników
+    // Result access errors
     RESULT_NOT_FOUND,
     NULL_SOURCE_RESULT,
     ROW_INDEX_OUT_OF_BOUNDS,
 
-    // Błędy dotyczące struktury wyników
+    // Result structure errors
     RESULT_NOT_LIST,
     RESULT_NOT_MAP_LIST,
     INVALID_ROW_ACCESS_ON_NON_LIST,
 
-    // Błędy dostępu do kolumn/pól
+    // Column/field access errors
     COLUMN_NOT_FOUND,
     SCALAR_NOT_FOUND,
 
     TRANSFORMATION_FAILED
 }
 
-// Wiadomość do logów
+// Message for logs
 private fun generateDeveloperMessage(
     messageEnum: StepDependencyExceptionMessage,
     stepIndex: Int,
@@ -44,12 +44,12 @@ private fun generateDeveloperMessage(
 }
 
 /**
- * Rzucany, gdy referencja do wyniku z poprzedniego kroku (`TransactionValue.FromStep`)
- * jest nieprawidłowa i nie może zostać rozwiązana.
+ * Thrown when a reference to a result from a previous step (`TransactionValue.FromStep`)
+ * is invalid and cannot be resolved.
  *
- * @param message Komunikat błędu.
- * @param referencedStepIndex Indeks kroku, do którego odnosiła się referencja.
- * @param args Argumenty przydatne dla wiadomości
+ * @param messageEnum Error message enum.
+ * @param referencedStepIndex Index of the step that the reference pointed to.
+ * @param args Arguments useful for the message.
  */
 class StepDependencyException(
     val messageEnum: StepDependencyExceptionMessage,

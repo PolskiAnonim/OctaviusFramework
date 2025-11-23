@@ -71,7 +71,7 @@ class PolymorphicArrayRoundTripTest {
             dataSource,
             baseConfig.packagesToScan,
             baseConfig.dbSchemas,
-            DynamicDtoSerializationStrategy.PREFER_DYNAMIC_DTO
+            DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
         )
     }
 

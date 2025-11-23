@@ -1,16 +1,16 @@
 package org.octavius.data.exception
 
 enum class ConversionExceptionMessage {
-    VALUE_CONVERSION_FAILED,    // Ogólny błąd konwersji standardowego typu
-    ENUM_CONVERSION_FAILED,     // Wartość z bazy nie pasuje do żadnego enuma
+    VALUE_CONVERSION_FAILED,    // General standard type conversion error
+    ENUM_CONVERSION_FAILED,     // Database value doesn't match any enum
     UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY,
-    INVALID_DYNAMIC_DTO_FORMAT, // Błąd parsowania dynamic_dto
+    INVALID_DYNAMIC_DTO_FORMAT, // dynamic_dto parsing error
 
-    // Błędy mapowania
-    OBJECT_MAPPING_FAILED,      // Ogólny błąd podczas tworzenia instancji data class
-    MISSING_REQUIRED_PROPERTY,  // Brak w danych klucza dla wymaganego pola w data class
-    JSON_DESERIALIZATION_FAILED, // Błąd deserializacji JSONa w dynamic_dto
-    JSON_SERIALIZATION_FAILED   // Błąd serializacji obiektu do JSON na potrzeby dynamic_dto
+    // Mapping errors
+    OBJECT_MAPPING_FAILED,      // General error during data class instantiation
+    MISSING_REQUIRED_PROPERTY,  // Missing key for required field in data class
+    JSON_DESERIALIZATION_FAILED, // JSON deserialization error in dynamic_dto
+    JSON_SERIALIZATION_FAILED   // Object to JSON serialization error for dynamic_dto
 }
 
 private fun generateDeveloperMessage(
@@ -20,26 +20,26 @@ private fun generateDeveloperMessage(
     propertyName: String?
 ): String {
     return when (messageEnum) {
-        ConversionExceptionMessage.VALUE_CONVERSION_FAILED -> "Nie można przekonwertować wartości '$value' na typ '$targetType'."
-        ConversionExceptionMessage.ENUM_CONVERSION_FAILED -> "Nie można przekonwertować wartości enum '$value' na typ '$targetType'."
-        ConversionExceptionMessage.INVALID_DYNAMIC_DTO_FORMAT -> "Nieprawidłowy format dynamic_dto: '$value'."
-        ConversionExceptionMessage.OBJECT_MAPPING_FAILED -> "Nie udało się zmapować danych na obiekt klasy '$targetType'."
-        ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY -> "Brak wymaganego pola '$propertyName' (klucz: '$value') podczas mapowania na klasę '$targetType'."
-        ConversionExceptionMessage.JSON_DESERIALIZATION_FAILED -> "Nie udało się zdeserializować JSON dla dynamicznego typu '$targetType'."
+        ConversionExceptionMessage.VALUE_CONVERSION_FAILED -> "Cannot convert value '$value' to type '$targetType'."
+        ConversionExceptionMessage.ENUM_CONVERSION_FAILED -> "Cannot convert enum value '$value' to type '$targetType'."
+        ConversionExceptionMessage.INVALID_DYNAMIC_DTO_FORMAT -> "Invalid dynamic_dto format: '$value'."
+        ConversionExceptionMessage.OBJECT_MAPPING_FAILED -> "Failed to map data to object of class '$targetType'."
+        ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY -> "Missing required field '$propertyName' (key: '$value') when mapping to class '$targetType'."
+        ConversionExceptionMessage.JSON_DESERIALIZATION_FAILED -> "Failed to deserialize JSON for dynamic type '$targetType'."
         ConversionExceptionMessage.UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY ->
-            "Natywne tablice JDBC (Array<*>) nie obsługują typów złożonych (np. data class, List, Map). " +
-                    "Wykryto typ: '${targetType}'. Użyj List<DataClass>, aby biblioteka mogła wygenerować składnię ARRAY[ROW(...)]."
-        ConversionExceptionMessage.JSON_SERIALIZATION_FAILED -> "Nie udało się zserializować obiektu klasy '$targetType' do formatu JSON. " +
-                "Upewnij się, że klasa i wszystkie jej zagnieżdżone typy mają adnotację @Serializable."
+            "Native JDBC arrays (Array<*>) do not support complex types (e.g., data class, List, Map). " +
+                    "Detected type: '${targetType}'. Use List<DataClass> so the library can generate ARRAY[ROW(...)] syntax."
+        ConversionExceptionMessage.JSON_SERIALIZATION_FAILED -> "Failed to serialize object of class '$targetType' to JSON format. " +
+                "Ensure that the class and all its nested types have the @Serializable annotation."
     }
 }
 
 /**
- * Błędy związane z konwersją, parsowaniem lub mapowaniem danych między bazą a Kotlinem.
+ * Errors related to conversion, parsing, or mapping data between Postgres and Kotlin.
  */
 class ConversionException(
     val messageEnum: ConversionExceptionMessage,
-    // Pola kontekstowe - mogą być null w zależności od typu błędu
+    // Context fields - can be null depending on error type
     val value: Any? = null,
     val targetType: String? = null,
     val rowData: Map<String, Any?>? = null,

@@ -1,21 +1,21 @@
 package org.octavius.data.exception
 
 /**
- * Bazowy, zapieczętowany wyjątek dla wszystkich błędów warstwy danych.
+ * Base sealed exception for all data layer errors.
  *
- * Wszystkie wyjątki związane z dostępem do bazy danych dziedziczą z tej klasy,
- * co umożliwia łatwe łapanie i obsługę błędów na różnych poziomach aplikacji.
+ * All database access related exceptions inherit from this class,
+ * enabling easy catching and handling of errors at different application levels.
  */
 sealed class DatabaseException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 /**
- * Błędy podczas wykonywania zapytań SQL.
+ * Errors during SQL query execution.
  *
- * Zawiera pełny kontekst błędu: zapytanie SQL i parametry.
- * Rzucane gdy:
- * - Zapytanie SQL jest niepoprawne składniowo
- * - Naruszenie ograniczeń bazy danych
- * - Błędy połączenia z bazą danych
+ * Contains full error context: SQL query and parameters.
+ * Thrown when:
+ * - SQL query is syntactically incorrect
+ * - Database constraint violation
+ * - Database connection errors
  */
 class QueryExecutionException(
     message: String,
@@ -33,7 +33,7 @@ class QueryExecutionException(
 | sql: $sql
 | params: $params
 -------------------------------------
-| Szczegóły błędu w kroku:
+| Step error details:
 $nestedError
 -------------------------------------
 """
@@ -41,13 +41,13 @@ $nestedError
 }
 
 /**
- * Wyjątek rzucany, gdy wykonanie konkretnego kroku w ramach transakcji wsadowej nie powiedzie się.
+ * Exception thrown when execution of a specific step within a batch transaction fails.
  *
- * Opakowuje oryginalny wyjątek (np. QueryExecutionException), dodając kontekst
- * o tym, który krok zawiódł.
+ * Wraps the original exception (e.g., QueryExecutionException), adding context
+ * about which step failed.
  *
- * @param stepIndex Indeks (0-based) kroku, który się nie powiódł.
- * @param cause Oryginalny wyjątek, który spowodował błąd.
+ * @param stepIndex Index (0-based) of the step that failed.
+ * @param cause Original exception that caused the error.
  */
 class TransactionStepExecutionException(
     val stepIndex: Int,
@@ -64,7 +64,7 @@ class TransactionStepExecutionException(
 -------------------------------------
 | TRANSACTION STEP $stepIndex FAILED
 -------------------------------------
-| Szczegóły błędu w kroku:
+| Step error details:
 $nestedError
 -------------------------------------
 """
