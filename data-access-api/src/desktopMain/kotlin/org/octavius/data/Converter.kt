@@ -16,9 +16,9 @@ import kotlin.reflect.full.primaryConstructor
  * Adnotacja używana do określenia niestandardowego klucza dla właściwości
  * podczas konwersji obiektu do/z mapy.
  *
- * Domyślnie używana jest nazwa właściwości. Ta adnotacja pozwala ją nadpisać,
+ * Domyślnie używana jest nazwa właściwości z zamianą snake_case <-> camelCase. Ta adnotacja pozwala ją nadpisać,
  * co jest przydatne, gdy nazwy kluczy z mapy nie powinne odpowiadać nazwom właściwości
- * np CamelCase vs snake_case
+ * np userId vs user
  *
  * @property name Nazwa klucza, która zostanie użyta w mapie.
  *
