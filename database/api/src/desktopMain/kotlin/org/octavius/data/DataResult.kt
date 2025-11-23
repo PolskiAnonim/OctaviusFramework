@@ -55,3 +55,37 @@ fun <T> DataResult<T>.onFailure(action: (DatabaseException) -> Unit): DataResult
     if (this is DataResult.Failure) action(error)
     return this
 }
+
+/**
+ * Zwraca wartość jeśli wynik jest Success, lub rzuca wyjątek jeśli jest Failure.
+ *
+ * Używaj ostrożnie - ta metoda przerywa bezpieczne przetwarzanie błędów.
+ * Preferuj [map], [onSuccess], [onFailure] lub [getOrElse] gdy to możliwe.
+ *
+ * @return Wartość typu T z Success.
+ * @throws DatabaseException jeśli wynik jest Failure.
+ */
+fun <T> DataResult<T>.getOrThrow(): T {
+    return when (this) {
+        is DataResult.Success -> this.value
+        is DataResult.Failure -> throw this.error
+    }
+}
+
+/**
+ * Zwraca wartość jeśli wynik jest Success, lub oblicza wartość domyślną z błędu jeśli jest Failure.
+ *
+ * Pozwala na bezpieczne "wyjście" z DataResult z zawsze zdefiniowaną wartością.
+ * Przykład: `result.getOrElse { emptyList() }` zwróci pustą listę w przypadku błędu.
+ *
+ * @param R Typ zwracanej wartości (nadtyp T).
+ * @param T Typ wartości w Success.
+ * @param onFailure Funkcja obliczająca wartość domyślną na podstawie błędu.
+ * @return Wartość z Success lub wynik funkcji onFailure.
+ */
+fun <R, T : R> DataResult<T>.getOrElse(onFailure: (Throwable) -> R): R {
+    return when (this) {
+        is DataResult.Success -> this.value
+        is DataResult.Failure -> onFailure.invoke(this.error)
+    }
+}
