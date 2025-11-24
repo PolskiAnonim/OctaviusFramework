@@ -144,10 +144,10 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
  * @return Mapa reprezentująca obiekt.
  */
 fun <T : Any> T.toMap(includeNulls: Boolean = true): Map<String, Any?> {
-    val metadata = getOrCreateDataObjectMetadata(this::class)
+    val metadata = getOrCreateDataObjectMetadata(this::class) as DataObjectClassMetadata<T>
 
     return metadata.constructorProperties.mapNotNull { (_, property, keyName) ->
-        val value = property.call(this)
+        val value = property.get(this)
         if (!includeNulls && value == null) {
             null
         } else {
