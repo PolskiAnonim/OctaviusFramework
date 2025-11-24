@@ -11,6 +11,7 @@ import org.junit.jupiter.api.assertThrows
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toSingle
 import org.octavius.data.exception.TypeRegistryException
+import org.octavius.data.getOrThrow
 import org.octavius.data.toDataObject
 import org.octavius.database.DatabaseAccess
 import org.octavius.database.config.DatabaseConfig
@@ -147,10 +148,5 @@ class DynamicDtoMappingTest {
     }
 
     // Prosta metoda rozszerzająca do uproszczenia testów
-    private fun <T> DataResult<T>.getOrThrow(): T {
-        return when (this) {
-            is DataResult.Success -> this.value
-            is DataResult.Failure -> throw this.error
-        }
-    }
+
 }

@@ -32,7 +32,7 @@ internal class RowMappers(
 
         logger.trace { "Mapping row with ${metaData.columnCount} columns using ColumnNameMapper" }
         for (i in 1..metaData.columnCount) {
-            val columnName = metaData.getColumnName(i)
+            val columnName = metaData.getColumnLabel(i)
             data[columnName] = valueExtractor.extract(rs, i)
         }
         data
