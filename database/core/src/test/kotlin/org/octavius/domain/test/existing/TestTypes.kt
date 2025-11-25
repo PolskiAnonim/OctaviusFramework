@@ -1,17 +1,18 @@
-package org.octavius.domain.test
+package org.octavius.domain.test.existing
 
 import kotlinx.datetime.LocalDateTime
-import org.octavius.data.annotation.EnumCaseConvention
-import org.octavius.data.annotation.PgType
+import org.octavius.data.annotation.PgComposite
+import org.octavius.data.annotation.PgEnum
+import org.octavius.data.util.CaseConvention
 import java.math.BigDecimal
 
-@PgType(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
+@PgEnum(pgConvention = CaseConvention.SNAKE_CASE_LOWER)
 enum class TestStatus { Active, Inactive, Pending, NotStarted }
-@PgType(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
+@PgEnum(pgConvention = CaseConvention.SNAKE_CASE_LOWER)
 enum class TestPriority { Low, Medium, High, Critical }
-@PgType(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
+@PgEnum(pgConvention = CaseConvention.SNAKE_CASE_LOWER)
 enum class TestCategory { BugFix, Feature, Enhancement, Documentation }
-@PgType
+@PgComposite
 data class TestMetadata(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
@@ -21,7 +22,7 @@ data class TestMetadata(
 
 // W Postgresie wszystkie pola są nullable
 // Jednakże tutaj ? dodane jest tylko dla pola które faktycznie będzie nullem
-@PgType
+@PgComposite
 data class TestPerson(
     val name: String?,
     val age: Int,
@@ -30,7 +31,7 @@ data class TestPerson(
     val roles: List<String>
 )
 
-@PgType
+@PgComposite
 data class TestTask(
     val id: Int,
     val title: String,
@@ -44,7 +45,7 @@ data class TestTask(
     val estimatedHours: BigDecimal
 )
 
-@PgType
+@PgComposite
 data class TestProject(
     val name: String,
     val description: String,

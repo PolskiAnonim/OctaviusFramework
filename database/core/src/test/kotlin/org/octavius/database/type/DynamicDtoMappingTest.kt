@@ -8,17 +8,16 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
-import org.octavius.data.DataResult
 import org.octavius.data.builder.toSingle
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.getOrThrow
 import org.octavius.data.toDataObject
 import org.octavius.database.DatabaseAccess
-import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
-import org.octavius.domain.test.DynamicProfile
-import org.octavius.domain.test.UserStats
-import org.octavius.domain.test.UserWithDynamicProfile
+import org.octavius.database.config.DatabaseConfig
+import org.octavius.domain.test.dynamic.DynamicProfile
+import org.octavius.domain.test.dynamic.UserStats
+import org.octavius.domain.test.dynamic.UserWithDynamicProfile
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import java.nio.file.Files
@@ -52,12 +51,24 @@ class DynamicDtoMappingTest {
 
         jdbcTemplate.jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
         jdbcTemplate.jdbcTemplate.execute("CREATE SCHEMA public;")
-        val initSql = String(Files.readAllBytes(Paths.get(this::class.java.classLoader.getResource("init-dynamic-test-db.sql")!!.toURI())))
+        val initSql = String(
+            Files.readAllBytes(
+                Paths.get(
+                    this::class.java.classLoader.getResource("init-dynamic-test-db.sql")!!.toURI()
+                )
+            )
+        )
         jdbcTemplate.jdbcTemplate.execute(initSql)
         println("Dynamic DTO test DB schema initialized successfully.")
 
         // --- Krok 3: Załadowanie TypeRegistry i stworzenie pełnego DAL-a ---
-        typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate,databaseConfig.packagesToScan, databaseConfig.dbSchemas).load() }
+        typeRegistry = runBlocking {
+            TypeRegistryLoader(
+                jdbcTemplate,
+                databaseConfig.packagesToScan.filter { it != "org.octavius.domain.test.existing" && it != "org.octavius.performance" },
+                databaseConfig.dbSchemas
+            ).load()
+        }
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         val extractor = ResultSetValueExtractor(typeRegistry)
         val rowMappers = RowMappers(extractor)

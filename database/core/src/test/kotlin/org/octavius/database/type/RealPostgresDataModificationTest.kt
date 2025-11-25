@@ -11,7 +11,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
-import org.octavius.domain.test.*
+import org.octavius.domain.test.existing.TestCategory
+import org.octavius.domain.test.existing.TestMetadata
+import org.octavius.domain.test.existing.TestPerson
+import org.octavius.domain.test.existing.TestPriority
+import org.octavius.domain.test.existing.TestProject
+import org.octavius.domain.test.existing.TestStatus
+import org.octavius.domain.test.existing.TestTask
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.math.BigDecimal
 import java.nio.file.Files
@@ -75,7 +81,7 @@ class RealPostgresDataModificationTest {
         val typeRegistry = runBlocking {
             TypeRegistryLoader(
                 jdbcTemplate,
-                databaseConfig.packagesToScan,
+                databaseConfig.packagesToScan.filter { it != "org.octavius.performance" },
                 databaseConfig.dbSchemas
             ).load()
         }

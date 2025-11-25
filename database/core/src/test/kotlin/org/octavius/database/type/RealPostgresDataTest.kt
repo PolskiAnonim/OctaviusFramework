@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
-import org.octavius.domain.test.TestPerson
-import org.octavius.domain.test.TestPriority
-import org.octavius.domain.test.TestProject
-import org.octavius.domain.test.TestStatus
+import org.octavius.domain.test.existing.TestPerson
+import org.octavius.domain.test.existing.TestPriority
+import org.octavius.domain.test.existing.TestProject
+import org.octavius.domain.test.existing.TestStatus
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -74,7 +74,7 @@ class RealPostgresDataTest {
         }
 
         // 4. Inicjalizujemy zależności dla konwerterów
-        val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas)
+        val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan.filter { it != "org.octavius.performance" }, databaseConfig.dbSchemas)
         typeRegistry = runBlocking {
             loader.load()
         }

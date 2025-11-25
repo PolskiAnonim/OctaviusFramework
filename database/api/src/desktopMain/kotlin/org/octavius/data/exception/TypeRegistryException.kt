@@ -3,30 +3,36 @@ package org.octavius.data.exception
 //---------------------------------------------TypeRegistryException----------------------------------------------------
 
 enum class TypeRegistryExceptionMessage {
-    // Loading errors
-    INITIALIZATION_FAILED,       // General top-level loading error
-    CLASSPATH_SCAN_FAILED,       // Error during annotation scanning
-    DB_QUERY_FAILED,             // Error querying database for types
-    // Access / inconsistency errors
-    PG_TYPE_NOT_FOUND,           // PostgreSQL type with given name not found
-    KOTLIN_CLASS_NOT_MAPPED,     // Kotlin class is not mapped to any PG type
-    PG_TYPE_NOT_MAPPED,          // PG type is not mapped to any Kotlin class
-    DYNAMIC_TYPE_NOT_FOUND,      // Class for dynamic type not found
-    WRONG_FIELD_NUMBER_IN_COMPOSITE, // Wrong number of fields in composite
+    // --- Loading / Infrastructure errors ---
+    INITIALIZATION_FAILED,       // General fatal error
+    CLASSPATH_SCAN_FAILED,       // ClassGraph issue
+    DB_QUERY_FAILED,             // JDBC/SQL issue
+
+    // --- Schema Consistency errors (Startup) ---
+    TYPE_DEFINITION_MISSING_IN_DB,   // Code has @PgType, Database is missing CREATE TYPE
+
+    // --- Runtime Lookup errors (Operations) ---
+    WRONG_FIELD_NUMBER_IN_COMPOSITE, // Registry <-> database mismatch
+    PG_TYPE_NOT_FOUND,           // Registry lookup failed (e.g. converting DB value -> Kotlin)
+    KOTLIN_CLASS_NOT_MAPPED,     // Registry lookup failed (e.g. Kotlin param -> SQL)
+    PG_TYPE_NOT_MAPPED,          // Inverse lookup failed (PG name -> KClass)
+    DYNAMIC_TYPE_NOT_FOUND       // Dynamic DTO key lookup failed
 }
 
 class TypeRegistryException(
     val messageEnum: TypeRegistryExceptionMessage,
-    val typeName: String? = null, // PG type name or Kotlin class name related to the problem
+    val typeName: String? = null,
     cause: Throwable? = null
 ) : DatabaseException(messageEnum.name, cause) {
+
     override fun toString(): String {
         return """
         -------------------------------
         |     TYPE REGISTRY FAILED     
-        | message: ${generateDeveloperMessage(this.messageEnum, typeName) }
-        | typeName: $typeName
-        ---------------------------------
+        | Reason: ${messageEnum.name}
+        | Details: ${generateDeveloperMessage(this.messageEnum, typeName)}
+        | Related Type: ${typeName ?: "N/A"}
+        -------------------------------
         """.trimIndent()
     }
 }
@@ -36,10 +42,16 @@ private fun generateDeveloperMessage(messageEnum: TypeRegistryExceptionMessage, 
         TypeRegistryExceptionMessage.INITIALIZATION_FAILED -> "Critical error: Failed to initialize TypeRegistry."
         TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED -> "Failed to scan classpath for annotations."
         TypeRegistryExceptionMessage.DB_QUERY_FAILED -> "Failed to fetch type definitions from database."
-        TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND -> "PostgreSQL type not found in registry: '$typeName'."
-        TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED -> "Class '$typeName' is not a registered PostgreSQL type. Check the @PgType annotation."
-        TypeRegistryExceptionMessage.PG_TYPE_NOT_MAPPED -> "No mapped Kotlin class found for PostgreSQL type: '$typeName'."
-        TypeRegistryExceptionMessage.DYNAMIC_TYPE_NOT_FOUND -> "No registered class found for dynamic type: '$typeName'."
-        TypeRegistryExceptionMessage.WRONG_FIELD_NUMBER_IN_COMPOSITE -> "Composite '$typeName' from database has a different number of fields than in the registry."
+
+        // --- Nowy komunikat ---
+        TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB ->
+            "Startup validation failed. A Kotlin class is annotated with @PgEnum/@PgComposite(name='$typeName'), but the type '$typeName' does not exist in the database schemas. Please check your SQL migrations."
+
+        TypeRegistryExceptionMessage.WRONG_FIELD_NUMBER_IN_COMPOSITE -> "Schema mismatch. Composite type '$typeName' in the database has a different number of fields than defined in the registry."
+
+        TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND -> "Runtime lookup failed. The PostgreSQL type '$typeName' was not found in the loaded registry."
+        TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED -> "Runtime lookup failed. Class '$typeName' is not mapped to any PostgreSQL type. Ensure it has @PgEnum/@PgComposite annotation and is scanned."
+        TypeRegistryExceptionMessage.PG_TYPE_NOT_MAPPED -> "Runtime lookup failed. No Kotlin class found mapped to PostgreSQL type '$typeName'."
+        TypeRegistryExceptionMessage.DYNAMIC_TYPE_NOT_FOUND -> "Runtime lookup failed. No registered @DynamicallyMappable class found for key '$typeName'."
     }
 }

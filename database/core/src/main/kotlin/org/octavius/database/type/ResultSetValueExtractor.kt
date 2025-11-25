@@ -20,10 +20,10 @@ internal class ResultSetValueExtractor(
         }
 
         val pgTypeName = (rs.metaData as PgResultSetMetaData).getColumnTypeName(columnIndex)
-        val typeInfo = typeRegistry.getTypeInfo(pgTypeName)
+        val typeCategory = typeRegistry.getCategory(pgTypeName)
 
         // Główna logika: rozróżnienie ścieżek
-        return when (typeInfo.typeCategory) {
+        return when (typeCategory) {
             TypeCategory.STANDARD -> extractStandardType(rs, columnIndex, pgTypeName)
             else -> {
                 val rawValue = rs.getString(columnIndex)

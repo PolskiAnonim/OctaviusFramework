@@ -5,13 +5,11 @@ import kotlinx.datetime.*
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.OffsetTime
 import org.octavius.data.type.PgTyped
-import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toMap
 import org.octavius.data.type.DynamicDto
-import org.octavius.data.util.toCamelCase
-import org.octavius.data.util.toSnakeCase
+import org.octavius.data.util.CaseConverter
 import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
@@ -180,7 +178,7 @@ internal class KotlinToPostgresConverter(
         if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.EXPLICIT_ONLY) {
             return null
         }
-        // 2. Dla strategii "bez dwuznaczności", sprawdź, czy nie ma konfliktu z @PgType
+        // 2. Dla strategii "bez dwuznaczności", sprawdź, czy nie ma konfliktu z @PgComposite
         if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS && typeRegistry.isPgType(paramValue::class)) {
             return null
         }
@@ -201,7 +199,7 @@ internal class KotlinToPostgresConverter(
             throw ex
         }
         // Rekurencyjnie wywołaj expandParameter na tym wrapperze.
-        // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgType.
+        // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgComposite.
         return expandParameter(paramName, dynamicDtoWrapper)
     }
 
@@ -242,21 +240,14 @@ internal class KotlinToPostgresConverter(
 
         val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
 
-        val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
-        val convention = typeInfo.enumConvention
+        val typeInfo = typeRegistry.getEnumDefinition(dbTypeName)
 
-        logger.trace { "Converting enum value '${enumValue.name}' using convention: $convention" }
-        val finalValue = when (convention) {
-            EnumCaseConvention.SNAKE_CASE_LOWER -> enumValue.name.toSnakeCase().lowercase()
-            EnumCaseConvention.SNAKE_CASE_UPPER -> enumValue.name.toSnakeCase().uppercase()
-            EnumCaseConvention.PASCAL_CASE -> enumValue.name
-            EnumCaseConvention.CAMEL_CASE -> enumValue.name.toCamelCase()
-            EnumCaseConvention.AS_IS -> enumValue.name
-        }
+        val finalDbValue = typeInfo.enumToValueMap[enumValue]
 
-        logger.trace { "Enum value converted to: '$finalValue' with type: $dbTypeName" }
+        logger.trace { "Converted Kotlin enum '${enumValue.name}' to DB value '$finalDbValue'" }
+
         val pgObject = PGobject().apply {
-            value = finalValue
+            value = finalDbValue
             type = dbTypeName
         }
         return ":$paramName" to mapOf(paramName to pgObject)
@@ -310,7 +301,7 @@ internal class KotlinToPostgresConverter(
 
         // 1. Pobierz informacje o typie z rejestru (bez zmian)
         val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
-        val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
+        val typeInfo = typeRegistry.getCompositeDefinition(dbTypeName)
 
         logger.trace { "Found database type '$dbTypeName' with ${typeInfo.attributes.size} attributes" }
 

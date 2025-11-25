@@ -6,12 +6,11 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.octavius.data.DataAccess
-import org.octavius.data.annotation.PgType
+import org.octavius.data.annotation.PgComposite
 import org.octavius.database.DatabaseAccess
-import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.KotlinToPostgresConverter
-import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.database.type.ResultSetValueExtractor
 import org.octavius.database.type.TypeRegistryLoader
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -21,7 +20,7 @@ import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
 
 // Prosta data class do przechowywania naszych danych testowych
-@PgType(name = "performance_test")
+@PgComposite(name = "performance_test")
 data class PerformanceTestData(val val1: Int, val val2: String)
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -72,10 +71,21 @@ class ComprehensiveBulkInsertBenchmark {
         jdbcTemplate.jdbcTemplate.execute(
             """
             CREATE TABLE performance_test (id SERIAL PRIMARY KEY, val1 INT, val2 VARCHAR(50));
+            -- Uniwersalny typ-przenośnik - będzie obecny także na zwykłej bazie. Wymagany przez rejestr
+            DROP TYPE IF EXISTS dynamic_dto;
+            CREATE TYPE dynamic_dto AS
+            (
+                type_name    TEXT,
+                data_payload JSONB
+            );
         """.trimIndent()
         )
         // --- Krok 3: Inicjalizacja frameworka ---
-        val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas)
+        val loader = TypeRegistryLoader(
+            jdbcTemplate,
+            databaseConfig.packagesToScan.filter { it != "org.octavius.domain.test.dynamic" && it != "org.octavius.domain.test.existing" },
+            databaseConfig.dbSchemas
+        )
         val typeRegistry = runBlocking { loader.load() }
         val kotlinToPostgresConverter = KotlinToPostgresConverter(typeRegistry)
         val extractor = ResultSetValueExtractor(typeRegistry)
@@ -114,7 +124,7 @@ class ComprehensiveBulkInsertBenchmark {
         val jdbcTimings = mutableListOf<Long>()
         val unnestRowTimings = mutableListOf<Long>()
         val unnestParallelTimings = mutableListOf<Long>()
-        val unnestTypedArrayTimings = mutableListOf<Long>() // <-- NOWE
+        val unnestTypedArrayTimings = mutableListOf<Long>()
 
         for (i in 1..ITERATIONS_PER_SIZE) {
             dataAccess.rawQuery("TRUNCATE TABLE performance_test RESTART IDENTITY").execute(emptyMap())
