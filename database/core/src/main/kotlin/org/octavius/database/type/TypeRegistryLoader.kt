@@ -191,9 +191,9 @@ internal class TypeRegistryLoader(
             if (dbValues == null) {
                 // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
                 throw TypeRegistryException(
-                    messageEnum = TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND,
+                    messageEnum = TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB,
                     typeName = kt.pgName,
-                    cause = IllegalStateException("Enum class '${kt.kClass.qualifiedName}' is annotated with @PgEnum(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
+                    cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' expects DB type '${kt.pgName}'")
                 )
             }
 
@@ -242,9 +242,9 @@ internal class TypeRegistryLoader(
             if (dbAttributes == null) {
                 // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
                 throw TypeRegistryException(
-                    messageEnum = TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND,
+                    messageEnum = TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB,
                     typeName = kt.pgName,
-                    cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' is annotated with @PgComposite(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
+                    cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' expects DB type '${kt.pgName}'")
                 )
             }
 
