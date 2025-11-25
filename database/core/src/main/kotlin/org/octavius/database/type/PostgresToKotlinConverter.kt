@@ -4,13 +4,12 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
-import org.octavius.data.util.toPascalCase
+import org.octavius.data.util.CaseConverter
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -171,15 +170,13 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                 clazz.getMethod("valueOf", String::class.java)
             }
 
-            val enumValueName = when (typeInfo.enumConvention) {
-                EnumCaseConvention.SNAKE_CASE_LOWER -> value.toPascalCase()
-                EnumCaseConvention.SNAKE_CASE_UPPER -> value.toPascalCase()
-                EnumCaseConvention.PASCAL_CASE -> value
-                EnumCaseConvention.CAMEL_CASE -> value.toPascalCase()
-                EnumCaseConvention.AS_IS -> value
-            }
+            val enumValueName = CaseConverter.convert(
+                value = value,
+                from = typeInfo.pgConvention,
+                to = typeInfo.kotlinConvention
+            )
 
-            logger.trace { "Converting enum '$value' to '$enumValueName' using convention: ${typeInfo.enumConvention}" }
+            logger.trace { "Converting DB enum '$value' (${typeInfo.pgConvention}) to Kotlin '$enumValueName' (${typeInfo.kotlinConvention})" }
             val result = valueOfMethod.invoke(null, enumValueName)
             logger.trace { "Successfully converted enum value to: $result" }
             result

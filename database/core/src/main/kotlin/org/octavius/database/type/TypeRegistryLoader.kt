@@ -8,12 +8,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.octavius.data.annotation.DynamicallyMappable
-import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.annotation.PgComposite
 import org.octavius.data.annotation.PgEnum
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.type.PgStandardType
+import org.octavius.data.util.CaseConvention
 import org.octavius.data.util.toSnakeCase
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
@@ -34,7 +34,8 @@ internal class TypeRegistryLoader(
     private data class KotlinPgTypeMapping(
         val classFullPath: String,
         val pgTypeName: String,
-        val enumConvention: EnumCaseConvention?
+        val pgConvention: CaseConvention?,
+        val kotlinConvention: CaseConvention?
     )
 
     private data class KotlinDynamicTypeMapping(val typeName: String, val kClass: KClass<*>)
@@ -114,11 +115,15 @@ internal class TypeRegistryLoader(
                         val annotationInfo: AnnotationInfo = classInfo.getAnnotationInfo(PgEnum::class.java)
                         val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
                         val pgTypeName = pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
+                        // Pobieranie konwencji DB
+                        val dbConventionVal = annotationInfo.parameterValues.getValue("pgConvention") as io.github.classgraph.AnnotationEnumValue
+                        val dbConvention = dbConventionVal.loadClassAndReturnEnumValue() as CaseConvention
 
-                        val conventionEnumValue = annotationInfo.parameterValues.getValue("enumConvention") as io.github.classgraph.AnnotationEnumValue
-                        val convention = conventionEnumValue.loadClassAndReturnEnumValue() as EnumCaseConvention
+                        // Pobieranie konwencji Kotlina
+                        val ktConventionVal = annotationInfo.parameterValues.getValue("kotlinConvention") as io.github.classgraph.AnnotationEnumValue
+                        val kotlinConvention = ktConventionVal.loadClassAndReturnEnumValue() as CaseConvention
 
-                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, convention))
+                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, dbConvention, kotlinConvention))
                     }
 
                     // Przetwarzamy klasy z @PgComposite
@@ -134,7 +139,7 @@ internal class TypeRegistryLoader(
                         val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
                         val pgTypeName = pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
 
-                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, null)) // enumConvention jest null dla kompozytów
+                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, null, null)) // enumConvention jest null dla kompozytów
                     }
 
                     // Przetwarzamy klasy z @DynamicallyMappable
@@ -195,9 +200,7 @@ internal class TypeRegistryLoader(
         kotlinMappings: List<KotlinPgTypeMapping>
     ): ProcessedDbTypes {
         logger.debug { "Processing ${rawInfo.size} raw DB type entries..." }
-        val pgNameToEnumConventionMap = kotlinMappings
-            .filter { it.enumConvention != null }
-            .associate { it.pgTypeName to it.enumConvention!! }
+        val pgTypeNameToMapping = kotlinMappings.associateBy { it.pgTypeName }
 
         val enums = mutableMapOf<String, MutableList<String>>()
         val composites = mutableMapOf<String, MutableMap<String, String>>()
@@ -210,9 +213,15 @@ internal class TypeRegistryLoader(
         }
 
         val enumTypes = enums.mapValues { (typeName, values) ->
+            val mapping = pgTypeNameToMapping[typeName]
+
             PostgresTypeInfo(
-                typeName, TypeCategory.ENUM, enumValues = values,
-                enumConvention = pgNameToEnumConventionMap[typeName] ?: EnumCaseConvention.SNAKE_CASE_UPPER
+                typeName = typeName,
+                typeCategory = TypeCategory.ENUM,
+                enumValues = values,
+                // Jeśli nie znaleziono mapowania (enum z DB bez klasy w kodzie), przyjmujemy domyślne
+                pgConvention = mapping?.pgConvention ?: CaseConvention.SNAKE_CASE_UPPER,
+                kotlinConvention = mapping?.kotlinConvention ?: CaseConvention.PASCAL_CASE
             )
         }
 

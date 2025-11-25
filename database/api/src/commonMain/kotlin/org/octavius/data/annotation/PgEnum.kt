@@ -1,5 +1,7 @@
 package org.octavius.data.annotation
 
+import org.octavius.data.util.CaseConvention
+
 /**
  * Oznacza klasę `enum` jako typ danych, który może być mapowany na typ `ENUM`
  * w bazie danych PostgreSQL.
@@ -40,13 +42,8 @@ package org.octavius.data.annotation
 @Retention(AnnotationRetention.RUNTIME)
 annotation class PgEnum(
     val name: String = "",
-    val enumConvention: EnumCaseConvention = EnumCaseConvention.SNAKE_CASE_UPPER
+    // Jak zapisane są wartości w bazie PostgreSQL (np. 'PENDING', 'in_progress')
+    val pgConvention: CaseConvention = CaseConvention.SNAKE_CASE_UPPER,
+    // Jak zapisane są wartości w klasie Enum w Kotlinie (np. Pending, InProgress)
+    val kotlinConvention: CaseConvention = CaseConvention.PASCAL_CASE
 )
-
-enum class EnumCaseConvention {
-    SNAKE_CASE_UPPER,  // MOJA_WARTOSC
-    SNAKE_CASE_LOWER,  // moja_wartosc
-    PASCAL_CASE,       // MojaWartosc
-    CAMEL_CASE,        // mojaWartosc
-    AS_IS              // MojaWartosc -> MojaWartosc
-}

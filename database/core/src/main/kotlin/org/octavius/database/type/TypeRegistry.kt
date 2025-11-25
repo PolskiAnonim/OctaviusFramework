@@ -1,9 +1,9 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
+import org.octavius.data.util.CaseConvention
 import kotlin.reflect.KClass
 
 /**
@@ -149,15 +149,17 @@ internal enum class TypeCategory {
  * @param typeName Nazwa typu w PostgreSQL
  * @param typeCategory Kategoria typu
  * @param enumValues Lista wartości dla typów enum (pusta dla innych typów)
- * @param enumConvention Konwencja konwersji nazw enum
  * @param elementType Typ elementu dla typów tablicowych (null dla innych typów)
  * @param attributes Mapa atrybutów dla typów kompozytowych (pusta dla innych typów)
+ * @param pgConvention Konwencja nazewnicza dla enuma w Postgresie
+ * @param kotlinConvention Konwencja nazewnicza dla enuma w Kotlinie
  */
 internal data class PostgresTypeInfo(
     val typeName: String,
     val typeCategory: TypeCategory,
     val enumValues: List<String> = emptyList(),
-    val enumConvention: EnumCaseConvention = EnumCaseConvention.SNAKE_CASE_LOWER,
     val elementType: String? = null,
-    val attributes: Map<String, String> = emptyMap()
+    val attributes: Map<String, String> = emptyMap(),
+    val pgConvention: CaseConvention = CaseConvention.SNAKE_CASE_UPPER,
+    val kotlinConvention: CaseConvention = CaseConvention.PASCAL_CASE
 )
