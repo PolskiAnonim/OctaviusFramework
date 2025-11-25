@@ -6,6 +6,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.octavius.data.DataAccess
+import org.octavius.data.annotation.PgComposite
 import org.octavius.data.annotation.PgType
 import org.octavius.database.DatabaseAccess
 import org.octavius.database.config.DatabaseConfig
@@ -21,7 +22,7 @@ import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
 
 // Prosta data class do przechowywania naszych danych testowych
-@PgType(name = "performance_test")
+@PgComposite(name = "performance_test")
 data class PerformanceTestData(val val1: Int, val val2: String)
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

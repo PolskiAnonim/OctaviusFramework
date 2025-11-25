@@ -180,7 +180,7 @@ internal class KotlinToPostgresConverter(
         if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.EXPLICIT_ONLY) {
             return null
         }
-        // 2. Dla strategii "bez dwuznaczności", sprawdź, czy nie ma konfliktu z @PgType
+        // 2. Dla strategii "bez dwuznaczności", sprawdź, czy nie ma konfliktu z @PgComposite
         if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS && typeRegistry.isPgType(paramValue::class)) {
             return null
         }
@@ -201,7 +201,7 @@ internal class KotlinToPostgresConverter(
             throw ex
         }
         // Rekurencyjnie wywołaj expandParameter na tym wrapperze.
-        // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgType.
+        // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgComposite.
         return expandParameter(paramName, dynamicDtoWrapper)
     }
 

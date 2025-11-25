@@ -128,7 +128,7 @@ class DynamicDtoSerializationTest {
 
         // --- ACT & ASSERT ---
         // Używamy DAL-a z WYŁĄCZONĄ funkcją.
-        // Próba zapisu obiektu @DynamicallyMappable, który nie jest @PgType,
+        // Próba zapisu obiektu @DynamicallyMappable, który nie jest @PgComposite,
         // powinna rzucić wyjątek, bo framework nie wie, jak go zmapować.
         // To jest OCZEKIWANE zachowanie, które dowodzi, że flaga działa.
         assertThrows<TypeRegistryException> {

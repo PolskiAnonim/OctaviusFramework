@@ -1,16 +1,19 @@
 package org.octavius.database.type
 
+import io.github.classgraph.AnnotationInfo
 import io.github.classgraph.ClassGraph
+import io.github.classgraph.ClassInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import org.octavius.data.type.PgStandardType
 import org.octavius.data.annotation.DynamicallyMappable
 import org.octavius.data.annotation.EnumCaseConvention
-import org.octavius.data.annotation.PgType
+import org.octavius.data.annotation.PgComposite
+import org.octavius.data.annotation.PgEnum
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
+import org.octavius.data.type.PgStandardType
 import org.octavius.data.util.toSnakeCase
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
@@ -46,10 +49,8 @@ internal class TypeRegistryLoader(
         try {
             logger.info { "Starting TypeRegistry loading..." }
 
-            // Zmiana: teraz mamy tylko DWA równoległe zadania
             val (scanResults, processedDbTypes) = coroutineScope {
                 logger.debug { "Starting parallel execution of classpath scan and database query." }
-                // JEDNO skanowanie classpathu
                 val annotationScanJob = async(Dispatchers.IO) { scanForAnnotations() }
                 val dbTypesJob = async(Dispatchers.IO) { loadAllCustomTypesFromDb() }
 
@@ -68,7 +69,7 @@ internal class TypeRegistryLoader(
             val dynamicTypeMap = scanResults.dynamicTypeMappings.associate { it.typeName to it.kClass }
 
             logger.info { "TypeRegistry loaded successfully. Found ${postgresTypeMap.size} total PG types." }
-            logger.debug { "Static @PgStandardType.kt mappings found: ${scanResults.pgTypeMappings.size}" }
+            logger.debug { "Static @PgEnum/@PgComposite mappings found: ${scanResults.pgTypeMappings.size}" }
             logger.debug { "Dynamic @DynamicallyMappable mappings found: ${scanResults.dynamicTypeMappings.size}" }
 
             return TypeRegistry(
@@ -88,7 +89,8 @@ internal class TypeRegistryLoader(
     }
 
     /**
-     * Wykonuje JEDNO skanowanie classpathu i wyszukuje klasy z obiema adnotacjami.
+     * Wykonuje JEDNO skanowanie classpathu i wyszukuje klasy z adnotacjami
+     * @PgEnum, @PgComposite oraz @DynamicallyMappable.
      */
     private fun scanForAnnotations(): AnnotationScanResults {
         val pgMappings = mutableListOf<KotlinPgTypeMapping>()
@@ -100,20 +102,39 @@ internal class TypeRegistryLoader(
                 .enableAllInfo()                    // DynamicDto
                 .acceptPackages("org.octavius.data.type", *packagesToScan.toTypedArray())
                 .scan().use { scanResult ->
-                    // Przetwarzamy klasy z @PgType
-                    scanResult.getClassesWithAnnotation(PgType::class.java).forEach { classInfo ->
-                        val annotationInfo = classInfo.getAnnotationInfo(PgType::class.java)
-                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
-                        val pgTypeName =
-                            pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
-
-                        var convention: EnumCaseConvention? = null
-                        if (classInfo.isEnum) {
-                            val conventionEnumValue =
-                                annotationInfo.parameterValues.getValue("enumConvention") as? io.github.classgraph.AnnotationEnumValue
-                            convention = conventionEnumValue?.loadClassAndReturnEnumValue() as? EnumCaseConvention
+                    // Przetwarzamy klasy z @PgEnum
+                    scanResult.getClassesWithAnnotation(PgEnum::class.java).forEach { classInfo: ClassInfo ->
+                        if (!classInfo.isEnum) {
+                            throw TypeRegistryException(
+                                messageEnum = TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
+                                typeName = classInfo.name,
+                                cause = IllegalStateException("Class '${classInfo.name}' is annotated with @PgEnum but is not an enum class.")
+                            )
                         }
+                        val annotationInfo: AnnotationInfo = classInfo.getAnnotationInfo(PgEnum::class.java)
+                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
+                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
+
+                        val conventionEnumValue = annotationInfo.parameterValues.getValue("enumConvention") as io.github.classgraph.AnnotationEnumValue
+                        val convention = conventionEnumValue.loadClassAndReturnEnumValue() as EnumCaseConvention
+
                         pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, convention))
+                    }
+
+                    // Przetwarzamy klasy z @PgComposite
+                    scanResult.getClassesWithAnnotation(PgComposite::class.java).forEach { classInfo ->
+                        if (classInfo.isEnum) {
+                            throw TypeRegistryException(
+                                messageEnum = TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
+                                typeName = classInfo.name,
+                                cause = IllegalStateException("Class '${classInfo.name}' is an enum and cannot be annotated with @PgComposite. Use @PgEnum instead.")
+                            )
+                        }
+                        val annotationInfo = classInfo.getAnnotationInfo(PgComposite::class.java)
+                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
+                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
+
+                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, null)) // enumConvention jest null dla kompozytów
                     }
 
                     // Przetwarzamy klasy z @DynamicallyMappable
@@ -268,7 +289,6 @@ internal class TypeRegistryLoader(
                 AND n.nspname = ANY(:schemas)
         """
 
-        // Jedno zapytanie, by rządzić wszystkimi!
         private const val SQL_QUERY_ALL_TYPES = """
             $SQL_QUERY_ENUM_TYPES
             UNION ALL

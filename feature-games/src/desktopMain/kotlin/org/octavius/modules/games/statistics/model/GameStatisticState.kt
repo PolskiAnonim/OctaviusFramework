@@ -1,18 +1,18 @@
 package org.octavius.modules.games.statistics.model
 
-import org.octavius.data.annotation.PgType
+import org.octavius.data.annotation.PgComposite
 import org.octavius.domain.game.GameStatus
 import java.math.BigDecimal
 
 // Typ kompozytowy dla rozkładu statusów
-@PgType
+@PgComposite
 data class DashboardStatusCount(
     val status: GameStatus,
     val count: Long
 )
 
 // Typ kompozytowy dla gry w liście "najwięcej grane"
-@PgType
+@PgComposite
 data class DashboardGameByTime(
     val id: Int,
     val name: String,
@@ -20,7 +20,7 @@ data class DashboardGameByTime(
 )
 
 // Typ kompozytowy dla gry w liście "najwyżej oceniane"
-@PgType
+@PgComposite
 data class DashboardGameByRating(
     val id: Int,
     val name: String,

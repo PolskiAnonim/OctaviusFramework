@@ -1,8 +1,9 @@
 package org.octavius.modules.asian.home.model
 
-import org.octavius.data.annotation.PgType
+import org.octavius.data.annotation.PgComposite
 
-@PgType
+
+@PgComposite
 data class DashboardItem(
     val id: Int,
     val mainTitle: String

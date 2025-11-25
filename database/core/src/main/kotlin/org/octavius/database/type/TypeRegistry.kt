@@ -110,7 +110,7 @@ internal class TypeRegistry(
     }
 
     /**
-     * Sprawdza czy dana klasa jest zarejestrowana jako @PgType
+     * Sprawdza czy dana klasa jest zarejestrowana jako @PgComposite
      */
     fun isPgType(kClass: KClass<*>): Boolean {
         return classFullPathToPgTypeNameMap.containsKey(kClass.qualifiedName)

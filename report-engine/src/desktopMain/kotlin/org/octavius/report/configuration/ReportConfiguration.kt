@@ -1,7 +1,8 @@
 package org.octavius.report.configuration
 
 import kotlinx.serialization.json.JsonObject
-import org.octavius.data.annotation.PgType
+import org.octavius.data.annotation.PgComposite
+import org.octavius.data.annotation.PgEnum
 
 data class ReportConfiguration(
     val id: Int? = null,
@@ -16,19 +17,19 @@ data class ReportConfiguration(
     val filters: List<FilterConfig>
 )
 
-@PgType
+@PgEnum
 enum class SortDirection {
     Ascending, // Rosnąca
     Descending // Malejąca
 }
 
-@PgType
+@PgComposite
 data class SortConfiguration(
     val columnName: String,
     val sortDirection: SortDirection
 )
 
-@PgType
+@PgComposite
 data class FilterConfig(
     val columnName: String,
     val config: JsonObject

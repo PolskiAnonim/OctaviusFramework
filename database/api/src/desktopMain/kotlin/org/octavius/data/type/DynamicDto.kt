@@ -5,7 +5,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
 import org.octavius.data.annotation.DynamicallyMappable
-import org.octavius.data.annotation.PgType
+import org.octavius.data.annotation.PgComposite
+import org.octavius.data.annotation.PgEnum
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import kotlin.reflect.KClass
@@ -33,7 +34,7 @@ import kotlin.reflect.full.findAnnotation
  * @see DynamicallyMappable
  */
 @ConsistentCopyVisibility
-@PgType(name = "dynamic_dto")
+@PgComposite(name = "dynamic_dto")
 data class DynamicDto private constructor(
     val typeName: String,
     val dataPayload: JsonObject

@@ -37,7 +37,7 @@ private fun generateDeveloperMessage(messageEnum: TypeRegistryExceptionMessage, 
         TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED -> "Failed to scan classpath for annotations."
         TypeRegistryExceptionMessage.DB_QUERY_FAILED -> "Failed to fetch type definitions from database."
         TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND -> "PostgreSQL type not found in registry: '$typeName'."
-        TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED -> "Class '$typeName' is not a registered PostgreSQL type. Check the @PgType annotation."
+        TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED -> "Class '$typeName' is not a registered PostgreSQL type. Check the @PgEnum/@PgComposite annotation."
         TypeRegistryExceptionMessage.PG_TYPE_NOT_MAPPED -> "No mapped Kotlin class found for PostgreSQL type: '$typeName'."
         TypeRegistryExceptionMessage.DYNAMIC_TYPE_NOT_FOUND -> "No registered class found for dynamic type: '$typeName'."
         TypeRegistryExceptionMessage.WRONG_FIELD_NUMBER_IN_COMPOSITE -> "Composite '$typeName' from database has a different number of fields than in the registry."
