@@ -164,34 +164,12 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      */
     private fun convertEnum(value: String, typeInfo: PgEnumDefinition): Any? {
 
-        return try {
-            // Użycie cache'a
-            val valueOfMethod = enumClassCache.getOrPut(typeInfo.classFullPath) {
-                logger.debug { "Cache miss for enum class ${typeInfo.classFullPath}. Loading via reflection." }
-                val clazz = Class.forName(typeInfo.classFullPath)
-                clazz.getMethod("valueOf", String::class.java)
-            }
-
-            val enumValueName = CaseConverter.convert(
-                value = value,
-                from = typeInfo.pgConvention,
-                to = typeInfo.kotlinConvention
-            )
-
-            logger.trace { "Converting DB enum '$value' (${typeInfo.pgConvention}) to Kotlin '$enumValueName' (${typeInfo.kotlinConvention})" }
-            val result = valueOfMethod.invoke(null, enumValueName)
-            logger.trace { "Successfully converted enum value to: $result" }
-            result
-        } catch (e: Exception) {
-            val conversionEx = ConversionException(
+        return typeInfo.valueToEnumMap[value]
+            ?: throw ConversionException(
                 messageEnum = ConversionExceptionMessage.ENUM_CONVERSION_FAILED,
                 value = value,
-                targetType = typeInfo.classFullPath,
-                cause = e
+                targetType = typeInfo.kClass.simpleName
             )
-            logger.error(conversionEx) { conversionEx }
-            throw conversionEx
-        }
     }
 
     /**
@@ -233,7 +211,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      */
     private fun convertCompositeType(value: String, typeInfo:  PgCompositeDefinition): Any? {
 
-        logger.trace { "Converting composite type ${typeInfo.typeName} to class: ${typeInfo.classFullPath}" }
+        logger.trace { "Converting composite type ${typeInfo.typeName} to class: ${typeInfo.kClass.qualifiedName}" }
 
         // 1. Parsowanie stringa na listę surowych wartości
         val fieldValues: List<String?> = parseNestedStructure(value)
@@ -254,13 +232,8 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
         }.toMap()
 
         return try {
-            // Użycie cache'a dla KClass
-            val clazz = compositeKClassCache.getOrPut(typeInfo.classFullPath) {
-                logger.trace { "Cache miss for composite KClass ${typeInfo.classFullPath}. Loading via reflection." }
-                Class.forName(typeInfo.classFullPath).kotlin
-            }
-            val result = constructorArgsMap.toDataObject(clazz)
-            logger.trace { "Successfully created instance of ${clazz.simpleName}" }
+            val result = constructorArgsMap.toDataObject(typeInfo.kClass)
+            logger.trace { "Successfully created instance of ${typeInfo.kClass.simpleName}" }
             result
         } catch (e: Exception) { // To zawsze powinien być ConversionException
             logger.error(e) { e }

@@ -15,7 +15,7 @@ internal class TypeRegistry(
     private val arrays: Map<String, PgArrayDefinition>,
 
     // Mapowania do zapisu (Kotlin Class -> PgType)
-    private val classToPgNameMap: Map<String, String>,
+    private val classToPgNameMap: Map<KClass<*>, String>,
 
     // Mapowania dynamiczne (Dynamic Key -> Kotlin Class)
     private val dynamicDtoMapping: Map<String, KClass<*>>
@@ -65,9 +65,10 @@ internal class TypeRegistry(
     // --- Sekcja ZAPISU (Kotlin -> DB) ---
 
     fun getPgTypeNameForClass(clazz: KClass<*>): String {
-        return classToPgNameMap[clazz.qualifiedName] ?: throw TypeRegistryException(
+        // Bezpośrednie pobranie z mapy po obiekcie klasy
+        return classToPgNameMap[clazz] ?: throw TypeRegistryException(
             TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED,
-            typeName = clazz.qualifiedName ?: "unknown"
+            typeName = clazz.qualifiedName ?: clazz.simpleName ?: "unknown"
         )
     }
 
@@ -78,6 +79,6 @@ internal class TypeRegistry(
     }
 
     fun isPgType(kClass: KClass<*>): Boolean {
-        return classToPgNameMap.containsKey(kClass.qualifiedName)
+        return classToPgNameMap.containsKey(kClass)
     }
 }

@@ -242,11 +242,7 @@ internal class KotlinToPostgresConverter(
 
         val typeInfo = typeRegistry.getEnumDefinition(dbTypeName)
 
-        val finalDbValue = CaseConverter.convert(
-            value = enumValue.name,
-            from = typeInfo.kotlinConvention,
-            to = typeInfo.pgConvention
-        )
+        val finalDbValue = typeInfo.enumToValueMap[enumValue]
 
         logger.trace { "Converted Kotlin enum '${enumValue.name}' to DB value '$finalDbValue'" }
 

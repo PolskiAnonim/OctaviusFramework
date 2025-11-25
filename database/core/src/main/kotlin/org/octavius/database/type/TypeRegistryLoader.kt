@@ -13,6 +13,7 @@ import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.type.PgStandardType
 import org.octavius.data.util.CaseConvention
+import org.octavius.data.util.CaseConverter
 import org.octavius.data.util.toSnakeCase
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
@@ -28,8 +29,8 @@ internal class TypeRegistryLoader(
         val composites: List<KtCompositeInfo>,
         val dynamic: Map<String, KClass<*>>
     )
-    private data class KtEnumInfo(val fqn: String, val pgName: String, val pgConv: CaseConvention, val ktConv: CaseConvention)
-    private data class KtCompositeInfo(val fqn: String, val pgName: String)
+    private data class KtEnumInfo(val kClass: KClass<*>, val pgName: String, val pgConv: CaseConvention, val ktConv: CaseConvention)
+    private data class KtCompositeInfo(val kClass: KClass<*>, val pgName: String)
 
     // Wyniki z bazy
     private data class DatabaseData(
@@ -118,8 +119,8 @@ internal class TypeRegistryLoader(
                 .loadClassAndReturnEnumValue() as CaseConvention
             val ktConv = (annotation.parameterValues.getValue("kotlinConvention") as io.github.classgraph.AnnotationEnumValue)
                 .loadClassAndReturnEnumValue() as CaseConvention
-
-            target.add(KtEnumInfo(classInfo.name, name, pgConv, ktConv))
+            val kClass = classInfo.loadClass().kotlin
+            target.add(KtEnumInfo(kClass, name, pgConv, ktConv))
         }
     }
 
@@ -129,8 +130,8 @@ internal class TypeRegistryLoader(
 
             val annotation = classInfo.getAnnotationInfo(PgComposite::class.java)
             val name = (annotation.parameterValues.getValue("name") as String).ifBlank { classInfo.simpleName.toSnakeCase() }
-
-            target.add(KtCompositeInfo(classInfo.name, name))
+            val kClass = classInfo.loadClass().kotlin
+            target.add(KtCompositeInfo(kClass, name))
         }
     }
 
@@ -178,10 +179,10 @@ internal class TypeRegistryLoader(
     private fun mergeEnums(
         ktEnums: List<KtEnumInfo>,
         dbEnums: Map<String, List<String>>
-    ): Pair<Map<String, PgEnumDefinition>, Map<String, String>> {
+    ): Pair<Map<String, PgEnumDefinition>, Map<KClass<*>, String>> {
 
         val defs = mutableMapOf<String, PgEnumDefinition>()
-        val classMap = mutableMapOf<String, String>()
+        val classMap = mutableMapOf<KClass<*>, String>()
 
         ktEnums.forEach { kt ->
             // VALIDATION: Sprawdź czy Enum istnieje w bazie
@@ -192,18 +193,36 @@ internal class TypeRegistryLoader(
                 throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND,
                     typeName = kt.pgName,
-                    cause = IllegalStateException("Enum class '${kt.fqn}' is annotated with @PgEnum(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
+                    cause = IllegalStateException("Enum class '${kt.kClass.qualifiedName}' is annotated with @PgEnum(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
                 )
             }
 
+            // Pobieramy wszystkie stałe enuma raz przy starcie
+            val enumConstants = kt.kClass.java.enumConstants!!
+
+            // Budujemy mapę: DB_STRING -> ENUM_INSTANCE
+            val lookupMap: Map<String, Enum<*>> = enumConstants.associate { constant ->
+                val enumConst = constant as Enum<*>
+
+                // Konwersja nazwy (Kotlin -> DB)
+                val dbKey = CaseConverter.convert(
+                    value = enumConst.name,
+                    from = kt.ktConv,
+                    to = kt.pgConv
+                )
+
+                // Zwracamy parę (Klucz, Wartość). Wartość jest teraz typu Enum<*>
+                dbKey to enumConst
+            }
+
+            @Suppress("UNCHECKED_CAST") val enumClassTyped = kt.kClass as KClass<out Enum<*>>
+
             defs[kt.pgName] = PgEnumDefinition(
                 typeName = kt.pgName,
-                values = dbValues,
-                pgConvention = kt.pgConv,
-                kotlinConvention = kt.ktConv,
-                classFullPath = kt.fqn
+                valueToEnumMap = lookupMap,
+                kClass = enumClassTyped
             )
-            classMap[kt.fqn] = kt.pgName
+            classMap[kt.kClass] = kt.pgName
         }
         return defs to classMap
     }
@@ -211,10 +230,10 @@ internal class TypeRegistryLoader(
     private fun mergeComposites(
         ktComposites: List<KtCompositeInfo>,
         dbComposites: Map<String, Map<String, String>>
-    ): Pair<Map<String, PgCompositeDefinition>, Map<String, String>> {
+    ): Pair<Map<String, PgCompositeDefinition>, Map<KClass<*>, String>> {
 
         val defs = mutableMapOf<String, PgCompositeDefinition>()
-        val classMap = mutableMapOf<String, String>()
+        val classMap = mutableMapOf<KClass<*>, String>()
 
         ktComposites.forEach { kt ->
             // VALIDATION: Sprawdź czy Kompozyt istnieje w bazie
@@ -225,16 +244,16 @@ internal class TypeRegistryLoader(
                 throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND,
                     typeName = kt.pgName,
-                    cause = IllegalStateException("Class '${kt.fqn}' is annotated with @PgComposite(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
+                    cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' is annotated with @PgComposite(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
                 )
             }
 
             defs[kt.pgName] = PgCompositeDefinition(
                 typeName = kt.pgName,
                 attributes = dbAttributes, // Mapa zachowuje kolejność z DB
-                classFullPath = kt.fqn
+                kClass = kt.kClass
             )
-            classMap[kt.fqn] = kt.pgName
+            classMap[kt.kClass] = kt.pgName
         }
         return defs to classMap
     }
