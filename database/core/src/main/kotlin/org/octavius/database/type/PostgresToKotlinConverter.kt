@@ -91,7 +91,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     @OptIn(InternalSerializationApi::class)
     private fun convertDynamicType(value: String): Any? {
 
-        val parts: List<String?> = parsePostgresComposite(value)
+        val parts: List<String?> = parseNestedStructure(value)
 
         if (parts.size != 2) {
             throw TypeRegistryException(TypeRegistryExceptionMessage.WRONG_FIELD_NUMBER_IN_COMPOSITE, typeName = "dynamic_dto")
@@ -211,7 +211,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
 
         logger.trace { "Parsing PostgreSQL array with element type: $elementType" }
 
-        val elements: List<String?> = parsePostgresArray(value)
+        val elements: List<String?> = parseNestedStructure(value)
 
         logger.trace { "Parsed ${elements.size} array elements" }
 
@@ -239,7 +239,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
         logger.trace { "Converting composite type ${typeInfo.typeName} to class: $fullClassName" }
 
         // 1. Parsowanie stringa na listę surowych wartości
-        val fieldValues: List<String?> = parsePostgresComposite(value)
+        val fieldValues: List<String?> = parseNestedStructure(value)
 
 
         val dbAttributes = typeInfo.attributes.toList()
@@ -272,17 +272,14 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     // =================================================================
-    // --- PARSERY STRUKTUR POSTGRESQL ---
+    // --- PARSER STRUKTUR POSTGRESQL ---
     // =================================================================
-
-    private fun parsePostgresArray(pgArrayString: String): List<String?> = parseNestedStructure(pgArrayString, '{', '}')
-    private fun parsePostgresComposite(pgCompositeString: String): List<String?> = parseNestedStructure(pgCompositeString, '(', ')')
 
     /**
      * Uniwersalny parser dla zagnieżdżonych struktur (tablic i kompozytów).
      * Obsługuje cudzysłowy, escapowanie, wartości `NULL` i zagnieżdżenia.
      */
-    private fun parseNestedStructure(input: String, startChar: Char, endChar: Char): List<String?> {
+    private fun parseNestedStructure(input: String): List<String?> {
 
         val content = input.substring(1, input.length - 1)
         if (content.isEmpty()) return emptyList()
