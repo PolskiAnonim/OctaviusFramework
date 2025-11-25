@@ -1,16 +1,16 @@
-package org.octavius.domain.test
+package org.octavius.domain.test.existing
 
 import kotlinx.datetime.LocalDateTime
-import org.octavius.data.annotation.EnumCaseConvention
 import org.octavius.data.annotation.PgComposite
 import org.octavius.data.annotation.PgEnum
+import org.octavius.data.util.CaseConvention
 import java.math.BigDecimal
 
-@PgEnum(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
+@PgEnum(pgConvention = CaseConvention.SNAKE_CASE_LOWER)
 enum class TestStatus { Active, Inactive, Pending, NotStarted }
-@PgEnum(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
+@PgEnum(pgConvention = CaseConvention.SNAKE_CASE_LOWER)
 enum class TestPriority { Low, Medium, High, Critical }
-@PgEnum(enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
+@PgEnum(pgConvention = CaseConvention.SNAKE_CASE_LOWER)
 enum class TestCategory { BugFix, Feature, Enhancement, Documentation }
 @PgComposite
 data class TestMetadata(

@@ -1,4 +1,4 @@
-package org.octavius.domain.test
+package org.octavius.domain.test.dynamic
 
 import kotlinx.serialization.Serializable
 import org.octavius.data.annotation.DynamicallyMappable

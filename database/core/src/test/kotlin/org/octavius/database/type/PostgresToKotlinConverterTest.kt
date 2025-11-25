@@ -6,7 +6,13 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.octavius.domain.test.*
+import org.octavius.domain.test.existing.TestCategory
+import org.octavius.domain.test.existing.TestMetadata
+import org.octavius.domain.test.existing.TestPerson
+import org.octavius.domain.test.existing.TestPriority
+import org.octavius.domain.test.existing.TestProject
+import org.octavius.domain.test.existing.TestStatus
+import org.octavius.domain.test.existing.TestTask
 import java.math.BigDecimal
 import java.util.*
 import kotlin.time.Duration
@@ -115,7 +121,13 @@ class PostgresToKotlinConverterUnitTest {
             status = TestStatus.Active,
             teamMembers = listOf(
                 TestPerson("Project Manager", 40, "pm@example.com", true, listOf("manager", "stakeholder")),
-                TestPerson("Senior Dev \"The Architect\"", 35, "senior@example.com", true, listOf("architect", "senior-dev")),
+                TestPerson(
+                    "Senior Dev \"The Architect\"",
+                    35,
+                    "senior@example.com",
+                    true,
+                    listOf("architect", "senior-dev")
+                ),
                 TestPerson("Junior Dev", 24, "junior@example.com", true, listOf("junior-dev", "learner")),
                 TestPerson(null, 30, "", true, listOf("user"))
             ),
@@ -157,7 +169,12 @@ class PostgresToKotlinConverterUnitTest {
                         version = 2,
                         tags = listOf("core", "critical", "feature")
                     ),
-                    subtasks = listOf("design API", "implement \"business logic\"", "add tests", "write \"documentation\""),
+                    subtasks = listOf(
+                        "design API",
+                        "implement \"business logic\"",
+                        "add tests",
+                        "write \"documentation\""
+                    ),
                     estimatedHours = BigDecimal("40.0")
                 )
             ),

@@ -7,7 +7,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.octavius.domain.test.*
+import org.octavius.domain.test.existing.TestCategory
+import org.octavius.domain.test.existing.TestMetadata
+import org.octavius.domain.test.existing.TestPerson
+import org.octavius.domain.test.existing.TestPriority
+import org.octavius.domain.test.existing.TestProject
+import org.octavius.domain.test.existing.TestStatus
+import org.octavius.domain.test.existing.TestTask
 import org.postgresql.util.PGobject
 import java.math.BigDecimal
 

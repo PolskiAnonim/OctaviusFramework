@@ -8,17 +8,13 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.database.config.DatabaseConfig
-import org.octavius.database.type.PostgresToKotlinConverter
-import org.octavius.database.type.TypeCategory
-import org.octavius.database.type.TypeRegistry
-import org.octavius.database.type.TypeRegistryLoader
+import org.octavius.database.type.*
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.ResultSet
-import java.util.*
 import kotlin.system.measureTimeMillis
 
 /**
@@ -70,11 +66,15 @@ class SimpleTypeOverheadBenchmark {
         jdbcTemplate = NamedParameterJdbcTemplate(hikariDataSource)
 
         typeRegistry = runBlocking {
-            TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan, databaseConfig.dbSchemas).load()
+            TypeRegistryLoader(
+                jdbcTemplate,
+                databaseConfig.packagesToScan.filter { it != "org.octavius.domain.test.dynamic" && it != "org.octavius.domain.test.existing" },
+                databaseConfig.dbSchemas
+            ).load()
         }
         typesConverter = PostgresToKotlinConverter(typeRegistry)
         // --- NOWOŚĆ: Inicjalizujemy ekstraktor ---
-        valueExtractor = ResultSetValueExtractor(typeRegistry, typesConverter)
+        valueExtractor = ResultSetValueExtractor(typeRegistry)
 
 
         try {
@@ -146,8 +146,22 @@ class SimpleTypeOverheadBenchmark {
         println("  2. Stary Framework (getString):    ${String.format("%7.2f", avgOld)} ms")
         println("  3. Nowy Framework (Optimized):   ${String.format("%7.2f", avgOptimized)} ms")
         println("----------------------------------------------------------------------------------")
-        println("  Narzut Starego Frameworka:   +${String.format("%.2f", overheadOldMs)} ms (+${String.format("%.1f", overheadOldPercent)}%)")
-        println("  Narzut Nowego Frameworka:    +${String.format("%.2f", overheadOptimizedMs)} ms (+${String.format("%.1f", overheadOptimizedPercent)}%)")
+        println(
+            "  Narzut Starego Frameworka:   +${String.format("%.2f", overheadOldMs)} ms (+${
+                String.format(
+                    "%.1f",
+                    overheadOldPercent
+                )
+            }%)"
+        )
+        println(
+            "  Narzut Nowego Frameworka:    +${
+                String.format(
+                    "%.2f",
+                    overheadOptimizedMs
+                )
+            } ms (+${String.format("%.1f", overheadOptimizedPercent)}%)"
+        )
         println("==================================================================================")
     }
 }
@@ -191,7 +205,8 @@ private class OldFrameworkRowMapper(private val converter: PostgresToKotlinConve
 /**
  * NOWY Mapper implementujący zoptymalizowaną strategię z "szybką ścieżką".
  */
-private class OptimizedFrameworkRowMapper(private val extractor: ResultSetValueExtractor) : RowMapper<Map<String, Any?>> {
+private class OptimizedFrameworkRowMapper(private val extractor: ResultSetValueExtractor) :
+    RowMapper<Map<String, Any?>> {
     override fun mapRow(rs: ResultSet, rowNum: Int): Map<String, Any?> {
         val data = mutableMapOf<String, Any?>()
         val metaData = rs.metaData
@@ -209,53 +224,44 @@ private class OptimizedFrameworkRowMapper(private val extractor: ResultSetValueE
  * Używa "szybkiej ścieżki" dla typów standardowych i deleguje do konwertera dla reszty.
  */
 private class ResultSetValueExtractor(
-    private val typeRegistry: TypeRegistry,
-    private val stringConverter: PostgresToKotlinConverter
+    private val typeRegistry: TypeRegistry
 ) {
+    private val stringConverter = PostgresToKotlinConverter(typeRegistry)
+
     fun extract(rs: ResultSet, columnIndex: Int): Any? {
-        // Najpierw sprawdzamy SQL NULL - rs.getObject() jest do tego najlepszy.
-        // Wywołanie np. rs.getInt() na kolumnie z NULLem zwróci 0, co jest błędem.
+        // Sprawdzenie, czy wartość jest SQL NULL
         if (rs.getObject(columnIndex) == null) {
             return null
         }
 
         val pgTypeName = (rs.metaData as PgResultSetMetaData).getColumnTypeName(columnIndex)
+        val typeCategory = typeRegistry.getCategory(pgTypeName)
 
-        val typeCategory = typeRegistry.getTypeInfo(pgTypeName).typeCategory
-
+        // Główna logika: rozróżnienie ścieżek
         return when (typeCategory) {
             TypeCategory.STANDARD -> extractStandardType(rs, columnIndex, pgTypeName)
             else -> {
-                // Wolna ścieżka dla ENUM, COMPOSITE, ARRAY, DYNAMIC
                 val rawValue = rs.getString(columnIndex)
                 stringConverter.convert(rawValue, pgTypeName)
             }
         }
     }
 
+
     /**
      * Szybka ścieżka dla typów standardowych.
      */
     private fun extractStandardType(rs: ResultSet, columnIndex: Int, pgTypeName: String): Any? {
-        return when (pgTypeName) {
-            "int4", "serial", "int2", "smallserial" -> rs.getInt(columnIndex)
-            "int8", "bigserial" -> rs.getLong(columnIndex)
-            "float4" -> rs.getFloat(columnIndex)
-            "float8" -> rs.getDouble(columnIndex)
-            "numeric" -> rs.getBigDecimal(columnIndex)
-            "bool" -> rs.getBoolean(columnIndex)
-            "uuid" -> rs.getObject(columnIndex) as UUID
-            "date" -> rs.getDate(columnIndex).toLocalDate()
-            "timestamp" -> rs.getTimestamp(columnIndex).toLocalDateTime()
+        val handler = StandardTypeMappingRegistry.getHandler(pgTypeName)
 
-            // Dla tych typów konwersja ze Stringa jest wystarczająco dobra lub konieczna.
-            // Delegujemy do specjalisty, żeby nie duplikować logiki.
-            "timestamptz", "time", "timetz", "interval", "json", "jsonb" -> {
-                val rawValue = rs.getString(columnIndex)
-                stringConverter.convert(rawValue, pgTypeName)
-            }
-            // text, varchar, char etc.
-            else -> rs.getString(columnIndex)
+        // 1. Spróbuj użyć dedykowanej "szybkiej ścieżki", jeśli istnieje.
+        handler?.fromResultSet?.let { fastPath ->
+            return fastPath(rs, columnIndex)
         }
+
+        // 2. Jeśli nie ma szybkiej ścieżki (handler jest null lub fromResultSet jest null),
+        //    użyj uniwersalnej, ale wolniejszej ścieżki opartej na konwersji ze Stringa.
+        val rawValue = rs.getString(columnIndex)
+        return stringConverter.convert(rawValue, pgTypeName)
     }
 }

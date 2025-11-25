@@ -13,8 +13,8 @@ import org.octavius.data.builder.toField
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.OctaviusDatabase
 import org.octavius.database.config.DynamicDtoSerializationStrategy
-import org.octavius.domain.test.DynamicProfile
-import org.octavius.domain.test.UserStats
+import org.octavius.domain.test.dynamic.DynamicProfile
+import org.octavius.domain.test.dynamic.UserStats
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import java.nio.file.Files
@@ -69,7 +69,7 @@ class PolymorphicArrayRoundTripTest {
         // --- Stworzenie instancji DAL-a z włączoną "diaboliczną" magią zapisu ---
         dataAccess = OctaviusDatabase.fromDataSource(
             dataSource,
-            baseConfig.packagesToScan,
+            baseConfig.packagesToScan.filter { it != "org.octavius.domain.test.existing" && it != "org.octavius.performance" },
             baseConfig.dbSchemas,
             DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
         )
