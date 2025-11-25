@@ -1,8 +1,7 @@
 package org.octavius.database.type
 
-import io.github.classgraph.AnnotationInfo
 import io.github.classgraph.ClassGraph
-import io.github.classgraph.ClassInfo
+import io.github.classgraph.ScanResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -23,241 +22,247 @@ internal class TypeRegistryLoader(
     private val packagesToScan: List<String>,
     private val dbSchemas: List<String>
 ) {
+    // --- DTO wewnętrzne loadera ---
+    private data class ClasspathData(
+        val enums: List<KtEnumInfo>,
+        val composites: List<KtCompositeInfo>,
+        val dynamic: Map<String, KClass<*>>
+    )
+    private data class KtEnumInfo(val fqn: String, val pgName: String, val pgConv: CaseConvention, val ktConv: CaseConvention)
+    private data class KtCompositeInfo(val fqn: String, val pgName: String)
 
-    private data class DbTypeRawInfo(val infoType: String, val typeName: String, val col1: String?, val col2: String?)
-    private data class ProcessedDbTypes(
-        val enums: Map<String, PostgresTypeInfo>,
-        val composites: Map<String, PostgresTypeInfo>
+    // Wyniki z bazy
+    private data class DatabaseData(
+        val enums: Map<String, List<String>>, // TypeName -> Values
+        val composites: Map<String, Map<String, String>> // TypeName -> (Col -> Type) [Ordered Map]
     )
 
-    // Klasa pomocnicza do przechowywania zmapowanych informacji o klasach Kotlina.
-    private data class KotlinPgTypeMapping(
-        val classFullPath: String,
-        val pgTypeName: String,
-        val pgConvention: CaseConvention?,
-        val kotlinConvention: CaseConvention?
-    )
+    suspend fun load(): TypeRegistry = coroutineScope {
+        logger.info { "Starting TypeRegistry initialization..." }
 
-    private data class KotlinDynamicTypeMapping(val typeName: String, val kClass: KClass<*>)
+        // 1. Równoległe pobieranie danych
+        val cpJob = async(Dispatchers.IO) { scanClasspath() }
+        val dbJob = async(Dispatchers.IO) { scanDatabase() }
 
-    // klasa-kontener na wyniki z jednego skanowania
-    private data class AnnotationScanResults(
-        val pgTypeMappings: List<KotlinPgTypeMapping>,
-        val dynamicTypeMappings: List<KotlinDynamicTypeMapping>
-    )
+        val cpData = cpJob.await()
+        val dbData = dbJob.await()
 
-    suspend fun load(): TypeRegistry {
-        try {
-            logger.info { "Starting TypeRegistry loading..." }
+        logger.debug { "Merging definitions..." }
 
-            val (scanResults, processedDbTypes) = coroutineScope {
-                logger.debug { "Starting parallel execution of classpath scan and database query." }
-                val annotationScanJob = async(Dispatchers.IO) { scanForAnnotations() }
-                val dbTypesJob = async(Dispatchers.IO) { loadAllCustomTypesFromDb() }
+        // 2. Budowanie map z walidacją "Strict" (Musi być w kodzie I w bazie)
+        val (finalEnums, enumClassMap) = mergeEnums(cpData.enums, dbData.enums)
+        val (finalComposites, compositeClassMap) = mergeComposites(cpData.composites, dbData.composites)
 
-                val scanRes = annotationScanJob.await()
-                val rawDbData = dbTypesJob.await()
-                logger.debug { "Classpath scan and database query completed." }
+        // 3. Typy standardowe i tablicowe
+        val standardTypes = PgStandardType.entries.filter { !it.isArray }.map { it.typeName }.toSet()
 
-                val processed = processRawDbTypes(rawDbData, scanRes.pgTypeMappings)
+        // Tablice generujemy dla wszystkiego co mamy zarejestrowane
+        val allBaseTypes = finalEnums.keys + finalComposites.keys + standardTypes
+        val finalArrays = buildArrays(allBaseTypes)
 
-                scanRes to processed
-            }
+        // 4. Budowanie routera (TypeCategory Map)
+        val categoryMap = buildCategoryMap(finalEnums.keys, finalComposites.keys, finalArrays.keys, standardTypes)
 
-            val postgresTypeMap = buildPostgresTypeMap(processedDbTypes)
-            // Rozpakowujemy wyniki ze zunifikowanego skanowania
-            val (classToPgMap, pgToClassMap) = buildBidirectionalClassMaps(scanResults.pgTypeMappings)
-            val dynamicTypeMap = scanResults.dynamicTypeMappings.associate { it.typeName to it.kClass }
+        // 5. Scalanie map klas
+        val classToPgNameMap = enumClassMap + compositeClassMap
 
-            logger.info { "TypeRegistry loaded successfully. Found ${postgresTypeMap.size} total PG types." }
-            logger.debug { "Static @PgEnum/@PgComposite mappings found: ${scanResults.pgTypeMappings.size}" }
-            logger.debug { "Dynamic @DynamicallyMappable mappings found: ${scanResults.dynamicTypeMappings.size}" }
+        logger.info { "TypeRegistry initialized. Enums: ${finalEnums.size}, Composites: ${finalComposites.size}, Arrays: ${finalArrays.size}" }
 
-            return TypeRegistry(
-                postgresTypeMap = postgresTypeMap,
-                classFullPathToPgTypeNameMap = classToPgMap,
-                pgTypeNameToClassFullPathMap = pgToClassMap,
-                dynamicTypeNameToKClassMap = dynamicTypeMap
-            )
-        } catch (e: TypeRegistryException) {
-            // Jeśli już jest to nasz typ, po prostu go rzuć dalej
-            throw e
-        } catch (e: Exception) {
-            logger.error(e) { "FATAL: Failed to load TypeRegistry. Application state is inconsistent!" }
-            // Opakuj ogólny błąd
-            throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, cause = e)
-        }
+        return@coroutineScope TypeRegistry(
+            categoryMap = categoryMap,
+            enums = finalEnums,
+            composites = finalComposites,
+            arrays = finalArrays,
+            classToPgNameMap = classToPgNameMap,
+            dynamicDtoMapping = cpData.dynamic
+        )
     }
 
-    /**
-     * Wykonuje JEDNO skanowanie classpathu i wyszukuje klasy z adnotacjami
-     * @PgEnum, @PgComposite oraz @DynamicallyMappable.
-     */
-    private fun scanForAnnotations(): AnnotationScanResults {
-        val pgMappings = mutableListOf<KotlinPgTypeMapping>()
-        val dynamicMappings = mutableListOf<KotlinDynamicTypeMapping>()
+    // -------------------------------------------------------------------------
+    // ETAP 1: CLASSPATH (Skanowanie adnotacji)
+    // -------------------------------------------------------------------------
+    // ... (metoda scanClasspath taka sama jak w poprzedniej wersji) ...
+    private fun scanClasspath(): ClasspathData {
+        val enumInfos = mutableListOf<KtEnumInfo>()
+        val compositeInfos = mutableListOf<KtCompositeInfo>()
+        val dynamicInfos = mutableMapOf<String, KClass<*>>()
 
         try {
             logger.debug { "Scanning packages for annotations: ${packagesToScan.joinToString()}" }
             ClassGraph()
                 .enableAllInfo()                    // DynamicDto
                 .acceptPackages("org.octavius.data.type", *packagesToScan.toTypedArray())
-                .scan().use { scanResult ->
-                    // Przetwarzamy klasy z @PgEnum
-                    scanResult.getClassesWithAnnotation(PgEnum::class.java).forEach { classInfo: ClassInfo ->
-                        if (!classInfo.isEnum) {
-                            throw TypeRegistryException(
-                                messageEnum = TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
-                                typeName = classInfo.name,
-                                cause = IllegalStateException("Class '${classInfo.name}' is annotated with @PgEnum but is not an enum class.")
-                            )
-                        }
-                        val annotationInfo: AnnotationInfo = classInfo.getAnnotationInfo(PgEnum::class.java)
-                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
-                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
-                        // Pobieranie konwencji DB
-                        val dbConventionVal = annotationInfo.parameterValues.getValue("pgConvention") as io.github.classgraph.AnnotationEnumValue
-                        val dbConvention = dbConventionVal.loadClassAndReturnEnumValue() as CaseConvention
+                .scan().use { result ->
+                    processEnums(result, enumInfos)
 
-                        // Pobieranie konwencji Kotlina
-                        val ktConventionVal = annotationInfo.parameterValues.getValue("kotlinConvention") as io.github.classgraph.AnnotationEnumValue
-                        val kotlinConvention = ktConventionVal.loadClassAndReturnEnumValue() as CaseConvention
+                    processComposites(result, compositeInfos)
 
-                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, dbConvention, kotlinConvention))
-                    }
-
-                    // Przetwarzamy klasy z @PgComposite
-                    scanResult.getClassesWithAnnotation(PgComposite::class.java).forEach { classInfo ->
-                        if (classInfo.isEnum) {
-                            throw TypeRegistryException(
-                                messageEnum = TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
-                                typeName = classInfo.name,
-                                cause = IllegalStateException("Class '${classInfo.name}' is an enum and cannot be annotated with @PgComposite. Use @PgEnum instead.")
-                            )
-                        }
-                        val annotationInfo = classInfo.getAnnotationInfo(PgComposite::class.java)
-                        val pgTypeNameFromAnnotation = annotationInfo.parameterValues.getValue("name") as String
-                        val pgTypeName = pgTypeNameFromAnnotation.ifBlank { classInfo.simpleName.toSnakeCase() }
-
-                        pgMappings.add(KotlinPgTypeMapping(classInfo.name, pgTypeName, null, null)) // enumConvention jest null dla kompozytów
-                    }
-
-                    // Przetwarzamy klasy z @DynamicallyMappable
-                    scanResult.getClassesWithAnnotation(DynamicallyMappable::class.java).forEach { classInfo ->
-                        // SPRAWDZENIE 1: Czy klasa ma obie wymagane adnotacje?
-                        val hasSerializable = classInfo.hasAnnotation("kotlinx.serialization.Serializable")
-
-                        if (hasSerializable) {
-                            // Jeśli tak, kontynuuj normalną logikę
-                            val annotationInfo = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
-                            val typeName = annotationInfo.parameterValues.getValue("typeName") as String
-                            dynamicMappings.add(KotlinDynamicTypeMapping(typeName, classInfo.loadClass().kotlin))
-                        } else {
-                            // Jeśli nie, rzuć natychmiastowym, opisowym błędem!
-                            throw TypeRegistryException(
-                                messageEnum = TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
-                                typeName = classInfo.name,
-                                cause = IllegalStateException(
-                                    "Class '${classInfo.name}' is annotated with @DynamicallyMappable " +
-                                            "but is missing the required @Serializable annotation."
-                                )
-                            )
-                        }
-                    }
+                    processDynamicTypes(result, dynamicInfos)
                 }
         } catch (e: Exception) {
-            val ex = TypeRegistryException(TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED, cause = e)
-            logger.error(ex) { ex.message }
-            throw ex
+            throw TypeRegistryException(TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED, cause = e)
         }
-        return AnnotationScanResults(pgMappings, dynamicMappings)
+
+        return ClasspathData(enumInfos, compositeInfos, dynamicInfos)
     }
 
 
-    private fun loadAllCustomTypesFromDb(): List<DbTypeRawInfo> {
+    private fun processEnums(scanResult: ScanResult, target: MutableList<KtEnumInfo>) {
+        scanResult.getClassesWithAnnotation(PgEnum::class.java).forEach { classInfo ->
+            if(!classInfo.isEnum) throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, typeName = classInfo.name, cause = IllegalStateException("@PgEnum not on enum"))
+
+            val annotation = classInfo.getAnnotationInfo(PgEnum::class.java)
+            val name = (annotation.parameterValues.getValue("name") as String).ifBlank { classInfo.simpleName.toSnakeCase() }
+
+            val pgConv = (annotation.parameterValues.getValue("pgConvention") as io.github.classgraph.AnnotationEnumValue)
+                .loadClassAndReturnEnumValue() as CaseConvention
+            val ktConv = (annotation.parameterValues.getValue("kotlinConvention") as io.github.classgraph.AnnotationEnumValue)
+                .loadClassAndReturnEnumValue() as CaseConvention
+
+            target.add(KtEnumInfo(classInfo.name, name, pgConv, ktConv))
+        }
+    }
+
+    private fun processComposites(scanResult: ScanResult, target: MutableList<KtCompositeInfo>) {
+        scanResult.getClassesWithAnnotation(PgComposite::class.java).forEach { classInfo ->
+            if(classInfo.isEnum) throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, typeName = classInfo.name, cause = IllegalStateException("@PgComposite on enum"))
+
+            val annotation = classInfo.getAnnotationInfo(PgComposite::class.java)
+            val name = (annotation.parameterValues.getValue("name") as String).ifBlank { classInfo.simpleName.toSnakeCase() }
+
+            target.add(KtCompositeInfo(classInfo.name, name))
+        }
+    }
+
+    private fun processDynamicTypes(scanResult: ScanResult, target: MutableMap<String, KClass<*>>) {
+        scanResult.getClassesWithAnnotation(DynamicallyMappable::class.java).forEach { classInfo ->
+            if (!classInfo.hasAnnotation("kotlinx.serialization.Serializable")) throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, typeName = classInfo.name, cause = IllegalStateException("Missing @Serializable"))
+
+            val annotation = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
+            val typeName = annotation.parameterValues.getValue("typeName") as String
+
+            target[typeName] = classInfo.loadClass().kotlin
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // ETAP 2: DATABASE (Pobieranie definicji)
+    // -------------------------------------------------------------------------
+
+    private fun scanDatabase(): DatabaseData {
+        val enums = mutableMapOf<String, MutableList<String>>()
+        val composites = mutableMapOf<String, MutableMap<String, String>>()
+
         try {
-            logger.debug { "Executing unified query for all custom DB types..." }
-            // Używamy schematów przekazanych w konstruktorze
-            val params = mapOf("schemas" to dbSchemas.toTypedArray())
-            return namedParameterJdbcTemplate.query(SQL_QUERY_ALL_TYPES, params) { rs, _ ->
-                DbTypeRawInfo(
-                    infoType = rs.getString("info_type"),
-                    typeName = rs.getString("type_name"),
-                    col1 = rs.getString("col1"),
-                    col2 = rs.getString("col2")
-                )
+            namedParameterJdbcTemplate.query(SQL_QUERY_ALL_TYPES, mapOf("schemas" to dbSchemas.toTypedArray())) { rs, _ ->
+                val type = rs.getString("info_type")
+                val name = rs.getString("type_name")
+                val col1 = rs.getString("col1")
+                val col2 = rs.getString("col2")
+
+                when (type) {
+                    "enum" -> enums.getOrPut(name) { mutableListOf() }.add(col1)
+                    "composite" -> composites.getOrPut(name) { mutableMapOf() }[col1] = col2
+                }
             }
         } catch (e: Exception) {
             throw TypeRegistryException(TypeRegistryExceptionMessage.DB_QUERY_FAILED, cause = e)
         }
+        return DatabaseData(enums, composites)
     }
 
-    /**
-     * Przetwarza surową listę z bazy na zorganizowane mapy typów.
-     */
-    private fun processRawDbTypes(
-        rawInfo: List<DbTypeRawInfo>,
-        kotlinMappings: List<KotlinPgTypeMapping>
-    ): ProcessedDbTypes {
-        logger.debug { "Processing ${rawInfo.size} raw DB type entries..." }
-        val pgTypeNameToMapping = kotlinMappings.associateBy { it.pgTypeName }
+    // -------------------------------------------------------------------------
+    // ETAP 3: MERGE & VALIDATE (Strict Mode)
+    // -------------------------------------------------------------------------
 
-        val enums = mutableMapOf<String, MutableList<String>>()
-        val composites = mutableMapOf<String, MutableMap<String, String>>()
+    private fun mergeEnums(
+        ktEnums: List<KtEnumInfo>,
+        dbEnums: Map<String, List<String>>
+    ): Pair<Map<String, PgEnumDefinition>, Map<String, String>> {
 
-        rawInfo.forEach {
-            when (it.infoType) {
-                "enum" -> enums.getOrPut(it.typeName) { mutableListOf() }.add(it.col1!!)
-                "composite" -> composites.getOrPut(it.typeName) { mutableMapOf() }[it.col1!!] = it.col2!!
+        val defs = mutableMapOf<String, PgEnumDefinition>()
+        val classMap = mutableMapOf<String, String>()
+
+        ktEnums.forEach { kt ->
+            // VALIDATION: Sprawdź czy Enum istnieje w bazie
+            val dbValues = dbEnums[kt.pgName]
+
+            if (dbValues == null) {
+                // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
+                throw TypeRegistryException(
+                    messageEnum = TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND,
+                    typeName = kt.pgName,
+                    cause = IllegalStateException("Enum class '${kt.fqn}' is annotated with @PgEnum(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
+                )
             }
-        }
 
-        val enumTypes = enums.mapValues { (typeName, values) ->
-            val mapping = pgTypeNameToMapping[typeName]
-
-            PostgresTypeInfo(
-                typeName = typeName,
-                typeCategory = TypeCategory.ENUM,
-                enumValues = values,
-                // Jeśli nie znaleziono mapowania (enum z DB bez klasy w kodzie), przyjmujemy domyślne
-                pgConvention = mapping?.pgConvention ?: CaseConvention.SNAKE_CASE_UPPER,
-                kotlinConvention = mapping?.kotlinConvention ?: CaseConvention.PASCAL_CASE
+            defs[kt.pgName] = PgEnumDefinition(
+                typeName = kt.pgName,
+                values = dbValues,
+                pgConvention = kt.pgConv,
+                kotlinConvention = kt.ktConv,
+                classFullPath = kt.fqn
             )
+            classMap[kt.fqn] = kt.pgName
         }
-
-        val compositeTypes = composites.mapValues { (typeName, attrs) ->
-            val category = if (typeName == "dynamic_dto") TypeCategory.DYNAMIC else TypeCategory.COMPOSITE
-            PostgresTypeInfo(typeName, category, attributes = attrs)
-        }
-
-        return ProcessedDbTypes(enumTypes, compositeTypes)
+        return defs to classMap
     }
 
-    private fun buildPostgresTypeMap(processedDbTypes: ProcessedDbTypes): Map<String, PostgresTypeInfo> {
-        return buildMap {
-            putAll(loadStandardTypes())
-            putAll(processedDbTypes.enums)
-            putAll(processedDbTypes.composites)
+    private fun mergeComposites(
+        ktComposites: List<KtCompositeInfo>,
+        dbComposites: Map<String, Map<String, String>>
+    ): Pair<Map<String, PgCompositeDefinition>, Map<String, String>> {
 
-            // Array types muszą być dodane na końcu, na podstawie już istniejących typów
-            val existingKeys = keys.toList()
-            existingKeys.forEach { elementType ->
-                val arrayTypeName = "_$elementType"
-                put(arrayTypeName, PostgresTypeInfo(arrayTypeName, TypeCategory.ARRAY, elementType = elementType))
+        val defs = mutableMapOf<String, PgCompositeDefinition>()
+        val classMap = mutableMapOf<String, String>()
+
+        ktComposites.forEach { kt ->
+            // VALIDATION: Sprawdź czy Kompozyt istnieje w bazie
+            val dbAttributes = dbComposites[kt.pgName]
+
+            if (dbAttributes == null) {
+                // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
+                throw TypeRegistryException(
+                    messageEnum = TypeRegistryExceptionMessage.PG_TYPE_NOT_FOUND,
+                    typeName = kt.pgName,
+                    cause = IllegalStateException("Class '${kt.fqn}' is annotated with @PgComposite(name='${kt.pgName}'), but type '${kt.pgName}' was not found in database schemas: $dbSchemas")
+                )
             }
+
+            defs[kt.pgName] = PgCompositeDefinition(
+                typeName = kt.pgName,
+                attributes = dbAttributes, // Mapa zachowuje kolejność z DB
+                classFullPath = kt.fqn
+            )
+            classMap[kt.fqn] = kt.pgName
+        }
+        return defs to classMap
+    }
+
+    private fun buildArrays(baseTypes: Set<String>): Map<String, PgArrayDefinition> {
+        return baseTypes.associate { base ->
+            val arrayName = "_$base"
+            arrayName to PgArrayDefinition(arrayName, base)
         }
     }
 
-    private fun buildBidirectionalClassMaps(mappings: List<KotlinPgTypeMapping>): Pair<Map<String, String>, Map<String, String>> {
-        val classToPg = mappings.associate { it.classFullPath to it.pgTypeName }
-        val pgToClass = mappings.associate { it.pgTypeName to it.classFullPath }
-        return classToPg to pgToClass
-    }
+    private fun buildCategoryMap(
+        enums: Set<String>,
+        composites: Set<String>,
+        arrays: Set<String>,
+        standard: Set<String>
+    ): Map<String, TypeCategory> {
+        val map = mutableMapOf<String, TypeCategory>()
+        enums.forEach { map[it] = TypeCategory.ENUM }
 
-    private fun loadStandardTypes(): Map<String, PostgresTypeInfo> {
-        // Mapowanie standardowych typów PostgreSQL
-        return PgStandardType.entries.filter { !it.isArray }
-            .associate { it.typeName to PostgresTypeInfo(it.typeName, TypeCategory.STANDARD) }
+        composites.forEach {
+            // Jeśli struktura nazywa się "dynamic_dto", traktujemy ją specjalnie przy deserializacji.
+            map[it] = if (it == "dynamic_dto") TypeCategory.DYNAMIC else TypeCategory.COMPOSITE
+        }
+
+        arrays.forEach { map[it] = TypeCategory.ARRAY }
+        standard.forEach { map[it] = TypeCategory.STANDARD }
+        return map
     }
 
     companion object {

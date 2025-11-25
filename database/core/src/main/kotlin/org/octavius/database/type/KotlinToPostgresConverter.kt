@@ -240,7 +240,7 @@ internal class KotlinToPostgresConverter(
 
         val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
 
-        val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
+        val typeInfo = typeRegistry.getEnumDefinition(dbTypeName)
 
         val finalDbValue = CaseConverter.convert(
             value = enumValue.name,
@@ -305,7 +305,7 @@ internal class KotlinToPostgresConverter(
 
         // 1. Pobierz informacje o typie z rejestru (bez zmian)
         val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
-        val typeInfo = typeRegistry.getTypeInfo(dbTypeName)
+        val typeInfo = typeRegistry.getCompositeDefinition(dbTypeName)
 
         logger.trace { "Found database type '$dbTypeName' with ${typeInfo.attributes.size} attributes" }
 
