@@ -2,6 +2,8 @@ package org.octavius.data.builder
 
 import org.octavius.data.DataResult
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /** Interfejs zawierający metody terminalne zwracające dane */
 interface TerminalReturningMethods {
@@ -32,10 +34,10 @@ interface TerminalReturningMethods {
     // --- Zwracanie wartości skalarnych ---
 
     /** Pobiera pojedynczą wartość z pierwszej kolumny pierwszego wiersza. */
-    fun <T : Any> toField(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<T?>
+    fun <T : Any> toField(kType: KType, params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
     /** Pobiera listę wartości z pierwszej kolumny wszystkich wierszy. */
-    fun <T : Any> toColumn(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
+    fun <T : Any> toColumn(kType: KType, params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
 
     // --- Pomocnicze ---
 
@@ -51,19 +53,19 @@ fun TerminalReturningMethods.toSingle(vararg params: Pair<String, Any?>): DataRe
 
 inline fun <reified T : Any> TerminalReturningMethods.toField(
     params: Map<String, Any?> = emptyMap()
-): DataResult<T?> = toField(T::class, params)
+): DataResult<T?> = toField(typeOf<T>(), params)
 
 inline fun <reified T : Any> TerminalReturningMethods.toField(
     vararg params: Pair<String, Any?>
-): DataResult<T?> = toField(T::class, params.toMap())
+): DataResult<T?> = toField(typeOf<T>(), params.toMap())
 
 inline fun <reified T : Any> TerminalReturningMethods.toColumn(
     params: Map<String, Any?> = emptyMap()
-): DataResult<List<T?>> = toColumn(T::class, params)
+): DataResult<List<T?>> = toColumn(typeOf<T>(), params)
 
 inline fun <reified T : Any> TerminalReturningMethods.toColumn(
     vararg params: Pair<String, Any?>
-): DataResult<List<T?>> = toColumn(T::class, params.toMap())
+): DataResult<List<T?>> = toColumn(typeOf<T>() , params.toMap())
 
 inline fun <reified T : Any> TerminalReturningMethods.toListOf(vararg params: Pair<String, Any?>): DataResult<List<T>> =
     toListOf(T::class, params.toMap())

@@ -4,10 +4,7 @@ import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.util.toSnakeCase
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
-import kotlin.reflect.KProperty1
+import kotlin.reflect.*
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -32,18 +29,23 @@ annotation class MapKey(val name: String)
 // --- Wspólny Cache i Metadane dla obu konwersji ---
 
 /**
+ * Przechowuje kompletne, pre-obliczone metadane dla parametru konstruktora.
+ * Zapewnia wydajny dostęp bez potrzeby ponownej refleksji.
+ */
+private data class ConstructorParamMetadata<T : Any>(
+    val parameter: KParameter,
+    val property: KProperty1<T, Any?>,
+    val type: KType,
+    val keyName: String
+)
+
+/**
  * Przechowuje metadane klasy oparte na jej głównym konstruktorze.
- *
- * @param constructor Referencja do głównego konstruktora klasy.
- * @param constructorProperties Lista trójek zawierająca:
- *   1. Parametr konstruktora (KParameter).
- *   2. Odpowiadającą mu właściwość klasy (KProperty1).
- *   3. Nazwę klucza, która będzie używana w mapie.
+ * Służy jako centralny cache dla operacji `toDataObject` i `toMap`.
  */
 private data class DataObjectClassMetadata<T : Any>(
     val constructor: KFunction<T>,
-    // Triple: (parametr konstruktora, odpowiadająca mu właściwość, nazwa klucza w mapie)
-    val constructorProperties: List<Triple<KParameter, KProperty1<T, Any?>, String>>
+    val constructorProperties: List<ConstructorParamMetadata<T>>
 )
 
 // Używamy jednego, wspólnego cache'a dla obu operacji.
@@ -51,6 +53,7 @@ private val dataObjectCache = ConcurrentHashMap<KClass<*>, DataObjectClassMetada
 
 /**
  * Wewnętrzna funkcja do pobierania lub tworzenia metadanych dla danej klasy.
+ * To jest jedyne miejsce, gdzie odbywa się kosztowna refleksja. Wyniki są cachowane.
  */
 @Suppress("UNCHECKED_CAST")
 private fun <T : Any> getOrCreateDataObjectMetadata(kClass: KClass<T>): DataObjectClassMetadata<T> {
@@ -62,20 +65,21 @@ private fun <T : Any> getOrCreateDataObjectMetadata(kClass: KClass<T>): DataObje
         val propertiesByName = kClass.memberProperties.associateBy { it.name }
 
         val constructorProperties = constructor.parameters.map { param ->
-            val property = propertiesByName[param.name]
-                ?: throw IllegalStateException(
-                    "Błąd wewnętrzny: Nie znaleziono właściwości dla parametru konstruktora '${param.name}' w klasie ${kClass.simpleName}."
-                )
+            val property = propertiesByName[param.name]!!
 
             val keyName = property.findAnnotation<MapKey>()?.name
                 ?: param.name!!.toSnakeCase()
 
-            Triple(param, property, keyName)
+            ConstructorParamMetadata(
+                parameter = param,
+                property = property,
+                type = param.type,
+                keyName = keyName
+            )
         }
         DataObjectClassMetadata(constructor, constructorProperties)
     } as DataObjectClassMetadata<T>
 }
-
 
 // --- Konwersja Z MAPY do OBIEKTU  ---
 
@@ -86,41 +90,42 @@ inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
 fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
     val metadata = getOrCreateDataObjectMetadata(kClass)
 
-    val args = metadata.constructorProperties.mapNotNull { (param, _, keyName) ->
-        // Sprawdzamy, czy klucz ISTNIEJE w mapie (nie tylko czy wartość nie jest null)
-        val hasKeyInMap = this.containsKey(keyName)
+    val args = metadata.constructorProperties.mapNotNull { meta ->
+        val (param, _, type, keyName) = meta
 
-        when {
+        val valueToUse = when {
             // Przypadek 1: Klucz istnieje w mapie. Zawsze używamy wartości z mapy,
             // nawet jeśli jest to jawne null.
-            hasKeyInMap -> param to this[keyName]
-
+            this.containsKey(keyName) -> this[keyName]
             // Przypadek 2: Klucz NIE istnieje w mapie.
             // Parametr ma wartość domyślną, więc pomijamy go w mapie args.
             // callBy() automatycznie użyje wartości domyślnej.
             // mapNotNull usunie tę parę
-            param.isOptional -> null
-
+            param.isOptional -> return@mapNotNull null
             // Przypadek 3: Parametr nie ma wartości domyślnej i nie ma go w mapie.
             // Parametr jest nullable (np. String?), więc możemy wstawić null.
-            param.type.isMarkedNullable -> param to null
-
+            param.type.isMarkedNullable -> null
             // Przypadek 4: Parametr jest non-nullable (np. String) i nie ma wartości domyślnej,
             // a klucz nie został znaleziony w mapie. To jest błąd.
             else -> throw ConversionException(
                 messageEnum = ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY,
                 targetType = kClass.qualifiedName,
-                value = keyName, // Używamy klucza mapy jako 'value'
+                value = keyName,
                 rowData = this,
                 propertyName = param.name
             )
         }
+
+        // Walidacja z użyciem cachowanego KType
+        val validatedValue = validateAndCast(valueToUse, type)
+
+        param to validatedValue
     }.associate { it }
 
     // Wywołaj główny konstruktor z przygotowanymi argumentami.
     try {
         return metadata.constructor.callBy(args)
-    } catch(e: Exception) {
+    } catch (e: Exception) {
         throw ConversionException(
             messageEnum = ConversionExceptionMessage.OBJECT_MAPPING_FAILED,
             targetType = kClass.qualifiedName ?: kClass.simpleName ?: "unknown",
@@ -146,7 +151,9 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
 fun <T : Any> T.toMap(includeNulls: Boolean = true): Map<String, Any?> {
     val metadata = getOrCreateDataObjectMetadata(this::class) as DataObjectClassMetadata<T>
 
-    return metadata.constructorProperties.mapNotNull { (_, property, keyName) ->
+    return metadata.constructorProperties.mapNotNull { meta ->
+        val (_, property, _, keyName) = meta
+
         val value = property.get(this)
         if (!includeNulls && value == null) {
             null

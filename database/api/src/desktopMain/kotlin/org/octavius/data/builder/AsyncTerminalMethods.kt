@@ -3,6 +3,8 @@ package org.octavius.data.builder
 import kotlinx.coroutines.Job
 import org.octavius.data.DataResult
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /**
  * Interfejs dla buildera wykonującego zapytania asynchronicznie w podanym CoroutineScope.
@@ -43,14 +45,14 @@ interface AsyncTerminalMethods {
 
     /** Asynchronicznie pobiera pojedynczą wartość z pierwszej kolumny i przekazuje wynik do callbacka onResult. */
     fun <T : Any> toField(
-        kClass: KClass<T>,
+        kType: KType,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<T?>) -> Unit
     ): Job
 
     /** Asynchronicznie pobiera listę wartości z pierwszej kolumny i przekazuje wynik do callbacka onResult. */
     fun <T : Any> toColumn(
-        kClass: KClass<T>,
+        kType: KType,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<List<T?>>) -> Unit
     ): Job
@@ -98,20 +100,20 @@ inline fun <reified T : Any> AsyncTerminalMethods.toSingleOf(
 inline fun <reified T : Any> AsyncTerminalMethods.toField(
     params: Map<String, Any?> = emptyMap(),
     noinline onResult: (DataResult<T?>) -> Unit
-): Job = toField(T::class, params, onResult)
+): Job = toField(typeOf<T>(), params, onResult)
 
 inline fun <reified T : Any> AsyncTerminalMethods.toField(
     vararg params: Pair<String, Any?>,
     noinline onResult: (DataResult<T?>) -> Unit
-): Job = toField(T::class, params.toMap(), onResult)
+): Job = toField(typeOf<T>(), params.toMap(), onResult)
 
 // toColumn
 inline fun <reified T : Any> AsyncTerminalMethods.toColumn(
     params: Map<String, Any?> = emptyMap(),
     noinline onResult: (DataResult<List<T?>>) -> Unit
-): Job = toColumn(T::class, params, onResult)
+): Job = toColumn(typeOf<T>(), params, onResult)
 
 inline fun <reified T : Any> AsyncTerminalMethods.toColumn(
     vararg params: Pair<String, Any?>,
     noinline onResult: (DataResult<List<T?>>) -> Unit
-): Job = toColumn(T::class, params.toMap(), onResult)
+): Job = toColumn(typeOf<T>(), params.toMap(), onResult)

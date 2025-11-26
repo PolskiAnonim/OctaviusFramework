@@ -2,6 +2,8 @@ package org.octavius.data.builder
 
 import org.octavius.data.transaction.TransactionStep
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /**
  * Interfejs dla StepBuilder - zawiera te same metody terminalne co TerminalReturningMethods
@@ -27,10 +29,10 @@ interface StepBuilderMethods {
     // --- Zwracanie wartości skalarnych ---
 
     /** Tworzy TransactionStep z metodą toField */
-    fun <T : Any> toField(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
+    fun <T : Any> toField(kType: KType, params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
 
     /** Tworzy TransactionStep z metodą toColumn */
-    fun <T : Any> toColumn(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<List<T?>>
+    fun <T : Any> toColumn(kType: KType,  params: Map<String, Any?> = emptyMap()): TransactionStep<List<T?>>
 
     // --- Metoda modyfikująca ---
 
@@ -46,19 +48,19 @@ fun StepBuilderMethods.toSingle(vararg params: Pair<String, Any?>): TransactionS
 
 inline fun <reified T : Any> StepBuilderMethods.toField(
     params: Map<String, Any?> = emptyMap()
-): TransactionStep<T?> = toField(T::class, params)
+): TransactionStep<T?> = toField(typeOf<T>(), params)
 
 inline fun <reified T : Any> StepBuilderMethods.toField(
     vararg params: Pair<String, Any?>
-): TransactionStep<T?> = toField(T::class, params.toMap())
+): TransactionStep<T?> = toField(typeOf<T>(), params.toMap())
 
 inline fun <reified T : Any> StepBuilderMethods.toColumn(
     params: Map<String, Any?> = emptyMap()
-): TransactionStep<List<T?>> = toColumn(T::class, params)
+): TransactionStep<List<T?>> = toColumn(typeOf<T>(), params)
 
 inline fun <reified T : Any> StepBuilderMethods.toColumn(
     vararg params: Pair<String, Any?>
-): TransactionStep<List<T?>> = toColumn(T::class, params.toMap())
+): TransactionStep<List<T?>> = toColumn(typeOf<T>(), params.toMap())
 
 fun StepBuilderMethods.execute(vararg params: Pair<String, Any?>): TransactionStep<Int> =
     execute(params.toMap())

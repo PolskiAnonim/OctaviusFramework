@@ -5,6 +5,8 @@ enum class ConversionExceptionMessage {
     ENUM_CONVERSION_FAILED,     // Database value doesn't match any enum
     UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY,
     INVALID_DYNAMIC_DTO_FORMAT, // dynamic_dto parsing error
+    INCOMPATIBLE_COLLECTION_ELEMENT_TYPE,
+    INCOMPATIBLE_TYPE,
 
     // Mapping errors
     OBJECT_MAPPING_FAILED,      // General error during data class instantiation
@@ -23,6 +25,9 @@ private fun generateDeveloperMessage(
         ConversionExceptionMessage.VALUE_CONVERSION_FAILED -> "Cannot convert value '$value' to type '$targetType'."
         ConversionExceptionMessage.ENUM_CONVERSION_FAILED -> "Cannot convert enum value '$value' to type '$targetType'."
         ConversionExceptionMessage.INVALID_DYNAMIC_DTO_FORMAT -> "Invalid dynamic_dto format: '$value'."
+        ConversionExceptionMessage.INCOMPATIBLE_COLLECTION_ELEMENT_TYPE ->
+            "An element within a collection has an incorrect type. Expected elements compatible with '$targetType', but found an element of type '${value?.let { it::class.simpleName }}'."
+        ConversionExceptionMessage.INCOMPATIBLE_TYPE -> "Element has an incompatible type. Expected elements compatible with '$targetType', but found an element of type '${value?.let { it::class.simpleName }}'."
         ConversionExceptionMessage.OBJECT_MAPPING_FAILED -> "Failed to map data to object of class '$targetType'."
         ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY -> "Missing required field '$propertyName' (key: '$value') when mapping to class '$targetType'."
         ConversionExceptionMessage.JSON_DESERIALIZATION_FAILED -> "Failed to deserialize JSON for dynamic type '$targetType'."

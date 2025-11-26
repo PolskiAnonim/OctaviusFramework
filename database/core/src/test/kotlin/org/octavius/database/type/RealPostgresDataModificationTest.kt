@@ -22,6 +22,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.math.BigDecimal
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.reflect.typeOf
 
 /**
  * Test integracyjny dla konwertera Kotlin -> PostgreSQL.
@@ -161,7 +162,7 @@ class RealPostgresDataModificationTest {
         val retrievedTeam = jdbcTemplate.queryForObject(
             "SELECT person_array FROM complex_test_data WHERE id = 1",
             emptyMap<String, Any>(),
-            mappers.SingleValueMapper(List::class)
+            mappers.SingleValueMapper<List<TestPerson>>(typeOf<List<TestPerson>>())
         ) as List<TestPerson>
 
         assertThat(retrievedTeam).isEqualTo(newTeam)

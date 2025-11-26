@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import org.octavius.data.DataResult
 import org.octavius.data.builder.AsyncTerminalMethods
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 /**
  * Wewnętrzna implementacja AsyncTerminalMethods.
@@ -56,19 +57,19 @@ internal class AsyncQueryBuilder(
     }
 
     override fun <T : Any> toField(
-        kClass: KClass<T>,
+        kType: KType,
         params: Map<String, Any?>,
         onResult: (DataResult<T?>) -> Unit
     ): Job = scope.launch {
-        executeAndInvoke({ builder.toField(kClass, params) }, onResult)
+        executeAndInvoke({ builder.toField(kType, params) }, onResult)
     }
 
     override fun <T : Any> toColumn(
-        kClass: KClass<T>,
+        kType: KType,
         params: Map<String, Any?>,
         onResult: (DataResult<List<T?>>) -> Unit
     ): Job = scope.launch {
-        executeAndInvoke({ builder.toColumn(kClass, params) }, onResult)
+        executeAndInvoke({ builder.toColumn(kType, params) }, onResult)
     }
 
     override fun execute(

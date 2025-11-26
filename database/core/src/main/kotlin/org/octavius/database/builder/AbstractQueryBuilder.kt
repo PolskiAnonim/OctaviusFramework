@@ -14,6 +14,7 @@ import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 /**
  * Klasa bazowa dla wszystkich builderów, które mogą zwracać wyniki w postaci wierszy danych
@@ -141,15 +142,16 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     // --- Mapowanie do pojedynczych wartości (skalarne) ---
 
     /** Wykonuje zapytanie i zwraca wartość z pierwszej kolumny pierwszego wiersza. */
-    fun <T: Any> toField(kClass: KClass<T>, params: Map<String, Any?>): DataResult<T?> {
-        return executeReturningQuery(params, rowMappers.SingleValueMapper(kClass)) {
+    fun <T: Any> toField(targetType: KType, params: Map<String, Any?>): DataResult<T?> {
+        return executeReturningQuery(params, rowMappers.SingleValueMapper<T>(targetType)) {
+            // Rzutowanie jest teraz bezpieczniejsze, bo mapper zweryfikował typ
             DataResult.Success(it.firstOrNull() as T?)
         }
     }
 
     /** Wykonuje zapytanie i zwraca listę wartości z pierwszej kolumny wszystkich wierszy. */
-    fun <T: Any> toColumn(kClass: KClass<T>, params: Map<String, Any?>): DataResult<List<T?>> {
-        return executeReturningQuery(params, rowMappers.SingleValueMapper(kClass)) {
+    fun <T: Any> toColumn(targetType: KType, params: Map<String, Any?>): DataResult<List<T?>> {
+        return executeReturningQuery(params, rowMappers.SingleValueMapper<T>(targetType)) {
             DataResult.Success(it)
         }
     }
