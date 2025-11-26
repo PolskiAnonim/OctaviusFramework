@@ -66,7 +66,7 @@ CREATE TABLE public.report_configurations
     sort_order      public.sort_configuration[]                        NOT NULL,
     visible_columns text[]                                             NOT NULL,
     column_order    text[]                                             NOT NULL,
-    page_size       integer                                            NOT NULL,
+    page_size       int8                                               NOT NULL,
     filters         public.filter_config[],
     created_at      timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at      timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
