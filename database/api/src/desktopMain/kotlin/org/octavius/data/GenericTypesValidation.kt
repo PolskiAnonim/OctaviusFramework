@@ -8,7 +8,7 @@ import kotlin.reflect.KType
 
 /**
  * Waliduje, czy wartość pasuje do docelowego typu KType.
- * Dla list, weryfikuje typ pierwszego elementu, który nie jest nullem.
+ * Dla list i map, weryfikuje typ pierwszego elementu, który nie jest nullem.
  */
 fun validateAndCast(value: Any?, targetType: KType): Any? {
     if (value == null) {

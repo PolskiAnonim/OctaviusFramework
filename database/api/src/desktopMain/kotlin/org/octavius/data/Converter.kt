@@ -117,7 +117,17 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
         }
 
         // Walidacja z użyciem cachowanego KType
-        val validatedValue = validateAndCast(valueToUse, type)
+        val validatedValue = try {
+            validateAndCast(valueToUse, type)
+        } catch (e: ConversionException) {
+            throw ConversionException(
+                messageEnum = e.messageEnum,
+                value = e.value,
+                targetType = e.targetType,
+                rowData = this,
+                propertyName = param.name
+            )
+        }
 
         param to validatedValue
     }.associate { it }
