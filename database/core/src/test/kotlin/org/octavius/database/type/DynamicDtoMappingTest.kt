@@ -122,9 +122,9 @@ class DynamicDtoMappingTest {
             .getOrThrow() // Używamy getOrThrow dla uproszczenia w teście
 
         assertThat(result).isNotNull
-
+        assertThat(result!!["profile"]).isInstanceOf(DynamicProfile::class.java)
         // Assert: Sprawdzamy, czy konwersja zadziałała
-        val userWithProfile = result!!.toDataObject<UserWithDynamicProfile>()
+        val userWithProfile = result.toDataObject<UserWithDynamicProfile>()
 
         assertThat(userWithProfile.userId).isEqualTo(1)
         assertThat(userWithProfile.username).isEqualTo("dynamic_user_1")
@@ -157,7 +157,4 @@ class DynamicDtoMappingTest {
         assertThat(stats.postCount).isEqualTo(150)
         assertThat(stats.commentCount).isEqualTo(3000)
     }
-
-    // Prosta metoda rozszerzająca do uproszczenia testów
-
 }
