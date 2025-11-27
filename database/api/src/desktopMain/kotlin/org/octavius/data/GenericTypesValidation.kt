@@ -1,6 +1,5 @@
 package org.octavius.data
 
-import kotlinx.serialization.json.JsonElement
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import kotlin.reflect.KClass

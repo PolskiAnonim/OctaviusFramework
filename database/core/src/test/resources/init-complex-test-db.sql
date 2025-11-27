@@ -129,7 +129,7 @@ INSERT INTO complex_test_data (
     42,
     true,
     '{"name": "test", "value": 123, "nested": {"key": "value"}, "array": [1, 2, 3]}',
-    gen_random_uuid(),
+    '7b14b7bb-625c-408c-b5ff-ccd2233747dc',
     '2024-01-15',
     '2024-01-15 14:30:00',
     '2024-01-15 14:30:00 Europe/Warsaw',
@@ -239,7 +239,7 @@ INSERT INTO complex_test_data (
         ),
         ROW(
             'Research "Innovation" Project',
-            'Experimental features and "new technologies"',
+            'Experimental features, "new technologies"',
             'active',
             ARRAY[
                 ROW('Researcher ''The Innovator''', 33, 'research@example.com', true, ARRAY['researcher', 'innovator']),
