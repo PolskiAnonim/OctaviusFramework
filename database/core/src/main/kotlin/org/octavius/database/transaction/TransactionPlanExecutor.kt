@@ -122,7 +122,6 @@ internal class TransactionPlanExecutor(
                                 stepIndex = index,
                                 cause = e
                             )
-                            logger.error(ex) { ex }
                             throw ex
                         }
                     }
