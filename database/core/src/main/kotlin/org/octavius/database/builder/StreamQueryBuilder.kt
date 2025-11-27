@@ -1,21 +1,10 @@
 package org.octavius.database.builder
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.trySendBlocking
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.withContext
 import org.octavius.data.DataResult
 import org.octavius.data.builder.StreamingTerminalMethods
-import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
-import org.springframework.jdbc.core.PreparedStatementCallback
 import org.springframework.jdbc.core.RowMapper
-import org.springframework.jdbc.core.SqlTypeValue
-import org.springframework.jdbc.core.StatementCreatorUtils
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterUtils
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
@@ -45,19 +34,17 @@ internal class StreamingQueryBuilder(
 
             logger.debug { "Executing streaming query (expanded): $expandedSql with params: $expandedParams" }
 
-            // Krok 2: Konwersja z :nazwa na ?
-            val parsedSql = NamedParameterUtils.parseSqlStatement(expandedSql)
-            val paramsInOrder =
-                NamedParameterUtils.buildValueArray(parsedSql, MapSqlParameterSource(expandedParams), null)
-            val sqlWithQuestionMarks = NamedParameterUtils.substituteNamedParameters(parsedSql, null)
-
-            // Krok 3: Użycie PreparedStatementCallback
-            val callback = PreparedStatementCallback { ps ->
-                ps.fetchSize = this.fetchSize // Ustawiamy streaming!
-
-                for ((index, value) in paramsInOrder.withIndex()) {
-                    StatementCreatorUtils.setParameterValue(ps, index + 1, SqlTypeValue.TYPE_UNKNOWN, value)
+            builder.jdbcTemplate.execute(expandedSql, expandedParams) { ps ->
+                // --- WARN-FAST MECHANISM ---
+                if (ps.connection.autoCommit) {
+                    logger.warn {
+                        "POTENTIAL PERFORMANCE ISSUE: Streaming query executed with autoCommit=true. " +
+                                "PostgreSQL driver will ignore fetchSize=$fetchSize and load all rows into RAM. " +
+                                "Wrap this call in DataAccess.transaction { ... }."
+                    }
                 }
+
+                ps.fetchSize = this.fetchSize
 
                 val rs: ResultSet = ps.executeQuery()
                 var rowNum = 0
@@ -67,18 +54,14 @@ internal class StreamingQueryBuilder(
                 }
             }
 
-            // Krok 4: Wykonanie
-            builder.jdbcTemplate.jdbcOperations.execute(sqlWithQuestionMarks, callback)
-
             DataResult.Success(Unit)
         } catch (e: Exception) {
-            // Logujemy i tworzymy wyjątek z pełnym kontekstem
-            logger.error(e) { "Database error executing streaming query: $expandedSql with params: $expandedParams" }
+            logger.error(e) { "Database error executing streaming query: $expandedSql" }
             DataResult.Failure(
                 QueryExecutionException(
                     sql = expandedSql ?: originalSql,
                     params = expandedParams ?: params,
-                    "Streaming query failed.",
+                    message = "Streaming query failed.",
                     cause = e
                 )
             )
@@ -97,40 +80,5 @@ internal class StreamingQueryBuilder(
         action: (obj: T) -> Unit
     ): DataResult<Unit> {
         return executeStream(params, builder.rowMappers.DataObjectMapper(kClass), action)
-    }
-
-    override fun toFlow(params: Map<String, Any?>): Flow<Map<String, Any?>> {
-        return channelFlow {
-            // Używamy withContext(Dispatchers.IO), bo operacje JDBC są blokujące
-            // i MUSZĄ być wykonane na wątku przeznaczonym do takich operacji.
-            withContext(Dispatchers.IO) {
-                val result = executeStream(params, builder.rowMappers.ColumnNameMapper()) { item ->
-                    trySendBlocking(item)
-                }
-                // Jeśli executeStream zwróci błąd, zamknij Flow z tym błędem
-                if (result is DataResult.Failure) {
-                    close(result.error)
-                }
-            }
-        }
-    }
-
-    override fun <T : Any> toFlowOf(
-        kClass: KClass<T>,
-        params: Map<String, Any?>
-    ): Flow<T> {
-        return channelFlow {
-            // Używamy withContext(Dispatchers.IO), bo operacje JDBC są blokujące
-            // i MUSZĄ być wykonane na wątku przeznaczonym do takich operacji.
-            withContext(Dispatchers.IO) {
-                val result = executeStream(params, builder.rowMappers.DataObjectMapper(kClass)) { item ->
-                    trySendBlocking(item)
-                }
-                // Jeśli executeStream zwróci błąd, zamknij Flow z tym błędem
-                if (result is DataResult.Failure) {
-                    close(result.error)
-                }
-            }
-        }
     }
 }
