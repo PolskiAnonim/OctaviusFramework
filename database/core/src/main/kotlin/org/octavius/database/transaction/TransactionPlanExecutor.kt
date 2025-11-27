@@ -142,10 +142,7 @@ internal class TransactionPlanExecutor(
             // Jeśli `runCatching` złapał jakikolwiek wyjątek, opakowujemy go w Failure
             val dbException = when (error) {
                 is DatabaseException -> error // Jeśli to już nasz wyjątek, przekaż go dalej
-                else -> QueryExecutionException( // W przeciwnym razie stwórz nowy
-                    "An unexpected error occurred during transaction execution.",
-                    "N/A", emptyMap(), error
-                )
+                else -> TransactionException(error) // W przeciwnym razie stwórz nowy
             }
             logger.error(dbException) { "Transaction failed and was rolled back." }
             DataResult.Failure(dbException)

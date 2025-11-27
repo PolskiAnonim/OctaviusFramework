@@ -7,7 +7,6 @@ import org.octavius.data.builder.AsyncTerminalMethods
 import org.octavius.data.builder.QueryBuilder
 import org.octavius.data.builder.StepBuilderMethods
 import org.octavius.data.builder.StreamingTerminalMethods
-import org.octavius.data.exception.DatabaseException
 import org.octavius.data.exception.QueryExecutionException
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
@@ -230,14 +229,10 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
             expandedParams = expanded.expandedParams
             logger.debug { "Executing query (expanded): $expandedSql with params: $expandedParams" }
             action(expandedSql, expandedParams)
-        } catch (e: DatabaseException) {
-            logger.error(e) { "Database error executing query: $expandedSql with params: $expandedParams" }
-            DataResult.Failure(e)
         } catch (e: Exception) {
-            logger.error(e) { "Unexpected error executing query: $expandedSql with params: $expandedParams" }
+            logger.error(e) { "Database error executing query: $expandedSql with params: $expandedParams" }
             DataResult.Failure(
                 QueryExecutionException(
-                    "Unexpected error during query execution.",
                     sql = expandedSql ?: sql,
                     params = expandedParams ?: params,
                     cause = e

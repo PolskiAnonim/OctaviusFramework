@@ -71,18 +71,14 @@ internal class StreamingQueryBuilder(
             builder.jdbcTemplate.jdbcOperations.execute(sqlWithQuestionMarks, callback)
 
             DataResult.Success(Unit)
-        } catch (e: DatabaseException) {
-            // Logujemy z pełnym kontekstem
-            logger.error(e) { "Database error executing streaming query: $expandedSql with params: $expandedParams" }
-            DataResult.Failure(e)
         } catch (e: Exception) {
             // Logujemy i tworzymy wyjątek z pełnym kontekstem
-            logger.error(e) { "Unexpected error executing streaming query: $expandedSql with params: $expandedParams" }
+            logger.error(e) { "Database error executing streaming query: $expandedSql with params: $expandedParams" }
             DataResult.Failure(
                 QueryExecutionException(
-                    "Streaming query failed.",
                     sql = expandedSql ?: originalSql,
                     params = expandedParams ?: params,
+                    "Streaming query failed.",
                     cause = e
                 )
             )

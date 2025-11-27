@@ -6,7 +6,7 @@ import org.octavius.data.DataResult
 import org.octavius.data.QueryOperations
 import org.octavius.data.builder.*
 import org.octavius.data.exception.DatabaseException
-import org.octavius.data.exception.QueryExecutionException
+import org.octavius.data.exception.TransactionException
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionPlanResult
 import org.octavius.data.transaction.TransactionPropagation
@@ -28,7 +28,12 @@ internal class DatabaseAccess(
     // --- Implementacja QueryOperations (dla pojedynczych zapytań i użycia w transakcji) ---
 
     override fun select(vararg columns: String): SelectQueryBuilder {
-        return DatabaseSelectQueryBuilder(jdbcTemplate, rowMappers, kotlinToPostgresConverter, columns.joinToString(",\n"))
+        return DatabaseSelectQueryBuilder(
+            jdbcTemplate,
+            rowMappers,
+            kotlinToPostgresConverter,
+            columns.joinToString(",\n")
+        )
     }
 
     override fun update(table: String): UpdateQueryBuilder {
@@ -91,12 +96,7 @@ internal class DatabaseAccess(
                 logger.error(e) { "An unexpected exception was thrown inside the transaction block. Rolling back." }
                 // Opakowujemy go w nasze standardowe Failure
                 DataResult.Failure(
-                    QueryExecutionException(
-                        "Transaction failed due to an unexpected error: ${e.message}",
-                        sql = "N/A",
-                        params = mapOf(),
-                        cause = e
-                    )
+                    TransactionException(cause = e)
                 )
             }
         }!!

@@ -18,11 +18,11 @@ sealed class DatabaseException(message: String, cause: Throwable? = null) : Runt
  * - Database connection errors
  */
 class QueryExecutionException(
-    message: String,
     val sql: String,
     val params: Map<String, Any?>,
+    message: String? = null,
     cause: Throwable? = null
-) : DatabaseException(message, cause) {
+) : DatabaseException(message ?: "Error during query execution", cause) {
     override fun toString(): String {
         val nestedError = cause.toString().prependIndent("|   ")
         return """
@@ -33,7 +33,7 @@ class QueryExecutionException(
 | sql: $sql
 | params: $params
 -------------------------------------
-| Step error details:
+| Error details:
 $nestedError
 -------------------------------------
 """
@@ -65,6 +65,34 @@ class TransactionStepExecutionException(
 | TRANSACTION STEP $stepIndex FAILED
 -------------------------------------
 | Step error details:
+$nestedError
+-------------------------------------
+"""
+    }
+}
+
+/**
+ * Exception thrown when execution of a transaction fails.
+ *
+ * Wraps the original exception (e.g., QueryExecutionException)
+ *
+ * @param cause Original exception that caused the error.
+ */
+class TransactionException(
+    override val cause: Throwable
+) : DatabaseException(
+    "Execution of transaction failed",
+    cause
+) {
+    override fun toString(): String {
+        val nestedError = cause.toString().prependIndent("|   ")
+
+        return """
+
+-------------------------------------
+| TRANSACTION FAILED
+-------------------------------------
+| Error details:
 $nestedError
 -------------------------------------
 """
