@@ -9,7 +9,6 @@ import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toMap
 import org.octavius.data.type.DynamicDto
-import org.octavius.data.util.CaseConverter
 import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
@@ -41,7 +40,7 @@ data class ExpandedQuery(
  * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
  */
 internal class KotlinToPostgresConverter(
-    private val typeRegistry: TypeRegistry, private val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.EXPLICIT_ONLY
+    private val typeRegistry: TypeRegistry, private val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}

@@ -9,9 +9,6 @@ import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
-import java.lang.reflect.Method
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KClass
 
 /**
  * Konwertuje wartości z PostgreSQL (jako `String`) na odpowiednie typy Kotlina.
@@ -24,12 +21,6 @@ import kotlin.reflect.KClass
 internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
     companion object {
         private val logger = KotlinLogging.logger {}
-
-        // Cache dla klasy enum i metody valueOf
-        private val enumClassCache = ConcurrentHashMap<String, Method>()
-
-        // Cache dla Kotlin KClass kompozytowych (data class)
-        private val compositeKClassCache = ConcurrentHashMap<String, KClass<*>>()
     }
 
     /**
