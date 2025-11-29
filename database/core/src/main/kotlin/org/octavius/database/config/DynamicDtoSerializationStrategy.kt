@@ -20,7 +20,7 @@ enum class DynamicDtoSerializationStrategy {
 
     /**
      * Automatycznie konwertuje do dynamic_dto, ale TYLKO wtedy,
-     * gdy nie ma dwuznaczności (tj. klasa NIE ma adnotacji @PgComposite).
+     * gdy nie ma dwuznaczności (tj. klasa NIE ma adnotacji @PgComposite lub @PgEnum).
      * W przypadku konfliktu, @PgComposite zawsze wygrywa.
      */
     AUTOMATIC_WHEN_UNAMBIGUOUS,
@@ -28,7 +28,7 @@ enum class DynamicDtoSerializationStrategy {
     /**
      * Agresywnie konwertuje do dynamic_dto, jeśli tylko klasa ma
      * adnotację @DynamicallyMappable. Ta strategia ma wyższy priorytet
-     * niż @PgComposite w przypadku konfliktu.
+     * niż @PgComposite i @PgEnum w przypadku konfliktu.
      */
     PREFER_DYNAMIC_DTO
 }

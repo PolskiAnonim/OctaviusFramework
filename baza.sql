@@ -24,7 +24,27 @@ CREATE OR REPLACE FUNCTION dynamic_dto(p_type_name TEXT, p_data JSONB)
 BEGIN
     RETURN ROW(p_type_name, p_data)::dynamic_dto;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION soft_enum(p_type_name TEXT, p_raw_value TEXT)
+    RETURNS dynamic_dto AS
+$$
+BEGIN
+    -- to_jsonb('dark_theme') -> '"dark_theme"' (typ jsonb)
+    -- Dzięki temu deserializer w Kotlinie dostanie poprawny format JSON stringa
+    RETURN ROW(p_type_name, to_jsonb(p_raw_value))::dynamic_dto;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION unwrap(p_dto dynamic_dto)
+    RETURNS TEXT AS $$
+BEGIN
+    -- Operator #>> '{}' wyciąga główny element JSON-a jako text.
+    -- Dla "dark_theme" zwróci dark_theme (bez cudzysłowów).
+    -- Dla null zwróci null.
+    RETURN p_dto.data_payload #>> '{}';
+END;
+$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 
 ---------- TRIGGER
 
