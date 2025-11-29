@@ -2,6 +2,7 @@ package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.OffsetTime
 import org.octavius.data.exception.ConversionException
@@ -64,12 +65,6 @@ internal class KotlinToPostgresConverter(
                 type = "interval"
                 value = (v as Duration).toIsoString()
             }
-        },
-        JsonObject::class to { v ->
-            PGobject().apply {
-                type = "jsonb"
-                value = (v as JsonObject).toString()
-            }
         }
     )
 
@@ -126,11 +121,10 @@ internal class KotlinToPostgresConverter(
      * @param paramValue Wartość parametru do konwersji.
      * @return Para: placeholder SQL i mapa spłaszczonych parametrów.
      */
-    @OptIn(ExperimentalTime::class)
     private fun expandParameter(
         paramName: String,
         paramValue: Any?,
-        appendTypeCastForRow: Boolean = true
+        appendTypeCast: Boolean = true
     ): Pair<String, Map<String, Any?>> {
         if (paramValue == null) {
             return ":$paramName" to mapOf(paramName to null)
@@ -141,7 +135,7 @@ internal class KotlinToPostgresConverter(
             val (innerPlaceholder, innerParams) = expandParameter(
                 paramName,
                 paramValue.value,
-                appendTypeCastForRow = false
+                appendTypeCast = false
             )
             val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
             return finalPlaceholder to innerParams
@@ -153,20 +147,37 @@ internal class KotlinToPostgresConverter(
         }
 
         return when {
+            paramValue is JsonElement -> {
+                val pgObject = PGobject().apply {
+                    type = "jsonb"
+                    value = paramValue.toString()
+                }
+                ":$paramName" to mapOf(paramName to pgObject)
+            }
             isDataClass(paramValue) -> {
-                if (appendTypeCastForRow) {
+                if (appendTypeCast) {
                     // Najpierw spróbuj "diabolicznej" magii jako specjalnego przypadku
                     tryExpandAsDynamicDto(paramName, paramValue)
                     // Jeśli się nie uda, użyj standardowej konwersji do ROW().
-                        ?: expandRowParameter(paramName, paramValue)
+                        ?: expandRowParameter(paramName, paramValue, true)
                 } else {
-                    expandRowParameter(paramName, paramValue, appendTypeCastForRow)
+                    expandRowParameter(paramName, paramValue, false)
                 }
             }
             // Pozostałe typy złożone
             paramValue is Array<*> -> validateTypedArrayParameter(paramName, paramValue)
             paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
-            paramValue is Enum<*> -> createEnumParameter(paramName, paramValue)
+            paramValue is Enum<*> -> {
+                //Najpierw sprawdzamy, czy to jest "Soft Enum" (@DynamicallyMappable)
+                // Jeśli tak -> zamieniamy go w DynamicDto (ROW z JSON-em)
+                // Jeśli nie -> traktujemy jak zwykły Postgresowy ENUM (PGobject)
+                if (appendTypeCast) {
+                    tryExpandAsDynamicDto(paramName, paramValue)
+                        ?: createEnumParameter(paramName, paramValue)
+                } else {
+                    createEnumParameter(paramName, paramValue)
+                }
+            }
             // Krok 4: Fallback dla wszystkich innych typów prostych (Int, String, etc.)
             else -> ":$paramName" to mapOf(paramName to paramValue)
         }
