@@ -1,11 +1,9 @@
 package org.octavius.modules.games.statistics.model
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
@@ -15,10 +13,8 @@ import org.octavius.data.exception.DatabaseException
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
-class GameStatisticsHandler : KoinComponent {
+class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
     private val dataAccess: DataAccess by inject()
-    private val scope = CoroutineScope(Dispatchers.IO)
-
     private val _state = MutableStateFlow(GameStatisticsState())
     val state = _state.asStateFlow()
 
@@ -67,9 +63,12 @@ class GameStatisticsHandler : KoinComponent {
             "array_agg(ROW(g.id, g.name, pt.play_time_hours)::games.dashboard_game_by_time ORDER BY pt.play_time_hours DESC) AS games"
         )
             .from("games.play_time pt JOIN games.games g ON pt.game_id = g.id")
-            .where("pt.game_id IN (${
-                dataAccess.select("game_id").from("games.play_time").orderBy("play_time_hours DESC NULLS LAST").limit(5).toSql()
-            })")
+            .where(
+                "pt.game_id IN (${
+                    dataAccess.select("game_id").from("games.play_time").orderBy("play_time_hours DESC NULLS LAST")
+                        .limit(5).toSql()
+                })"
+            )
             .toSql()
 
         // --- CTE 5: highest_rated_games ---
@@ -90,12 +89,14 @@ class GameStatisticsHandler : KoinComponent {
             "array_agg(ROW(g.id, g.name, r.avg_rating)::games.dashboard_game_by_rating ORDER BY r.avg_rating DESC) AS games"
         )
             .from(
-                "(${dataAccess.select("game_id, $avgRatingCalculation AS avg_rating")
-                    .from("games.ratings")
-                    .where("$avgRatingCalculation IS NOT NULL") // Wyrzucamy gry bez ocen od razu
-                    .orderBy("avg_rating DESC")
-                    .limit(5)
-                    .toSql()}) r JOIN games.games g ON r.game_id = g.id"
+                "(${
+                    dataAccess.select("game_id, $avgRatingCalculation AS avg_rating")
+                        .from("games.ratings")
+                        .where("$avgRatingCalculation IS NOT NULL") // Wyrzucamy gry bez ocen od razu
+                        .orderBy("avg_rating DESC")
+                        .limit(5)
+                        .toSql()
+                }) r JOIN games.games g ON r.game_id = g.id"
             )
             .toSql()
 
@@ -117,7 +118,8 @@ class GameStatisticsHandler : KoinComponent {
             .limit(1)
             .toSql()
 
-        return dataAccess.select("""
+        return dataAccess.select(
+            """
             kpi.total_games,
             kpi.total_playtime_hours,
             kpi.played_games_count,
@@ -145,10 +147,9 @@ class GameStatisticsHandler : KoinComponent {
 
     fun loadData() {
         _state.update { it.copy(isLoading = true) }
-        scope.launch {
-            val query = buildGameStatisticsQuery()
-            val result = dataAccess.rawQuery(query).toSingleOf<GameStatisticsData>()
 
+        val query = buildGameStatisticsQuery()
+        dataAccess.rawQuery(query).async(scope).toSingleOf<GameStatisticsData> { result ->
             when (result) {
                 is DataResult.Success -> {
                     _state.update {
@@ -158,6 +159,7 @@ class GameStatisticsHandler : KoinComponent {
                         )
                     }
                 }
+
                 is DataResult.Failure -> {
                     showError(result.error)
                     _state.update { it.copy(isLoading = false) }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -27,7 +28,11 @@ import java.math.BigDecimal
 class GameStatisticsScreen(override val title: String) : Screen {
     @Composable
     override fun Content() {
-        val handler = remember { GameStatisticsHandler() }
+        val composableScope = rememberCoroutineScope()
+
+        val handler = remember(composableScope) {
+            GameStatisticsHandler(composableScope)
+        }
         val state by handler.state.collectAsState()
 
         if (state.isLoading) {
