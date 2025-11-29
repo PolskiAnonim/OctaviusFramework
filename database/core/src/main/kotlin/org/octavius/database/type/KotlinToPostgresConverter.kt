@@ -4,11 +4,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.OffsetTime
-import org.octavius.data.type.PgTyped
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toMap
 import org.octavius.data.type.DynamicDto
+import org.octavius.data.type.PgTyped
 import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
@@ -40,7 +40,8 @@ data class ExpandedQuery(
  * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
  */
 internal class KotlinToPostgresConverter(
-    private val typeRegistry: TypeRegistry, private val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
+    private val typeRegistry: TypeRegistry,
+    private val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -126,14 +127,22 @@ internal class KotlinToPostgresConverter(
      * @return Para: placeholder SQL i mapa spłaszczonych parametrów.
      */
     @OptIn(ExperimentalTime::class)
-    private fun expandParameter(paramName: String, paramValue: Any?, appendTypeCastForRow: Boolean = true): Pair<String, Map<String, Any?>> {
+    private fun expandParameter(
+        paramName: String,
+        paramValue: Any?,
+        appendTypeCastForRow: Boolean = true
+    ): Pair<String, Map<String, Any?>> {
         if (paramValue == null) {
             return ":$paramName" to mapOf(paramName to null)
         }
 
         // Krok 1: Obsługa typów opakowujących, które muszą być przetworzone jako pierwsze.
         if (paramValue is PgTyped) {
-            val (innerPlaceholder, innerParams) = expandParameter(paramName, paramValue.value, appendTypeCastForRow = false)
+            val (innerPlaceholder, innerParams) = expandParameter(
+                paramName,
+                paramValue.value,
+                appendTypeCastForRow = false
+            )
             val finalPlaceholder = innerPlaceholder + "::" + paramValue.pgType
             return finalPlaceholder to innerParams
         }
@@ -178,21 +187,24 @@ internal class KotlinToPostgresConverter(
             return null
         }
         // 2. Dla strategii "bez dwuznaczności", sprawdź, czy nie ma konfliktu z @PgComposite
-        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS && typeRegistry.isPgType(paramValue::class)) {
+        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS && typeRegistry.isPgType(
+                paramValue::class
+            )
+        ) {
             return null
         }
 
         // Sprawdź w rejestrze, czy ta klasa jest oznaczona jako @DynamicallyMappable
         val dynamicTypeName = typeRegistry.getDynamicTypeNameForClass(paramValue::class)
             ?: return null // Jeśli nie jest, to nie nasza działka
-
+        val serializer = typeRegistry.getDynamicSerializer(dynamicTypeName)
         // Jeśli jest, wykonaj "diaboliczną" magię
 
         logger.trace { "Dynamically converting ${paramValue::class.simpleName} to dynamic_dto '$dynamicTypeName'" }
 
         val dynamicDtoWrapper: DynamicDto
         try {
-            dynamicDtoWrapper = DynamicDto.from(paramValue, dynamicTypeName)
+            dynamicDtoWrapper = DynamicDto.from(paramValue, dynamicTypeName, serializer)
         } catch (ex: Exception) { // To zawsze powinien być ConversionException
             logger.error(ex) { ex }
             throw ex
@@ -294,7 +306,11 @@ internal class KotlinToPostgresConverter(
      * @return Para: placeholder ROW(...)::type_name i mapa parametrów pól.
      * @throws org.octavius.data.exception.TypeRegistryException jeśli klasa nie jest zarejestrowana.
      */
-    private fun expandRowParameter(paramName: String, compositeValue: Any, appendTypeCast: Boolean = true): Pair<String, Map<String, Any?>> {
+    private fun expandRowParameter(
+        paramName: String,
+        compositeValue: Any,
+        appendTypeCast: Boolean = true
+    ): Pair<String, Map<String, Any?>> {
         val kClass = compositeValue::class
         logger.trace { "Expanding row parameter '$paramName' for class ${kClass.simpleName}" }
 

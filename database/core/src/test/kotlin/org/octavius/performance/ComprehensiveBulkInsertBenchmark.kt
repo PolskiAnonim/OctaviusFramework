@@ -72,18 +72,18 @@ class ComprehensiveBulkInsertBenchmark {
             """
             CREATE TABLE performance_test (id SERIAL PRIMARY KEY, val1 INT, val2 VARCHAR(50));
             -- Uniwersalny typ-przenośnik - będzie obecny także na zwykłej bazie. Wymagany przez rejestr
-            DROP TYPE IF EXISTS dynamic_dto;
-            CREATE TYPE dynamic_dto AS
-            (
-                type_name    TEXT,
-                data_payload JSONB
-            );
+            DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dynamic_dto') THEN
+                    CREATE TYPE dynamic_dto AS (type_name text, data_payload jsonb);
+                END IF;
+            END $$;
+
         """.trimIndent()
         )
         // --- Krok 3: Inicjalizacja frameworka ---
         val loader = TypeRegistryLoader(
             jdbcTemplate,
-            databaseConfig.packagesToScan.filter { it != "org.octavius.domain.test.dynamic" && it != "org.octavius.domain.test.existing" },
+            listOf("org.octavius.performance"),
             databaseConfig.dbSchemas
         )
         val typeRegistry = runBlocking { loader.load() }

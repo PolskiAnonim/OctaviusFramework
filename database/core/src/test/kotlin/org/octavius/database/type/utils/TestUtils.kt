@@ -1,8 +1,13 @@
-package org.octavius.database.type
+package org.octavius.database.type.utils
 
 import org.octavius.data.type.DynamicDto
 import org.octavius.data.util.CaseConvention
 import org.octavius.data.util.CaseConverter
+import org.octavius.database.type.PgArrayDefinition
+import org.octavius.database.type.PgCompositeDefinition
+import org.octavius.database.type.PgEnumDefinition
+import org.octavius.database.type.TypeCategory
+import org.octavius.database.type.TypeRegistry
 import org.octavius.domain.test.existing.TestCategory
 import org.octavius.domain.test.existing.TestMetadata
 import org.octavius.domain.test.existing.TestPerson
@@ -158,6 +163,7 @@ internal fun createFakeTypeRegistry(): TypeRegistry {
         composites = composites,
         arrays = arrays,
         classToPgNameMap = classToPgNameMap,
-        dynamicDtoMapping = emptyMap() // Pusta mapa dla dynamicznych w tym teście
+        dynamicSerializers = emptyMap(), // Pusta mapa dla dynamicznych w tym teście
+        classToDynamicNameMap = emptyMap()
     )
 }

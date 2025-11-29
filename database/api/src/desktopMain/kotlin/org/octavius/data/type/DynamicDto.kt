@@ -1,12 +1,11 @@
 package org.octavius.data.type
 
-import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 import org.octavius.data.annotation.DynamicallyMappable
 import org.octavius.data.annotation.PgComposite
-import org.octavius.data.annotation.PgEnum
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import kotlin.reflect.KClass
@@ -37,7 +36,7 @@ import kotlin.reflect.full.findAnnotation
 @PgComposite(name = "dynamic_dto")
 data class DynamicDto private constructor(
     val typeName: String,
-    val dataPayload: JsonObject
+    val dataPayload: JsonElement
 ) {
     companion object {
         /**
@@ -45,7 +44,7 @@ data class DynamicDto private constructor(
          *
          * Jest to preferowana ścieżka dla użytkownika końcowego. Używa refleksji do
          * automatycznego znalezienia `typeName` z adnotacji [DynamicallyMappable]
-         * i serializuje obiekt do [JsonObject].
+         * i serializuje obiekt do [JsonElement].
          *
          * @param value Instancja obiektu do opakowania. Musi posiadać adnotacje
          *              [DynamicallyMappable] oraz `@Serializable`.
@@ -53,9 +52,11 @@ data class DynamicDto private constructor(
          * @throws ConversionException jeśli klasa obiektu nie ma wymaganej adnotacji
          *                           lub jeśli wystąpi błąd podczas serializacji JSON.
          */
-        fun from(value: Any): DynamicDto {
+        inline fun <reified T: Any> from(value: T): DynamicDto {
             @Suppress("UNCHECKED_CAST")
             val kClass = value::class as KClass<Any>
+
+            // 1. Znajdź nazwę typu (refleksja)
             val annotation = kClass.findAnnotation<DynamicallyMappable>()
                 ?: throw ConversionException(
                     messageEnum = ConversionExceptionMessage.JSON_SERIALIZATION_FAILED,
@@ -63,41 +64,33 @@ data class DynamicDto private constructor(
                     targetType = DynamicallyMappable::class.simpleName
                 )
 
-            // Deleguje do bardziej jawnej wersji, aby nie powielać logiki serializacji
-            return from(value, annotation.typeName)
+            // 2. Znajdź serializer
+            val serializer = try {
+                // Udajemy że jest to bezpieczniejsze od innych metod (i tak odczyt nie pozwoli na pełną informację)
+                serializer<T>()
+            } catch (e: Exception) {
+                throw ConversionException(
+                    messageEnum = ConversionExceptionMessage.JSON_SERIALIZATION_FAILED,
+                    targetType = annotation.typeName,
+                    cause = e
+                )
+            }
+
+            // 3. Deleguj do wersji zoptymalizowanej
+            return from(value, annotation.typeName, serializer as KSerializer<Any>)
         }
 
         /**
-         * Jawna i zoptymalizowana metoda fabryczna, przeznaczona dla frameworka i zaawansowanych
-         * scenariuszy użycia.
-         *
-         * Przyjmuje `typeName` jako jawny parametr, całkowicie omijając potrzebę refleksji
-         * w celu znalezienia adnotacji. Jest to ścieżka o najwyższej wydajności.
-         *
-         * @param value Instancja obiektu do opakowania. Musi posiadać adnotację `@Serializable`.
-         * @param typeName Klucz identyfikujący typ, który normalnie pochodziłby z adnotacji.
-         * @return Nowa, w pełni skonstruowana instancja [DynamicDto].
-         * @throws ConversionException jeśli wystąpi błąd podczas serializacji JSON.
+         * [ŚCIEŻKA FRAMEWORKA]
+         * Tworzy DTO używając dostarczonego z zewnątrz (zcache'owanego) serializera.
+         * Zero refleksji, maksymalna wydajność.
          */
-        @OptIn(InternalSerializationApi::class)
-        fun from(value: Any, typeName: String): DynamicDto {
+        fun from(value: Any, typeName: String, serializer: KSerializer<Any>): DynamicDto {
             try {
-                @Suppress("UNCHECKED_CAST")
-                val kClass = value::class as KClass<Any>
-                val serializer = kClass.serializer()
-                val jsonElement = Json.encodeToJsonElement(serializer, value)
+                // Serializacja do JsonElement
+                val jsonPayload = Json.encodeToJsonElement(serializer, value)
 
-                if (jsonElement !is JsonObject) {
-                    throw IllegalStateException(
-                        "Serialization of '${kClass.simpleName}' did not result in a JsonObject. " +
-                                "Only class-based serialization is supported for DynamicDto."
-                    )
-                }
-
-                return DynamicDto(
-                    typeName = typeName,
-                    dataPayload = jsonElement
-                )
+                return DynamicDto(typeName, jsonPayload)
             } catch (e: Exception) {
                 throw ConversionException(
                     messageEnum = ConversionExceptionMessage.JSON_SERIALIZATION_FAILED,

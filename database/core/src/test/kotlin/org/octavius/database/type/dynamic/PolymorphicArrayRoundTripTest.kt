@@ -1,8 +1,8 @@
-package org.octavius.database.type
+package org.octavius.database.type.dynamic
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,8 +10,8 @@ import org.junit.jupiter.api.TestInstance
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toField
-import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.OctaviusDatabase
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.octavius.domain.test.dynamic.DynamicProfile
 import org.octavius.domain.test.dynamic.UserStats
@@ -43,7 +43,7 @@ class PolymorphicArrayRoundTripTest {
     @BeforeAll
     fun setup() {
         // --- Konfiguracja i zabezpieczenia ---
-        baseConfig = DatabaseConfig.loadFromFile("test-database.properties")
+        baseConfig = DatabaseConfig.Companion.loadFromFile("test-database.properties")
         val connectionUrl = baseConfig.dbUrl
         if (!connectionUrl.contains("octavius_test")) {
             throw IllegalStateException("ABORTING TEST! Attempting to run on a non-test database.")
@@ -117,9 +117,9 @@ class PolymorphicArrayRoundTripTest {
             ))
 
         // Sprawdzamy, czy zapis się powiódł i pobieramy ID nowego wiersza
-        assertThat(insertResult).isInstanceOf(DataResult.Success::class.java)
+        Assertions.assertThat(insertResult).isInstanceOf(DataResult.Success::class.java)
         val newId = (insertResult as DataResult.Success).value
-        assertThat(newId).isNotNull()
+        Assertions.assertThat(newId).isNotNull()
 
         // --- ACT (READ) ---
         // Odczytujemy tę samą wartość z bazy, używając pobranego ID.
@@ -132,21 +132,21 @@ class PolymorphicArrayRoundTripTest {
 
         // --- ASSERT ---
         // Krok 1: Sprawdzamy, czy odczyt się powiódł
-        assertThat(readResult).isInstanceOf(DataResult.Success::class.java)
+        Assertions.assertThat(readResult).isInstanceOf(DataResult.Success::class.java)
         val retrievedEvents = (readResult as DataResult.Success).value
-        assertThat(retrievedEvents).isNotNull
+        Assertions.assertThat(retrievedEvents).isNotNull
 
         // Krok 2: OSTATECZNY DOWÓD.
         // Odczytana lista musi być strukturalnie identyczna z oryginalną listą.
         // Ponieważ używamy `data class`, .isEqualTo() wykona głębokie porównanie.
-        assertThat(retrievedEvents).isEqualTo(originalEvents)
+        Assertions.assertThat(retrievedEvents).isEqualTo(originalEvents)
 
         // Krok 3: Dodatkowe, jawne asercje dla pełnej jasności
-        assertThat(retrievedEvents).hasSize(3)
-        assertThat(retrievedEvents!![0]).isInstanceOf(DynamicProfile::class.java)
-        assertThat(retrievedEvents[1]).isInstanceOf(UserStats::class.java)
-        assertThat(retrievedEvents[2]).isInstanceOf(DynamicProfile::class.java)
-        assertThat((retrievedEvents[0] as DynamicProfile).role).isEqualTo("editor")
-        assertThat((retrievedEvents[1] as UserStats).commentCount).isEqualTo(1337)
+        Assertions.assertThat(retrievedEvents).hasSize(3)
+        Assertions.assertThat(retrievedEvents!![0]).isInstanceOf(DynamicProfile::class.java)
+        Assertions.assertThat(retrievedEvents[1]).isInstanceOf(UserStats::class.java)
+        Assertions.assertThat(retrievedEvents[2]).isInstanceOf(DynamicProfile::class.java)
+        Assertions.assertThat((retrievedEvents[0] as DynamicProfile).role).isEqualTo("editor")
+        Assertions.assertThat((retrievedEvents[1] as UserStats).commentCount).isEqualTo(1337)
     }
 }

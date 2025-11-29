@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.octavius.database.type.utils.createFakeTypeRegistry
 import org.octavius.domain.test.existing.TestCategory
 import org.octavius.domain.test.existing.TestMetadata
 import org.octavius.domain.test.existing.TestPerson

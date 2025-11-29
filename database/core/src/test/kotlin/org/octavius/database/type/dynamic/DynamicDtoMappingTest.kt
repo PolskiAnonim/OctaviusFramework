@@ -1,4 +1,4 @@
-package org.octavius.database.type
+package org.octavius.database.type.dynamic
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
+import org.octavius.data.DataAccess
 import org.octavius.data.builder.toSingle
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.getOrThrow
@@ -15,6 +16,10 @@ import org.octavius.data.toDataObject
 import org.octavius.database.DatabaseAccess
 import org.octavius.database.RowMappers
 import org.octavius.database.config.DatabaseConfig
+import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.database.type.ResultSetValueExtractor
+import org.octavius.database.type.TypeRegistry
+import org.octavius.database.type.TypeRegistryLoader
 import org.octavius.domain.test.dynamic.DynamicProfile
 import org.octavius.domain.test.dynamic.UserStats
 import org.octavius.domain.test.dynamic.UserWithDynamicProfile
@@ -26,7 +31,7 @@ import java.nio.file.Paths
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DynamicDtoMappingTest {
 
-    private lateinit var dataAccess: org.octavius.data.DataAccess
+    private lateinit var dataAccess: DataAccess
     private lateinit var typeRegistry: TypeRegistry // Potrzebne do weryfikacji
 
     @BeforeAll
@@ -74,23 +79,6 @@ class DynamicDtoMappingTest {
         val rowMappers = RowMappers(extractor)
         // Używamy pełnej implementacji DataAccess, aby testować jak najbliżej rzeczywistości
         dataAccess = DatabaseAccess(jdbcTemplate, transactionManager, rowMappers, kotlinToPostgresConverter)
-    }
-
-    @Test
-    fun `should correctly load DynamicallyMappable classes into TypeRegistry`() {
-        // Assert: Sprawdzamy, czy nasz loader poprawnie znalazł i zarejestrował klasy
-        val profileClass = typeRegistry.getDynamicMappableClass("profile_dto")
-        val statsClass = typeRegistry.getDynamicMappableClass("user_stats_dto")
-
-        assertThat(profileClass).isNotNull
-        assertThat(profileClass).isEqualTo(DynamicProfile::class)
-
-        assertThat(statsClass).isNotNull
-        assertThat(statsClass).isEqualTo(UserStats::class)
-
-        assertThrows<TypeRegistryException> {
-            typeRegistry.getDynamicMappableClass("non_existent_dto")
-        }
     }
 
     @Test

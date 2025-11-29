@@ -80,7 +80,6 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @param value Surowa wartość z bazy w formacie kompozytu `("typeName", "jsonData")`.
      * @return Instancja odpowiedniej `data class` z adnotacją `@DynamicallyMappable`.
      */
-    @OptIn(InternalSerializationApi::class)
     private fun convertDynamicType(value: String): Any? {
 
         val parts: List<String?> = parseNestedStructure(value)
@@ -96,11 +95,11 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             throw ConversionException(ConversionExceptionMessage.INVALID_DYNAMIC_DTO_FORMAT, value = value)
         }
 
-        // Użyj TypeRegistry do bezpiecznego znalezienia KClass
-        val kClass = typeRegistry.getDynamicMappableClass(typeName)
+        // Użyj TypeRegistry do bezpiecznego znalezienia serializatora
+        val serializer = typeRegistry.getDynamicSerializer(typeName)
 
         return try {
-            Json.decodeFromString(kClass.serializer(), jsonDataString)
+            Json.decodeFromString(serializer, jsonDataString)
         } catch (e: Exception) {
             throw ConversionException(ConversionExceptionMessage.JSON_DESERIALIZATION_FAILED, targetType = typeName, rowData = mapOf("json" to jsonDataString), cause = e)
         }

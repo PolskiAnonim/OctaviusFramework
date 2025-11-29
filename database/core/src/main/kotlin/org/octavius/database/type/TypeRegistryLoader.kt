@@ -6,6 +6,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.serializer
 import org.octavius.data.annotation.DynamicallyMappable
 import org.octavius.data.annotation.PgComposite
 import org.octavius.data.annotation.PgEnum
@@ -27,7 +30,8 @@ internal class TypeRegistryLoader(
     private data class ClasspathData(
         val enums: List<KtEnumInfo>,
         val composites: List<KtCompositeInfo>,
-        val dynamic: Map<String, KClass<*>>
+        val dynamicSerializers: Map<String, KSerializer<Any>>,
+        val dynamicReverseMap: Map<KClass<*>, String>
     )
     private data class KtEnumInfo(val kClass: KClass<*>, val pgName: String, val pgConv: CaseConvention, val ktConv: CaseConvention)
     private data class KtCompositeInfo(val kClass: KClass<*>, val pgName: String)
@@ -75,7 +79,8 @@ internal class TypeRegistryLoader(
             composites = finalComposites,
             arrays = finalArrays,
             classToPgNameMap = classToPgNameMap,
-            dynamicDtoMapping = cpData.dynamic
+            dynamicSerializers = cpData.dynamicSerializers,
+            classToDynamicNameMap = cpData.dynamicReverseMap
         )
     }
 
@@ -86,7 +91,8 @@ internal class TypeRegistryLoader(
     private fun scanClasspath(): ClasspathData {
         val enumInfos = mutableListOf<KtEnumInfo>()
         val compositeInfos = mutableListOf<KtCompositeInfo>()
-        val dynamicInfos = mutableMapOf<String, KClass<*>>()
+        val targetSerializers = mutableMapOf<String, KSerializer<Any>>()
+        val targetReverseMap = mutableMapOf<KClass<*>, String>()
 
         try {
             logger.debug { "Scanning packages for annotations: ${packagesToScan.joinToString()}" }
@@ -98,13 +104,13 @@ internal class TypeRegistryLoader(
 
                     processComposites(result, compositeInfos)
 
-                    processDynamicTypes(result, dynamicInfos)
+                    processDynamicTypes(result, targetSerializers, targetReverseMap)
                 }
         } catch (e: Exception) {
             throw TypeRegistryException(TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED, cause = e)
         }
 
-        return ClasspathData(enumInfos, compositeInfos, dynamicInfos)
+        return ClasspathData(enumInfos, compositeInfos, targetSerializers, targetReverseMap)
     }
 
 
@@ -135,14 +141,36 @@ internal class TypeRegistryLoader(
         }
     }
 
-    private fun processDynamicTypes(scanResult: ScanResult, target: MutableMap<String, KClass<*>>) {
+    @OptIn(InternalSerializationApi::class)
+    private fun processDynamicTypes(
+        scanResult: ScanResult,
+        targetSerializers: MutableMap<String, KSerializer<Any>>,
+        targetReverseMap: MutableMap<KClass<*>, String>
+    ) {
         scanResult.getClassesWithAnnotation(DynamicallyMappable::class.java).forEach { classInfo ->
-            if (!classInfo.hasAnnotation("kotlinx.serialization.Serializable")) throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, typeName = classInfo.name, cause = IllegalStateException("Missing @Serializable"))
+            if (!classInfo.hasAnnotation("kotlinx.serialization.Serializable")) {
+                throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, typeName = classInfo.name, cause = IllegalStateException("Missing @Serializable"))
+            }
 
             val annotation = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
             val typeName = annotation.parameterValues.getValue("typeName") as String
+            val kClass = classInfo.loadClass().kotlin
+            try {
+                @Suppress("UNCHECKED_CAST")
+                val serializer = kClass.serializer() as KSerializer<Any>
 
-            target[typeName] = classInfo.loadClass().kotlin
+                targetSerializers[typeName] = serializer
+                targetReverseMap[kClass] = typeName
+
+                logger.trace { "Registered DynamicDTO serializer for '$typeName' -> ${kClass.simpleName}" }
+            } catch (e: Exception) {
+                // Jeśli klasa jest uszkodzona (np. generyk bez kontekstu), wiemy to od razu.
+                throw TypeRegistryException(
+                    TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
+                    typeName = typeName,
+                    cause = IllegalStateException("Failed to obtain serializer for ${kClass.qualifiedName}. Ensure it is a valid @Serializable class/enum.", e)
+                )
+            }
         }
     }
 

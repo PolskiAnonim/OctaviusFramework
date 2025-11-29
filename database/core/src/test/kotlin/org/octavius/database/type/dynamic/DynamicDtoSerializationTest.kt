@@ -1,4 +1,4 @@
-package org.octavius.database.type
+package org.octavius.database.type.dynamic
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

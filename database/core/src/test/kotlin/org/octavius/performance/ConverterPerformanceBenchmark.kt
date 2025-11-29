@@ -9,7 +9,7 @@ import org.junit.jupiter.api.TestMethodOrder
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.octavius.database.type.PostgresToKotlinConverter
-import org.octavius.database.type.createFakeTypeRegistry
+import org.octavius.database.type.utils.createFakeTypeRegistry
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.measureNanoTime
 

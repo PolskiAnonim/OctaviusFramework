@@ -1,6 +1,7 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.KSerializer
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import kotlin.reflect.KClass
@@ -18,12 +19,9 @@ internal class TypeRegistry(
     private val classToPgNameMap: Map<KClass<*>, String>,
 
     // Mapowania dynamiczne (Dynamic Key -> Kotlin Class)
-    private val dynamicDtoMapping: Map<String, KClass<*>>
+    private val dynamicSerializers: Map<String, KSerializer<Any>>,
+    private val classToDynamicNameMap: Map<KClass<*>, String>
 ) {
-    companion object {
-        private val logger = KotlinLogging.logger {}
-    }
-
     // --- Sekcja ODCZYTU (DB -> Kotlin) ---
 
     fun getCategory(pgTypeName: String): TypeCategory {
@@ -54,9 +52,9 @@ internal class TypeRegistry(
         )
     }
 
-    // Dla typu DYNAMIC potrzebujemy znaleźć klasę na podstawie klucza z JSON-a
-    fun getDynamicMappableClass(dynamicTypeName: String): KClass<*> {
-        return dynamicDtoMapping[dynamicTypeName] ?: throw TypeRegistryException(
+    // Dla typu DYNAMIC potrzebujemy znaleźć serializator
+    fun getDynamicSerializer(dynamicTypeName: String): KSerializer<Any> {
+        return dynamicSerializers[dynamicTypeName] ?: throw TypeRegistryException(
             TypeRegistryExceptionMessage.DYNAMIC_TYPE_NOT_FOUND,
             typeName = dynamicTypeName
         )
@@ -72,11 +70,11 @@ internal class TypeRegistry(
         )
     }
 
-    // Metoda pomocnicza dla DynamicDTO
     fun getDynamicTypeNameForClass(clazz: KClass<*>): String? {
-        // To jest odwrotność dynamicDtoMapping, można by to scache'ować w init jeśli wolne
-        return dynamicDtoMapping.entries.find { it.value == clazz }?.key
+        return classToDynamicNameMap[clazz]
     }
+
+    // Metoda pomocnicza dla DynamicDTO
 
     fun isPgType(kClass: KClass<*>): Boolean {
         return classToPgNameMap.containsKey(kClass)
