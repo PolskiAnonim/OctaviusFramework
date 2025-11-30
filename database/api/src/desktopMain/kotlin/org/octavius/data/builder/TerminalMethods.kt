@@ -34,10 +34,10 @@ interface TerminalReturningMethods {
     // --- Zwracanie wartości skalarnych ---
 
     /** Pobiera pojedynczą wartość z pierwszej kolumny pierwszego wiersza. */
-    fun <T : Any> toField(kType: KType, params: Map<String, Any?> = emptyMap()): DataResult<T?>
+    fun <T : Any> toField(targetType: KType, params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
     /** Pobiera listę wartości z pierwszej kolumny wszystkich wierszy. */
-    fun <T : Any> toColumn(kType: KType, params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
+    fun <T : Any> toColumn(targetType: KType, params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
 
     // --- Pomocnicze ---
 
