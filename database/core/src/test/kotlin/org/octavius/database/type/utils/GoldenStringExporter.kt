@@ -1,4 +1,4 @@
-package org.octavius.database.type
+package org.octavius.database.type.utils
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -17,7 +17,7 @@ import java.nio.file.Paths
  * a następnie generuje z niej gotowy do wklejenia kod.
  *
  */
-class GoldenStringExporterTest {
+class GoldenStringExporter {
     @Test
     @Disabled("Użyj tylko do jednorazowego wygenerowania danych testowych!")
     fun exportAllGoldenStrings() {
@@ -88,7 +88,7 @@ class GoldenStringExporterTest {
                 data[columnName] = rs.getString(i)
             }
             data
-        } ?: emptyMap()
+        }
 
         // --- 4. Wygenerowanie kodu z mapy w pętli ---
         val stringBuilder = StringBuilder()

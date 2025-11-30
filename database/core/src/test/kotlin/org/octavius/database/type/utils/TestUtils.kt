@@ -8,13 +8,13 @@ import org.octavius.database.type.PgCompositeDefinition
 import org.octavius.database.type.PgEnumDefinition
 import org.octavius.database.type.TypeCategory
 import org.octavius.database.type.TypeRegistry
-import org.octavius.domain.test.existing.TestCategory
-import org.octavius.domain.test.existing.TestMetadata
-import org.octavius.domain.test.existing.TestPerson
-import org.octavius.domain.test.existing.TestPriority
-import org.octavius.domain.test.existing.TestProject
-import org.octavius.domain.test.existing.TestStatus
-import org.octavius.domain.test.existing.TestTask
+import org.octavius.domain.test.pgtype.TestCategory
+import org.octavius.domain.test.pgtype.TestMetadata
+import org.octavius.domain.test.pgtype.TestPerson
+import org.octavius.domain.test.pgtype.TestPriority
+import org.octavius.domain.test.pgtype.TestProject
+import org.octavius.domain.test.pgtype.TestStatus
+import org.octavius.domain.test.pgtype.TestTask
 import kotlin.reflect.KClass
 
 /**

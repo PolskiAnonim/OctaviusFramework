@@ -1,4 +1,4 @@
-package org.octavius.domain.test.existing
+package org.octavius.domain.test.pgtype
 
 import kotlinx.datetime.LocalDateTime
 import org.octavius.data.annotation.PgComposite

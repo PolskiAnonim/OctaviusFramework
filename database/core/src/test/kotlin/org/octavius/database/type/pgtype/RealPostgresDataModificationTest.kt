@@ -1,4 +1,4 @@
-package org.octavius.database.type
+package org.octavius.database.type.pgtype
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -11,13 +11,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
-import org.octavius.domain.test.existing.TestCategory
-import org.octavius.domain.test.existing.TestMetadata
-import org.octavius.domain.test.existing.TestPerson
-import org.octavius.domain.test.existing.TestPriority
-import org.octavius.domain.test.existing.TestProject
-import org.octavius.domain.test.existing.TestStatus
-import org.octavius.domain.test.existing.TestTask
+import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.database.type.ResultSetValueExtractor
+import org.octavius.database.type.TypeRegistryLoader
+import org.octavius.domain.test.pgtype.TestCategory
+import org.octavius.domain.test.pgtype.TestMetadata
+import org.octavius.domain.test.pgtype.TestPerson
+import org.octavius.domain.test.pgtype.TestPriority
+import org.octavius.domain.test.pgtype.TestProject
+import org.octavius.domain.test.pgtype.TestStatus
+import org.octavius.domain.test.pgtype.TestTask
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.math.BigDecimal
 import java.nio.file.Files
@@ -82,7 +85,7 @@ class RealPostgresDataModificationTest {
         val typeRegistry = runBlocking {
             TypeRegistryLoader(
                 jdbcTemplate,
-                databaseConfig.packagesToScan.filter { it != "org.octavius.performance" },
+                listOf("org.octavius.domain.test.pgtype"),
                 databaseConfig.dbSchemas
             ).load()
         }

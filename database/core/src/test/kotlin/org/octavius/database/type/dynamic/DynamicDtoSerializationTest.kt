@@ -8,6 +8,7 @@ import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
+import org.octavius.data.exception.QueryExecutionException
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.OctaviusDatabase
@@ -58,7 +59,7 @@ class DynamicDtoSerializationTest {
         // Instancja z WŁĄCZONĄ diaboliczną funkcją
         dataAccessWithFeature = OctaviusDatabase.fromDataSource(
             dataSource,
-            baseConfig.packagesToScan.filter { it != "org.octavius.domain.test.existing" && it != "org.octavius.performance" },
+            listOf("org.octavius.domain.test.dynamic"),
             baseConfig.dbSchemas,
             DynamicDtoSerializationStrategy.PREFER_DYNAMIC_DTO
         )
@@ -136,7 +137,9 @@ class DynamicDtoSerializationTest {
 
             // Jeśli doszło do błędu wewnątrz frameworka, będzie on opakowany w DataResult.Failure
             if (result is DataResult.Failure) {
-                throw result.error
+                val queryExecutionError = result.error
+                assertThat(queryExecutionError).isInstanceOf(QueryExecutionException::class.java)
+                throw queryExecutionError.cause!! //To powinien być TypeRegistryException
             }
         }
     }

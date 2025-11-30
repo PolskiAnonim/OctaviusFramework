@@ -70,7 +70,7 @@ class DynamicDtoMappingTest {
         typeRegistry = runBlocking {
             TypeRegistryLoader(
                 jdbcTemplate,
-                databaseConfig.packagesToScan.filter { it != "org.octavius.domain.test.existing" && it != "org.octavius.performance" },
+                listOf("org.octavius.domain.test.dynamic"),
                 databaseConfig.dbSchemas
             ).load()
         }

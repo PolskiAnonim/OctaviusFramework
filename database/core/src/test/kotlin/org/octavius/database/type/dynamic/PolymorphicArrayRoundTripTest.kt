@@ -69,7 +69,7 @@ class PolymorphicArrayRoundTripTest {
         // --- Stworzenie instancji DAL-a z włączoną "diaboliczną" magią zapisu ---
         dataAccess = OctaviusDatabase.fromDataSource(
             dataSource,
-            baseConfig.packagesToScan.filter { it != "org.octavius.domain.test.existing" && it != "org.octavius.performance" },
+            listOf("org.octavius.domain.test.dynamic"),
             baseConfig.dbSchemas,
             DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
         )

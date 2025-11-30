@@ -1,4 +1,4 @@
-package org.octavius.database.type
+package org.octavius.database.type.pgtype
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -9,10 +9,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.RowMappers
-import org.octavius.domain.test.existing.TestPerson
-import org.octavius.domain.test.existing.TestPriority
-import org.octavius.domain.test.existing.TestProject
-import org.octavius.domain.test.existing.TestStatus
+import org.octavius.database.type.ResultSetValueExtractor
+import org.octavius.database.type.TypeRegistry
+import org.octavius.database.type.TypeRegistryLoader
+import org.octavius.domain.test.pgtype.TestPerson
+import org.octavius.domain.test.pgtype.TestPriority
+import org.octavius.domain.test.pgtype.TestProject
+import org.octavius.domain.test.pgtype.TestStatus
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -74,7 +77,11 @@ class RealPostgresDataTest {
         }
 
         // 4. Inicjalizujemy zależności dla konwerterów
-        val loader = TypeRegistryLoader(jdbcTemplate, databaseConfig.packagesToScan.filter { it != "org.octavius.performance" }, databaseConfig.dbSchemas)
+        val loader = TypeRegistryLoader(
+            jdbcTemplate,
+            listOf("org.octavius.domain.test.pgtype"),
+            databaseConfig.dbSchemas
+        )
         typeRegistry = runBlocking {
             loader.load()
         }
