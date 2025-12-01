@@ -26,25 +26,29 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 
-CREATE OR REPLACE FUNCTION soft_enum(p_type_name TEXT, p_raw_value TEXT)
-    RETURNS dynamic_dto AS
-$$
+-- Ta nazwa jest zawsze prawdziwa. Tworzy DTO z dowolnej wartości, którą da się rzutować na JSONB.
+CREATE OR REPLACE FUNCTION to_dynamic_dto(p_type_name TEXT, p_value ANYELEMENT)
+    RETURNS dynamic_dto AS $$
 BEGIN
-    -- to_jsonb('dark_theme') -> '"dark_theme"' (typ jsonb)
-    -- Dzięki temu deserializer w Kotlinie dostanie poprawny format JSON stringa
-    RETURN ROW(p_type_name, to_jsonb(p_raw_value))::dynamic_dto;
+    RETURN ROW(p_type_name, to_jsonb(p_value))::dynamic_dto;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+$$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION unwrap(p_dto dynamic_dto)
-    RETURNS TEXT AS $$
+-- Przeciążenie dla TEXT
+CREATE OR REPLACE FUNCTION to_dynamic_dto(p_type_name TEXT, p_value TEXT)
+    RETURNS dynamic_dto AS $$
 BEGIN
-    -- Operator #>> '{}' wyciąga główny element JSON-a jako text.
-    -- Dla "dark_theme" zwróci dark_theme (bez cudzysłowów).
-    -- Dla null zwróci null.
-    RETURN p_dto.data_payload #>> '{}';
+    RETURN ROW(p_type_name, to_jsonb(p_value))::dynamic_dto;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
+$$ LANGUAGE plpgsql;
+
+-- Funkcja do odpakowywania
+CREATE OR REPLACE FUNCTION unwrap_dto_payload(p_dto dynamic_dto)
+    RETURNS JSONB AS $$
+BEGIN
+    RETURN p_dto.data_payload;
+END;
+$$ LANGUAGE plpgsql;
 
 ---------- TRIGGER
 

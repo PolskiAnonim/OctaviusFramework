@@ -7,6 +7,8 @@ import kotlinx.serialization.json.JsonObject
 import org.octavius.data.OffsetTime
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
+import org.octavius.data.exception.TypeRegistryException
+import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toMap
 import org.octavius.data.type.DynamicDto
 import org.octavius.data.type.PgTyped
@@ -178,6 +180,14 @@ internal class KotlinToPostgresConverter(
                     createEnumParameter(paramName, paramValue)
                 }
             }
+            isValueClass(paramValue) -> tryExpandAsDynamicDto(paramName, paramValue)
+                ?: throw TypeRegistryException(
+                    messageEnum = TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED,
+                    typeName = paramValue::class.qualifiedName,
+                    cause = IllegalStateException(
+                        "Value class '${paramValue::class.simpleName}' must be annotated with @DynamicallyMappable to be used as a query parameter."
+                    )
+                )
             // Krok 4: Fallback dla wszystkich innych typów prostych (Int, String, etc.)
             else -> ":$paramName" to mapOf(paramName to paramValue)
         }
@@ -364,5 +374,15 @@ internal class KotlinToPostgresConverter(
      */
     private fun isDataClass(obj: Any): Boolean {
         return obj::class.isData
+    }
+
+    /**
+     * Sprawdza, czy obiekt jest instancją value class.
+     *
+     * @param obj Obiekt do sprawdzenia.
+     * @return true jeśli obj jest instancją value class, false w przeciwnym razie.
+     */
+    private fun isValueClass(obj: Any): Boolean {
+        return obj::class.isValue
     }
 }
