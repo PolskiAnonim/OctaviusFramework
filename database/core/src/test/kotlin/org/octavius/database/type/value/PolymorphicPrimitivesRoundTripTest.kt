@@ -81,10 +81,10 @@ class PolymorphicPrimitivesRoundTripTest {
         // klas - zarówno data class, jak i value class. To jest nasze "źródło prawdy".
         val originalPayload: List<Any> = listOf(
             UserAction("LOGIN", "2025-12-01T12:00:00Z"),
-            UserId(12345),
-            SessionToken("xyz-secret-token-a1b2c3"),
-            IsEnabled(true),
-            UserId(98765) // Dodajemy drugi raz ten sam typ, żeby sprawdzić obsługę
+            IntWrapper(12345),
+            StringWrapper("xyz-secret-token-a1b2c3"),
+            BooleanWrapper(true),
+            IntWrapper(98765) // Dodajemy drugi raz ten sam typ, żeby sprawdzić obsługę
         )
 
         // --- ACT (WRITE) ---
@@ -125,16 +125,16 @@ class PolymorphicPrimitivesRoundTripTest {
         // Krok 3: Dodatkowe, jawne asercje dla pełnej jasności
         assertThat(retrievedPayload).hasSize(5)
         assertThat(retrievedPayload!![0]).isInstanceOf(UserAction::class.java)
-        assertThat(retrievedPayload[1]).isInstanceOf(UserId::class.java)
-        assertThat(retrievedPayload[2]).isInstanceOf(SessionToken::class.java)
-        assertThat(retrievedPayload[3]).isInstanceOf(IsEnabled::class.java)
-        assertThat(retrievedPayload[4]).isInstanceOf(UserId::class.java)
+        assertThat(retrievedPayload[1]).isInstanceOf(IntWrapper::class.java)
+        assertThat(retrievedPayload[2]).isInstanceOf(StringWrapper::class.java)
+        assertThat(retrievedPayload[3]).isInstanceOf(BooleanWrapper::class.java)
+        assertThat(retrievedPayload[4]).isInstanceOf(IntWrapper::class.java)
 
         // Sprawdźmy też wartości
         assertThat((retrievedPayload[0] as UserAction).action).isEqualTo("LOGIN")
-        assertThat((retrievedPayload[1] as UserId).id).isEqualTo(12345)
-        assertThat((retrievedPayload[2] as SessionToken).token).isEqualTo("xyz-secret-token-a1b2c3")
-        assertThat((retrievedPayload[3] as IsEnabled).status).isTrue()
-        assertThat((retrievedPayload[4] as UserId).id).isEqualTo(98765)
+        assertThat((retrievedPayload[1] as IntWrapper).int).isEqualTo(12345)
+        assertThat((retrievedPayload[2] as StringWrapper).string).isEqualTo("xyz-secret-token-a1b2c3")
+        assertThat((retrievedPayload[3] as BooleanWrapper).boolean).isTrue()
+        assertThat((retrievedPayload[4] as IntWrapper).int).isEqualTo(98765)
     }
 }

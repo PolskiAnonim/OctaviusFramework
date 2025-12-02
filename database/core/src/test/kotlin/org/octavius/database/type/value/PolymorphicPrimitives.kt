@@ -12,25 +12,20 @@ import org.octavius.data.annotation.DynamicallyMappable
 // --- Wrappery 'value class' dla typów prostych ---
 
 @Serializable
-@DynamicallyMappable("user_id")
+@DynamicallyMappable("int_wrapper")
 @JvmInline
-value class UserId(val id: Int)
+value class IntWrapper(val int: Int)
 
 @Serializable
-@DynamicallyMappable("session_token")
+@DynamicallyMappable("string_wrapper")
 @JvmInline
-value class SessionToken(val token: String)
+value class StringWrapper(val string: String)
 
 @Serializable
-@DynamicallyMappable("is_enabled_flag")
+@DynamicallyMappable("boolean_wrapper")
 @JvmInline
-value class IsEnabled(val status: Boolean)
+value class BooleanWrapper(val boolean: Boolean)
 
-
-@Serializable
-@DynamicallyMappable("aaa")
-@JvmInline
-value class AAA(val status: List<String>)
 // --- Standardowa 'data class' dla porównania ---
 
 @Serializable
