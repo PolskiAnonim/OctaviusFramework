@@ -65,15 +65,21 @@ class SoftEnumReadIntegrationTest {
             
             END $$;
             
-            CREATE OR REPLACE FUNCTION soft_enum(p_type_name TEXT, p_raw_value TEXT)
-                RETURNS dynamic_dto AS
-            $$
+           -- Ta nazwa jest zawsze prawdziwa. Tworzy DTO z dowolnej wartości, którą da się rzutować na JSONB.
+            CREATE OR REPLACE FUNCTION to_dynamic_dto(p_type_name TEXT, p_value ANYELEMENT)
+            RETURNS dynamic_dto AS $$
             BEGIN
-                -- to_jsonb('DarkTheme') -> '"DarkTheme"' (typ jsonb)
-                -- Dzięki temu deserializer w Kotlinie dostanie poprawny format JSON stringa
-                RETURN ROW(p_type_name, to_jsonb(p_raw_value))::dynamic_dto;
+                RETURN ROW(p_type_name, to_jsonb(p_value))::dynamic_dto;
             END;
             $$ LANGUAGE plpgsql;
+
+        -- Przeciążenie dla TEXT
+        CREATE OR REPLACE FUNCTION to_dynamic_dto(p_type_name TEXT, p_value TEXT)
+            RETURNS dynamic_dto AS $$
+        BEGIN
+            RETURN ROW(p_type_name, to_jsonb(p_value))::dynamic_dto;
+        END;
+        $$ LANGUAGE plpgsql;
         """.trimIndent())
 
         val loader = TypeRegistryLoader(
@@ -94,8 +100,7 @@ class SoftEnumReadIntegrationTest {
     @Test
     fun `should read soft_enum from database via SELECT function`() {
         // Arrange
-        // Używamy funkcji SQL soft_enum('feature_flag', 'dark_theme')
-        val sql = "SELECT soft_enum('feature_flag', 'dark_theme') AS flag"
+        val sql = "SELECT to_dynamic_dto('feature_flag', 'dark_theme') AS flag"
 
         // Act
         val result = dataAccess.rawQuery(sql)
@@ -116,8 +121,8 @@ class SoftEnumReadIntegrationTest {
         // Symulujemy tablicę flag: array[soft_enum(...), soft_enum(...)]
         val sql = """
             SELECT ARRAY[
-                soft_enum('feature_flag', 'beta_access'),
-                soft_enum('feature_flag', 'legacy_support')
+                to_dynamic_dto('feature_flag', 'beta_access'),
+                to_dynamic_dto('feature_flag', 'legacy_support')
             ] AS flags
         """.trimIndent()
 
