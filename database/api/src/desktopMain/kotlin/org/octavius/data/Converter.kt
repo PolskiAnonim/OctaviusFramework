@@ -81,7 +81,7 @@ private fun <T : Any> getOrCreateDataObjectMetadata(kClass: KClass<T>): DataObje
     } as DataObjectClassMetadata<T>
 }
 
-// --- Konwersja Z MAPY do OBIEKTU  ---
+// --- Konwersja Z MAPY do OBIEKTU ---
 
 inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
     return toDataObject(T::class)
@@ -159,6 +159,7 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
  * @return Mapa reprezentująca obiekt.
  */
 fun <T : Any> T.toMap(includeNulls: Boolean = true): Map<String, Any?> {
+    @Suppress("UNCHECKED_CAST")
     val metadata = getOrCreateDataObjectMetadata(this::class) as DataObjectClassMetadata<T>
 
     return metadata.constructorProperties.mapNotNull { meta ->

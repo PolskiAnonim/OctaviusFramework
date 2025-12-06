@@ -77,6 +77,7 @@ data class DynamicDto private constructor(
             }
 
             // 3. Deleguj do wersji zoptymalizowanej
+            @Suppress("UNCHECKED_CAST")
             return from(value, annotation.typeName, serializer as KSerializer<Any>)
         }
 
