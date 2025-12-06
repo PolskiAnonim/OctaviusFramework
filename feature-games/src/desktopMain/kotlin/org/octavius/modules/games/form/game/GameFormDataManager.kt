@@ -68,7 +68,13 @@ class GameFormDataManager : FormDataManager() {
         val loadedData = loadGameData(loadedId)
 
         val defaultData = if (loadedId == null) {
-            mapOf("visibleCharactersSection" to false, "categories" to emptyList<Map<String, Any?>>())
+            mapOf(
+                "visibleCharactersSection" to false,
+                "playTimeExists" to false,
+                "ratingsExists" to false,
+                "charactersExists" to false,
+                "categories" to emptyList<Map<String, Any?>>()
+            )
         } else {
             mapOf("visibleCharactersSection" to (loadedData["charactersExists"] as Boolean))
         }
