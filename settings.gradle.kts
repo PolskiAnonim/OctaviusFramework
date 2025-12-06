@@ -20,6 +20,9 @@ dependencyResolutionManagement {
         create("dbLibs") {
             from(files("database/gradle/libs.versions.toml"))
         }
+        create("browserLibs") {
+            from(files("browser-extension/gradle/libs.versions.toml"))
+        }
     }
     repositories {
         google {

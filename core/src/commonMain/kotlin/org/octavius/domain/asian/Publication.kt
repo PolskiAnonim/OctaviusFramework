@@ -58,22 +58,4 @@ enum class PublicationType : EnumWithFormatter<PublicationType> {
         }
     }
 
-    // Dynamiczne etykiety dla tomów
-    fun getVolumesLabel(): String {
-        return when (this) {
-            Manga, LightNovel, PublishedNovel, Manhwa, Manhua -> "Tomy"
-            WebNovel -> "Części"
-            Webtoon -> "Sezony"
-        }
-    }
-
-    // Dynamiczne etykiety dla rozdziałów
-    fun getChaptersLabel(): String {
-        return "Rozdziały"
-    }
-
-    // Czy publikacja używa rozdziałów
-    fun hasChapters(): Boolean {
-        return true // Wszystkie typy mają jakąś formę podziału na części
-    }
 }

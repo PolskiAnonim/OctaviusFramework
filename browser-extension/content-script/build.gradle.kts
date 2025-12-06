@@ -11,11 +11,12 @@ kotlin {
     sourceSets {
         val jsMain by getting {
             dependencies {
+                implementation(projects.browserExtension.chromeApi)
                 implementation(kotlin("stdlib-js"))
                 implementation(projects.core)
                 // Nie potrzebuje api-contract, bo tylko wysyła dane, nie używa DTO
                 // Ale potrzebuje wrapperów do komunikacji
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-browser:2025.8.6")
+                implementation(browserLibs.kotlin.browser)
             }
         }
     }

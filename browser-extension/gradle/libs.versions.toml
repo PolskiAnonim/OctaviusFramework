@@ -1,0 +1,4 @@
+[versions]
+kotlin-browser = "2025.8.6"
+[libraries]
+kotlin-browser = { group = "org.jetbrains.kotlin-wrappers", name = "kotlin-browser", version.ref = "kotlin-browser" }

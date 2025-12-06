@@ -13,6 +13,7 @@ kotlin {
     sourceSets {
         val jsMain by getting {
             dependencies {
+                implementation(projects.browserExtension.chromeApi)
                 implementation(kotlin("stdlib-js"))
                 implementation(projects.core)
                 implementation(projects.apiContract)
@@ -24,7 +25,7 @@ kotlin {
                 implementation(libs.ktor.client.js) // Implementacja dla środowiska JS
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-browser:2025.8.6")
+                implementation(browserLibs.kotlin.browser)
             }
         }
     }
