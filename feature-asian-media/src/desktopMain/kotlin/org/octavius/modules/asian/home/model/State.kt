@@ -1,9 +1,11 @@
 package org.octavius.modules.asian.home.model
 
-import org.octavius.data.annotation.PgComposite
+import kotlinx.serialization.Serializable
+import org.octavius.data.annotation.DynamicallyMappable
 
 
-@PgComposite
+@DynamicallyMappable("asian_media_dashboard_item")
+@Serializable
 data class DashboardItem(
     val id: Int,
     val mainTitle: String

@@ -45,8 +45,14 @@ class AsianMediaHomeHandler(
             .orderBy("t.updated_at DESC")
             .limit(5)
             .toSql()
-        val currentlyReadingSubquery = dataAccess.select("array_agg(ROW(id, titles[1])::asian_media.dashboard_item)")
-                .fromSubquery(innerCurrentlyReading)
+        val currentlyReadingSubquery = dataAccess.select("""
+            array_agg(
+                dynamic_dto('asian_media_dashboard_item', jsonb_build_object(
+                    'id', id,
+                    'mainTitle', titles[1])
+                )
+            )"""
+        ).fromSubquery(innerCurrentlyReading)
                 .toSql()
 
         val innerRecentlyAdded = dataAccess.select("id, titles")
@@ -54,8 +60,13 @@ class AsianMediaHomeHandler(
             .orderBy("created_at DESC")
             .limit(5)
             .toSql()
-        val recentlyAddedSubquery = dataAccess.select("array_agg(ROW(id, titles[1])::asian_media.dashboard_item)")
-                .fromSubquery(innerRecentlyAdded)
+        val recentlyAddedSubquery = dataAccess.select("""
+            array_agg(
+                dynamic_dto('asian_media_dashboard_item', jsonb_build_object(
+                    'id', id,
+                    'mainTitle', titles[1])
+                )
+            )""").fromSubquery(innerRecentlyAdded)
                 .toSql()
 
         // === Składamy finalną klauzulę SELECT z gotowych klocków ===
