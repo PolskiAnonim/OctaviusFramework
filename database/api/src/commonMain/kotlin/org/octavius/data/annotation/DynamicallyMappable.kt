@@ -1,7 +1,7 @@
 package org.octavius.data.annotation
 
 /**
- * Oznacza klasę `data class` jako cel dla dynamicznego mapowania z typu `dynamic_dto`
+ * Oznacza klasę `data class`, `enum class` bądź `value class` jako cel dla dynamicznego mapowania z typu `dynamic_dto`
  * w PostgreSQL.
  *
  * Ta adnotacja jest używana przez `TypeRegistryLoader` do zbudowania bezpiecznej mapy
