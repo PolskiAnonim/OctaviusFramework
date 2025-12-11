@@ -35,10 +35,15 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
             .toSql()
 
         // --- CTE 2: status_distribution ---
-        // Bez zmian, było idealnie.
-        val statusDistributionQuery = dataAccess.select(
-            "array_agg(ROW(status, count)::games.dashboard_status_count ORDER BY count DESC) AS distribution"
-        )
+        val statusDistributionQuery = dataAccess.select("""
+            array_agg(
+                dynamic_dto('game_dashboard_status', jsonb_build_object(
+                    'status', status,
+                    'count', count
+                    )
+                ) ORDER BY count DESC
+            ) AS distribution
+        """)
             .fromSubquery(
                 dataAccess.select("status, COUNT(*) as count")
                     .from("games.games")
@@ -59,9 +64,15 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
 
         // --- CTE 4: most_played_games ---
         // Prostsze i bardziej "postgresowe" - LIMIT bezpośrednio w CTE.
-        val mostPlayedGamesQuery = dataAccess.select(
-            "array_agg(ROW(g.id, g.name, pt.play_time_hours)::games.dashboard_game_by_time ORDER BY pt.play_time_hours DESC) AS games"
-        )
+        val mostPlayedGamesQuery = dataAccess.select("""
+            array_agg(
+                dynamic_dto('game_dashboard_time', jsonb_build_object(
+                    'id', g.id,
+                    'name', g.name,
+                    'playTimeHours', pt.play_time_hours)
+                ) ORDER BY pt.play_time_hours DESC
+            ) AS games
+        """)
             .from("games.play_time pt JOIN games.games g ON pt.game_id = g.id")
             .where(
                 "pt.game_id IN (${
@@ -85,9 +96,15 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
         )::numeric(10, 2)
     """.trimIndent()
 
-        val highestRatedGamesQuery = dataAccess.select(
-            "array_agg(ROW(g.id, g.name, r.avg_rating)::games.dashboard_game_by_rating ORDER BY r.avg_rating DESC) AS games"
-        )
+        val highestRatedGamesQuery = dataAccess.select("""
+            array_agg(
+                dynamic_dto('game_dashboard_rating', jsonb_build_object(
+                    'id', g.id,
+                    'name', g.name,
+                    'averageRating', r.avg_rating)
+                ) ORDER BY r.avg_rating DESC
+            ) AS games
+        """)
             .from(
                 "(${
                     dataAccess.select("game_id, $avgRatingCalculation AS avg_rating")

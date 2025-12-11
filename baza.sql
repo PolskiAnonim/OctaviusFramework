@@ -351,30 +351,6 @@ CREATE TABLE IF NOT EXISTS games.time_played_check_time
     check_time timestamp without time zone NOT NULL
 );
 
--- game Statistics
--- Typ do przechowywania rozkładu statusów
-CREATE TYPE games.dashboard_status_count AS
-(
-    status games.game_status,
-    count  int8
-);
-
--- Typ do przechowywania gry w rankingu wg czasu gry
-CREATE TYPE games.dashboard_game_by_time AS
-(
-    id              integer,
-    name            text,
-    play_time_hours numeric(10, 2)
-);
-
--- Typ do przechowywania gry w rankingu wg ocen
-CREATE TYPE games.dashboard_game_by_rating AS
-(
-    id             integer,
-    name           text,
-    average_rating numeric(10, 2)
-);
-
 CREATE OR REPLACE VIEW games.time_played
 AS
 SELECT sum(play_time_hours) AS time_played

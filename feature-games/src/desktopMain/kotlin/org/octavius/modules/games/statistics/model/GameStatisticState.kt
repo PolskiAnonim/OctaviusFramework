@@ -1,6 +1,8 @@
 package org.octavius.modules.games.statistics.model
 
-import org.octavius.data.annotation.PgComposite
+import kotlinx.serialization.Serializable
+import org.octavius.data.annotation.DynamicallyMappable
+import org.octavius.data.helper.BigDecimalAsNumberSerializer
 import org.octavius.domain.game.GameStatus
 import java.math.BigDecimal
 
@@ -11,28 +13,32 @@ interface DashboardGame {
     val value: String
 }
 
-// Typ kompozytowy dla rozkładu statusów
-@PgComposite
+@DynamicallyMappable("game_dashboard_status")
+@Serializable
 data class DashboardStatusCount(
     val status: GameStatus,
     val count: Long
 )
 
-// Typ kompozytowy dla gry w liście "najwięcej grane"
-@PgComposite
+// Typ dla gry w liście "najwięcej grane"
+@DynamicallyMappable("game_dashboard_time")
+@Serializable
 data class DashboardGameByTime(
     override val id: Int,
     override val name: String,
+    @Serializable(with = BigDecimalAsNumberSerializer::class)
     val playTimeHours: BigDecimal
 ) : DashboardGame {
     override val value: String = "${this.playTimeHours}h"
 }
 
-// Typ kompozytowy dla gry w liście "najwyżej oceniane"
-@PgComposite
+// Typ dla gry w liście "najwyżej oceniane"
+@DynamicallyMappable("game_dashboard_rating")
+@Serializable
 data class DashboardGameByRating(
     override val id: Int,
     override val name: String,
+    @Serializable(with = BigDecimalAsNumberSerializer::class)
     val averageRating: BigDecimal
 ) : DashboardGame {
     override val value: String = averageRating.toString()
