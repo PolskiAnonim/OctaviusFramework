@@ -4,6 +4,13 @@ import org.octavius.data.annotation.PgComposite
 import org.octavius.domain.game.GameStatus
 import java.math.BigDecimal
 
+
+interface DashboardGame {
+    val id: Int
+    val name: String
+    val value: String
+}
+
 // Typ kompozytowy dla rozkładu statusów
 @PgComposite
 data class DashboardStatusCount(
@@ -14,18 +21,22 @@ data class DashboardStatusCount(
 // Typ kompozytowy dla gry w liście "najwięcej grane"
 @PgComposite
 data class DashboardGameByTime(
-    val id: Int,
-    val name: String,
+    override val id: Int,
+    override val name: String,
     val playTimeHours: BigDecimal
-)
+) : DashboardGame {
+    override val value: String = "${this.playTimeHours}h"
+}
 
 // Typ kompozytowy dla gry w liście "najwyżej oceniane"
 @PgComposite
 data class DashboardGameByRating(
-    val id: Int,
-    val name: String,
+    override val id: Int,
+    override val name: String,
     val averageRating: BigDecimal
-)
+) : DashboardGame {
+    override val value: String = averageRating.toString()
+}
 
 // Główna data class, która mapuje się na wynik całego zapytania
 data class GameStatisticsData(

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.T
 import org.octavius.modules.games.form.game.ui.GameFormScreen
+import org.octavius.modules.games.statistics.model.DashboardGame
 import org.octavius.modules.games.statistics.model.DashboardGameByRating
 import org.octavius.modules.games.statistics.model.DashboardGameByTime
 import org.octavius.modules.games.statistics.model.GameStatisticsData
@@ -58,7 +59,7 @@ class GameStatisticsScreen(override val title: String) : Screen {
                     QuickAccessGameList(
                         title = T.get("games.stats.mostPlayed"),
                         items = data.mostPlayedGames.orEmpty(),
-                        onItemClick = { AppRouter.navigateTo(GameFormScreen.create(it.id)) }
+                        onItemClick = { AppRouter.navigateTo(GameFormScreen.create(it)) }
                     )
                 }
 
@@ -66,7 +67,7 @@ class GameStatisticsScreen(override val title: String) : Screen {
                     QuickAccessGameList(
                         title = T.get("games.stats.highestRated"),
                         items = data.highestRatedGames.orEmpty(),
-                        onItemClick = { AppRouter.navigateTo(GameFormScreen.create(it.id)) }
+                        onItemClick = { AppRouter.navigateTo(GameFormScreen.create(it)) }
                     )
                 }
             }
@@ -157,8 +158,8 @@ private fun StatCard(title: String, value: String, modifier: Modifier = Modifier
 @Composable
 private fun QuickAccessGameList(
     title: String,
-    items: List<Any>, // DashboardGameByTime or DashboardGameByRating
-    onItemClick: (DashboardGameByTime) -> Unit // Użyjemy wspólnego typu bazowego
+    items: List<DashboardGame>,
+    onItemClick: (Int) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -169,17 +170,12 @@ private fun QuickAccessGameList(
             Card {
                 Column {
                     items.forEachIndexed { index, item ->
-                        val (id, name, value) = when (item) {
-                            is DashboardGameByTime -> Triple(item.id, item.name, "${item.playTimeHours}h")
-                            is DashboardGameByRating -> Triple(item.id, item.name, item.averageRating.toString())
-                            else -> Triple(0, "Error", "")
-                        }
 
                         ListItem(
-                            headlineContent = { Text(name) },
-                            supportingContent = { Text(value) },
+                            headlineContent = { Text(item.name) },
+                            supportingContent = { Text(item.value) },
                             trailingContent = { Icon(Icons.Default.ChevronRight, null) },
-                            modifier = Modifier.clickable { onItemClick(DashboardGameByTime(id, name, BigDecimal.ZERO)) } // Prosty hack do przekazania ID
+                            modifier = Modifier.clickable { onItemClick(item.id) }
                         )
                         if (index < items.lastIndex) {
                             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
