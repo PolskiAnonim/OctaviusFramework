@@ -18,39 +18,29 @@ class ReportConfigurationManager : KoinComponent {
 
     val dataAccess: DataAccess by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
-        val configResult = dataAccess.select("id").from("public.report_configurations")
-            .where("name = :name AND report_name = :report_name")
-            .toField<Int>("name" to configuration.name, "report_name" to configuration.reportName)
-
-        val configId = when (configResult) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(configResult.error))
-                null
-            }
-            is DataResult.Success<*> -> configResult.value
-        }
-
         val flatValueMap = configuration.toMap(includeNulls = false)
+        val result = dataAccess.insertInto("report_configurations")
+            .values(flatValueMap).onConflict {
+                onColumns("name", "report_name")
+                doUpdate("""
+                    description = EXCLUDED.description,
+                    sort_order = EXCLUDED.sort_order,
+                    visible_columns = EXCLUDED.visible_columns,
+                    column_order = EXCLUDED.column_order,
+                    page_size = EXCLUDED.page_size,
+                    is_default = EXCLUDED.is_default,
+                    filters = EXCLUDED.filters,
+                    updated_at = CURRENT_TIMESTAMP
+                    """
+                )
+            }.execute(flatValueMap)
 
-        val plan = TransactionPlan()
-
-        if (configId != null) {
-            plan.add(
-                dataAccess.update("report_configurations").setValues(flatValueMap).where("id = :id").asStep()
-                    .execute(flatValueMap)
-            )
-        } else {
-            plan.add(
-                dataAccess.insertInto("report_configurations").values(flatValueMap).asStep().execute(flatValueMap)
-            )
-        }
-        val result = dataAccess.executeTransactionPlan(plan)
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
-            is DataResult.Success<TransactionPlanResult> -> true
+            is DataResult.Success<Int> -> true
         }
     }
 
