@@ -1,56 +1,40 @@
 # Octavius Framework
 
-Aplikacja desktopowa w Kotlin Compose Multiplatform do zarządzania i śledzenia azjatyckich mediów (powieści, manga, manhwa) oraz gier. Aplikacja wykorzystuje własne frameworki formularzy i raportów.
+Aplikacja desktopowa wraz z prostą wtyczką do przeglądarki napisana w Kotlinie i używająca Compose Multiplatform.
+Służy do zarządzania kolekcjami mediów azjatyckich (mang, powieści) oraz gier.
 
-## ✨ Kluczowe funkcje
+Wykorzystuje autorskie silniki do formularzy, raportów oraz dostępu do danych
 
-### 📚 Zarządzanie kolekcjami
+## Kluczowe funkcje
+
+###  Zarządzanie kolekcjami
 - **Publikacje azjatyckie**: Kompleksowe śledzenie powieści, mangi, manhw z postępem czytania
 - **Gry**: Organizacja kolekcji gier z seriami, platformami i metadanymi
 
-### 🚀 Zaawansowane frameworki
+### Zaawansowane frameworki
 - **System formularzy**: Własny silnik z prostymi kontrolkami, kontrolkami wyboru, sekcjami i kontrolką sekcji powtarzalnej
 - **System raportów**: Dynamiczne tabele z filtrowaniem, sortowaniem, zarządzaniem kolumnami
-- **Nawigacja**: Centralny router z zarządzaniem stosami dla każdej zakładki
-- **Walidacja**: Wielopoziomowa walidacja pól i reguł biznesowych
+- **System bazodanowy** [Opis](database/README.md)
 
-### 🎨 Nowoczesny interfejs
-- **Material 3**: Pełne wsparcie Material Design 3
-- **Drag & Drop**: Zaawansowane przesuwanie elementów
-- **Lokalizacja**: Pełna lokalizacja z obsługą form liczby mnogiej
-
-## 🛠️ Stack technologiczny
+## Stack technologiczny
 
 ### Główne Technologie
 - **Kotlin Multiplatform**
-- **Compose Multiplatform** (desktop)
+- **Compose Multiplatform** (desktop, web)
 - **PostgreSQL 17+** z wieloma schematami
 - **Spring JDBC** + **HikariCP**
 - **Material 3** design system
 - **kotlinx-serialization** dla JSON
-
-### Dodatkowe komponenty
-- **Browser Extension** (JS modules)
-- **API Server** (embedded server)
-- **TypeRegistry** (dynamiczne mapowanie typów)
 
 ## 🚀 Uruchamianie
 
 ### Wymagania systemowe
 - **JDK 24+**
 - **PostgreSQL 17+**
-- **Baza danych** `novels_games` ze schematem z `baza.sql`
+- **Baza danych** `octavius` ze schematem z `baza.sql`
 
 ### Budowanie i uruchamianie
 
-**WSL/Windows:**
-```bash
-source ~/.bashrc
-./gradlew1 build
-./gradlew1 run
-```
-
-**Standardowe środowiska:**
 ```bash
 ./gradlew build
 ./gradlew run
@@ -68,9 +52,9 @@ Sprawdza użycie kluczy tłumaczeń w kodzie i raportuje nieużywane tłumaczeni
 ```bash
 ./gradlew assembleBrowserExtension
 ```
-Kompiluje rozszerzenie do `build/extension/`.
+Kompiluje rozszerzenie do `browser-extension/build/extension`.
 
-## 🏗️ Architektura
+## Architektura
 
 ### Struktura modułowa
 
@@ -78,7 +62,7 @@ Kompiluje rozszerzenie do `build/extension/`.
 Octavius/
 ├── desktop-app/           # Główna aplikacja i punkt wejścia
 ├── core/                  # Fundamenty: domain, localization, util
-├── data-access/           # Warstwa dostępu do danych (Spring JDBC)
+├── database/              # Warstwa dostępu do danych (Spring JDBC)
 ├── form-engine/           # Framework formularzy
 ├── report-engine/         # Framework raportów  
 ├── ui-core/               # Współdzielone komponenty UI i system nawigacji
@@ -88,8 +72,7 @@ Octavius/
 ├── feature-contract/      # Interfejsy dla modułów funkcjonalnych
 ├── api-server/            # API server
 ├── api-contract/          # Kontrakty API
-├── extension-popup/       # Rozszerzenie przeglądarki (popup)
-└── extension-content-script/ # Rozszerzenie przeglądarki (content script)
+└── browser-extension/     # Rozszerzenie przeglądarki
 ```
 
 ### 🔧 System formularzy (form-engine)
@@ -119,32 +102,7 @@ Dynamiczne tabele z pełną konfiguracją:
 - **Paginacja**: Efektywne ładowanie danych
 - **Konfiguracja**: Zapisywanie/ładowanie układów tabel
 
-### 🧭 System nawigacji
-
-Centralny router
-
-```
-AppRouter (Singleton) -> AppNavigationState -> Tab Stacks -> Screens
-```
-
-**Kluczowe cechy:**
-- **Oddzielny stos na każdą zakładkę**: Każda zakładka ma niezależną historię nawigacji
-- **Globalny dostęp**: Funkcje nawigacji dostępne z każdego miejsca
-
-### 🗄️ Warstwa bazy danych
-
-**TypeRegistry** - Automatyczne skanowanie schematów PostgreSQL:
-- Mapowanie typów PostgreSQL na klasy Kotlin
-- Obsługa ENUM, COMPOSITE i ARRAY
-- Wsparcie dla wielu schematów (public, asian_media, games)
-
-**Komponenty:**
-- **DatabaseSystem**: Singleton z HikariCP pool i inicjalizacją
-- **DatabaseFetcher**: Zaawansowane operacje SELECT z filtrowaniem
-- **DatabaseBatchExecutor**: Transakcyjne operacje UPDATE/INSERT/DELETE
-- **RowMappers**: Automatyczna konwersja ResultSet na obiekty Kotlin
-
-## 📁 Wzorzec domenowy
+## Wzorzec domenowy
 
 Każda encja biznesowa następuje konsekwentny wzorzec:
 
@@ -167,6 +125,6 @@ feature-[domain]/
 ## 🌍 System lokalizacji
 
 - **Tłumaczenia oparte o pliki JSON**: `translations_pl.json` w każdym module
-- **Singleton Translations**: Globalny dostęp przez `Translations.get()` i `Translations.getPlural()`
+- **Singleton Translations**: Globalny dostęp przez `T.get()` i `T.getPlural()`
 - **Obsługa liczby mnogiej**: Wsparcie dla form "one", "few", "many"
 - **Walidacja**: Automatyczne sprawdzanie użycia kluczy tłumaczeń przez task `validateTranslations`
