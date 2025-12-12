@@ -18,7 +18,7 @@ class ReportConfigurationManager : KoinComponent {
 
     val dataAccess: DataAccess by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
-        val flatValueMap = configuration.toMap(includeNulls = false)
+        val flatValueMap = configuration.toMap("id")
         val result = dataAccess.insertInto("report_configurations")
             .values(flatValueMap).onConflict {
                 onColumns("name", "report_name")

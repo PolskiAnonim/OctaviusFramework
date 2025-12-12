@@ -152,24 +152,25 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
  * Konwertuje obiekt data class na mapę, gdzie kluczami są nazwy właściwości
  * (lub wartości z adnotacji @MapKey), a wartościami są wartości tych właściwości.
  *
- * @param includeNulls Jeśli `true` (domyślnie), właściwości z wartością `null` zostaną
- *                     uwzględnione w mapie. Jeśli `false`, zostaną pominięte.
- *                     Jest to przydatne np. przy operacjach UPDATE, gdzie chcemy
- *                     zmienić tylko pola, które nie są nullem.
+ * @param excludeKeys Klucze do wykluczenia z wynikowej mapy
  * @return Mapa reprezentująca obiekt.
  */
-fun <T : Any> T.toMap(includeNulls: Boolean = true): Map<String, Any?> {
+fun <T : Any> T.toMap(vararg excludeKeys: String): Map<String, Any?> {
     @Suppress("UNCHECKED_CAST")
     val metadata = getOrCreateDataObjectMetadata(this::class) as DataObjectClassMetadata<T>
+
+    // Konwersja do Set dla szybszego sprawdzania (O(1) zamiast O(n))
+    val exclusionSet = if (excludeKeys.isNotEmpty()) excludeKeys.toSet() else emptySet()
 
     return metadata.constructorProperties.mapNotNull { meta ->
         val (_, property, _, keyName) = meta
 
-        val value = property.get(this)
-        if (!includeNulls && value == null) {
-            null
-        } else {
-            keyName to value
+        if (keyName in exclusionSet) {
+            return@mapNotNull null
         }
+
+        val value = property.get(this)
+
+        keyName to value
     }.associate { it }
 }
