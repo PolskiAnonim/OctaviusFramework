@@ -185,3 +185,5 @@ val savedFlags = dataAccess.select("flags")
 The project is split into two main modules:
 *   `./database/api`: A Kotlin Multiplatform (`commonMain`) module that defines the public API, interfaces, annotations, and data transfer objects. It has no dependencies on the JVM or Spring.
 *   `./database/core`: A JVM module that contains the concrete implementation of the API. It uses Spring JDBC, HikariCP, and a lot of diabolical magic to bring the API to life.
+
+[![Documentation](https://img.shields.io/badge/KDoc-documentation-blue)]( https://polskianonim.github.io/OctaviusFramework/)
