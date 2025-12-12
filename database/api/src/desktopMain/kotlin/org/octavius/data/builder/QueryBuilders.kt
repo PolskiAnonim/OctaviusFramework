@@ -210,6 +210,27 @@ interface OnConflictClauseBuilder {
      * @param whereCondition Opcjonalny warunek WHERE dla akcji UPDATE.
      */
     fun doUpdate(setExpression: String, whereCondition: String? = null)
+
+    /**
+     * W przypadku konfliktu, wykonaj aktualizację (DO UPDATE) używając par kolumna-wartość.
+     * Jest to preferowany sposób, ponieważ jest bardziej czytelny i mniej podatny na błędy niż ręczne składanie stringa.
+     * Przykład użycia:
+     * doUpdate(
+     *   "last_login" to "NOW()",
+     *   "login_attempts" to "EXCLUDED.login_attempts + 1"
+     * )
+     * @param setPairs Pary (kolumna, wyrażenie) do użycia w klauzuli SET.
+     * @param whereCondition Opcjonalny warunek WHERE dla akcji UPDATE.
+     */
+    fun doUpdate(vararg setPairs: Pair<String, String>, whereCondition: String? = null)
+
+    /**
+     * W przypadku konfliktu, wykonaj aktualizację (DO UPDATE) używając mapy kolumna-wartość.
+     * Użyteczne, gdy logika aktualizacji jest budowana dynamicznie.
+     * @param setMap Mapa {kolumna -> wyrażenie} do użycia w klauzuli SET.
+     * @param whereCondition Opcjonalny warunek WHERE dla akcji UPDATE.
+     */
+    fun doUpdate(setMap: Map<String, String>, whereCondition: String? = null)
 }
 
 /**

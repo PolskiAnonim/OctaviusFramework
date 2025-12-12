@@ -22,16 +22,15 @@ class ReportConfigurationManager : KoinComponent {
         val result = dataAccess.insertInto("report_configurations")
             .values(flatValueMap).onConflict {
                 onColumns("name", "report_name")
-                doUpdate("""
-                    description = EXCLUDED.description,
-                    sort_order = EXCLUDED.sort_order,
-                    visible_columns = EXCLUDED.visible_columns,
-                    column_order = EXCLUDED.column_order,
-                    page_size = EXCLUDED.page_size,
-                    is_default = EXCLUDED.is_default,
-                    filters = EXCLUDED.filters,
-                    updated_at = CURRENT_TIMESTAMP
-                    """
+                doUpdate(
+                    "description" to "EXCLUDED.description",
+                    "sort_order" to "EXCLUDED.sort_order",
+                    "visible_columns" to "EXCLUDED.visible_columns",
+                    "column_order" to "EXCLUDED.column_order",
+                    "page_size" to "EXCLUDED.page_size",
+                    "is_default" to "EXCLUDED.is_default",
+                    "filters" to "EXCLUDED.filters",
+                    "updated_at" to "CURRENT_TIMESTAMP"
                 )
             }.execute(flatValueMap)
 

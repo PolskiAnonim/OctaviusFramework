@@ -158,15 +158,37 @@ internal class DatabaseOnConflictClauseBuilder : OnConflictClauseBuilder {
 
     /**
      * Definiuje akcję DO UPDATE.
-     * @param setExpression Wyrażenie SET, np. "name = EXCLUDED.name, updated_at = NOW()"
-     * @param whereCondition Opcjonalny warunek WHERE, np. "target_table.version < EXCLUDED.version"
      */
     override fun doUpdate(setExpression: String, whereCondition: String?) {
+        require(setExpression.isNotBlank()) { "doUpdate cannot be blank." }
         val updateAction = StringBuilder("DO UPDATE SET $setExpression")
         whereCondition?.let {
             updateAction.append(" WHERE $it")
         }
         action = updateAction.toString()
+    }
+
+    /**
+     * Przeciążenie dla vararg Pair
+     */
+    override fun doUpdate(vararg setPairs: Pair<String, String>, whereCondition: String?) {
+        val setExpression = setPairs.joinToString(",\n") { (column, expression) ->
+            "$column = $expression"
+        }
+
+        // Wywołujemy oryginalną metodę, aby nie duplikować logiki budowania klauzuli
+        doUpdate(setExpression, whereCondition)
+    }
+
+    /**
+     * Przeciążenie dla Map
+     */
+    override fun doUpdate(setMap: Map<String, String>, whereCondition: String?) {
+        val setExpression = setMap.map { (column, expression) ->
+            "$column = $expression"
+        }.joinToString(",\n")
+
+        doUpdate(setExpression, whereCondition)
     }
 
     /**
