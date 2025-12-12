@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import org.octavius.data.annotation.DynamicallyMappable
 import org.octavius.data.helper.BigDecimalAsNumberSerializer
 import org.octavius.domain.game.GameStatus
+import org.octavius.domain.game.GameStatusDynamicDtoSerializer
 import java.math.BigDecimal
 
 
@@ -16,6 +17,7 @@ interface DashboardGame {
 @DynamicallyMappable("game_dashboard_status")
 @Serializable
 data class DashboardStatusCount(
+    @Serializable(with = GameStatusDynamicDtoSerializer::class)
     val status: GameStatus,
     val count: Long
 )
