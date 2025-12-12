@@ -43,7 +43,7 @@ jobs:
       # 4. Uruchom zadanie Dokka do wygenerowania dokumentacji HTML
       - name: Build KDoc with Dokka
         # Użyj --no-daemon, aby upewnić się, że proces Gradle zakończy się poprawnie w CI
-        run: ./gradlew dokkaHtml --no-daemon
+        run: ./gradlew dokkaGenerateHtml --no-daemon
 
       # 5. Przygotuj artefakt z wygenerowaną dokumentacją do wgrania na GitHub Pages
       - name: Setup Pages
