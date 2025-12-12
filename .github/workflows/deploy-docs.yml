@@ -1,0 +1,62 @@
+name: Deploy KDoc Documentation to GitHub Pages
+
+on:
+  # Uruchamiaj workflow przy pushu do gałęzi `main`
+  push:
+    branches:
+      - main
+  # Pozwala na ręczne uruchomienie tego workflow z zakładki Actions na GitHubie
+  workflow_dispatch:
+
+# Ustaw uprawnienia dla GITHUB_TOKEN, aby umożliwić wdrożenie na GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Pobierz kod repozytorium
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Ustaw środowisko Java (Dokka/Gradle jej potrzebuje)
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'temurin'
+
+      # 3. Ustaw cache dla Gradle, aby przyspieszyć budowanie
+      - name: Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 4. Uruchom zadanie Dokka do wygenerowania dokumentacji HTML
+      - name: Build KDoc with Dokka
+        # Użyj --no-daemon, aby upewnić się, że proces Gradle zakończy się poprawnie w CI
+        run: ./gradlew dokkaHtml --no-daemon
+
+      # 5. Przygotuj artefakt z wygenerowaną dokumentacją do wgrania na GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # 6. Wgraj artefakt (całą zawartość katalogu z dokumentacją)
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Ścieżka do wygenerowanej dokumentacji
+          path: './database/api/build/dokka/html'
+
+      # 7. Wdróż artefakt na GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
