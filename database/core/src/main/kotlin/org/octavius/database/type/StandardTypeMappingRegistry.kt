@@ -66,7 +66,7 @@ internal object StandardTypeMappingRegistry {
                 // Typy numeryczne całkowite
                 PgStandardType.SMALLSERIAL -> StandardTypeHandler(
                     Short::class,
-                    { rs, i -> rs.getInt(i) },
+                    { rs, i -> rs.getShort(i) },
                     { s -> s.toShort() })
 
                 PgStandardType.INT2 -> StandardTypeHandler(
