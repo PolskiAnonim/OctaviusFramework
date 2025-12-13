@@ -1,5 +1,8 @@
 # Octavius Database: An Un-opinionated, Hyper-Pragmatic Data Access Layer for Kotlin & PostgreSQL
 
+[![API Documentation](https://img.shields.io/badge/KDoc-database--api-blue)](https://polskianonim.github.io/OctaviusFramework/database-api/)
+[![Core Documentation](https://img.shields.io/badge/KDoc-database--core-blue)](https://polskianonim.github.io/OctaviusFramework/database-core/)
+
 **Octavius Database** is a data access framework for Kotlin, born from a fundamental disagreement with the magic and complexity of traditional ORMs. It provides a powerful, intuitive, and un-opinionated way to interact with your PostgreSQL database, putting you—the developer—back in control.
 
 It's not an ORM. It's an **Anti-ORM**. It embraces the power of SQL and combines it with the safety and elegance of Kotlin's type system, giving you the best of both worlds.
@@ -185,5 +188,3 @@ val savedFlags = dataAccess.select("flags")
 The project is split into two main modules:
 *   `./database/api`: A Kotlin Multiplatform (`commonMain`) module that defines the public API, interfaces, annotations, and data transfer objects. It has no dependencies on the JVM or Spring.
 *   `./database/core`: A JVM module that contains the concrete implementation of the API. It uses Spring JDBC, HikariCP, and a lot of diabolical magic to bring the API to life.
-
-[![Documentation](https://img.shields.io/badge/KDoc-documentation-blue)]( https://polskianonim.github.io/OctaviusFramework/)
