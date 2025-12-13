@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.dokka)
 }
 
 kotlin {
@@ -26,8 +25,4 @@ kotlin {
         }
         val jsMain by getting
     }
-}
-
-dokka {
-
 }

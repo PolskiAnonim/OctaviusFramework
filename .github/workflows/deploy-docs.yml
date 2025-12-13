@@ -40,10 +40,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 4. Uruchom zadanie Dokka do wygenerowania dokumentacji HTML
+      # 4. Uruchom zadanie Dokka do wygenerowania dokumentacji HTML (agregacja z wszystkich modułów)
       - name: Build KDoc with Dokka
         # Użyj --no-daemon, aby upewnić się, że proces Gradle zakończy się poprawnie w CI
-        run: ./gradlew dokkaGenerateHtml --no-daemon
+        run: ./gradlew :dokkaGenerate --no-daemon
 
       # 5. Przygotuj artefakt z wygenerowaną dokumentacją do wgrania na GitHub Pages
       - name: Setup Pages
@@ -53,8 +53,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Ścieżka do wygenerowanej dokumentacji
-          path: './database/api/build/dokka/html'
+          # Ścieżka do zagregowanej dokumentacji z root projektu
+          path: './build/dokka/html'
 
       # 7. Wdróż artefakt na GitHub Pages
       - name: Deploy to GitHub Pages
