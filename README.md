@@ -22,8 +22,8 @@ Octavius is a Kotlin Multiplatform desktop application for tracking manga, light
 | Component | Description |
 |-----------|-------------|
 | **[Database Layer](database/)** | An "Anti-ORM" — SQL-first data access with automatic type mapping for PostgreSQL composites, enums, and arrays |
-| **Form Engine** | Declarative form builder with dependencies, validation, and repeatable sections |
-| **Report Engine** | Dynamic data tables with filtering, sorting, column management, and persistent layouts |
+| **[Form Engine](form-engine/)** | Declarative form builder with dependencies, validation, and repeatable sections |
+| **[Report Engine](report-engine/)** | Dynamic data tables with filtering, sorting, column management, and persistent layouts |
 | **Browser Extension** | Kotlin/JS extension for importing data from external sources |
 
 ## Tech Stack
@@ -85,6 +85,8 @@ A data-driven form framework supporting:
 - **Dependencies**: Show/hide controls based on other values
 - **Validation**: Multi-level validation with business rules
 
+[Learn more →](form-engine/)
+
 ### Report Engine
 
 Configurable data tables with:
@@ -93,6 +95,8 @@ Configurable data tables with:
 - **Type-specific filters**: String, number, enum, boolean, date
 - **Multi-column sorting** with state persistence
 - **Layout presets**: Save and load table configurations
+
+[Learn more →](report-engine/)
 
 ### Database Layer
 
