@@ -1,91 +1,55 @@
-# Octavius Database: An Un-opinionated, Hyper-Pragmatic Data Access Layer for Kotlin & PostgreSQL
+# Octavius Database
 
 [![API Documentation](https://img.shields.io/badge/KDoc-database--api-blue)](https://polskianonim.github.io/OctaviusFramework/database-api/)
 [![Core Documentation](https://img.shields.io/badge/KDoc-database--core-blue)](https://polskianonim.github.io/OctaviusFramework/database-core/)
 
-**Octavius Database** is a data access framework for Kotlin, born from a fundamental disagreement with the magic and complexity of traditional ORMs. It provides a powerful, intuitive, and un-opinionated way to interact with your PostgreSQL database, putting you—the developer—back in control.
+An un-opinionated, hyper-pragmatic data access layer for Kotlin & PostgreSQL.
 
-It's not an ORM. It's an **Anti-ORM**. It embraces the power of SQL and combines it with the safety and elegance of Kotlin's type system, giving you the best of both worlds.
+It's not an ORM. It's an **Anti-ORM** — embracing the power of SQL combined with Kotlin's type safety.
 
-## Core Philosophy
+## Philosophy
 
-This library is built on a few simple, powerful principles:
+1. **The Query is King.** Your SQL query dictates the shape of data, not the other way around.
+2. **The Object is a Vessel.** A `data class` is simply a type-safe container for query results.
+3. **Explicitness over Magic.** No lazy-loading, no session management, no dirty checking.
 
-1.  **The Query is King.** The shape and content of your data objects are dictated by your SQL query, not the other way around. You have absolute control over joins, aggregations, and performance.
-2.  **The Object is a Vessel.** A `data class` is simply a type-safe container for the results of your query. The framework's job is to fill this vessel with perfect fidelity, no questions asked.
-3.  **Explicitness over Magic.** No hidden lazy-loading, no session management, no dirty checking. Every database operation is an explicit, predictable action. You get what you ask for—nothing more, nothing less.
+## Quick Start
 
-## Key Features
-
-*   **Fluent & Intuitive Query Builders:** A "clause-gluing" approach that provides structure without sacrificing the power of raw SQL strings.
-*   **Powerful Automatic Type Mapping:** Robust, bi-directional conversion between PostgreSQL types (including `COMPOSITE`, `ENUM`, `ARRAY`) and Kotlin `data class`/`enum class` objects.
-*   **Declarative Transaction Management:** Build complex, atomic operations as a `TransactionPlan`—a list of steps with dependencies, where the result of one step can be used as an input for the next.
-*   **First-Class Polymorphism in PostgreSQL:** A groundbreaking implementation of `dynamic_dto` that allows you to store and retrieve even lists of different object types in a single database column, fully type-safe.
-*   **Streaming & Asynchronous Support:** Process large result sets efficiently with `forEach` streaming, or run queries asynchronously in a Coroutine scope.
-*   **Safe Dynamic Filters:** Build complex, conditional `WHERE` clauses with `QueryFragment` without risking SQL injection or operator precedence errors.
-*   **Pragmatic & Modular Architecture:** A clean separation between the multiplatform `api` module (for sharing data models) and the JVM-based `core` implementation.
-
-
-## Configuration and Initialization
-
-### Three ways to initialize:
-
-**Two from DatabaseConfig (standalone):**
-
-`database.properties` file in resources:
-```properties
-db.url=jdbc:postgresql://localhost:5432/my_app
-db.username=user
-db.password=pass
-db.schemas=public, my_schema
-db.packagesToScan=com.myapp.domain
-```
 ```kotlin
-import org.octavius.data.DataAccess
-import org.octavius.database.config.DatabaseConfig
-import org.octavius.database.OctaviusDatabase
+// Define your data class
+data class User(val id: Int, val name: String, val email: String)
 
+// Query the database
+val users = dataAccess.select("id", "name", "email")
+    .from("users")
+    .where("active = true")
+    .orderBy("name")
+    .toListOf<User>()
+```
+
+## Configuration
+
+```kotlin
+// Option 1: From properties file
 val config = DatabaseConfig.loadFromFile("database.properties")
-val dataAccess: DataAccess = OctaviusDatabase.fromConfig(config)
-```
-Or directly
-```kotlin
-import org.octavius.data.DataAccess
-import org.octavius.database.config.DatabaseConfig
-import org.octavius.database.OctaviusDatabase
+val dataAccess = OctaviusDatabase.fromConfig(config)
 
-OctaviusDatabase.fromConfig(
-            DatabaseConfig(
-                dbUrl = "url",
-                dbUsername = "postgres",
-                dbPassword = "postgres",
-                dbSchemas = listOf("public"),
-                setSearchPath = true,
-                packagesToScan = listOf(),
-                dynamicDtoStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
-            )
-        )
-```
-And one from DataSource (for integration):
-```kotlin
-import org.octavius.data.DataAccess
-import org.octavius.database.config.DatabaseConfig
-import org.octavius.database.OctaviusDatabase
-
-val config = DatabaseConfig.loadFromFile("database.properties")
-val dataAccess: DataAccess = OctaviusDatabase.fromDataSource(
-        dataSource = datasource,
-        packagesToScan = listOf(),
-        dbSchema = listOf(),
-        dynamicDtoStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
+// Option 2: Direct configuration
+val dataAccess = OctaviusDatabase.fromConfig(
+    DatabaseConfig(
+        dbUrl = "jdbc:postgresql://localhost:5432/mydb",
+        dbUsername = "user",
+        dbPassword = "pass",
+        dbSchemas = listOf("public"),
+        packagesToScan = listOf("com.myapp.domain")
+    )
 )
+
+// Option 3: From existing DataSource (for framework integration)
+val dataAccess = OctaviusDatabase.fromDataSource(dataSource, ...)
 ```
 
-## Core Concepts
-
-### Query Builders
-
-Build any query type with a fluent, readable API. The builders handle the structure, you provide the clauses.
+## Query Builders
 
 ```kotlin
 // SELECT
@@ -96,67 +60,100 @@ val users = dataAccess.select("id", "name")
     .limit(10)
     .toListOf<User>("min_age" to 18)
 
-// INSERT
-val newUserId = dataAccess.insertInto("users")
-    .values(mapOf("name" to "John Doe", "age" to 30))
+// INSERT with RETURNING
+val newId = dataAccess.insertInto("users")
+    .values(mapOf("name" to "John", "age" to 30))
     .returning("id")
     .toField<Int>()
 
 // UPDATE
-val updatedRows = dataAccess.update("users")
+dataAccess.update("users")
     .setExpression("age", "age + 1")
     .where("id = :id")
     .execute("id" to 42)
 
 // DELETE
-val deletedRows = dataAccess.deleteFrom("users")
+dataAccess.deleteFrom("users")
     .where("status = 'INACTIVE'")
     .execute()
 ```
 
-### Transaction Plans
+## Safe Dynamic Filters with QueryFragment
 
-For complex, multi-step operations, `TransactionPlan` is your ultimate weapon. Define a series of steps and execute them in a single, atomic transaction.
+Build complex, conditional WHERE clauses without SQL injection risks:
 
-**Scenario:** Create a new user, and immediately use their new ID to create their profile.
+```kotlin
+fun buildFilters(name: String?, minAge: Int?, status: Status?): QueryFragment {
+    val fragments = mutableListOf<QueryFragment>()
+
+    name?.let {
+        fragments += QueryFragment("name ILIKE :name", mapOf("name" to "%$it%"))
+    }
+    minAge?.let {
+        fragments += QueryFragment("age >= :minAge", mapOf("minAge" to it))
+    }
+    status?.let {
+        fragments += QueryFragment("status = :status", mapOf("status" to it))
+    }
+
+    return fragments.join(" AND ")
+}
+
+// Usage
+val filter = buildFilters(name = "John", minAge = 18, status = null)
+val users = dataAccess.select("*")
+    .from("users")
+    .where(filter.sql)
+    .toListOf<User>(filter.params)
+```
+
+## Transaction Plans
+
+Execute multi-step operations atomically, with dependencies between steps:
 
 ```kotlin
 val plan = TransactionPlan()
 
-// Step 1: Insert the user and get a "handle" to its future ID.
-val userData = mapOf("name" to "Jane Doe", "email" to "jane@example.com")
+// Step 1: Insert user, get handle to future ID
 val userIdHandle = plan.add(
     dataAccess.insertInto("users")
-        .values(userData)
+        .values(mapOf("name" to "Jane", "email" to "jane@example.com"))
         .returning("id")
-        .asStep() // Convert the query to a transaction step
-        .toField<Int>(userData)
+        .asStep()
+        .toField<Int>()
 )
 
-// Step 2: Insert the profile, using the handle to reference the future user ID.
-val profileData = mapOf(
-    "bio" to "Loves Kotlin and PostgreSQL",
-    "user_id" to userIdHandle.field() // Reference a future value.
-)
+// Step 2: Use the handle to reference future value
 plan.add(
     dataAccess.insertInto("profiles")
-        .values(profileData)
+        .values(mapOf("user_id" to userIdHandle.field(), "bio" to "Hello!"))
         .asStep()
-        .execute(profileData)
+        .execute()
 )
 
-// Execute the entire plan atomically.
-val result = dataAccess.executeTransactionPlan(plan)
+// Execute atomically
+dataAccess.executeTransactionPlan(plan)
 ```
 
-### First-Class Polymorphism
+## Type Mapping
 
-Leverage the `dynamic_dto` type to store different kinds of objects in the same column or array, enabling powerful patterns like **Soft Enums**.
-
-A **Soft Enum** is a Kotlin `enum` that is not backed by a rigid `ENUM` type in PostgreSQL, allowing you to add new values without database migrations.
+Automatic bi-directional conversion between PostgreSQL and Kotlin types:
 
 ```kotlin
-// 1. Define your enum with annotations
+// PostgreSQL COMPOSITE -> Kotlin data class
+@PgComposite
+data class Address(val street: String, val city: String, val zip: String)
+
+// PostgreSQL ENUM -> Kotlin enum
+@PgEnum
+enum class OrderStatus { Pending, Shipped, Delivered }
+```
+
+## Polymorphism with dynamic_dto
+
+Store different object types in a single column — fully type-safe:
+
+```kotlin
 @DynamicallyMappable(typeName = "feature_flag")
 @Serializable
 enum class FeatureFlag {
@@ -164,20 +161,14 @@ enum class FeatureFlag {
     @SerialName("new_dashboard") NewDashboard
 }
 
-// 2. Your database table has a column of type `dynamic_dto[]`
-// CREATE TABLE user_settings (id SERIAL, flags dynamic_dto[]);
-
-// 3. Write and read it like any other list!
-val flagsToSave: List<FeatureFlag> = listOf(FeatureFlag.DarkTheme, FeatureFlag.NewDashboard)
-
-// The framework automatically converts the list to `dynamic_dto[]`
+// Write
 dataAccess.update("user_settings")
     .setValue("flags")
     .where("id = 1")
-    .execute("flags" to flagsToSave)
+    .execute("flags" to listOf(FeatureFlag.DarkTheme))
 
-// And automatically converts it back!
-val savedFlags = dataAccess.select("flags")
+// Read — automatically converted back
+val flags = dataAccess.select("flags")
     .from("user_settings")
     .where("id = 1")
     .toField<List<FeatureFlag>>()
@@ -185,6 +176,7 @@ val savedFlags = dataAccess.select("flags")
 
 ## Architecture
 
-The project is split into two main modules:
-*   `./database/api`: A Kotlin Multiplatform (`commonMain`) module that defines the public API, interfaces, annotations, and data transfer objects. It has no dependencies on the JVM or Spring.
-*   `./database/core`: A JVM module that contains the concrete implementation of the API. It uses Spring JDBC, HikariCP, and a lot of diabolical magic to bring the API to life.
+| Module | Description |
+|--------|-------------|
+| `database/api` | Kotlin Multiplatform module with public API, interfaces, and annotations. No JVM dependencies. |
+| `database/core` | JVM implementation using Spring JDBC and HikariCP. |
