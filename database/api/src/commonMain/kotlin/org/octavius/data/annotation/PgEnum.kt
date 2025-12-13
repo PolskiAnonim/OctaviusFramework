@@ -25,7 +25,8 @@ import org.octavius.data.util.CaseConvention
  * @param enumConvention Konwencja nazewnicza dla wartości enuma podczas mapowania
  *                       na odpowiedniki w PostgreSQL. Domyślnie `SNAKE_CASE_UPPER`.
  *
- * @sample
+ * ### Przykłady
+ * ```kotlin
  * // Przykład 1: Użycie domyślnej konwencji nazewniczej
  * // Klasa `OrderStatus` zostanie zmapowana na typ `order_status` w PostgreSQL.
  * // Wartości (PENDING, COMPLETED) zostaną zmapowane jako 'PENDING', 'COMPLETED'.
@@ -37,6 +38,7 @@ import org.octavius.data.util.CaseConvention
  * // Wartości (CreditCard) zostaną zmapowane jako 'credit_card'.
  * @PgEnum(name = "payment_method_enum", enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
  * enum class PaymentMethod { CreditCard, BankTransfer }
+ * ```
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

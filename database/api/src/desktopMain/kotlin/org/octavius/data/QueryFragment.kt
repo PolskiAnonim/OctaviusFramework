@@ -16,7 +16,7 @@ data class QueryFragment(
 )
 
 /**
- * Łączy listę fragmentów w jeden, używając podanego [separatora].
+ * Łączy listę fragmentów w jeden, używając podanego separatora.
  *
  * 1.  **Bezpiecznie łączy mapy parametrów**, rzucając błąd w przypadku konfliktu kluczy.
  *     To zapobiega cichemu nadpisywaniu parametrów.

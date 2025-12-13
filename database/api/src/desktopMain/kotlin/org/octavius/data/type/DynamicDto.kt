@@ -29,7 +29,7 @@ import kotlin.reflect.full.findAnnotation
  *   bezpośrednio obiekt domenowy (np. `DynamicProfile`), a nie instancję `DynamicDto`.
  *
  * @property typeName Klucz identyfikujący typ obiektu, pobierany z adnotacji [DynamicallyMappable].
- * @property dataPayload Obiekt zserializowany do postaci [JsonObject].
+ * @property dataPayload Obiekt zserializowany do postaci [JsonElement].
  * @see DynamicallyMappable
  */
 @ConsistentCopyVisibility

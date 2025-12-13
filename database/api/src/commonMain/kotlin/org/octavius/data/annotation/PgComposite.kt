@@ -23,7 +23,8 @@ package org.octavius.data.annotation
  *             Jeśli pozostawiona pusta, nazwa zostanie wygenerowana automatycznie
  *             zgodnie z konwencją `CamelCase` -> `snake_case`.
  *
- * @sample
+ * ### Przykłady
+ * ```kotlin
  * // Przykład 1: Użycie domyślnej konwencji nazewniczej
  * // Klasa `UserInfo` zostanie zmapowana na typ `user_info` w PostgreSQL.
  * @PgComposite
@@ -33,6 +34,7 @@ package org.octavius.data.annotation
  * // Klasa `AddressDetails` zostanie zmapowana na typ `address_type` w PostgreSQL.
  * @PgComposite(name = "address_type")
  * data class AddressDetails(val street: String, val city: String)
+ * ```
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
