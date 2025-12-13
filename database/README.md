@@ -4,8 +4,8 @@
 
 **An un-opinionated, SQL-first data access layer for Kotlin & PostgreSQL**
 
-[![KDoc API](https://img.shields.io/badge/KDoc-database--api-7F52FF?logo=kotlin&logoColor=white)](https://polskianonim.github.io/OctaviusFramework/database/api/index.html)
-[![KDoc Core](https://img.shields.io/badge/KDoc-database--core-7F52FF?logo=kotlin&logoColor=white)](https://polskianonim.github.io/OctaviusFramework//database/core/index.html)
+[![KDoc API](https://img.shields.io/badge/KDoc-database--api-7F52FF?logo=kotlin&logoColor=white)](https://polskianonim.github.io/OctaviusFramework/database/api)
+[![KDoc Core](https://img.shields.io/badge/KDoc-database--core-7F52FF?logo=kotlin&logoColor=white)](https://polskianonim.github.io/OctaviusFramework/database/core)
 
 *It's not an ORM. It's an* ***Anti-ORM.***
 
