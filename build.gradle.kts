@@ -47,5 +47,13 @@ subprojects {
     val excludedModules = setOf("browser-extension", "buildSrc")
     if (name !in excludedModules) {
         apply(plugin = "org.jetbrains.dokka")
+
+        // Ustawiamy unikalną nazwę modułu na podstawie pełnej ścieżki projektu
+        // np. :database:api -> database-api, :core -> core
+        afterEvaluate {
+            extensions.findByType<org.jetbrains.dokka.gradle.DokkaExtension>()?.apply {
+                moduleName.set(path.removePrefix(":").replace(":", "-"))
+            }
+        }
     }
 }
