@@ -6,11 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -18,13 +14,10 @@ import androidx.compose.ui.unit.dp
 import org.octavius.localization.T
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.statistics.model.DashboardGame
-import org.octavius.modules.games.statistics.model.DashboardGameByRating
-import org.octavius.modules.games.statistics.model.DashboardGameByTime
 import org.octavius.modules.games.statistics.model.GameStatisticsData
 import org.octavius.modules.games.statistics.model.GameStatisticsHandler
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
-import java.math.BigDecimal
 
 class GameStatisticsScreen(override val title: String) : Screen {
     @Composable

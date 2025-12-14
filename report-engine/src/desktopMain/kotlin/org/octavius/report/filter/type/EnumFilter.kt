@@ -13,10 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
+import org.octavius.data.QueryFragment
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.T
 import org.octavius.report.FilterMode
-import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.FilterSpacer

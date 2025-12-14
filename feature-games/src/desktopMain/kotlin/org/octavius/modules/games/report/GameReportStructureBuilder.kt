@@ -2,12 +2,12 @@ package org.octavius.modules.games.report
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import org.octavius.data.QueryFragment
 import org.octavius.domain.game.GameStatus
 import org.octavius.localization.T
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
-import org.octavius.data.QueryFragment
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn

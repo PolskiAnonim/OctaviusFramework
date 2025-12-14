@@ -27,6 +27,7 @@ private fun generateDeveloperMessage(
         ConversionExceptionMessage.INVALID_DYNAMIC_DTO_FORMAT -> "Invalid dynamic_dto format: '$value'."
         ConversionExceptionMessage.INCOMPATIBLE_COLLECTION_ELEMENT_TYPE ->
             "An element within a collection has an incorrect type. Expected elements compatible with '$targetType', but found an element of type '${value?.let { it::class.simpleName }}'."
+
         ConversionExceptionMessage.INCOMPATIBLE_TYPE -> "Element has an incompatible type. Expected elements compatible with '$targetType', but found an element of type '${value?.let { it::class.simpleName }}'."
         ConversionExceptionMessage.OBJECT_MAPPING_FAILED -> "Failed to map data to object of class '$targetType'."
         ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY -> "Missing required field '$propertyName' (key: '$value') when mapping to class '$targetType'."
@@ -34,6 +35,7 @@ private fun generateDeveloperMessage(
         ConversionExceptionMessage.UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY ->
             "Native JDBC arrays (Array<*>) do not support complex types (e.g., data class, List, Map). " +
                     "Detected type: '${targetType}'. Use List<DataClass> so the library can generate ARRAY[ROW(...)] syntax."
+
         ConversionExceptionMessage.JSON_SERIALIZATION_FAILED -> "Failed to serialize object of class '$targetType' to JSON format. " +
                 "Ensure that the class and all its nested types have the @Serializable annotation."
     }
@@ -55,14 +57,21 @@ class ConversionException(
     cause
 ) {
     override fun toString(): String {
-        return """
+
+        var s = """
+
         -------------------------------
         |     CONVERSION FAILED     
-        | message: ${generateDeveloperMessage(this.messageEnum, value, targetType, propertyName) }
+        | message: ${generateDeveloperMessage(this.messageEnum, value, targetType, propertyName)}
         | value: $value
         | targetType: $targetType
         | rowData: $rowData
         | propertyName: $propertyName
+        """.trimIndent()
+        if (cause != null) {
+            s += "\n| Caused by: ${cause!!::class.simpleName}: ${cause!!.message}"
+        }
+        return s + """
         ---------------------------------
         """.trimIndent()
     }

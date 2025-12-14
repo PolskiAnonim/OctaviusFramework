@@ -9,13 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.utils.createFakeTypeRegistry
-import org.octavius.domain.test.pgtype.TestCategory
-import org.octavius.domain.test.pgtype.TestMetadata
-import org.octavius.domain.test.pgtype.TestPerson
-import org.octavius.domain.test.pgtype.TestPriority
-import org.octavius.domain.test.pgtype.TestProject
-import org.octavius.domain.test.pgtype.TestStatus
-import org.octavius.domain.test.pgtype.TestTask
+import org.octavius.domain.test.pgtype.*
 import org.postgresql.util.PGobject
 import java.math.BigDecimal
 

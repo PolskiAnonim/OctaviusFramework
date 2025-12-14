@@ -1,8 +1,5 @@
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.octavius.gradle.registerMergeTranslationsTask
-import java.nio.charset.StandardCharsets
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)

@@ -3,7 +3,6 @@ package org.octavius.database.type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.*
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import org.octavius.data.OffsetTime
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage

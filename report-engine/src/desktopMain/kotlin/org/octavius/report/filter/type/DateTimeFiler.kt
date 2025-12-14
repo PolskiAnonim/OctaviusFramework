@@ -7,10 +7,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
+import org.octavius.data.QueryFragment
 import org.octavius.localization.T
 import org.octavius.report.DateTimeFilterDataType
 import org.octavius.report.FilterMode
-import org.octavius.data.QueryFragment
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.EnumDropdownMenu
 import org.octavius.report.filter.Filter

@@ -1,9 +1,7 @@
 package org.octavius.database.type
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import org.octavius.data.exception.ConversionException
 import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.exception.TypeRegistryException

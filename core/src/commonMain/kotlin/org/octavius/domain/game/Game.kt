@@ -1,6 +1,5 @@
 package org.octavius.domain.game
 
-import kotlinx.serialization.Serializable
 import org.octavius.data.annotation.PgEnum
 import org.octavius.data.helper.DynamicDtoEnumSerializer
 import org.octavius.domain.EnumWithFormatter

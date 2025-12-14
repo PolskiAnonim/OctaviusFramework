@@ -3,10 +3,10 @@ package org.octavius.modules.games.report
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import org.octavius.data.QueryFragment
 import org.octavius.localization.T
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
-import org.octavius.data.QueryFragment
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn

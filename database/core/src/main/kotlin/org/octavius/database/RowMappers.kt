@@ -1,8 +1,6 @@
 package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.octavius.data.exception.ConversionException
-import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.toDataObject
 import org.octavius.data.validateAndCast
 import org.octavius.database.type.ResultSetValueExtractor

@@ -7,9 +7,11 @@ import kotlinx.coroutines.runBlocking
 import org.octavius.data.DataAccess
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.config.DynamicDtoSerializationStrategy
-import org.octavius.database.type.*
+import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.database.type.ResultSetValueExtractor
+import org.octavius.database.type.TypeRegistry
+import org.octavius.database.type.TypeRegistryLoader
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.support.JdbcTransactionManager
 import javax.sql.DataSource
 import kotlin.time.measureTime

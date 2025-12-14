@@ -8,13 +8,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.database.type.utils.createFakeTypeRegistry
-import org.octavius.domain.test.pgtype.TestCategory
-import org.octavius.domain.test.pgtype.TestMetadata
-import org.octavius.domain.test.pgtype.TestPerson
-import org.octavius.domain.test.pgtype.TestPriority
-import org.octavius.domain.test.pgtype.TestProject
-import org.octavius.domain.test.pgtype.TestStatus
-import org.octavius.domain.test.pgtype.TestTask
+import org.octavius.domain.test.pgtype.*
 import java.math.BigDecimal
 import java.util.*
 import kotlin.time.Duration

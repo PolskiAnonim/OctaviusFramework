@@ -10,10 +10,10 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.exception.QueryExecutionException
 import org.octavius.data.exception.TypeRegistryException
-import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.OctaviusDatabase
+import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.config.DynamicDtoSerializationStrategy
-import org.octavius.domain.test.dynamic.DynamicProfile // Użyjemy istniejącej klasy
+import org.octavius.domain.test.dynamic.DynamicProfile
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
 import java.nio.file.Paths

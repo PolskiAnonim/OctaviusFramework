@@ -1,7 +1,7 @@
 package org.octavius.database.config
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.util.Properties
+import java.util.*
 
 /**
  * Niezmienna (immutable) konfiguracja połączenia z bazą danych PostgreSQL.

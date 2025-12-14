@@ -3,18 +3,8 @@ package org.octavius.database.type.utils
 import org.octavius.data.type.DynamicDto
 import org.octavius.data.util.CaseConvention
 import org.octavius.data.util.CaseConverter
-import org.octavius.database.type.PgArrayDefinition
-import org.octavius.database.type.PgCompositeDefinition
-import org.octavius.database.type.PgEnumDefinition
-import org.octavius.database.type.TypeCategory
-import org.octavius.database.type.TypeRegistry
-import org.octavius.domain.test.pgtype.TestCategory
-import org.octavius.domain.test.pgtype.TestMetadata
-import org.octavius.domain.test.pgtype.TestPerson
-import org.octavius.domain.test.pgtype.TestPriority
-import org.octavius.domain.test.pgtype.TestProject
-import org.octavius.domain.test.pgtype.TestStatus
-import org.octavius.domain.test.pgtype.TestTask
+import org.octavius.database.type.*
+import org.octavius.domain.test.pgtype.*
 import kotlin.reflect.KClass
 
 /**

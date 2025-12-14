@@ -1,6 +1,5 @@
 package org.octavius.database.type
 
-import org.octavius.data.util.CaseConvention
 import kotlin.reflect.KClass
 
 // --- Modele danych ---

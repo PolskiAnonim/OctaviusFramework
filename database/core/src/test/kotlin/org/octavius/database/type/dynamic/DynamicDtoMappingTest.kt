@@ -7,10 +7,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertThrows
 import org.octavius.data.DataAccess
 import org.octavius.data.builder.toSingle
-import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.getOrThrow
 import org.octavius.data.toDataObject
 import org.octavius.database.DatabaseAccess

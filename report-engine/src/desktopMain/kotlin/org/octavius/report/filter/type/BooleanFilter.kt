@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
-import org.octavius.report.FilterMode
 import org.octavius.data.QueryFragment
+import org.octavius.report.FilterMode
 import org.octavius.report.ReportEvent
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.data.type.BooleanFilterData

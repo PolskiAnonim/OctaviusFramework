@@ -1,7 +1,7 @@
 package org.octavius.modules.settings.report
 
-import org.octavius.localization.T
 import org.octavius.data.QueryFragment
+import org.octavius.localization.T
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.BooleanColumn
 import org.octavius.report.column.type.IntegerColumn
