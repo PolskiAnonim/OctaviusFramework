@@ -6,6 +6,8 @@ import org.octavius.data.builder.toField
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionValue
 import org.octavius.data.transaction.toTransactionValue
+import org.octavius.data.type.PgStandardType
+import org.octavius.data.type.withPgType
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus
@@ -182,56 +184,34 @@ class GameFormDataManager : FormDataManager() {
         // =================================================================================
 
         val categoriesResult = formResultData.getCurrentAs<RepeatableResultValue>("categories")
-
         // Usunięte kategorie
-        categoriesResult.deletedRows.forEach { rowData ->
-            val categoryId = rowData.getInitialAs<Int>("category")
-            plan.add(
-                dataAccess.deleteFrom("games.categories_to_games")
-                    .where("game_id = :game_id AND category_id = :category_id")
-                    .asStep()
-                    .execute("game_id" to gameIdRef, "category_id" to categoryId)
-            )
+        val deletedCategories = categoriesResult.deletedRows.map { rowData ->
+            rowData.getInitialAs<Int>("category")
+        } + categoriesResult.modifiedRows.map { rowData ->
+            rowData.getInitialAs<Int>("category")
         }
 
-        // Zmodyfikowane kategorie (DELETE + INSERT)
-        categoriesResult.modifiedRows.forEach { rowData ->
-            val oldCategoryId = rowData.getInitialAs<Int>("category")
-            val newCategoryId = rowData.getCurrent("category")
+        plan.add(
+            dataAccess.deleteFrom("games.categories_to_games ctg")
+                .using("UNNEST(:ids_to_delete) AS t(id)")
+                .where("ctg.category_id = t.id AND ctg.game_id = :game_id")
+                .asStep().execute("ids_to_delete" to deletedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
+        )
 
-            // Usuń stare powiązanie
-            plan.add(
-                dataAccess.deleteFrom("games.categories_to_games")
-                    .where("game_id = :game_id AND category_id = :category_id")
-                    .asStep()
-                    .execute("game_id" to gameIdRef, "category_id" to oldCategoryId)
-            )
-
-            // Dodaj nowe powiązanie
-            val insertData = mapOf("game_id" to gameIdRef, "category_id" to newCategoryId)
-            plan.add(
-                dataAccess.insertInto("games.categories_to_games")
-                    .values(insertData)
-                    .asStep()
-                    .execute(insertData)
-            )
+        val insertedCategories = categoriesResult.addedRows.map { rowData ->
+            rowData.getCurrentAs<Int>("category")
+        } + categoriesResult.modifiedRows.map { rowData ->
+            rowData.getCurrentAs<Int>("category")
         }
 
-        // Dodane kategorie
-        categoriesResult.addedRows.forEach { rowData ->
-            val categoryId = rowData.getCurrent("category")
-            val insertData = mapOf("game_id" to gameIdRef, "category_id" to categoryId)
-            plan.add(
-                dataAccess.insertInto("games.categories_to_games")
-                    .values(insertData)
-                    .asStep()
-                    .execute(insertData)
-            )
-        }
+        plan.add(
+            dataAccess.insertInto("games.categories_to_games", listOf("game_id", "category_id"))
+                .fromSelect(dataAccess.select(":game_id","category_id").from("UNNEST(:ids_to_insert) AS category_id").toSql())
+                .asStep().execute("ids_to_insert" to insertedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
+        )
 
         // Wykonanie całego planu
-        val result = dataAccess.executeTransactionPlan(plan)
-        return when (result) {
+        return when (val result = dataAccess.executeTransactionPlan(plan)) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 FormActionResult.Failure
