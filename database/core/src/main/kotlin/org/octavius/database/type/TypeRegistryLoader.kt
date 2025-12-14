@@ -87,12 +87,15 @@ internal class TypeRegistryLoader(
     // -------------------------------------------------------------------------
     // ETAP 1: CLASSPATH (Skanowanie adnotacji)
     // -------------------------------------------------------------------------
-    // ... (metoda scanClasspath taka sama jak w poprzedniej wersji) ...
+
     private fun scanClasspath(): ClasspathData {
         val enumInfos = mutableListOf<KtEnumInfo>()
         val compositeInfos = mutableListOf<KtCompositeInfo>()
         val targetSerializers = mutableMapOf<String, KSerializer<Any>>()
         val targetReverseMap = mutableMapOf<KClass<*>, String>()
+
+        // Zbiór do śledzenia unikalności nazw typów w bazie (Enums + Composites współdzielą przestrzeń nazw w PG)
+        val seenPgNames = mutableSetOf<String>()
 
         try {
             logger.debug { "Scanning packages for annotations: ${packagesToScan.joinToString()}" }
@@ -100,12 +103,14 @@ internal class TypeRegistryLoader(
                 .enableAllInfo()                    // DynamicDto
                 .acceptPackages("org.octavius.data.type", *packagesToScan.toTypedArray())
                 .scan().use { result ->
-                    processEnums(result, enumInfos)
+                    processEnums(result, enumInfos, seenPgNames)
 
-                    processComposites(result, compositeInfos)
+                    processComposites(result, compositeInfos, seenPgNames)
 
                     processDynamicTypes(result, targetSerializers, targetReverseMap)
                 }
+        } catch (e: TypeRegistryException) {
+            throw e // Przekazujemy dalej nasze wyjątki
         } catch (e: Exception) {
             throw TypeRegistryException(TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED, cause = e)
         }
@@ -114,12 +119,21 @@ internal class TypeRegistryLoader(
     }
 
 
-    private fun processEnums(scanResult: ScanResult, target: MutableList<KtEnumInfo>) {
+    private fun processEnums(scanResult: ScanResult, target: MutableList<KtEnumInfo>, seenNames: MutableSet<String>) {
         scanResult.getClassesWithAnnotation(PgEnum::class.java).forEach { classInfo ->
             if(!classInfo.isEnum) throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, typeName = classInfo.name, cause = IllegalStateException("@PgEnum not on enum"))
 
             val annotation = classInfo.getAnnotationInfo(PgEnum::class.java)
             val name = (annotation.parameterValues.getValue("name") as String).ifBlank { classInfo.simpleName.toSnakeCase() }
+
+            // Sprawdzanie duplikatów
+            if (!seenNames.add(name)) {
+                throw TypeRegistryException(
+                    messageEnum = TypeRegistryExceptionMessage.DUPLICATE_PG_TYPE_DEFINITION,
+                    typeName = name,
+                    cause = IllegalStateException("Duplicate PostgreSQL type name detected: '$name'. Found on ${classInfo.name}")
+                )
+            }
 
             val pgConv = (annotation.parameterValues.getValue("pgConvention") as io.github.classgraph.AnnotationEnumValue)
                 .loadClassAndReturnEnumValue() as CaseConvention
@@ -130,12 +144,22 @@ internal class TypeRegistryLoader(
         }
     }
 
-    private fun processComposites(scanResult: ScanResult, target: MutableList<KtCompositeInfo>) {
+    private fun processComposites(scanResult: ScanResult, target: MutableList<KtCompositeInfo>, seenNames: MutableSet<String>) {
         scanResult.getClassesWithAnnotation(PgComposite::class.java).forEach { classInfo ->
             if(classInfo.isEnum) throw TypeRegistryException(TypeRegistryExceptionMessage.INITIALIZATION_FAILED, typeName = classInfo.name, cause = IllegalStateException("@PgComposite on enum"))
 
             val annotation = classInfo.getAnnotationInfo(PgComposite::class.java)
             val name = (annotation.parameterValues.getValue("name") as String).ifBlank { classInfo.simpleName.toSnakeCase() }
+
+            // Sprawdzanie duplikatów (wspólna pula z Enumami)
+            if (!seenNames.add(name)) {
+                throw TypeRegistryException(
+                    messageEnum = TypeRegistryExceptionMessage.DUPLICATE_PG_TYPE_DEFINITION,
+                    typeName = name,
+                    cause = IllegalStateException("Duplicate PostgreSQL type name detected: '$name'. Found on ${classInfo.name}")
+                )
+            }
+
             val kClass = classInfo.loadClass().kotlin
             target.add(KtCompositeInfo(kClass, name))
         }
@@ -154,6 +178,16 @@ internal class TypeRegistryLoader(
 
             val annotation = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
             val typeName = annotation.parameterValues.getValue("typeName") as String
+
+            // Sprawdzanie duplikatów kluczy DynamicDTO
+            if (targetSerializers.containsKey(typeName)) {
+                throw TypeRegistryException(
+                    messageEnum = TypeRegistryExceptionMessage.DUPLICATE_DYNAMIC_TYPE_DEFINITION,
+                    typeName = typeName,
+                    cause = IllegalStateException("Duplicate @DynamicallyMappable key: '$typeName'. Found on ${classInfo.name}")
+                )
+            }
+
             val kClass = classInfo.loadClass().kotlin
             try {
                 @Suppress("UNCHECKED_CAST")
@@ -214,16 +248,12 @@ internal class TypeRegistryLoader(
 
         ktEnums.forEach { kt ->
             // VALIDATION: Sprawdź czy Enum istnieje w bazie
-            val dbValues = dbEnums[kt.pgName]
-
-            if (dbValues == null) {
-                // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
-                throw TypeRegistryException(
-                    messageEnum = TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB,
-                    typeName = kt.pgName,
-                    cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' expects DB type '${kt.pgName}'")
-                )
-            }
+            val dbValues = dbEnums[kt.pgName] ?: // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
+            throw TypeRegistryException(
+                messageEnum = TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB,
+                typeName = kt.pgName,
+                cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' expects DB type '${kt.pgName}'")
+            )
 
             // Pobieramy wszystkie stałe enuma raz przy starcie
             val enumConstants = kt.kClass.java.enumConstants!!
@@ -264,17 +294,13 @@ internal class TypeRegistryLoader(
         val classMap = mutableMapOf<KClass<*>, String>()
 
         ktComposites.forEach { kt ->
-            // VALIDATION: Sprawdź czy Kompozyt istnieje w bazie
-            val dbAttributes = dbComposites[kt.pgName]
-
-            if (dbAttributes == null) {
-                // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
+            val dbAttributes =
+                dbComposites[kt.pgName] ?: // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
                 throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB,
                     typeName = kt.pgName,
                     cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' expects DB type '${kt.pgName}'")
                 )
-            }
 
             defs[kt.pgName] = PgCompositeDefinition(
                 typeName = kt.pgName,
