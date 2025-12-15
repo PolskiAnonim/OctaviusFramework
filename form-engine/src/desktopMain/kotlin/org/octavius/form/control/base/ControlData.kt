@@ -105,5 +105,5 @@ inline fun <reified T> FormResultData.getInitialAs(key: String): T {
  * Użycie: `rowData.getInitial<Int>("id")`
  */
 fun FormResultData.getInitial(key: String): Any? {
-    return this[key]!!.currentValue
+    return this[key]!!.initialValue
 }
