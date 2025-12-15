@@ -2,7 +2,7 @@ package org.octavius.database
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.octavius.data.toDataObject
-import org.octavius.data.validateAndCast
+import org.octavius.data.validateValue
 import org.octavius.database.type.ResultSetValueExtractor
 import org.springframework.jdbc.core.RowMapper
 import kotlin.reflect.KClass
@@ -46,7 +46,7 @@ internal class RowMappers(
         if (value == null) return@RowMapper null
 
         @Suppress("UNCHECKED_CAST")
-        validateAndCast(value, kType) as T?
+        validateValue(value, kType) as T?
     }
 
     /**

@@ -37,11 +37,9 @@ fun List<QueryFragment>.join(separator: String): QueryFragment {
     val finalParams = mutableMapOf<String, Any?>()
     significantFragments.forEach { fragment ->
         fragment.params.forEach { (key, value) ->
-            if (finalParams.containsKey(key) && finalParams[key] != value) {
-                throw IllegalArgumentException(
-                    "Duplicate parameter key '$key' with different values found while joining QueryFragments. " +
-                            "Parameter names must be unique across all joined fragments."
-                )
+            require(!finalParams.containsKey(key) || finalParams[key] == value) {
+                "Duplicate parameter key '$key' with different values found while joining QueryFragments. " +
+                        "Parameter names must be unique across all joined fragments."
             }
             finalParams[key] = value
         }

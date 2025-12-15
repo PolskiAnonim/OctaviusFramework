@@ -1,6 +1,7 @@
 package org.octavius.database.builder
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.data.DataResult
 import org.octavius.data.builder.AsyncTerminalMethods
@@ -143,8 +144,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     /** Wykonuje zapytanie i zwraca wartość z pierwszej kolumny pierwszego wiersza. */
     fun <T: Any> toField(targetType: KType, params: Map<String, Any?>): DataResult<T?> {
         return executeReturningQuery(params, rowMappers.SingleValueMapper<T>(targetType)) {
-            // Rzutowanie jest teraz bezpieczniejsze, bo mapper zweryfikował typ
-            DataResult.Success(it.firstOrNull() as T?)
+            DataResult.Success(it.firstOrNull())
         }
     }
 
@@ -170,9 +170,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
      * użyć metod `toList()`, `toSingle()` itp.
      */
     fun execute(params: Map<String, Any?>): DataResult<Int> {
-        if (returningClause != null) {
-            throw IllegalStateException("Użyj metod toList(), toSingle() etc., gdy zdefiniowano klauzulę RETURNING.")
-        }
+        check(returningClause == null) { "Użyj metod toList(), toSingle() etc., gdy zdefiniowano klauzulę RETURNING." }
         val sql = buildSql()
         return execute(sql, params) { expandedSql, expandedParams ->
             val affectedRows = jdbcTemplate.update(expandedSql, expandedParams)
@@ -195,9 +193,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
         rowMapper: RowMapper<M>,
         transform: (List<M>) -> DataResult<R>
     ): DataResult<R> {
-        if (!canReturnResultsByDefault && returningClause == null) {
-            throw IllegalStateException("Nie można wywołać toList(), toSingle() etc. na zapytaniu modyfikującym bez klauzuli RETURNING. Użyj .returning().")
-        }
+        check(canReturnResultsByDefault || returningClause != null) { "Nie można wywołać toList(), toSingle() etc. na zapytaniu modyfikującym bez klauzuli RETURNING. Użyj .returning()." }
         val sql = buildSql()
         return execute(sql, params) { expandedSql, expandedParams ->
             val results: List<M> = jdbcTemplate.query(expandedSql, expandedParams, rowMapper)
@@ -255,8 +251,8 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     }
 
 
-    override fun async(scope: CoroutineScope): AsyncTerminalMethods {
-        return AsyncQueryBuilder(this, scope)
+    override fun async(scope: CoroutineScope, ioDispatcher: CoroutineDispatcher): AsyncTerminalMethods {
+        return AsyncQueryBuilder(this, scope, ioDispatcher)
     }
 
     override fun asStream(fetchSize: Int): StreamingTerminalMethods {

@@ -95,19 +95,18 @@ internal class DatabaseSelectQueryBuilder(
     //------------------------------------------------------------------------------------------------------------------
 
     override fun buildSql(): String {
-        if (selectClause.isBlank()) {
-            throw IllegalStateException("Cannot build a SELECT query without a SELECT clause.")
+        check(!selectClause.isBlank()) { "Cannot build a SELECT query without a SELECT clause." }
+        // Warunek: FROM musi istnieć LUB żadna z zależnych klauzul nie może istnieć.
+        check(
+            !fromClause.isNullOrBlank() || (whereCondition == null && groupByClause == null && orderByClause == null)
+        ) {
+            "WHERE, GROUP BY, or ORDER BY clauses require a FROM clause."
         }
-        if (fromClause.isNullOrBlank()) {
-            // Jeśli są inne klauzule, które wymagają FROM, rzucamy wyjątek.
-            if (whereCondition != null || groupByClause != null || orderByClause != null) {
-                throw IllegalStateException("WHERE, GROUP BY, or ORDER BY clauses require a FROM clause.")
-            }
+        check(
+            havingClause.isNullOrBlank() || !groupByClause.isNullOrBlank()
+        ) {
+            "HAVING clause requires a GROUP BY clause."
         }
-        if (!havingClause.isNullOrBlank() && groupByClause.isNullOrBlank()) {
-            throw IllegalStateException("HAVING clause requires a GROUP BY clause.")
-        }
-
         val sqlBuilder = StringBuilder(buildWithClause())
 
         sqlBuilder.append("SELECT ").append(selectClause)

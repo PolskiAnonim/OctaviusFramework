@@ -19,39 +19,40 @@ internal class DatabaseInsertQueryBuilder(
     private var onConflictBuilder: DatabaseOnConflictClauseBuilder? = null
 
     override fun valuesExpressions(expressions: Map<String, String>): InsertQueryBuilder = apply {
+        check(selectSource == null) { "Cannot use valuesExpressions() when fromSelect() has already been called." }
         expressions.forEach { (key, value) ->
             valuePlaceholders[key] = value
         }
     }
 
     override fun valueExpression(column: String, expression: String): InsertQueryBuilder = apply {
+        check(selectSource == null) { "Cannot use valueExpression() when fromSelect() has already been called." }
         valuePlaceholders[column] = expression
     }
 
     override fun values(data: Map<String, Any?>): InsertQueryBuilder {
+        check(selectSource == null) { "Cannot use values() when fromSelect() has already been called." }
         val placeholders = data.keys.associateWith { key -> ":$key" }
         // Delegujemy do metody niskopoziomowej
         return this.valuesExpressions(placeholders)
     }
 
     override fun values(values: List<String>): InsertQueryBuilder {
+        check(selectSource == null) { "Cannot use values() when fromSelect() has already been called." }
         val placeholders = values.associateWith { key -> ":$key" }
         // Delegujemy do metody niskopoziomowej
         return this.valuesExpressions(placeholders)
     }
 
     override fun value(column: String): InsertQueryBuilder {
+        check(selectSource == null) { "Cannot use value() when fromSelect() has already been called." }
         // Delegujemy do metody niskopoziomowej
         return this.valueExpression(column, ":$column")
     }
 
     override fun fromSelect(query: String): InsertQueryBuilder = apply {
-        if (valuePlaceholders.isNotEmpty()) {
-            throw IllegalStateException("Cannot use fromSelect() when values() has already been called.")
-        }
-        if (columns.isEmpty()) {
-            throw IllegalStateException("Must specify columns in insertInto() to use fromSelect().")
-        }
+        check(valuePlaceholders.isEmpty()) { "Cannot use fromSelect() when values() has already been called." }
+        check(columns.isNotEmpty()) { "Must specify columns in insertInto() to use fromSelect()." }
         this.selectSource = query
     }
 
@@ -74,9 +75,7 @@ internal class DatabaseInsertQueryBuilder(
         val hasValues = valuePlaceholders.isNotEmpty()
         val hasSelect = selectSource != null
 
-        if (!hasValues && !hasSelect) {
-            throw IllegalStateException("Cannot build an INSERT statement without values or a SELECT source.")
-        }
+        check(hasValues || hasSelect) { "Cannot build an INSERT statement without values or a SELECT source." }
 
         val targetColumns = columns.ifEmpty { valuePlaceholders.keys.toList() }
         val columnsSql = targetColumns.joinToString(", ")
@@ -85,7 +84,7 @@ internal class DatabaseInsertQueryBuilder(
         sql.append("INSERT INTO $table ($columnsSql)")
 
         if (hasValues) {
-            val placeholders = targetColumns.joinToString(", ") { key -> valuePlaceholders[key]!! }
+            val placeholders = targetColumns.joinToString(", ") { key -> valuePlaceholders.getValue(key) }
             sql.append("\nVALUES ($placeholders)")
         } else {
             sql.append("\n").append(selectSource!!)

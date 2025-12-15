@@ -60,7 +60,6 @@ internal fun RepeatableHeader(
 
 @Composable
 internal fun RepeatableRowCard(
-    row: RepeatableRow,
     index: Int,
     canDelete: Boolean,
     onDelete: () -> Unit,

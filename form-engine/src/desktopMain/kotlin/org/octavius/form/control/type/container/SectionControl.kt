@@ -16,6 +16,8 @@ import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.layout.section.SectionContent
+import org.octavius.form.control.layout.section.SectionHeader
 import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
@@ -43,7 +45,7 @@ class SectionControl(
 
     @Composable
     override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
-        val expanded = remember { mutableStateOf(initiallyExpanded) }
+        val isExpanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(
             modifier = Modifier
@@ -51,88 +53,21 @@ class SectionControl(
                 .padding(vertical = FormSpacing.containerPaddingVertical),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Nagłówek sekcji
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = collapsible) { expanded.value = !expanded.value },
-                    color = MaterialTheme.colorScheme.primary
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(FormSpacing.sectionPadding),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = label ?: "",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+                SectionHeader(
+                    label = label,
+                    collapsible = collapsible,
+                    isExpanded = isExpanded.value,
+                    onToggle = { isExpanded.value = !isExpanded.value }
+                )
 
-                        if (collapsible) {
-                            Icon(
-                                imageVector = if (expanded.value) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (expanded.value) T.get("expandable.collapse") else T.get("expandable.expand"),
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
-                }
-
-                // Zawartość sekcji
-                AnimatedVisibility(visible = expanded.value) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.surface
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(FormSpacing.sectionPadding)
-                        ) {
-                            if (columns > 1) {
-                                val controlGroups =
-                                    ctrls.chunked(ctrls.size / columns + if (ctrls.size % columns > 0) 1 else 0)
-
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    controlGroups.forEach { group ->
-                                        Column(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .padding(horizontal = FormSpacing.fieldPaddingHorizontal)
-                                        ) {
-                                            group.forEach { ctrlName ->
-                                                val controls =
-                                                    this@SectionControl.formSchema.getAllControls()
-                                                val states = this@SectionControl.formState.getAllStates()
-                                                controls[ctrlName]?.let { control ->
-                                                    states[ctrlName]?.let { controlState ->
-                                                        control.Render(RenderContext(ctrlName, renderContext.basePath), controlState)
-                                                    }
-                                                    Spacer(modifier = Modifier.height(FormSpacing.sectionContentSpacing))
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                Column(modifier = Modifier.fillMaxWidth()) {
-                                    ctrls.forEach { ctrlName ->
-                                        val controls = this@SectionControl.formSchema.getAllControls()
-                                        val states = this@SectionControl.formState.getAllStates()
-                                        controls[ctrlName]?.let { control ->
-                                            states[ctrlName]?.let { controlState ->
-                                                control.Render(RenderContext(ctrlName, renderContext.basePath), controlState)
-                                            }
-                                            Spacer(modifier = Modifier.height(FormSpacing.sectionHeaderPaddingBottom))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                AnimatedVisibility(visible = isExpanded.value) {
+                    SectionContent(
+                        controlNames = ctrls,
+                        columns = columns,
+                        formSchema = this@SectionControl.formSchema,
+                        formState = this@SectionControl.formState,
+                        basePath = renderContext.basePath
+                    )
                 }
             }
         }

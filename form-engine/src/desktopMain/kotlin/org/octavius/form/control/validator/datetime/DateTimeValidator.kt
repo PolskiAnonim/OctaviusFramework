@@ -13,7 +13,8 @@ class DateTimeValidator<T: Any>(
 ) : ControlValidator<T>() {
 
     override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
-        val value = state.value.value as? T ?: return
+        @Suppress("UNCHECKED_CAST")
+        val value = state.value.value as T
         val errors = mutableListOf<String>()
 
         validationOptions?.let { options ->

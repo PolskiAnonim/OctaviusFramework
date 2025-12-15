@@ -129,6 +129,61 @@ fun ConfigurationItem(
     }
 }
 
+private class SaveConfigurationDialogStateHolder(
+    private val reportName: String,
+    private val reportState: ReportState,
+    private val configManager: ReportConfigurationManager,
+    private val existingConfigurations: List<ReportConfiguration>,
+    private val onSaved: () -> Unit
+) {
+    // === Stan UI ===
+    var name by mutableStateOf("")
+    var description by mutableStateOf("")
+    var isDefault by mutableStateOf(false)
+    var nameError by mutableStateOf<String?>(null)
+    var generalError by mutableStateOf<String?>(null)
+
+    val isOverwriting by derivedStateOf {
+        existingConfigurations.any { it.name.equals(name.trim(), ignoreCase = true) }
+    }
+
+    // === Logika Akcji ===
+    fun onNameChange(newName: String) {
+        name = newName
+        nameError = null
+        generalError = null
+    }
+
+    fun onSaveClick() {
+        if (name.isBlank()) {
+            nameError = T.get("report.configuration.nameRequired")
+            return
+        }
+
+        val newConfiguration = buildConfiguration()
+
+        if (configManager.saveConfiguration(newConfiguration)) {
+            onSaved()
+        } else {
+            generalError = T.get("report.configuration.errorSaving")
+        }
+    }
+
+    private fun buildConfiguration(): ReportConfiguration {
+        return ReportConfiguration(
+            name = name.trim(),
+            reportName = reportName,
+            description = description.trim().takeIf { it.isNotEmpty() },
+            isDefault = isDefault,
+            visibleColumns = reportState.visibleColumns.toList(),
+            columnOrder = reportState.columnKeysOrder,
+            sortOrder = reportState.sortOrder.map { (col, dir) -> SortConfiguration(col, dir) },
+            pageSize = reportState.pagination.pageSize,
+            filters = reportState.filterData.map { (col, data) -> FilterConfig(col, data.serialize()) }
+        )
+    }
+}
+
 @Composable
 fun SaveConfigurationDialog(
     reportName: String,
@@ -138,14 +193,8 @@ fun SaveConfigurationDialog(
     onDismiss: () -> Unit,
     onSaved: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var isDefault by remember { mutableStateOf(false) }
-    var nameError by remember { mutableStateOf<String?>(null) }
-    var generalError by remember { mutableStateOf<String?>(null) }
-
-    val isOverwriting by remember(name) {
-        derivedStateOf { existingConfigurations.any { it.name.equals(name.trim(), ignoreCase = true) } }
+    val state = remember(reportName, reportState, configManager, existingConfigurations, onSaved) {
+        SaveConfigurationDialogStateHolder(reportName, reportState, configManager, existingConfigurations, onSaved)
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -154,63 +203,79 @@ fun SaveConfigurationDialog(
                 Text(text = T.get("report.configuration.saveConfiguration"), style = MaterialTheme.typography.headlineSmall)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it; nameError = null; generalError = null },
-                    label = { Text(T.get("report.configuration.name") + "*") },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = nameError != null,
-                    singleLine = true,
-                    supportingText = {
-                        if (nameError != null) Text(nameError!!, color = MaterialTheme.colorScheme.error)
-                        else if (isOverwriting) Text(T.get("report.configuration.overwriteWarning"), color = MaterialTheme.colorScheme.tertiary)
-                    }
+                // === Pola formularza ===
+                ConfigurationNameInput(
+                    name = state.name,
+                    onNameChange = state::onNameChange,
+                    nameError = state.nameError,
+                    isOverwriting = state.isOverwriting
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text(T.get("report.configuration.description")) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = state.description,
+                    onValueChange = { state.description = it },
+                    label = { Text(T.get("report.configuration.description")) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                    Checkbox(checked = isDefault, onCheckedChange = { isDefault = it })
+                    Checkbox(checked = state.isDefault, onCheckedChange = { state.isDefault = it })
                     Text(T.get("report.configuration.setAsDefault"))
                 }
-                if (generalError != null) Text(text = generalError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+
+                // === Błędy i przyciski ===
+                if (state.generalError != null) {
+                    Text(text = state.generalError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                }
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text(T.get("action.cancel")) }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            if (name.isBlank()) {
-                                nameError = T.get("report.configuration.nameRequired")
-                                return@Button
-                            }
-
-                            val newConfiguration = ReportConfiguration(
-                                name = name.trim(),
-                                reportName = reportName,
-                                description = description.trim().takeIf { it.isNotEmpty() },
-                                isDefault = isDefault,
-                                visibleColumns = reportState.visibleColumns.toList(),
-                                columnOrder = reportState.columnKeysOrder,
-                                sortOrder = reportState.sortOrder.map { (col, dir) -> SortConfiguration(col, dir) },
-                                pageSize = reportState.pagination.pageSize,
-                                filters = reportState.filterData.map { (col, data) -> FilterConfig(col, data.serialize()) }
-                            )
-
-                            if (configManager.saveConfiguration(newConfiguration)) {
-                                onSaved()
-                            } else {
-                                generalError = T.get("report.configuration.errorSaving")
-                            }
-                        },
-                        colors = if (isOverwriting) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary) else ButtonDefaults.buttonColors()
-                    ) {
-                        Text(if (isOverwriting) T.get("action.overwrite") else T.get("action.save"))
-                    }
-                }
+                DialogActions(
+                    onDismiss = onDismiss,
+                    onSaveClick = state::onSaveClick,
+                    isOverwriting = state.isOverwriting
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun ConfigurationNameInput(
+    name: String,
+    onNameChange: (String) -> Unit,
+    nameError: String?,
+    isOverwriting: Boolean
+) {
+    OutlinedTextField(
+        value = name,
+        onValueChange = onNameChange,
+        label = { Text(T.get("report.configuration.name") + "*") },
+        modifier = Modifier.fillMaxWidth(),
+        isError = nameError != null,
+        singleLine = true,
+        supportingText = {
+            if (nameError != null) Text(nameError, color = MaterialTheme.colorScheme.error)
+            else if (isOverwriting) Text(T.get("report.configuration.overwriteWarning"), color = MaterialTheme.colorScheme.tertiary)
+        }
+    )
+}
+
+@Composable
+private fun DialogActions(
+    onDismiss: () -> Unit,
+    onSaveClick: () -> Unit,
+    isOverwriting: Boolean
+) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        TextButton(onClick = onDismiss) { Text(T.get("action.cancel")) }
+        Spacer(modifier = Modifier.width(8.dp))
+        Button(
+            onClick = onSaveClick,
+            colors = if (isOverwriting) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary) else ButtonDefaults.buttonColors()
+        ) {
+            Text(if (isOverwriting) T.get("action.overwrite") else T.get("action.save"))
         }
     }
 }

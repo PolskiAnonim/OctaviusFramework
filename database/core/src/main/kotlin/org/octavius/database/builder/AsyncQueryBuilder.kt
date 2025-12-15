@@ -11,14 +11,15 @@ import kotlin.reflect.KType
  */
 internal class AsyncQueryBuilder(
     private val builder: AbstractQueryBuilder<*>,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher
 ) : AsyncTerminalMethods {
 
     private suspend fun <T> executeAndInvoke(
         query: () -> DataResult<T>,
         onResult: (DataResult<T>) -> Unit
     ) {
-        val result = withContext(Dispatchers.IO) {
+        val result = withContext(ioDispatcher) {
             query()
         }
         withContext(scope.coroutineContext) { // Wracamy na oryginalny kontekst (np. UI)

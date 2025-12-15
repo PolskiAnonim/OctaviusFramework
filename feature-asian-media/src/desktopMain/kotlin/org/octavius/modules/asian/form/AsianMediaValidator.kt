@@ -6,6 +6,7 @@ import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator
 import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.getCurrentAs
 import org.octavius.localization.T
 
 class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
@@ -15,7 +16,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
     private fun validateTitleDuplication(formResultData: FormResultData): Boolean {
         @Suppress("UNCHECKED_CAST")
-        val titles = formResultData["titles"]!!.currentValue as List<String>
+        val titles = formResultData.getCurrentAs<List<String>>("titles")
         val hasDuplicates = titles.size != titles.toSet().size
 
         if (hasDuplicates) {
@@ -27,7 +28,7 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
     fun validateTitlesAgainstDatabase(formResultData: FormResultData): Boolean {
         @Suppress("UNCHECKED_CAST")
-        val titles = formResultData["titles"]!!.currentValue as List<String>
+        val titles = formResultData.getCurrentAs<List<String>>("titles")
 
         if (titles.isEmpty()) return true
 
@@ -36,17 +37,17 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
             .where("title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}").toField<Long>(params)
 
 
-        when (result) {
+        return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return false
+                false
             }
             is DataResult.Success<Long?> -> {
                 if ((result.value ?: 0L) > 0L) {
                     errorManager.addGlobalError(T.get("asianMedia.form.titlesAlreadyExist"))
-                    return false
+                    false
                 } else {
-                    return true
+                    true
                 }
             }
         }

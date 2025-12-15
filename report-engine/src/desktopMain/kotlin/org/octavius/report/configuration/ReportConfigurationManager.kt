@@ -78,16 +78,15 @@ class ReportConfigurationManager : KoinComponent {
             dataAccess.deleteFrom("report_configurations").where("name = :name AND report_name = :report_name").asStep().execute("name" to name, "report_name" to reportName)
         )
 
-        val result = dataAccess.executeTransactionPlan(plan)
-
-        when(result) {
+        return when(val result = dataAccess.executeTransactionPlan(plan)) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return false
+                false
             }
+
             is DataResult.Success -> {
                 val firstStepResult = result.value.get(ref)
-                return firstStepResult > 0
+                firstStepResult > 0
             }
         }
     }

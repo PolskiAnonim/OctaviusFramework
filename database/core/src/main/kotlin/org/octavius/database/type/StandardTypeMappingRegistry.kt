@@ -159,11 +159,7 @@ internal object StandardTypeMappingRegistry {
                     }
                 )
 
-                PgStandardType.JSON -> StandardTypeHandler(JsonElement::class, null) { s -> Json.parseToJsonElement(s) }
-                PgStandardType.JSONB -> StandardTypeHandler(
-                    JsonElement::class,
-                    null
-                ) { s -> Json.parseToJsonElement(s) }
+                PgStandardType.JSON, PgStandardType.JSONB -> StandardTypeHandler(JsonElement::class, null) { s -> Json.parseToJsonElement(s) }
 
                 PgStandardType.BOOL -> StandardTypeHandler(
                     Boolean::class,
@@ -198,9 +194,7 @@ internal object StandardTypeMappingRegistry {
 
     private fun hexStringToByteArray(hex: String): ByteArray {
         val len = hex.length
-        if (len % 2 != 0) {
-            throw IllegalArgumentException("Hex string must have an even number of characters")
-        }
+        require(len % 2 == 0) { "Hex string must have an even number of characters" }
         val data = ByteArray(len / 2)
         var i = 0
         while (i < len) {

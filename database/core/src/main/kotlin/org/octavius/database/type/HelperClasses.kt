@@ -13,7 +13,7 @@ internal data class PgEnumDefinition(
     val valueToEnumMap: Map<String, Enum<*>>,
     val kClass: KClass<out Enum<*>>
 ) {
-    val enumToValueMap: Map<Enum<*>, String> = valueToEnumMap.map { it -> it.value to it.key }.toMap()
+    val enumToValueMap: Map<Enum<*>, String> = valueToEnumMap.map { it.value to it.key }.toMap()
 }
 
 internal data class PgCompositeDefinition(

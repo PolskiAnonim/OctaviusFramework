@@ -34,7 +34,7 @@ class RepeatableValidator(
      *
      * Sprawdzanie odbywa się tylko gdy lista uniqueFields nie jest pusta.
      *
-     * @param controlName nazwa kontrolki (potrzebna do budowania hierarchicznych nazw)
+     * @param renderContext nazwa kontrolki z kontekstem wiersza (potrzebna do budowania hierarchicznych nazw)
      * @param state stan kontrolki powtarzalnej zawierający listę wierszy
      */
     override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
@@ -42,61 +42,95 @@ class RepeatableValidator(
         val rows = state.value.value as List<RepeatableRow>
 
         val control = formSchema.getControl(renderContext.fullPath) as? RepeatableControl ?: return
-        val allStates = formState.getAllStates()
 
-        // 1. Walidacja kontrolek-dzieci
+        // 1. Walidacja kontrolek-dzieci (zawsze musi być wykonana)
+        validateChildControls(rows, control, renderContext)
+
+        // 2. Walidacja reguł samej listy
+        val allErrors = mutableListOf<String>()
+
+        validationOptions?.let { options ->
+            // Sprawdź min/max
+            allErrors.addAll(validateListRules(rows, options))
+
+            // Sprawdź unikalność
+            validateUniqueness(rows, options, renderContext)?.let { uniquenessError ->
+                allErrors.add(uniquenessError)
+            }
+        }
+
+        // 3. Ustaw błędy dla GŁÓWNEJ kontrolki
+        errorManager.setFieldErrors(renderContext.fullPath, allErrors)
+    }
+
+    private fun validateUniqueness(
+        rows: List<RepeatableRow>,
+        options: RepeatableValidation,
+        renderContext: RenderContext
+    ): String? { // Zwraca string błędu lub null
+        if (options.uniqueFields.isEmpty()) {
+            return null
+        }
+
+        val allStates = formState.getAllStates()
+        val seenValues = mutableSetOf<List<Any?>>()
+
+        for ((index, row) in rows.withIndex()) {
+            // Bierzemy pod uwagę tylko wiersze, które nie mają błędów w polach unikalności
+            val uniqueKey = options.uniqueFields.map { field ->
+                val hierarchicalContext = renderContext.forRepeatableChild(field, row.id)
+                allStates[hierarchicalContext.fullPath]?.value?.value
+            }
+
+            // Ignoruj klucze z pustymi polami
+            if (uniqueKey.any { it == null || (it is String && it.isBlank()) }) {
+                continue
+            }
+
+            if (!seenValues.add(uniqueKey)) {
+                // Znaleziono duplikat, zwróć błąd i zakończ
+                return T.get("validation.duplicateInRow", index + 1)
+            }
+        }
+
+        return null // Brak duplikatów
+    }
+
+    private fun validateListRules(
+        rows: List<RepeatableRow>,
+        options: RepeatableValidation
+    ): List<String> {
+        val errors = mutableListOf<String>()
+
+        // Sprawdź minimalną liczbę elementów
+        options.minItems?.let { minItems ->
+            if (rows.size < minItems) {
+                errors.add(T.get("validation.minItems", minItems))
+            }
+        }
+
+        // Sprawdź maksymalną liczbę elementów
+        options.maxItems?.let { maxItems ->
+            if (rows.size > maxItems) {
+                errors.add(T.get("validation.maxItems", maxItems))
+            }
+        }
+
+        return errors
+    }
+
+    private fun validateChildControls(
+        rows: List<RepeatableRow>,
+        control: RepeatableControl,
+        renderContext: RenderContext
+    ) {
+        val allStates = formState.getAllStates()
         for (row in rows) {
             for ((fieldName, fieldControl) in control.rowControls) {
                 val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
-                val fieldState = allStates[hierarchicalContext.fullPath]!!
-
+                val fieldState = allStates.getValue(hierarchicalContext.fullPath)
                 fieldControl.validateControl(hierarchicalContext, fieldState)
             }
         }
-
-        // 2. Walidacja reguł listy
-        val errors = mutableListOf<String>()
-        validationOptions?.let { options ->
-            // Sprawdź minimalną liczbę elementów
-            options.minItems?.let { minItems ->
-                if (rows.size < minItems) {
-                    errors.add(T.get("validation.minItems", minItems))
-                }
-            }
-
-            // Sprawdź maksymalną liczbę elementów
-            options.maxItems?.let { maxItems ->
-                if (rows.size > maxItems) {
-                    errors.add(T.get("validation.maxItems", maxItems))
-                }
-            }
-
-            // Sprawdź unikalność
-            if (options.uniqueFields.isNotEmpty()) {
-                val seenValues = mutableSetOf<List<Any?>>()
-                for ((index, row) in rows.withIndex()) {
-                    // Bierzemy pod uwagę tylko wiersze, które nie mają błędów w polach unikalności
-                    val uniqueKey = options.uniqueFields.map { field ->
-                        val hierarchicalContext = renderContext.forRepeatableChild(field, row.id)
-                        allStates[hierarchicalContext.fullPath]?.value?.value
-                    }
-
-                    // Sprawdzamy, czy którekolwiek z pól klucza jest puste - takie klucze ignorujemy
-                    if (uniqueKey.any { it == null || (it is String && it.isBlank()) }) {
-                        continue
-                    }
-
-                    if (!seenValues.add(uniqueKey)) {
-                        errors.add(T.get("validation.duplicateInRow", index + 1))
-                        // Nie przerywamy, aby znaleźć wszystkie duplikaty, ale możemy dodać błąd tylko raz
-                        // Można to udoskonalić, by wskazywać wszystkie zduplikowane wiersze. Na razie `break` jest OK.
-                        break
-                    }
-                }
-            }
-        }
-
-        // Ustawiamy błędy dla GŁÓWNEJ kontrolki
-        errorManager.setFieldErrors(renderContext.fullPath, errors)
     }
 }

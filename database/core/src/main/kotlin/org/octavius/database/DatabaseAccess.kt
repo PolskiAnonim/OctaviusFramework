@@ -99,7 +99,7 @@ internal class DatabaseAccess(
                     TransactionException(cause = e)
                 )
             }
-        }!!
+        }
     }
 
     companion object {

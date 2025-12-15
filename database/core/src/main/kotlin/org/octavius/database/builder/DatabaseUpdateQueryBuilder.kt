@@ -52,12 +52,8 @@ internal class DatabaseUpdateQueryBuilder(
     }
 
     override fun buildSql(): String {
-        if (setClauses.isEmpty()) {
-            throw IllegalStateException("Cannot build an UPDATE statement without a SET clause.")
-        }
-        if (whereClause.isNullOrBlank()) {
-            throw IllegalStateException("Cannot build an UPDATE statement without a WHERE clause for safety.")
-        }
+        check(setClauses.isNotEmpty()) { "Cannot build an UPDATE statement without a SET clause." }
+        check(!whereClause.isNullOrBlank()) { "Cannot build an UPDATE statement without a WHERE clause for safety." }
 
         val sql = StringBuilder(buildWithClause())
         sql.append("UPDATE $table")

@@ -20,7 +20,7 @@ import org.octavius.report.filter.type.BooleanFilter
  * Kolumna do wyświetlania wartości boolean w raporcie.
  * Może wyświetlać dane jako ikony (check/close) lub jako tekst.
  * Obsługuje filtrowanie przez wybór wartości true/false.
- * 
+ *
  * @param header Nagłówek kolumny
  * @param width Względna szerokość kolumny (domyślnie 1.0)
  * @param filterable Czy kolumna obsługuje filtrowanie (domyślnie true)
@@ -51,21 +51,24 @@ class BooleanColumn(
             modifier = modifier,
             alignment = Alignment.Center
         ) {
-            if (value != null) {
-                if (showIcon) {
-                    Icon(
-                        imageVector = if (value) Icons.Default.Check
-                        else Icons.Default.Close,
-                        contentDescription = if (value) trueText else falseText,
-                        tint = if (value) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.error
-                    )
-                } else {
-                    Text(
-                        text = if (value) trueText else falseText, style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+            if (value == null) {
+                return@StandardCellWrapper
             }
+
+            if (showIcon) {
+                Icon(
+                    imageVector = if (value) Icons.Default.Check
+                    else Icons.Default.Close,
+                    contentDescription = if (value) trueText else falseText,
+                    tint = if (value) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
+                )
+            } else {
+                Text(
+                    text = if (value) trueText else falseText, style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
         }
     }
 }

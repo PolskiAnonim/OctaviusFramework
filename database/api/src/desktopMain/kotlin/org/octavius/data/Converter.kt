@@ -118,7 +118,7 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
 
         // Walidacja z użyciem cachowanego KType
         val validatedValue = try {
-            validateAndCast(valueToUse, type)
+            validateValue(valueToUse, type)
         } catch (e: ConversionException) {
             throw ConversionException(
                 messageEnum = e.messageEnum,

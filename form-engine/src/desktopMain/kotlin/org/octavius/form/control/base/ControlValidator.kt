@@ -49,61 +49,47 @@ abstract class ControlValidator<T : Any> {
         return RenderContext(localName = localName, basePath = basePath)
     }
 
-    /**
-     * Sprawdza czy kontrolka jest widoczna na podstawie zależności i hierarchii.
-     *
-     * Kontrolka jest widoczna gdy:
-     * - Jej kontrolka nadrzędna (jeśli istnieje) jest widoczna
-     * - Wszystkie zależności typu Visible są spełnione
-     *
-     * @param control kontrolka do sprawdzenia
-     * @return true jeśli kontrolka powinna być widoczna
-     */
+    private fun isDependencyMet(
+        dependency: ControlDependency<*>,
+        renderContext: RenderContext
+    ): Boolean {
+        // Pobieramy stan z nadrzędnej klasy.
+        val states = formState.getAllStates()
+
+        val resolvedControlName = resolveDependencyControlName(dependency, renderContext)
+        val dependentState = states[resolvedControlName] ?: return true // Jeśli kontrolka nie istnieje, traktujemy zależność jako spełnioną
+
+        val dependentValue = dependentState.value.value
+
+        return when (dependency.comparisonType) {
+            ComparisonType.OneOf -> {
+                @Suppress("UNCHECKED_CAST")
+                val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
+                dependentValue in acceptedValues
+            }
+            ComparisonType.Equals -> dependentValue == dependency.value
+            ComparisonType.NotEquals -> dependentValue != dependency.value
+        }
+    }
+
     internal fun isControlVisible(
         control: Control<*>,
         renderContext: RenderContext
     ): Boolean {
-        val controls = formSchema.getAllControls()
-        val states = formState.getAllStates()
-        // Jeśli kontrolka ma rodzica, najpierw sprawdź czy rodzic jest widoczny
+        // Krok 1: Sprawdź widoczność rodzica (rekurencja)
         control.parentControl?.let { parentName ->
-            val parentControl = controls[parentName]!! // Rodzic musi istnieć
-
-            // Stwórz kontekst dla rodzica. Jego nazwa jest jego pełną ścieżką.
+            val parentControl = formSchema.getControl(parentName)!!
             val parentContext = createContextFromName(parentName)
-
-            // Wywołaj rekurencyjnie isControlVisible dla rodzica, z jego WŁASNYM kontekstem.
             if (!isControlVisible(parentControl, parentContext)) {
                 return false
             }
         }
 
-        // Sprawdź zależności
-        control.dependencies?.forEach { (_, dependency) ->
-            if (dependency.dependencyType != DependencyType.Visible) return@forEach
-
-            val resolvedControlName = resolveDependencyControlName(dependency, renderContext)
-            val dependentState = states[resolvedControlName] ?: return@forEach
-            val dependentValue = dependentState.value.value
-
-            when (dependency.comparisonType) {
-                ComparisonType.OneOf -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
-                    if (dependentValue !in acceptedValues) return false
-                }
-
-                ComparisonType.NotEquals -> {
-                    if (dependentValue == dependency.value) return false
-                }
-
-                ComparisonType.Equals -> {
-                    if (dependentValue != dependency.value) return false
-                }
-            }
-        }
-
-        return true
+        // Krok 2: Sprawdź, czy WSZYSTKIE zależności typu Visible są spełnione.
+        return control.dependencies
+            ?.filter { it.value.dependencyType == DependencyType.Visible }
+            ?.all { (_, dependency) -> isDependencyMet(dependency, renderContext) }
+            ?: true // Jeśli nie ma zależności, jest widoczna.
     }
 
     /**
@@ -120,42 +106,14 @@ abstract class ControlValidator<T : Any> {
         control: Control<*>,
         renderContext: RenderContext
     ): Boolean {
-        formSchema.getAllControls()
-        val states = formState.getAllStates()
-        var isRequired = control.required == true
+        // Podstawowy warunek: jest wymagana, jeśli tak ustawiono w definicji.
+        if (control.required == true) return true
 
-        // Sprawdzamy zależności typu Required
-        control.dependencies?.forEach { (_, dependency) ->
-            if (dependency.dependencyType == DependencyType.Required) {
-                val resolvedControlName = resolveDependencyControlName(dependency, renderContext)
-                val dependentState = states[resolvedControlName] ?: return@forEach
-                val dependentValue = dependentState.value.value
-
-                when (dependency.comparisonType) {
-                    ComparisonType.OneOf -> {
-                        @Suppress("UNCHECKED_CAST")
-                        val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
-                        if (dependentValue in acceptedValues) {
-                            isRequired = true
-                        }
-                    }
-
-                    ComparisonType.Equals -> {
-                        if (dependentValue == dependency.value) {
-                            isRequired = true
-                        }
-                    }
-
-                    ComparisonType.NotEquals -> {
-                        if (dependentValue != dependency.value) {
-                            isRequired = true
-                        }
-                    }
-                }
-            }
-        }
-
-        return isRequired
+        // Dodatkowy warunek: jest wymagana, jeśli JAKAKOLWIEK zależność typu Required jest spełniona.
+        return control.dependencies
+            ?.filter { it.value.dependencyType == DependencyType.Required }
+            ?.any { (_, dependency) -> isDependencyMet(dependency, renderContext) }
+            ?: false // Jeśli nie ma zależności, nie jest wymagana (chyba że `required == true`).
     }
 
     /**

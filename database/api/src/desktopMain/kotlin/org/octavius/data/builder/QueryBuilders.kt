@@ -1,6 +1,8 @@
 package org.octavius.data.builder
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 /**
  * Definiuje publiczne API do budowania zapytań SQL SELECT.
@@ -252,9 +254,10 @@ interface QueryBuilder<T : QueryBuilder<T>> {
      * Wymaga podania CoroutineScope, w którym operacje zostaną uruchomione.
      *
      * @param scope Scope korutyn (zazwyczaj z ViewModelu/Handlera) do zarządzania cyklem życia.
+     * @param ioDispatcher Dispatcher na którym ma być wykonane zapytanie
      * @return Nowa instancja buildera z asynchronicznymi metodami terminalnymi.
      */
-    fun async(scope: CoroutineScope): AsyncTerminalMethods
+    fun async(scope: CoroutineScope, ioDispatcher: CoroutineDispatcher = Dispatchers.IO): AsyncTerminalMethods
 
     /**
      * Przełącza builder w tryb streamingowy, optymalny dla dużych zbiorów danych.

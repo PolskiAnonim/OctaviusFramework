@@ -40,213 +40,166 @@ internal class TransactionPlanExecutor(
         }
         return runCatching {
             // Krok 1: Stwórz mapę do szybkiego tłumaczenia uchwytów na indeksy
-            val handleToIndexMap = stepsWithHandles.withIndex().associate { (index, pair) -> pair.first to index }
+            val handleToIndexMap = validatePlan(stepsWithHandles)
 
-            // --- Walidacja (niepoprawna kolejność jest możliwa tylko za pomocą funkcji addPlan) ----
-            for ((currentIndex, pair) in stepsWithHandles.withIndex()) {
-                val step = pair.second
-                for (paramValue in step.params.values) {
-                    if (paramValue is TransactionValue.FromStep) {
-                        // Znajdź indeks kroku, od którego zależy ten parametr
-                        val sourceIndex = handleToIndexMap[paramValue.handle]
-                            ?: throw StepDependencyException(StepDependencyExceptionMessage.UNKNOWN_STEP_HANDLE, currentIndex)
+            // Krok 2: Przygotowanie szablonu transakcji
+            val transactionTemplate = createTransactionTemplate(propagation)
 
-                        // KLUCZOWY WARUNEK: Indeks źródła danych musi być mniejszy niż indeks bieżącego kroku.
-                        if (sourceIndex >= currentIndex) {
-                            throw StepDependencyException(
-                                StepDependencyExceptionMessage.DEPENDENCY_ON_FUTURE_STEP,
-                                currentIndex,
-                                sourceIndex
-                            )
-                        }
-                    }
-                }
+            val finalResultsMap = transactionTemplate.execute {
+                executeStepsInTransaction(stepsWithHandles, handleToIndexMap)
             }
 
-            logger.info { "Executing transaction plan with ${stepsWithHandles.size} steps." }
-
-            val transactionTemplate = TransactionTemplate(transactionManager).apply {
-                propagationBehavior = when (propagation) {
-                    TransactionPropagation.REQUIRED -> TransactionDefinition.PROPAGATION_REQUIRED
-                    TransactionPropagation.REQUIRES_NEW -> TransactionDefinition.PROPAGATION_REQUIRES_NEW
-                    TransactionPropagation.NESTED -> TransactionDefinition.PROPAGATION_NESTED
-                }
-            }
-
-            // `transactionTemplate.execute` wykonuje logikę wewnątrz transakcji
-            val finalResultsMap: Map<StepHandle<*>, Any?> = transactionTemplate.execute {
-                    val indexedResults = mutableMapOf<Int, Any?>()
-
-                    // Pętla po krokach. Używamy `withIndex` żeby mieć dostęp do `index`.
-                    for ((index, pair) in stepsWithHandles.withIndex()) {
-                        val step = pair.second
-
-                        try {
-                            logger.debug { "Executing step $index..." }
-
-                            // Krok 2: Rozwiąż referencje do wyników poprzednich kroków
-                            val resolvedParams = step.params.mapValues { (_, value) ->
-                                resolveReference(value, indexedResults, handleToIndexMap)
-                            }
-
-                            // Krok 3: Zbuduj finalną mapę parametrów, "rozsmarowując" wyniki z `FromStep.Row`
-                            val finalParams = mutableMapOf<String, Any?>()
-                            resolvedParams.forEach { key, resolvedValue ->
-                                val originalParam = step.params[key]
-                                if (originalParam is TransactionValue.FromStep.Row && resolvedValue is Map<*, *>) {
-                                    @Suppress("UNCHECKED_CAST")
-                                    finalParams.putAll(resolvedValue as Map<String, Any?>)
-                                } else {
-                                    finalParams[key] = resolvedValue
-                                }
-                            }
-                            logger.trace { "--> Final params for step $index: $finalParams" }
-
-                            // Krok 4: Wykonaj logikę kroku
-                            val stepResult = step.executionLogic(step.builder, finalParams)
-
-                            // Krok 5: Obsłuż wynik kroku
-                            when (stepResult) {
-                                is DataResult.Success -> {
-                                    indexedResults[index] = stepResult.value
-                                }
-                                is DataResult.Failure -> {
-                                    // Jeśli krok zwrócił błąd, rzucamy go, aby przerwać transakcję
-                                    throw stepResult.error
-                                }
-                            }
-
-                        } catch (e: Exception) {
-                            // Krok 6: Opakuj KAŻDY błąd w kontekst kroku
-                            val ex = TransactionStepExecutionException(
-                                stepIndex = index,
-                                cause = e
-                            )
-                            throw ex
-                        }
-                    }
-
-                    // Krok 7: Po udanym wykonaniu wszystkich kroków, stwórz finalną mapę wyników (Handle -> Wynik)
-                    stepsWithHandles.associate { (handle, _) ->
-                        val index = handleToIndexMap.getValue(handle)
-                        handle to indexedResults[index]
-                    }
-
-                }!! // `execute` zwraca nullable, ale w tym przypadku wiemy, że nie będzie nullem
-
-                // Jeśli transakcja się powiodła, opakowujemy wynik w Success
-                DataResult.Success(TransactionPlanResult(finalResultsMap))
+            // Jeśli transakcja się powiodła, opakowujemy wynik w Success
+            DataResult.Success(TransactionPlanResult(finalResultsMap))
 
         }.getOrElse { error ->
-            // Jeśli `runCatching` złapał jakikolwiek wyjątek, opakowujemy go w Failure
-            val dbException = when (error) {
-                is DatabaseException -> error // Jeśli to już nasz wyjątek, przekaż go dalej
-                else -> TransactionException(error) // W przeciwnym razie stwórz nowy
-            }
-            logger.error(dbException) { "Transaction failed and was rolled back." }
-            DataResult.Failure(dbException)
+            // Krok 4: Obsługa błędów na najwyższym poziomie
+            handleTransactionError(error)
         }
     }
+
+    private fun validateTransactionValue(
+        value: Any?,
+        currentIndex: Int,
+        handleToIndexMap: Map<StepHandle<*>, Int>
+    ) {
+        when (value) {
+            is TransactionValue.FromStep -> {
+                val sourceIndex = handleToIndexMap[value.handle]
+                    ?: throw StepDependencyException(StepDependencyExceptionMessage.UNKNOWN_STEP_HANDLE, currentIndex)
+
+                if (sourceIndex >= currentIndex) {
+                    throw StepDependencyException(
+                        StepDependencyExceptionMessage.DEPENDENCY_ON_FUTURE_STEP,
+                        currentIndex,
+                        sourceIndex
+                    )
+                }
+            }
+            is TransactionValue.Transformed -> {
+                // Walidujemy to, co jest w środku.
+                validateTransactionValue(value.source, currentIndex, handleToIndexMap)
+            }
+            // Inne typy (Value, zwykłe wartości) nie wymagają walidacji, więc nic nie robimy.
+        }
+    }
+
+    private fun validatePlan(stepsWithHandles: List<Pair<StepHandle<*>, TransactionStep<*>>>): Map<StepHandle<*>, Int> {
+        val handleToIndexMap = stepsWithHandles.withIndex().associate { (index, pair) -> pair.first to index }
+
+        for ((currentIndex, pair) in stepsWithHandles.withIndex()) {
+            val step = pair.second
+            for (paramValue in step.params.values) {
+                validateTransactionValue(paramValue, currentIndex, handleToIndexMap)
+            }
+        }
+
+        logger.info { "Transaction plan validated successfully. Executing ${stepsWithHandles.size} steps." }
+        return handleToIndexMap
+    }
+
+    private fun createTransactionTemplate(propagation: TransactionPropagation): TransactionTemplate {
+        return TransactionTemplate(transactionManager).apply {
+            propagationBehavior = when (propagation) {
+                TransactionPropagation.REQUIRED -> TransactionDefinition.PROPAGATION_REQUIRED
+                TransactionPropagation.REQUIRES_NEW -> TransactionDefinition.PROPAGATION_REQUIRES_NEW
+                TransactionPropagation.NESTED -> TransactionDefinition.PROPAGATION_NESTED
+            }
+        }
+    }
+
+    private fun executeStepsInTransaction(
+        stepsWithHandles: List<Pair<StepHandle<*>, TransactionStep<*>>>,
+        handleToIndexMap: Map<StepHandle<*>, Int>
+    ): Map<StepHandle<*>, Any?> {
+        val indexedResults = mutableMapOf<Int, Any?>()
+
+        for ((index, pair) in stepsWithHandles.withIndex()) {
+            val step = pair.second
+            try {
+                executeSingleStep(index, step, indexedResults, handleToIndexMap)
+            } catch (e: Exception) {
+                // Opakuj KAŻDY błąd w kontekst kroku i rzuć go dalej, aby wycofać transakcję
+                throw TransactionStepExecutionException(stepIndex = index, cause = e)
+            }
+        }
+
+        // Po udanym wykonaniu wszystkich kroków, stwórz finalną mapę wyników
+        return stepsWithHandles.associate { (handle, _) ->
+            handle to indexedResults.getValue(handleToIndexMap.getValue(handle))
+        }
+    }
+
+    private fun executeSingleStep(
+        index: Int,
+        step: TransactionStep<*>,
+        indexedResults: MutableMap<Int, Any?>, // Modyfikujemy tę mapę
+        handleToIndexMap: Map<StepHandle<*>, Int>
+    ) {
+        logger.debug { "Executing step $index..." }
+
+        // Rozwiąż referencje i zbuduj finalne parametry
+        val finalParams = buildFinalParameters(step, indexedResults, handleToIndexMap)
+        logger.trace { "--> Final params for step $index: $finalParams" }
+
+        // Wykonaj logikę kroku
+        // Obsłuż wynik kroku
+        when (val stepResult = step.executionLogic(step.builder, finalParams)) {
+            is DataResult.Success -> {
+                indexedResults[index] = stepResult.value
+            }
+            is DataResult.Failure -> {
+                // Rzucamy błąd, zostanie złapany piętro wyżej i opakowany
+                throw stepResult.error
+            }
+        }
+    }
+
+    private fun buildFinalParameters(
+        step: TransactionStep<*>,
+        indexedResults: Map<Int, Any?>,
+        handleToIndexMap: Map<StepHandle<*>, Int>
+    ): Map<String, Any?> {
+        val resolvedParams = step.params.mapValues { (_, value) ->
+            resolveReference(value, indexedResults, handleToIndexMap)
+        }
+
+        val finalParams = mutableMapOf<String, Any?>()
+        resolvedParams.forEach { (key, resolvedValue) ->
+            val originalParam = step.params[key]
+            if (originalParam is TransactionValue.FromStep.Row && resolvedValue is Map<*, *>) {
+                @Suppress("UNCHECKED_CAST")
+                finalParams.putAll(resolvedValue as Map<String, Any?>)
+            } else {
+                finalParams[key] = resolvedValue
+            }
+        }
+        return finalParams
+    }
+
+    private fun handleTransactionError(error: Throwable): DataResult.Failure {
+        val dbException = when (error) {
+            is DatabaseException -> error
+            else -> TransactionException(error)
+        }
+        logger.error(dbException) { "Transaction failed and was rolled back." }
+        return DataResult.Failure(dbException)
+    }
+
 
     private fun resolveReference(
         value: Any?,
         indexedResults: Map<Int, Any?>,
         handleToIndexMap: Map<StepHandle<*>, Int>
     ): Any? {
-        // 1. Jeśli to zwykła wartość, zwróć ją (istniejąca logika)
         if (value !is TransactionValue) {
-            return value // np. String, Int
-        }
-
-        // 2. Jeśli to Value wrapper, odpakuj (istniejąca logika)
-        if (value is TransactionValue.Value) {
-            return value.value
-        }
-
-        // 3. Obsługa transformacji
-        if (value is TransactionValue.Transformed) {
-            // Najpierw pobierz "surową" wartość z wnętrza (rekurencja!)
-            val rawValue = resolveReference(value.source, indexedResults, handleToIndexMap)
-
-            // Zastosuj funkcję użytkownika
-            return try {
-                value.transform(rawValue)
-            } catch (e: Exception) {
-                // Musimy ustalić, jakiego kroku dotyczyła ta transformacja.
-                // Ponieważ Transformed opakowuje inną wartość (np. FromStep),
-                // musimy "dokopać się" do uchwytu, żeby podać poprawny stepIndex w błędzie.
-                val rootHandle = extractRootHandle(value.source)
-                val stepIndex = rootHandle?.let { handleToIndexMap[it] } ?: -1
-
-                throw StepDependencyException(
-                    messageEnum = StepDependencyExceptionMessage.TRANSFORMATION_FAILED,
-                    referencedStepIndex = stepIndex,
-                    args = arrayOf(e.message ?: e.toString()), // Przekazujemy tekst błędu jako argument
-                    cause = e
-                )
-            }
-        }
-
-        value as TransactionValue.FromStep // Dla kompilatora
-
-        val stepIndex = handleToIndexMap[value.handle]!! // Sprawdzane w początkowej walidacji
-
-        // Logika pętli `execute` gwarantuje, że jeśli dotarliśmy do tego miejsca,
-        // to krok `stepIndex` został wykonany, a jego wynik znajduje się w mapie.
-        val sourceResult: Any? = indexedResults[stepIndex]
-
-        // Jeśli wynik kroku źródłowego to null, każda referencja do niego też jest null.
-        // To jest poprawne i zamierzone zachowanie.
-        if (sourceResult == null) {
-            return null
+            return value // Zwykła wartość
         }
 
         return when (value) {
-            is TransactionValue.FromStep.Field -> {
-                val rowData = sourceResult.toRowMap(value.rowIndex, stepIndex)
-
-                // Używamy "result" tylko jeśli columnName jest null
-                val colName = value.columnName ?: SCALAR_RESULT_KEY
-                if (!rowData.containsKey(colName)) {
-                    val errorMsg = if (value.columnName == null) {
-                        StepDependencyExceptionMessage.SCALAR_NOT_FOUND
-                    } else {
-                        StepDependencyExceptionMessage.COLUMN_NOT_FOUND
-                    }
-                    throw StepDependencyException(errorMsg,stepIndex, colName)
-                }
-                rowData[colName]
-            }
-            is TransactionValue.FromStep.Column -> {
-                // toList, toColumn, toListOf
-                val sourceList = sourceResult as? List<*>
-                    ?: throw StepDependencyException(StepDependencyExceptionMessage.RESULT_NOT_LIST,stepIndex)
-
-                val columnValues: List<Any?> = if (value.columnName != null) {
-                    @Suppress("UNCHECKED_CAST")
-                    // Wynik toList
-                    (sourceList as? List<Map<String, Any?>>)?.map { row ->
-                        if (!row.containsKey(value.columnName)) {
-                            throw StepDependencyException(
-                                StepDependencyExceptionMessage.COLUMN_NOT_FOUND, stepIndex,
-                                value.columnName!!
-                            )
-                        }
-                        row[value.columnName]
-                        // użycie nazwy kolumny na wyniku który jest listą skalarów
-                    } ?: throw StepDependencyException(StepDependencyExceptionMessage.RESULT_NOT_MAP_LIST, stepIndex)
-                } else {
-                    // toColumn, toListOf
-                    sourceList
-                }
-
-                // toListOf otrzyma błąd wewnątrz konwertera jeżeli jest tam data class niebędąca kompozytem
-                return  columnValues
-            }
-
-            is TransactionValue.FromStep.Row -> {
-                sourceResult.toRowMap(value.rowIndex, stepIndex)
-            }
+            is TransactionValue.Value -> value.value // Odpakowanie
+            is TransactionValue.Transformed -> resolveTransformed(value, indexedResults, handleToIndexMap)
+            is TransactionValue.FromStep -> resolveFromStep(value, indexedResults, handleToIndexMap)
         }
     }
 
@@ -258,19 +211,108 @@ internal class TransactionPlanExecutor(
             else -> null
         }
     }
+    private fun resolveTransformed(
+        value: TransactionValue.Transformed,
+        indexedResults: Map<Int, Any?>,
+        handleToIndexMap: Map<StepHandle<*>, Int>
+    ): Any? {
+        // Najpierw pobierz "surową" wartość z wnętrza (rekurencja!)
+        val rawValue = resolveReference(value.source, indexedResults, handleToIndexMap)
+
+        // Zastosuj funkcję użytkownika
+        return try {
+            value.transform(rawValue)
+        } catch (e: Exception) {
+            // Musimy ustalić, jakiego kroku dotyczyła ta transformacja.
+            // Ponieważ Transformed opakowuje inną wartość (np. FromStep),
+            // musimy "dokopać się" do uchwytu, żeby podać poprawny stepIndex w błędzie.
+            val rootHandle = extractRootHandle(value.source)
+            val stepIndex = rootHandle?.let { handleToIndexMap[it] } ?: -1
+
+            throw StepDependencyException(
+                messageEnum = StepDependencyExceptionMessage.TRANSFORMATION_FAILED,
+                referencedStepIndex = stepIndex,
+                args = arrayOf(e.message ?: e.toString()),
+                cause = e
+            )
+        }
+    }
+
+    private fun resolveFromStep(
+        value: TransactionValue.FromStep,
+        indexedResults: Map<Int, Any?>,
+        handleToIndexMap: Map<StepHandle<*>, Int>
+    ): Any? {
+        val stepIndex = handleToIndexMap[value.handle]!! // Walidowane wcześniej
+        // Logika pętli `execute` gwarantuje, że jeśli dotarliśmy do tego miejsca,
+        // to krok `stepIndex` został wykonany, a jego wynik znajduje się w mapie.
+        val sourceResult = indexedResults[stepIndex] ?: return null // Wynik kroku może być null
+
+        return when (value) {
+            is TransactionValue.FromStep.Field -> resolveField(value, sourceResult, stepIndex)
+            is TransactionValue.FromStep.Column -> resolveColumn(value, sourceResult, stepIndex)
+            is TransactionValue.FromStep.Row -> sourceResult.toRowMap(value.rowIndex, stepIndex)
+        }
+    }
+
+    private fun resolveField(
+        value: TransactionValue.FromStep.Field,
+        sourceResult: Any, // Wiemy, że nie jest null z poprzedniego kroku
+        stepIndex: Int
+    ): Any? {
+        val rowData = sourceResult.toRowMap(value.rowIndex, stepIndex)
+        val colName = value.columnName ?: SCALAR_RESULT_KEY
+
+        if (!rowData.containsKey(colName)) {
+            val errorMsg = if (value.columnName == null) {
+                StepDependencyExceptionMessage.SCALAR_NOT_FOUND
+            } else {
+                StepDependencyExceptionMessage.COLUMN_NOT_FOUND
+            }
+            throw StepDependencyException(errorMsg, stepIndex, colName)
+        }
+        return rowData[colName]
+    }
+
+    private fun resolveColumn(
+        value: TransactionValue.FromStep.Column,
+        sourceResult: Any, // Wiemy, że nie jest null
+        stepIndex: Int
+    ): List<Any?> {
+        // toList, toColumn, toListOf
+        val sourceList = sourceResult as? List<*>
+            ?: throw StepDependencyException(StepDependencyExceptionMessage.RESULT_NOT_LIST, stepIndex)
+
+        if (value.columnName == null) {
+            return sourceList
+        }
+
+        val columnName = value.columnName!!
+
+        return sourceList.map { element ->
+            val row = element as? Map<*, *>
+                ?: throw StepDependencyException(StepDependencyExceptionMessage.RESULT_NOT_MAP_LIST, stepIndex)
+
+            // Sprawdzamy, czy klucz istnieje.
+            if (!row.containsKey(columnName)) {
+                throw StepDependencyException(StepDependencyExceptionMessage.COLUMN_NOT_FOUND, stepIndex, columnName)
+            }
+
+            // Bezpiecznie pobieramy wartość.
+            row[columnName]
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     // Sygnatura `toRowMap` przyjmuje `Any`, bo `null` jest obsługiwany wcześniej w `resolveReference`.
     private fun Any.toRowMap(rowIndex: Int, stepIndex: Int): Map<String, Any?> {
-        when (this) {
+        return when (this) {
             // toList, toColumn, toListOf
             is List<*> -> {
                 if (rowIndex >= this.size) {
                     throw StepDependencyException(StepDependencyExceptionMessage.ROW_INDEX_OUT_OF_BOUNDS, stepIndex, rowIndex, this.size)
                 }
-                val element = this[rowIndex]
-
-                return when (element) {
+                when (val element = this[rowIndex]) {
                     // Wynik toList - ewentualnie może być zwrócona pusta mapa - brak nulli
                     is Map<*, *> -> element as Map<String, Any?>
                     // toListOf przechodzi - w konwerterze błąd dla niekompozytów
@@ -283,7 +325,7 @@ internal class TransactionPlanExecutor(
                 if (rowIndex > 0) {
                     throw StepDependencyException(StepDependencyExceptionMessage.INVALID_ROW_ACCESS_ON_NON_LIST, stepIndex, rowIndex)
                 }
-                return this as Map<String, Any?>
+                this as Map<String, Any?>
             }
             // toSingleOf, toField, execute
             else -> {
@@ -292,7 +334,7 @@ internal class TransactionPlanExecutor(
                 }
                 // Wynik toSingleOf (błąd w konwerterze i type registry gdy użyte na niekompozycie)
                 // toField może być nullem, natomiast execute nie
-                return mapOf(SCALAR_RESULT_KEY to this)
+                mapOf(SCALAR_RESULT_KEY to this)
             }
         }
     }

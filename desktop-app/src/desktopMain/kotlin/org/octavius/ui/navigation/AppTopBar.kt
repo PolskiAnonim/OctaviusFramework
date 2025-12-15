@@ -39,41 +39,48 @@ fun AppTopBar(
             modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically
         ) {
             tabs.forEach { tab ->
-                val isSelected = tab == currentState.activeTab
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable { onTabSelected.invoke(tab) }
-                        .background(
-                            if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.primary
-                        )
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        tab.options.icon?.let {
-                            Icon(
-                                painter = it,
-                                contentDescription = tab.options.title,
-                                tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                                else MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-
-                        Text(
-                            text = tab.options.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                            else MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
+                TopBarTab(
+                    tab = tab,
+                    isSelected = (tab == currentState.activeTab),
+                    onClick = { onTabSelected(tab) }
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.TopBarTab(
+    tab: Tab,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.primary
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onPrimary
+
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .clickable(onClick = onClick)
+            .background(backgroundColor)
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            tab.options.icon?.let { icon ->
+                Icon(
+                    painter = icon,
+                    contentDescription = tab.options.title,
+                    tint = contentColor
+                )
+            }
+            Text(
+                text = tab.options.title,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = contentColor
+            )
         }
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import org.octavius.dialog.DialogWrapper
 import org.octavius.dialog.GlobalDialogManager
+import org.octavius.navigation.AppNavigationState
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Tab
 import org.octavius.ui.navigation.AppTopBar
@@ -48,14 +49,15 @@ object MainScreen {
     @Composable
     fun Content(tabs: List<Tab>) {
         val navState by AppRouter.state.collectAsState()
-
         if (navState == null) return
-        val visibleTabs = remember { tabs.filter { it.isVisibleInNavBar } }
-        val currentScreen = navState!!.tabStacks[navState!!.activeTab]?.lastOrNull()
-        val screenStackSize = navState!!.tabStacks[navState!!.activeTab]?.size ?: 0
+
+
+        val visibleTabs = remember(tabs) { tabs.filter { it.isVisibleInNavBar } }
+        val activeTabState = navState!!
+        val currentScreen = activeTabState.tabStacks[activeTabState.activeTab]?.lastOrNull()
+        val screenStackSize = activeTabState.tabStacks[activeTabState.activeTab]?.size ?: 0
 
         val snackbarHostState = remember { SnackbarHostState() }
-
         SnackbarManager.HandleSnackbar(snackbarHostState)
 
         val dialog by GlobalDialogManager.dialogConfig.collectAsState()
@@ -75,43 +77,53 @@ object MainScreen {
             Column(Modifier.fillMaxSize().padding(paddingValues)) {
                 AppTopBar(
                     tabs = visibleTabs,
-                    currentState = navState!!,
+                    currentState = activeTabState,
                     onTabSelected = { tab -> AppRouter.switchToTab(tab) }
                 )
 
-                AnimatedContent(
-                    targetState = navState!!.activeTab,
-                    transitionSpec = {
-                        // Znajdź indeksy starego i nowego taba na liście widocznych zakładek
-                        val initialIndex = visibleTabs.indexOf(initialState)
-                        val targetIndex = visibleTabs.indexOf(targetState)
-
-                        // Jeśli któryś tab nie jest na liście (np. ukryty), nie animuj
-                        if (initialIndex == -1 || targetIndex == -1) {
-                            fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
-                        } else {
-                            // Użyj znalezionych indeksów do określenia kierunku
-                            val direction = if (targetIndex > initialIndex) {
-                                AnimatedContentTransitionScope.SlideDirection.Left
-                            } else {
-                                AnimatedContentTransitionScope.SlideDirection.Right
-                            }
-
-                            slideIntoContainer(
-                                towards = direction, animationSpec = tween(300)
-                            ) togetherWith slideOutOfContainer(
-                                towards = direction, animationSpec = tween(300)
-                            )
-                        }
-                    },
+                TabContentAnimator(
+                    navState = activeTabState,
+                    visibleTabs = visibleTabs,
                     modifier = Modifier.fillMaxSize()
-                ) { targetTabIndex ->
-                    val activeStack = navState!!.tabStacks[targetTabIndex] ?: emptyList()
-                    if (activeStack.isNotEmpty()) {
-                        TabContent(screenStack = activeStack)
-                    }
-                }
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun TabContentAnimator(
+    navState: AppNavigationState,
+    visibleTabs: List<Tab>,
+    modifier: Modifier = Modifier
+) {
+    AnimatedContent(
+        targetState = navState.activeTab,
+        transitionSpec = {
+            val initialIndex = visibleTabs.indexOf(initialState)
+            val targetIndex = visibleTabs.indexOf(targetState)
+
+            if (initialIndex == -1 || targetIndex == -1) {
+                fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+            } else {
+                val direction = if (targetIndex > initialIndex) {
+                    AnimatedContentTransitionScope.SlideDirection.Left
+                } else {
+                    AnimatedContentTransitionScope.SlideDirection.Right
+                }
+                slideIntoContainer(
+                    towards = direction, animationSpec = tween(300)
+                ) togetherWith slideOutOfContainer(
+                    towards = direction, animationSpec = tween(300)
+                )
+            }
+        },
+        modifier = modifier
+    ) { targetTab ->
+        // Renderowanie zawartości aktywnego taba
+        val activeStack = navState.tabStacks[targetTab] ?: emptyList()
+        if (activeStack.isNotEmpty()) {
+            TabContent(screenStack = activeStack)
         }
     }
 }

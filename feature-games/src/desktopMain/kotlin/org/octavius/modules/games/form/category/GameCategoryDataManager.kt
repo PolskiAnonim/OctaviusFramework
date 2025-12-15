@@ -40,13 +40,13 @@ class GameCategoryDataManager : FormDataManager() {
             dataAccess.insertInto("games.categories").value("name")
                 .execute(mapOf("name" to formResultData.getCurrent("name")))
         }
-        when (result) {
+        return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return FormActionResult.Failure
+                FormActionResult.Failure
             }
 
-            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+            is DataResult.Success<*> -> FormActionResult.CloseScreen
         }
     }
 }

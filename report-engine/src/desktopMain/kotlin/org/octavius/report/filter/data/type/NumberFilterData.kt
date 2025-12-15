@@ -1,5 +1,6 @@
 package org.octavius.report.filter.data.type
 
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling

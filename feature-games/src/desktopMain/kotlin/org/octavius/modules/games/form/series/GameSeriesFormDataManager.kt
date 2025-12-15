@@ -44,14 +44,13 @@ class GameSeriesFormDataManager : FormDataManager() {
                 dataAccess.insertInto("games.series").values(seriesData).asStep().execute()
             )
         }
-        val result = dataAccess.executeTransactionPlan(plan)
-        when (result) {
+        return when (val result = dataAccess.executeTransactionPlan(plan)) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                return FormActionResult.Failure
+                FormActionResult.Failure
             }
 
-            is DataResult.Success<*> -> return FormActionResult.CloseScreen
+            is DataResult.Success<*> -> FormActionResult.CloseScreen
         }
     }
 }

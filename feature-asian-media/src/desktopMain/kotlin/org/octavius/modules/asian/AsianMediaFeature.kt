@@ -16,7 +16,7 @@ object AsianMediaFeature : FeatureModule {
     override val name: String = "settings"
     override fun getTab(): Tab? = AsianMediaTab()
     override fun getApiModules(): List<ApiModule>? = listOf(AsianMediaApi())
-    override fun getScreenFactories(): List<ScreenFactory>? = listOf(
+    override fun getScreenFactories(): List<ScreenFactory> = listOf(
         object : ScreenFactory {
             override val screenId: String = ASIAN_MEDIA_FORM_SCREEN_ID
 

@@ -33,19 +33,18 @@ abstract class BaseTableMappingBuilder {
     }
 
     protected fun validateBase() {
-        if (!::tableName.isInitialized) throw IllegalStateException("Klauzula `from` jest wymagana w mapowaniu.")
+        check(::tableName.isInitialized) { "Klauzula `from` jest wymagana w mapowaniu." }
     }
 }
 
 class OneToOneMappingBuilder : BaseTableMappingBuilder() {
     lateinit var joinCondition: String
-    private var existenceFlag: ExistenceFlag? = null
+    var existenceFlag: ExistenceFlag? = null
+        private set
 
     fun existenceFlag(controlName: String, checkColumn: String) {
         this.existenceFlag = ExistenceFlag(controlName, checkColumn)
     }
-
-    fun getExistenceFlag(): ExistenceFlag? = existenceFlag
 
     fun on(condition: String) {
         this.joinCondition = condition
@@ -53,7 +52,7 @@ class OneToOneMappingBuilder : BaseTableMappingBuilder() {
 
     fun validate() {
         validateBase()
-        if (!::joinCondition.isInitialized) throw IllegalStateException("Klauzula `on` jest wymagana w mapowaniu jeden-do-jednego.")
+        check(::joinCondition.isInitialized) { "Klauzula `on` jest wymagana w mapowaniu jeden-do-jednego." }
     }
 }
 
@@ -71,7 +70,7 @@ class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
 
     fun validate() {
         validateBase()
-        if (!::linkColumn.isInitialized) throw IllegalStateException("Klauzula `linkedBy` jest wymagana w mapowaniu listy powiązanych danych.")
+        check(::linkColumn.isInitialized) { "Klauzula `linkedBy` jest wymagana w mapowaniu listy powiązanych danych." }
     }
 
     fun buildWhereClause(): String {
@@ -111,7 +110,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
     fun mapOneToOne(block: OneToOneMappingBuilder.() -> Unit) {
         val builder = OneToOneMappingBuilder().apply(block)
         builder.validate()
-        relations.add(OneToOneMapping(builder.getExistenceFlag(), builder.fromTable, builder.joinCondition, builder.mappings))
+        relations.add(OneToOneMapping(builder.existenceFlag, builder.fromTable, builder.joinCondition, builder.mappings))
     }
 
     fun mapRelatedList(controlName: String, block: RelatedDataMappingBuilder.() -> Unit) {

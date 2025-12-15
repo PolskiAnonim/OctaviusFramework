@@ -24,9 +24,7 @@ internal class DatabaseDeleteQueryBuilder(
     }
 
     override fun buildSql(): String {
-        if (whereClause.isNullOrBlank()) {
-            throw IllegalStateException("Cannot build a DELETE statement without a WHERE clause for safety.")
-        }
+        check(!whereClause.isNullOrBlank()) { "Cannot build a DELETE statement without a WHERE clause for safety." }
 
         val sql = StringBuilder(buildWithClause())
         sql.append("DELETE FROM $table")

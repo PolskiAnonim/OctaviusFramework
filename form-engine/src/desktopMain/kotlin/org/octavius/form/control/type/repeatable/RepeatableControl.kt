@@ -126,7 +126,6 @@ class RepeatableControl(
 
             controlState.value.value?.forEachIndexed { index, row ->
                 RepeatableRowCard(
-                    row = row,
                     index = index,
                     canDelete = rowManager.canDeleteRow(controlState),
                     onDelete = {

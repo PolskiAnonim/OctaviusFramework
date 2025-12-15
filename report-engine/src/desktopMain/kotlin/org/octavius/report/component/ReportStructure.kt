@@ -62,11 +62,7 @@ class ReportStructure(
      * Zwraca kolumnę o danej nazwie
      */
     fun getColumn(name: String): ReportColumn {
-        val column = columns[name]
-        if (column == null) {
-            NotImplementedError("Column with such name not found")
-        }
-        return columns[name]!!
+       return columns.getValue(name)
     }
 
     /**
