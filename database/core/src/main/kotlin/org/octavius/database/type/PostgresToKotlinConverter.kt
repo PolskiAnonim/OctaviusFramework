@@ -237,66 +237,86 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * Obsługuje cudzysłowy, escapowanie, wartości `NULL` i zagnieżdżenia.
      */
     private fun parseNestedStructure(input: String): List<String?> {
+        if (input.length < 2) return emptyList()
 
-        val content = input.substring(1, input.length - 1)
-        if (content.isEmpty()) return emptyList()
+        val contentView: CharSequence = input.subSequence(1, input.length - 1)
+        if (contentView.isEmpty()) return emptyList()
 
         val elements = mutableListOf<String?>()
-        var currentElementStart = 0
-        var inQuotes = false
-        var nestingLevel = 0 // Poziom zagnieżdżenia nawiasów
+        val state = ParserState()
 
-        var i = 0
-        while (i < content.length) {
-            val char = content[i]
-            if (inQuotes) {
-                when (char) {
-                    '\\' -> i++ // Pomiń następny znak - jest escape'owany
-                    '"' -> inQuotes = false
-                }
+        while (state.i < contentView.length) {
+            val char = contentView[state.i]
+
+            if (state.inQuotes) {
+                processInQuotes(contentView, state)
             } else {
-                when (char) {
-                    '"' -> inQuotes = true
-                    '{', '(' -> nestingLevel++
-                    '}', ')' -> nestingLevel--
-                    ',' -> {
-                        // Przecinek na najwyższym poziomie = separator elementów
-                        if (nestingLevel == 0) {
-                            elements.add(unescapeValue(content.substring(currentElementStart, i)))
-                            currentElementStart = i + 1
-                        }
-                    }
-                }
+                processOutsideQuotes(char, contentView, state, elements)
             }
-            i++
+            state.i++
         }
-        elements.add(unescapeValue(content.substring(currentElementStart)))
+
+        elements.add(unescapeValue(contentView, state.currentElementStart, contentView.length))
         return elements
     }
 
-    /**
-     * Przetwarza surową wartość, usuwając cudzysłowy i escapowanie.
-     * Poprawnie interpretuje `NULL` (jawne `NULL` lub pusty, niecytowany string)
-     * oraz pusty string (reprezentowany jako `""`).
-     */
-    private fun unescapeValue(raw: String): String? {
+    private data class ParserState(
+        var i: Int = 0,
+        var inQuotes: Boolean = false,
+        var nestingLevel: Int = 0,
+        var currentElementStart: Int = 0
+    )
 
-        // 1. Sprawdzamy, czy wartość jest w cudzysłowach.
-        if (raw.startsWith('"') && raw.endsWith('"')) {
-            // Jeśli tak, to jest to jawny string. Nawet jeśli pusty (""), to jest to pusty string, a nie NULL.
-            return raw.substring(1, raw.length - 1)
-                .replace("\"\"", "\"") // PostgreSQL escapuje cudzysłów przez podwojenie go
-                .replace("\\\"", "\"") // Obsługa standardowego escape'owania
-                .replace("\\\\", "\\")
+    private fun processInQuotes(contentView: CharSequence, state: ParserState) {
+        val char = contentView[state.i]
+        when (char) {
+            '\\' -> state.i++ // Pomiń następny znak
+            // W przypadku gdy jest to cudzysłów do escapowania innego (tj "")
+            // to przy kolejnym przejściu pętli parser po prostu z powrotem zmieni stan
+            // Bez celowa jest dodatkowa próba obsługi tego skoro dzielenie odbywa się na podstawie przecinka
+            '"' -> state.inQuotes = false
+        }
+    }
+
+    private fun processOutsideQuotes(
+        char: Char,
+        contentView: CharSequence,
+        state: ParserState,
+        elements: MutableList<String?>
+    ) {
+        when (char) {
+            '"' -> state.inQuotes = true
+            '{', '(' -> state.nestingLevel++
+            '}', ')' -> state.nestingLevel--
+            ',' -> {
+                if (state.nestingLevel == 0) {
+                    elements.add(unescapeValue(contentView, state.currentElementStart, state.i))
+                    state.currentElementStart = state.i + 1
+                }
+            }
+        }
+    }
+
+    private fun unescapeValue(source: CharSequence, start: Int, end: Int): String? {
+        if (start >= end) return null
+
+        if (source[start] == '"') {
+            return buildString {
+                var i = start + 1
+                while (i < end - 1) {
+                    val char = source[i]
+                    if (char == '"' || char == '\\') {
+                        i++
+                        append(source[i])
+                    } else {
+                        append(char)
+                    }
+                    i++
+                }
+            }
         }
 
-        // 2. Jeśli wartość NIE jest w cudzysłowach.
-        // Pusty, nieopakowany w cudzysłowy ciąg znaków w kompozycie oznacza NULL.
-        if (raw.isEmpty() || raw.equals("NULL", ignoreCase = true)) {
-            return null
-        }
-
-        // 3. W każdym innym przypadku jest to zwykła, nieopakowana w cudzysłowy wartość.
-        return raw
+        val rawValue = source.subSequence(start, end).toString()
+        return if (rawValue == "NULL") null else rawValue
     }
 }
