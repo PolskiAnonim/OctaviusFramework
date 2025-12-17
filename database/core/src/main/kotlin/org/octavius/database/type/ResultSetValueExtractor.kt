@@ -1,6 +1,5 @@
 package org.octavius.database.type
 
-import org.postgresql.jdbc.PgResultSetMetaData
 import java.sql.ResultSet
 
 /**
@@ -14,12 +13,7 @@ internal class ResultSetValueExtractor(
     private val stringConverter = PostgresToKotlinConverter(typeRegistry)
 
     fun extract(rs: ResultSet, columnIndex: Int): Any? {
-        // Sprawdzenie, czy wartość jest SQL NULL
-        if (rs.getObject(columnIndex) == null) {
-            return null
-        }
-
-        val pgTypeName = (rs.metaData as PgResultSetMetaData).getColumnTypeName(columnIndex)
+        val pgTypeName = rs.metaData.getColumnTypeName(columnIndex)
         val typeCategory = typeRegistry.getCategory(pgTypeName)
 
         // Główna logika: rozróżnienie ścieżek

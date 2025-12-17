@@ -7,8 +7,12 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.octavius.database.RowMappers
 import org.octavius.database.config.DatabaseConfig
-import org.octavius.database.type.*
+import org.octavius.database.type.PostgresToKotlinConverter
+import org.octavius.database.type.ResultSetValueExtractor
+import org.octavius.database.type.TypeRegistry
+import org.octavius.database.type.TypeRegistryLoader
 import org.postgresql.jdbc.PgResultSetMetaData
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -98,7 +102,7 @@ class SimpleTypeOverheadBenchmark {
         val sql = "SELECT * FROM simple_type_benchmark LIMIT $TOTAL_ROWS_TO_FETCH"
         val rawMapper = RawJdbcRowMapper()
         val oldFrameworkMapper = OldFrameworkRowMapper(typesConverter)
-        val optimizedFrameworkMapper = OptimizedFrameworkRowMapper(valueExtractor) // NOWY MAPPER
+        val optimizedFrameworkMapper = RowMappers(valueExtractor).ColumnNameMapper() // NOWY MAPPER
 
         // --- WARM-UP ---
         println("\n--- ROZGRZEWKA (x$WARMUP_ITERATIONS iteracji, wyniki ignorowane) ---")
@@ -199,69 +203,5 @@ private class OldFrameworkRowMapper(private val converter: PostgresToKotlinConve
             data[columnName] = converter.convert(rawValue, columnType)
         }
         return data
-    }
-}
-
-/**
- * NOWY Mapper implementujący zoptymalizowaną strategię z "szybką ścieżką".
- */
-private class OptimizedFrameworkRowMapper(private val extractor: ResultSetValueExtractor) :
-    RowMapper<Map<String, Any?>> {
-    override fun mapRow(rs: ResultSet, rowNum: Int): Map<String, Any?> {
-        val data = mutableMapOf<String, Any?>()
-        val metaData = rs.metaData
-        for (i in 1..metaData.columnCount) {
-            val columnName = metaData.getColumnName(i)
-            data[columnName] = extractor.extract(rs, i)
-        }
-        return data
-    }
-}
-
-
-/**
- * NOWA KLASA: Inteligentnie wyodrębnia wartości z ResultSet.
- * Używa "szybkiej ścieżki" dla typów standardowych i deleguje do konwertera dla reszty.
- */
-private class ResultSetValueExtractor(
-    private val typeRegistry: TypeRegistry
-) {
-    private val stringConverter = PostgresToKotlinConverter(typeRegistry)
-
-    fun extract(rs: ResultSet, columnIndex: Int): Any? {
-        // Sprawdzenie, czy wartość jest SQL NULL
-        if (rs.getObject(columnIndex) == null) {
-            return null
-        }
-
-        val pgTypeName = (rs.metaData as PgResultSetMetaData).getColumnTypeName(columnIndex)
-        val typeCategory = typeRegistry.getCategory(pgTypeName)
-
-        // Główna logika: rozróżnienie ścieżek
-        return when (typeCategory) {
-            TypeCategory.STANDARD -> extractStandardType(rs, columnIndex, pgTypeName)
-            else -> {
-                val rawValue = rs.getString(columnIndex)
-                stringConverter.convert(rawValue, pgTypeName)
-            }
-        }
-    }
-
-
-    /**
-     * Szybka ścieżka dla typów standardowych.
-     */
-    private fun extractStandardType(rs: ResultSet, columnIndex: Int, pgTypeName: String): Any? {
-        val handler = StandardTypeMappingRegistry.getHandler(pgTypeName)
-
-        // 1. Spróbuj użyć dedykowanej "szybkiej ścieżki", jeśli istnieje.
-        handler?.fromResultSet?.let { fastPath ->
-            return fastPath(rs, columnIndex)
-        }
-
-        // 2. Jeśli nie ma szybkiej ścieżki (handler jest null lub fromResultSet jest null),
-        //    użyj uniwersalnej, ale wolniejszej ścieżki opartej na konwersji ze Stringa.
-        val rawValue = rs.getString(columnIndex)
-        return stringConverter.convert(rawValue, pgTypeName)
     }
 }

@@ -64,70 +64,47 @@ internal object StandardTypeMappingRegistry {
             if (pgType.isArray) return@forEach
             val handler = when (pgType) {
                 // Typy numeryczne całkowite
-                PgStandardType.SMALLSERIAL -> StandardTypeHandler(
-                    Short::class,
-                    { rs, i -> rs.getShort(i) },
-                    { s -> s.toShort() })
-
-                PgStandardType.INT2 -> StandardTypeHandler(
-                    Short::class,
-                    { rs, i -> rs.getShort(i) },
-                    { s -> s.toShort() })
-
-                PgStandardType.INT4 -> StandardTypeHandler(Int::class, { rs, i -> rs.getInt(i) }, { s -> s.toInt() })
-                PgStandardType.SERIAL -> StandardTypeHandler(Int::class, { rs, i -> rs.getInt(i) }, { s -> s.toInt() })
-                PgStandardType.INT8 -> StandardTypeHandler(Long::class, { rs, i -> rs.getLong(i) }, { s -> s.toLong() })
-                PgStandardType.BIGSERIAL -> StandardTypeHandler(
-                    Long::class,
-                    { rs, i -> rs.getLong(i) },
-                    { s -> s.toLong() })
+                PgStandardType.INT2, PgStandardType.SMALLSERIAL -> primitive(Short::class, ResultSet::getShort, String::toShort)
+                PgStandardType.INT4, PgStandardType.SERIAL -> primitive(Int::class, ResultSet::getInt, String::toInt)
+                PgStandardType.INT8, PgStandardType.BIGSERIAL -> primitive(Long::class, ResultSet::getLong, String::toLong)
                 // Typy zmiennoprzecinkowe
-                PgStandardType.FLOAT4 -> StandardTypeHandler(
-                    Float::class,
-                    { rs, i -> rs.getFloat(i) },
-                    { s -> s.toFloat() })
+                PgStandardType.FLOAT4 -> primitive(Float::class, ResultSet::getFloat, String::toFloat)
+                PgStandardType.FLOAT8 -> primitive(Double::class, ResultSet::getDouble, String::toDouble)
 
-                PgStandardType.FLOAT8 -> StandardTypeHandler(
-                    Double::class,
-                    { rs, i -> rs.getDouble(i) },
-                    { s -> s.toDouble() })
-
-                PgStandardType.NUMERIC -> StandardTypeHandler(
-                    BigDecimal::class,
-                    { rs, i -> rs.getBigDecimal(i) },
-                    { s -> s.toBigDecimal() })
+                PgStandardType.NUMERIC -> standard(BigDecimal::class, ResultSet::getBigDecimal, String::toBigDecimal)
                 // Typy tekstowe
-                PgStandardType.TEXT -> StandardTypeHandler(String::class, null) { s -> s }
-                PgStandardType.VARCHAR -> StandardTypeHandler(String::class, null) { s -> s }
-                PgStandardType.CHAR -> StandardTypeHandler(String::class, null) { s -> s }
+                PgStandardType.TEXT, PgStandardType.VARCHAR, PgStandardType.CHAR -> fromStringOnly(String::class) { it }
                 // Data i czas
-                PgStandardType.DATE -> StandardTypeHandler(
-                    LocalDate::class,
-                    { rs, i -> rs.getDate(i).toLocalDate().toKotlinLocalDate() },
-                    { s -> LocalDate.parse(s) })
+                PgStandardType.DATE -> mapped(
+                    LocalDate::class, ResultSet::getDate,
+                    { it.toLocalDate().toKotlinLocalDate() },
+                    { LocalDate.parse(it) }
+                )
 
-                PgStandardType.TIMESTAMP -> StandardTypeHandler(
-                    LocalDateTime::class,
-                    { rs, i -> rs.getTimestamp(i).toLocalDateTime().toKotlinLocalDateTime() },
-                    { s -> LocalDateTime.parse(s.replace(' ', 'T')) })
+                PgStandardType.TIMESTAMP -> mapped(
+                    LocalDateTime::class, ResultSet::getTimestamp,
+                    { it.toLocalDateTime().toKotlinLocalDateTime() },
+                    { LocalDateTime.parse(it.replace(' ', 'T')) }
+                )
 
-                PgStandardType.TIMESTAMPTZ -> StandardTypeHandler(
-                    Instant::class,
-                    { rs, i -> rs.getTimestamp(i).toInstant().toKotlinInstant() },
-                    { s -> Instant.parse(s.replace(' ', 'T')) })
+                PgStandardType.TIMESTAMPTZ -> mapped(
+                    Instant::class, ResultSet::getTimestamp,
+                    { it.toInstant().toKotlinInstant() },
+                    { Instant.parse(it.replace(' ', 'T')) }
+                )
 
-                PgStandardType.TIME -> StandardTypeHandler(
-                    LocalTime::class,
-                    { rs, i -> rs.getTime(i).toLocalTime().toKotlinLocalTime() },
-                    { s -> LocalTime.parse(s) })
+                PgStandardType.TIME -> mapped(
+                    LocalTime::class, ResultSet::getTime,
+                    { it.toLocalTime().toKotlinLocalTime() },
+                    { LocalTime.parse(it) }
+                )
 
-                PgStandardType.TIMETZ -> StandardTypeHandler(
-                    OffsetTime::class,
-                    { rs, i ->
-                        val javaOffsetTime = rs.getObject(i, java.time.OffsetTime::class.java)
+                PgStandardType.TIMETZ -> mapped(
+                    OffsetTime::class, { getObject(it, java.time.OffsetTime::class.java) },
+                    { javaTime ->
                         OffsetTime(
-                            time = javaOffsetTime.toLocalTime().toKotlinLocalTime(),
-                            offset = UtcOffset(seconds = javaOffsetTime.offset.totalSeconds)
+                            time = javaTime.toLocalTime().toKotlinLocalTime(),
+                            offset = UtcOffset(seconds = javaTime.offset.totalSeconds)
                         )
                     },
                     { s ->
@@ -139,50 +116,29 @@ internal object StandardTypeMappingRegistry {
                     }
                 )
 
-                PgStandardType.INTERVAL -> StandardTypeHandler(
+                PgStandardType.INTERVAL -> mapped(
                     Duration::class,
-                    { rs, i ->
-                        val pgInterval = rs.getObject(i) as PGInterval
-                        // Konwersja z PGInterval na kotlin.time.Duration
-                        (pgInterval.days.toLong() * 24).hours +
-                                pgInterval.hours.toLong().hours +
-                                pgInterval.minutes.toLong().minutes +
-                                pgInterval.seconds.seconds
-                    },
+                    { getObject(it) as? PGInterval },
+                    ::pgIntervalToDuration,
                     { s ->
-                        val pgInterval = PGInterval(s)
                         // Konwersja z PGInterval na kotlin.time.Duration
-                        (pgInterval.days.toLong() * 24).hours +
-                                pgInterval.hours.toLong().hours +
-                                pgInterval.minutes.toLong().minutes +
-                                pgInterval.seconds.seconds
+                        pgIntervalToDuration(PGInterval(s))
                     }
                 )
+                // Json
+                PgStandardType.JSON, PgStandardType.JSONB -> fromStringOnly(JsonElement::class) { Json.parseToJsonElement(it) }
+                // Inne
+                PgStandardType.BOOL -> primitive(Boolean::class, ResultSet::getBoolean) { it == "t" }
 
-                PgStandardType.JSON, PgStandardType.JSONB -> StandardTypeHandler(JsonElement::class, null) { s -> Json.parseToJsonElement(s) }
+                PgStandardType.UUID -> standard(UUID::class, { getObject(it) as UUID? }, UUID::fromString)
 
-                PgStandardType.BOOL -> StandardTypeHandler(
-                    Boolean::class,
-                    { rs, i -> rs.getBoolean(i) },
-                    { s -> s == "t" })
-
-                PgStandardType.UUID -> StandardTypeHandler(
-                    UUID::class,
-                    { rs, i -> rs.getObject(i) as UUID },
-                    { s -> UUID.fromString(s) })
-
-                PgStandardType.BYTEA -> StandardTypeHandler(
-                    ByteArray::class,
-                    { rs, i -> rs.getBytes(i) },
-                    { s ->
-                        if (s.startsWith("\\x")) {
-                            hexStringToByteArray(s.substring(2))
-                        } else {
-                            throw UnsupportedOperationException("Unsupported bytea format. Only hex format (e.g. '\\xDEADBEEF') is supported.")
-                        }
+                PgStandardType.BYTEA -> standard(ByteArray::class, ResultSet::getBytes) {
+                    if (it.startsWith("\\x")) {
+                        hexStringToByteArray(it.substring(2))
+                    } else {
+                        throw UnsupportedOperationException("Unsupported bytea format. Only hex format (e.g. '\\xDEADBEEF') is supported.")
                     }
-                )
-
+                }
                 else -> null
             }
             if (handler != null) {
@@ -190,6 +146,13 @@ internal object StandardTypeMappingRegistry {
             }
         }
         return map.toMap()
+    }
+
+    private fun pgIntervalToDuration(pgInterval: PGInterval): Duration {
+        return (pgInterval.days.toLong() * 24).hours +
+                pgInterval.hours.toLong().hours +
+                pgInterval.minutes.toLong().minutes +
+                pgInterval.seconds.seconds
     }
 
     private fun hexStringToByteArray(hex: String): ByteArray {
@@ -208,4 +171,52 @@ internal object StandardTypeMappingRegistry {
     fun getHandler(pgTypeName: String): StandardTypeHandler? = mappings[pgTypeName]
 
     fun getAllTypeNames(): Set<String> = mappings.keys
+
+    // Śmietnik JDBC:
+    // 1. Dla typów prymitywnych (int, bool, double).
+    // Wywołuje getter, a potem sprawdza wasNull().
+    private inline fun <reified T : Any> primitive(
+        kClass: KClass<T>,
+        crossinline getter: ResultSet.(Int) -> T,
+        noinline parser: (String) -> T
+    ) = StandardTypeHandler(
+        kotlinClass = kClass,
+        fromResultSet = { rs, i ->
+            val v = rs.getter(i)
+            if (rs.wasNull()) null else v
+        },
+        fromString = parser
+    )
+    // 3. Dla typów standardowych (bez konwersji zwracających nulle).
+    private inline fun <reified T : Any> standard(
+        kClass: KClass<T>,
+        crossinline getter: ResultSet.(Int) -> T?,
+        noinline parser: (String) -> T
+    ) = StandardTypeHandler(
+        kotlinClass = kClass,
+        fromResultSet = { rs, i -> rs.getter(i) },
+        fromString = parser
+    )
+
+    // 3. Dla typów wymagających konwersji (np. Timestamp -> Kotlin Instant).
+    // Zabezpiecza przed NullPointerException w mapperze.
+    private inline fun <SRC : Any, reified T : Any> mapped(
+        kClass: KClass<T>,
+        crossinline getter: ResultSet.(Int) -> SRC?, // Getter JDBC
+        crossinline mapper: (SRC) -> T,              // Konwersja obiektu
+        noinline parser: (String) -> T               // Konwersja Stringa
+    ) = StandardTypeHandler(
+        kotlinClass = kClass,
+        fromResultSet = { rs, i -> rs.getter(i)?.let(mapper) }, // Safe call (?.) załatwia sprawę
+        fromString = parser
+    )
+    // 4. Dla typów nie posiadającej szybszej ścieżki niż odczyt Stringa
+    private inline fun <reified T : Any> fromStringOnly(
+        kClass: KClass<T>,
+        noinline parser: (String) -> T
+    ) = StandardTypeHandler(
+        kotlinClass = kClass,
+        fromResultSet = null,
+        fromString = parser
+    )
 }
