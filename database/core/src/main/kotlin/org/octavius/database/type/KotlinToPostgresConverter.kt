@@ -11,6 +11,7 @@ import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toMap
 import org.octavius.data.type.DynamicDto
 import org.octavius.data.type.PgTyped
+import org.octavius.data.util.clean
 import org.octavius.database.config.DynamicDtoSerializationStrategy
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
@@ -187,7 +188,9 @@ internal class KotlinToPostgresConverter(
                         "Value class '${paramValue::class.simpleName}' must be annotated with @DynamicallyMappable to be used as a query parameter."
                     )
                 )
-            // Krok 4: Fallback dla wszystkich innych typów prostych (Int, String, etc.)
+            // String jest oczyszczony z cudzysłowów i apostrofów drukarskich
+            paramValue is String -> ":$paramName" to mapOf(paramName to paramValue.clean())
+            // Fallback dla wszystkich innych typów prostych (Int, Double, etc.)
             else -> ":$paramName" to mapOf(paramName to paramValue)
         }
     }
