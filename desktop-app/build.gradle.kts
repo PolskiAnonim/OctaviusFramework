@@ -36,6 +36,7 @@ kotlin {
             implementation(projects.featureGames)
             implementation(projects.featureSettings)
             implementation(projects.featureAsianMedia)
+            implementation(projects.featureBooks)
             implementation(projects.apiServer)
             implementation(projects.apiContract)
             implementation(compose.desktop.currentOs)

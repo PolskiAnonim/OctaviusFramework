@@ -14,7 +14,7 @@ val databaseModule = module {
                 dbUrl = "jdbc:postgresql://localhost:5432/octavius",
                 dbUsername = "postgres",
                 dbPassword = "1234",
-                dbSchemas = listOf("public", "asian_media", "games"),
+                dbSchemas = listOf("public", "asian_media", "games", "books"),
                 setSearchPath = true,
                 packagesToScan = listOf("org.octavius")
             )

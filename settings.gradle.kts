@@ -38,9 +38,6 @@ dependencyResolutionManagement {
 
 include(
     ":desktop-app",
-    ":feature-asian-media",
-    ":feature-settings",
-    ":feature-games",
     ":form-engine",
     ":report-engine",
     ":api-server",
@@ -48,6 +45,11 @@ include(
     ":core",
     ":api-contract",
     ":feature-contract",
+    // Features
+    ":feature-settings",
+    ":feature-asian-media",
+    ":feature-games",
+    ":feature-books",
     // Database
     ":database:core",
     ":database:api",
