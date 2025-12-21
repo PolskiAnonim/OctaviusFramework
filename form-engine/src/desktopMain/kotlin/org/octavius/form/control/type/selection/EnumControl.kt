@@ -1,10 +1,19 @@
 package org.octavius.form.control.type.selection
 
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import kotlinx.coroutines.CoroutineScope
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
+import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
 import org.octavius.form.control.type.selection.dropdown.DropdownOption
+import org.octavius.localization.T
 import kotlin.reflect.KClass
 
 /**
@@ -28,14 +37,40 @@ class EnumControl<T>(
         return value?.toDisplayString()
     }
 
-    override fun loadOptions(searchQuery: String, page: Long): Pair<List<DropdownOption<T>>, Long> {
-        val options = enumClass.java.enumConstants
-            .filter {
-                searchQuery.isEmpty() ||
-                        it.toDisplayString().contains(searchQuery, ignoreCase = true)
-            }
-            .map { DropdownOption(it, it.toDisplayString()) }
+    @Composable
+    override fun ColumnScope.RenderMenuItems(
+        renderContext: RenderContext,
+        scope: CoroutineScope,
+        controlState: MutableState<T?>,
+        closeMenu: () -> Unit
+    ) {
+        val options = enumClass.java.enumConstants.map {
+            DropdownOption(it, it.toDisplayString())
+        }
 
-        return Pair(options, 1L) // Enumy zawsze mają jedną stronę
+        // Opcja "null"
+        if (required != true) {
+            DropdownMenuItem(
+                text = { Text(T.get("form.dropdown.noSelection")) },
+                onClick = {
+                    controlState.value = null
+                    executeActions(renderContext, null, scope)
+                    closeMenu()
+                }
+            )
+            HorizontalDivider()
+        }
+
+        // Lista opcji
+        options.forEach { option ->
+            DropdownMenuItem(
+                text = { Text(option.displayText) },
+                onClick = {
+                    controlState.value = option.value
+                    executeActions(renderContext, option.value, scope)
+                    closeMenu()
+                }
+            )
+        }
     }
 }
