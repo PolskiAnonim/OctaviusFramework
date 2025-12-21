@@ -18,6 +18,9 @@ dependencies {
     implementation(dbLibs.spring.jdbc)
     implementation(dbLibs.classgraph)
 
+    implementation(dbLibs.flyway.core)
+    implementation(dbLibs.flyway.postgres)
+
 
     // Test dependencies - precyzyjnie tylko to co potrzebne
     testImplementation(platform(libs.junit.bom))

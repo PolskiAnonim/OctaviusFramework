@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
+import org.flywaydb.core.Flyway
 import org.octavius.data.DataAccess
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.config.DynamicDtoSerializationStrategy
@@ -74,6 +75,7 @@ object OctaviusDatabase {
         val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         val transactionManager = JdbcTransactionManager(dataSource)
 
+        runMigrations(dataSource, dbSchemas)
         logger.debug { "Loading type registry from database..." }
         val typeRegistry: TypeRegistry
         val typeRegistryLoadTime = measureTime {
@@ -101,4 +103,32 @@ object OctaviusDatabase {
             kotlinToPostgresConverter
         )
     }
+
+    private fun runMigrations(dataSource: DataSource, schemas: List<String>) {
+        logger.info { "Checking database migrations..." }
+
+        // Konfiguracja Flyway
+        val flyway = Flyway.configure()
+            .dataSource(dataSource)
+            .schemas(*schemas.toTypedArray())
+            // Domyślna lokalizacja to classpath:db/migration
+            .locations("classpath:db/migration")
+            .createSchemas(true)
+            .baselineOnMigrate(true)
+            .baselineVersion("2025.12.21.15.13")
+            .load()
+
+        try {
+            val result = flyway.migrate()
+            if (result.migrationsExecuted > 0) {
+                logger.info { "Successfully applied ${result.migrationsExecuted} migrations." }
+            } else {
+                logger.debug { "Database is up to date." }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Migration failed!" }
+            throw e
+        }
+    }
+
 }
