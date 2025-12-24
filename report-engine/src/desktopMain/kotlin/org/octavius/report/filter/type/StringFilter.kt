@@ -124,7 +124,6 @@ class StringFilter: Filter<StringFilterData>() {
             StringFilterDataType.StartsWith -> "$escapedSearchValue%"
             StringFilterDataType.EndsWith -> "%$escapedSearchValue"
             StringFilterDataType.Contains, StringFilterDataType.NotContains -> "%$escapedSearchValue%"
-            else -> throw IllegalStateException("Unexpected filterType: $filterType") // Zabezpieczenie
         }
 
         val finalOperator = if (filterType == StringFilterDataType.NotContains) notOperator else operator
@@ -171,7 +170,6 @@ class StringFilter: Filter<StringFilterData>() {
             StringFilterDataType.StartsWith  -> Pair("$escapedSearchValue%", likeOperator)
             StringFilterDataType.EndsWith    -> Pair("%$escapedSearchValue", likeOperator)
             StringFilterDataType.NotContains -> Pair("%$escapedSearchValue%", notLikeOperator)
-            else -> throw IllegalStateException("Nieobsługiwany typ filtra: $filterType")
         }
 
         val innerCondition = "elem $currentLikeOperator :$columnName"
