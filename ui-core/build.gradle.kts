@@ -12,14 +12,17 @@ kotlin {
     }
 
     sourceSets {
-        // Wszystko, co ma być współdzielone, idzie do commonMain
         commonMain.dependencies {
             // Zależności Compose, które działają wszędzie
-            api(compose.runtime)
-            api(compose.foundation)
-            api(compose.material3)
-            api(compose.ui)
-            api(compose.materialIconsExtended)
+
+            api(composeLibs.runtime)
+            api(composeLibs.foundation)
+            api(composeLibs.material3)
+            api(composeLibs.ui)
+            api(composeLibs.components.resources)
+            api(composeLibs.materialIconsExtended)
+
+
             // Inne współdzielone biblioteki
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core) // ui-core może zależeć od core
@@ -27,7 +30,6 @@ kotlin {
             implementation(projects.database.api)
         }
 
-        // Zależności tylko dla desktopu (jeśli jakieś są)
         val desktopMain by getting
         val jsMain by getting
     }

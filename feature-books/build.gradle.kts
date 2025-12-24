@@ -14,19 +14,15 @@ kotlin {
 
         commonMain.dependencies {
             // Zależności Compose
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
+            implementation(projects.uiCore)
+            implementation(composeLibs.components.resources)
 
             implementation(libs.kotlinx.coroutines.core)
         }
 
         desktopMain.dependencies {
             implementation(projects.core)
-            implementation(projects.uiCore)
+
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
             implementation(projects.apiContract)

@@ -15,13 +15,8 @@ kotlin {
         val desktopMain by getting
 
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            implementation(projects.uiCore)
+
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
@@ -29,7 +24,6 @@ kotlin {
         desktopMain.dependencies {
             implementation(projects.core)
             implementation(projects.database.core)
-            implementation(projects.uiCore)
             implementation(projects.featureContract)
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
