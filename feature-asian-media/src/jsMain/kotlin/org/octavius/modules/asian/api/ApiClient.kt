@@ -1,4 +1,4 @@
-package org.octavius.modules.asian
+package org.octavius.modules.asian.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

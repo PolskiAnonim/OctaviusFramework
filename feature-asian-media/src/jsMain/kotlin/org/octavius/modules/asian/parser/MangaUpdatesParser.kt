@@ -1,10 +1,11 @@
-package org.octavius.modules.asian
+package org.octavius.modules.asian.parser
 
 import kotlinx.browser.document
 import org.octavius.api.contract.ParsedData
 import org.octavius.api.contract.Parser
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationType
+import org.octavius.modules.asian.model.AsianPublicationData
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
