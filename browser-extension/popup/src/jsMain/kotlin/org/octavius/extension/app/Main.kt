@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeViewport
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.jetbrains.compose.web.dom.Text
 import org.octavius.api.contract.ExtensionModule
 import org.octavius.extension.util.chrome
+import org.octavius.modules.asian.AsianMediaExtensionModule
 import org.octavius.navigation.Screen
 import org.octavius.ui.theme.AppTheme
 import kotlin.coroutines.resume
@@ -27,7 +28,7 @@ import kotlin.coroutines.resume
 fun main() {
     // Moduły wtyczki
     val extensionModules: List<ExtensionModule> = listOf(
-
+        AsianMediaExtensionModule
     )
     // Wtyczka
     ComposeViewport {
@@ -43,15 +44,11 @@ fun main() {
                 return@LaunchedEffect
             }
 
-            val screenToShow = extensionModules.asSequence()
-                // Najpierw próbujemy zdeserializować dane za pomocą każdego modułu.
-                .mapNotNull { module ->
-                    val data = module.deserializeData(responseJson)
-                    // Jeśli się udało, tworzymy parę (moduł, dane).
-                    if (data != null) module to data else null
-                }
-                // Bierzemy pierwszy moduł, któremu się udało.
-                .firstOrNull()
+            val screenToShow = extensionModules.firstNotNullOfOrNull { module ->
+                val data = module.deserializeData(responseJson)
+                // Jeśli się udało, tworzymy parę (moduł, dane).
+                if (data != null) module to data else null
+            }
                 // Jeśli znaleźliśmy parę, tworzymy z niej ekran.
                 ?.let { (module, data) ->
                     module.createScreenFromData(data)
@@ -109,7 +106,7 @@ suspend fun sendParseRequestToContentScript(): String? {
             chrome.tabs.sendMessage(tabId, message) { response ->
                 // Sprawdzenie, czy przeglądarka nie jest w trakcie zamykania korutyny.
                 if (!continuation.isActive) return@sendMessage
-
+                println("Odp JSON: ${JSON.stringify(response)}")
                 // 3. Przetwórz odpowiedź od content scriptu.
                 if (js("typeof response === 'undefined' || !response.success")) {
                     // Jeśli odpowiedź jest niezdefiniowana lub flaga 'success' to false.
