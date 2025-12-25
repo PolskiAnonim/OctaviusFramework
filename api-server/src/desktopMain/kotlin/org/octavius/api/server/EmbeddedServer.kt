@@ -13,7 +13,7 @@ import org.octavius.api.contract.ApiModule
 
 class EmbeddedServer(private val apiModules: List<ApiModule>) {
 
-    private val engine = embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+    private val engine = embeddedServer(Netty, port = 8080, host = "127.0.0.1") {
         install(ContentNegotiation) {
             json()
         }
