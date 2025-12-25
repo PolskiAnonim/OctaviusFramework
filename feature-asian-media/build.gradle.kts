@@ -24,10 +24,10 @@ kotlin {
 
             implementation(projects.apiContract)
             implementation(projects.database.api)
+            implementation(projects.core)
         }
 
         desktopMain.dependencies {
-            implementation(projects.core)
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
             implementation(projects.featureContract)
