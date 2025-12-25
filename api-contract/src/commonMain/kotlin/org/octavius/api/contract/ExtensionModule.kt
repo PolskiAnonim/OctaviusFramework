@@ -1,7 +1,6 @@
 package org.octavius.api.contract
 
 import org.octavius.navigation.Screen
-import org.octavius.navigation.Tab
 
 /**
  * Definiuje kontrakt dla modułu wtyczki
@@ -18,7 +17,7 @@ interface ExtensionModule {
      * @param jsonString Surowy JSON z content scriptu.
      * @return Zdeserializowany obiekt ParsedData lub null, jeśli dane nie są w oczekiwanym formacie.
      */
-    fun deserializeData(jsonString: String): ParsedData?
+    fun deserializeData(jsonString: String): ParsedData? // TODO sprawdzić czy nie lepiej filtrować po moduleId
 
     /**
      * Główna metoda "fabryczna". Na podstawie konkretnego typu danych
@@ -27,9 +26,4 @@ interface ExtensionModule {
      * @return Obiekt Screen gotowy do wyświetlenia, lub null jeśli dane nie pasują.
      */
     fun createScreenFromData(data: ParsedData): Screen?
-
-    /**
-     * Parsery stron (content-script)
-     */
-    val parsers: List<Parser>
 }

@@ -1,6 +1,8 @@
-package org.octavius.contentscript.dom
+package org.octavius.modules.asian
 
 import kotlinx.browser.document
+import org.octavius.api.contract.ParsedData
+import org.octavius.api.contract.Parser
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationType
 import org.w3c.dom.HTMLDivElement
@@ -11,15 +13,12 @@ import org.w3c.dom.asList
  * Prosty parser do wyciągania danych ze strony MangaUpdates.
  * Używa selektorów CSS do znalezienia odpowiednich elementów.
  */
-object MangaUpdatesParser {
+object MangaUpdatesParser: Parser {
+    override fun canParse(url: String): Boolean {
+        return "mangaupdates.com/series/" in url
+    }
 
-    data class PageData(
-        val titles: List<String>,
-        val type: PublicationType,
-        val language: PublicationLanguage
-    )
-
-    fun parsePage(): PageData {
+    override suspend fun parse(): ParsedData {
         // Główny tytuł
         val mainTitle = document.querySelector(".releasestitle.tabletitle")?.textContent?.trim() ?: ""
         println(mainTitle)
@@ -53,8 +52,12 @@ object MangaUpdatesParser {
             PublicationType.Manhua -> PublicationLanguage.Chinese
             else -> PublicationLanguage.Japanese
         }
-
-        return PageData(allTitles, detectedType, language)
+        return AsianPublicationData(
+            "MangaUpdates",
+            allTitles,
+            detectedType,
+            language
+        )
     }
 
     /**

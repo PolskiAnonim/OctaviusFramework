@@ -17,6 +17,7 @@ kotlin {
                 api(projects.core)
 
                 api(libs.ktor.server.core)
+                implementation(projects.uiCore)
             }
         }
         val desktopMain by getting
