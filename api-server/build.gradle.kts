@@ -9,7 +9,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(projects.core)
                 implementation(projects.apiContract)
             }
         }

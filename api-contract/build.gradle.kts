@@ -13,9 +13,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                // Potrzebujemy zależności do commonMain z core
-                api(projects.core)
-
                 api(libs.ktor.server.core)
                 implementation(projects.uiCore)
             }

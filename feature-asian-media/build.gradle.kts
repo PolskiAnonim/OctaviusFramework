@@ -23,6 +23,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
 
             implementation(projects.apiContract)
+            implementation(projects.database.api)
         }
 
         desktopMain.dependencies {

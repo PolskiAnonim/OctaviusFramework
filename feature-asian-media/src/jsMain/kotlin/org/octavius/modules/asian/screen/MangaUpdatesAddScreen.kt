@@ -23,7 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import org.octavius.api.contract.asian.PublicationAddRequest
+import org.octavius.modules.asian.model.PublicationAddRequest
 import org.octavius.modules.asian.api.ApiClient
 import org.octavius.modules.asian.model.AsianPublicationData
 import org.octavius.navigation.Screen
