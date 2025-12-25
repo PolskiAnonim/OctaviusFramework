@@ -6,10 +6,6 @@ import io.ktor.server.routing.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.api.contract.ApiModule
-import org.octavius.api.contract.asian.PublicationAddRequest
-import org.octavius.api.contract.asian.PublicationAddResponse
-import org.octavius.api.contract.asian.PublicationCheckRequest
-import org.octavius.api.contract.asian.PublicationCheckResponse
 import org.octavius.data.DataAccess
 import org.octavius.data.DataResult
 import org.octavius.data.builder.toField
@@ -19,6 +15,10 @@ import org.octavius.data.type.PgStandardType
 import org.octavius.data.type.withPgType
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.modules.asian.AsianMediaFeature
+import org.octavius.modules.asian.model.PublicationAddRequest
+import org.octavius.modules.asian.model.PublicationAddResponse
+import org.octavius.modules.asian.model.PublicationCheckRequest
+import org.octavius.modules.asian.model.PublicationCheckResponse
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
 

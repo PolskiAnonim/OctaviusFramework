@@ -24,7 +24,7 @@ kotlin {
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
             implementation(projects.featureContract)
-            implementation(projects.apiContract)
+
             implementation(project.dependencies.platform(libs.koin.bom))
 
             implementation(libs.koin.core)

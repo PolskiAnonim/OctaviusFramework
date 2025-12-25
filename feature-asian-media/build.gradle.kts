@@ -8,22 +8,28 @@ plugins {
 kotlin {
     // Definiujemy, że ten moduł jest tylko dla desktopa
     jvm("desktop")
+    js(IR) {
+        browser()
+    }
 
     sourceSets {
         val desktopMain by getting
+        val jsMain by getting
 
         commonMain.dependencies {
             implementation(projects.uiCore)
             implementation(composeLibs.components.resources)
-
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
+
+            implementation(projects.apiContract)
+            implementation(projects.database.api)
         }
 
         desktopMain.dependencies {
             implementation(projects.core)
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
-            implementation(projects.apiContract)
             implementation(projects.featureContract)
             implementation(project.dependencies.platform(libs.koin.bom))
 
@@ -31,6 +37,13 @@ kotlin {
             implementation(libs.koin.compose)
 
             implementation(libs.ktor.server.core)
+        }
+
+        jsMain.dependencies {
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.js) // Implementacja dla środowiska JS
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
         }
     }
 }

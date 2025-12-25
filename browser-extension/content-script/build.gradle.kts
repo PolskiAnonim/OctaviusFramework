@@ -14,9 +14,11 @@ kotlin {
                 implementation(projects.browserExtension.chromeApi)
                 implementation(kotlin("stdlib-js"))
                 implementation(projects.core)
-                // Nie potrzebuje api-contract, bo tylko wysyła dane, nie używa DTO
+                implementation(projects.apiContract)
+                implementation(projects.featureAsianMedia)
                 // Ale potrzebuje wrapperów do komunikacji
                 implementation(browserLibs.kotlin.browser)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
     }

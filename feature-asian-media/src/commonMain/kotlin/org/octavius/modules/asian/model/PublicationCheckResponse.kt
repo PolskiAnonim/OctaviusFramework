@@ -1,4 +1,4 @@
-package org.octavius.api.contract.asian
+package org.octavius.modules.asian.model
 
 import kotlinx.serialization.Serializable
 

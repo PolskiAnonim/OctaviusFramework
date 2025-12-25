@@ -1,12 +1,129 @@
 package org.octavius.extension.app
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeViewport
+import kotlinx.coroutines.suspendCancellableCoroutine
+import org.octavius.api.contract.ExtensionModule
+import org.octavius.extension.util.chrome
+import org.octavius.modules.asian.AsianMediaExtensionModule
+import org.octavius.navigation.Screen
+import org.octavius.ui.theme.AppTheme
+import kotlin.coroutines.resume
 
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
+    // Moduły wtyczki
+    val extensionModules: List<ExtensionModule> = listOf(
+        AsianMediaExtensionModule
+    )
+    // Wtyczka
     ComposeViewport {
-        App()
+        // Stan przechowujący aktualnie wyświetlany ekran
+        var currentScreen by remember { mutableStateOf<Screen?>(null) }
+        var statusMessage by remember { mutableStateOf("Analizowanie strony...") }
+
+        LaunchedEffect(Unit) {
+            val responseJson = sendParseRequestToContentScript() // Funkcja pomocnicza
+
+            if (responseJson == null) {
+                statusMessage = "Nie udało się sparsować strony lub nie znaleziono parsera."
+                return@LaunchedEffect
+            }
+
+            val screenToShow = extensionModules.firstNotNullOfOrNull { module ->
+                val data = module.deserializeData(responseJson)
+                // Jeśli się udało, tworzymy parę (moduł, dane).
+                if (data != null) module to data else null
+            }
+                // Jeśli znaleźliśmy parę, tworzymy z niej ekran.
+                ?.let { (module, data) ->
+                    module.createScreenFromData(data)
+                }
+
+            if (screenToShow != null) {
+                currentScreen = screenToShow
+            } else {
+                statusMessage = "Wystąpił błąd podczas przetwarzania danych."
+            }
+        }
+
+        // Główny widok wtyczki
+        AppTheme {
+            Surface(modifier = Modifier.fillMaxSize().width(400.dp)) {
+                if (currentScreen != null) {
+                    // Mamy konkretny ekran, więc go renderujemy
+                    currentScreen!!.Content()
+                } else {
+                    // Nie mamy ekranu, pokazujemy status (ładowanie, błąd, brak parsera)
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Text(statusMessage)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Wysyła generyczne żądanie parsowania do content scriptu na aktywnej karcie
+ * i asynchronicznie oczekuje na odpowiedź.
+ *
+ * @return String JSON zawierający sparsowane dane, lub null, jeśli wystąpił błąd,
+ *         nie znaleziono parsera, lub odpowiedź była nieprawidłowa.
+ */
+suspend fun sendParseRequestToContentScript(): String? {
+    // Używamy suspendCancellableCoroutine, aby ładnie opakować API oparte na callbackach.
+    return suspendCancellableCoroutine { continuation ->
+        // 1. Znajdź aktywną kartę w bieżącym oknie.
+        val queryInfo = js("{ active: true, currentWindow: true }")
+        chrome.tabs.query(queryInfo) { tabs ->
+            val activeTab = tabs.firstOrNull()
+            val tabId = activeTab?.id
+
+            // Sprawdzenie, czy udało się znaleźć aktywną kartę.
+            if (tabId == null) {
+                println("Błąd: Nie można znaleźć aktywnej karty.")
+                continuation.resume(null) // Zakończ korutynę z wynikiem null.
+                return@query
+            }
+
+            // 2. Zdefiniuj i wyślij wiadomość do content scriptu.
+            val message = js("{ action: 'parsePage' }")
+            chrome.tabs.sendMessage(tabId, message) { response ->
+                // Sprawdzenie, czy przeglądarka nie jest w trakcie zamykania korutyny.
+                if (!continuation.isActive) return@sendMessage
+                println("Odp JSON: ${JSON.stringify(response)}")
+                // 3. Przetwórz odpowiedź od content scriptu.
+                if (js("typeof response === 'undefined' || !response.success")) {
+                    // Jeśli odpowiedź jest niezdefiniowana lub flaga 'success' to false.
+                    val errorMsg = response?.error as? String ?: "Brak odpowiedzi od content scriptu."
+                    println("Błąd parsowania: $errorMsg")
+                    continuation.resume(null)
+                } else {
+                    // Sukces! Otrzymaliśmy dane.
+                    val jsonString = response.data as? String
+                    if (jsonString != null) {
+                        continuation.resume(jsonString) // Zwróć string JSON.
+                    } else {
+                        println("Błąd: Odpowiedź sukcesu nie zawiera danych w formacie string.")
+                        continuation.resume(null)
+                    }
+                }
+            }
+        }
     }
 }
