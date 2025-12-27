@@ -27,8 +27,7 @@ class ReportConfigurationManager : KoinComponent {
                     "column_order" to "EXCLUDED.column_order",
                     "page_size" to "EXCLUDED.page_size",
                     "is_default" to "EXCLUDED.is_default",
-                    "filters" to "EXCLUDED.filters",
-                    "updated_at" to "CURRENT_TIMESTAMP"
+                    "filters" to "EXCLUDED.filters"
                 )
             }.execute(flatValueMap)
 
