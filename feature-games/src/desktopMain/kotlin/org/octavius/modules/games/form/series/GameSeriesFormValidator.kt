@@ -1,11 +1,14 @@
 package org.octavius.modules.games.form.series
 
 import org.octavius.data.DataResult
+import org.octavius.data.QueryFragment
 import org.octavius.data.builder.toField
+import org.octavius.data.join
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator
 import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.getCurrentAs
 import org.octavius.localization.T
 
 class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
@@ -22,23 +25,14 @@ class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
      * @return `true` jeśli tytuł jest unikalny lub wystąpił błąd, `false` jeśli tytuł już istnieje.
      */
     private fun validateTitleAgainstDatabase(formResultData: FormResultData): Boolean {
-        val title = formResultData["name"]?.currentValue as? String
+        val title = formResultData.getCurrentAs<String>("name")
 
-        // Jeśli tytuł jest pusty, standardowa walidacja wymagalności już to obsłużyła.
-        if (title.isNullOrBlank()) {
-            return true
-        }
+        val whereClause = listOfNotNull(
+            QueryFragment("name = :title", mapOf("title" to title)),
+            entityId?.let { QueryFragment("id != :id", mapOf("id" to entityId)) }
+        ).join(" AND ")
 
-
-        val params = mutableMapOf<String, Any>("title" to title)
-        var whereClause = "name = :title"
-
-        if (entityId != null) {
-            whereClause += " AND id != :id"
-            params["id"] = entityId
-        }
-
-        val result = dataAccess.select("COUNT(*)").from("series").where(whereClause).toField<Long>(params)
+        val result = dataAccess.select("COUNT(*)").from("series").where(whereClause.sql).toField<Long>(whereClause.params)
 
         return when (result) {
             is DataResult.Success -> {

@@ -27,8 +27,7 @@ class GameCategoryValidator(): FormValidator() {
         } else {
             builder.where("name = :name")
         }
-        val result = builder.toField<Long>(params)
-        return when (result) {
+        return when (val result = builder.toField<Long>(params)) {
             is DataResult.Success -> {
                 if ((result.value ?: 0L) > 0) {
                     // Kategoria już istnieje. Ustawiamy błąd dla konkretnego pola 'name'.

@@ -24,12 +24,8 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             required = true
         ),
         "playTimeExists" to BooleanControl(null),
-        "ratingsExists" to BooleanControl(
-            null, null
-        ),
-        "charactersExists" to BooleanControl(
-            null, null
-        ),
+        "ratingsExists" to BooleanControl(null),
+        "charactersExists" to BooleanControl(null),
         // Sekcja podstawowych informacji
         "name" to StringControl(
             T.get("games.general.gameName"),
