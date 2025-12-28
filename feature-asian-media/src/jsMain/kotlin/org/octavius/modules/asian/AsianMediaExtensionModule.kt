@@ -7,28 +7,24 @@ import org.octavius.modules.asian.model.AsianPublicationData
 import org.octavius.modules.asian.screen.MangaUpdatesAddScreen
 import org.octavius.navigation.Screen
 
-
-val safeJson = Json {
-    ignoreUnknownKeys = true // To jest klucz! Oleje to dodatkowe pole 'dataType'
-}
-object AsianMediaExtensionModule: ExtensionModule {
+object AsianMediaExtensionModule : ExtensionModule {
     override val id: String = "asian-media"
 
-    override fun deserializeData(jsonString: String): ParsedData? {
+    override fun createScreenFromJson(jsonData: String): Screen? {
         return try {
-            // Moduł próbuje zdeserializować dane do JEDYNEGO typu, który go interesuje.
-            safeJson.decodeFromString<AsianPublicationData>(jsonString)
+            val data = Json.decodeFromString<AsianPublicationData>(jsonData)
+            chooseScreen(data)
         } catch (e: Exception) {
-            // Jeśli się nie uda, to znaczy, że to nie są dane dla niego.
+            println("Błąd deserializacji danych dla modułu $id: ${e.message}")
             null
         }
     }
 
-    override fun createScreenFromData(data: ParsedData): Screen {
-        val publicationData = data as AsianPublicationData
+    fun chooseScreen(publicationData: AsianPublicationData): Screen {
         return when (publicationData.source) {
             "MangaUpdates" -> MangaUpdatesAddScreen(publicationData)
             else -> TODO("Not implemented yet")
         }
     }
+
 }

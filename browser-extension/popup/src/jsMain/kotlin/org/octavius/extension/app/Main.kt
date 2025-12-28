@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeViewport
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.serialization.json.Json
 import org.octavius.api.contract.ExtensionModule
+import org.octavius.api.contract.ParseResult
 import org.octavius.extension.util.chrome
 import org.octavius.modules.asian.AsianMediaExtensionModule
 import org.octavius.navigation.Screen
@@ -30,6 +32,7 @@ fun main() {
     val extensionModules: List<ExtensionModule> = listOf(
         AsianMediaExtensionModule
     )
+    val modulesById = extensionModules.associateBy { it.id }
     // Wtyczka
     ComposeViewport {
         // Stan przechowujący aktualnie wyświetlany ekran
@@ -37,27 +40,39 @@ fun main() {
         var statusMessage by remember { mutableStateOf("Analizowanie strony...") }
 
         LaunchedEffect(Unit) {
-            val responseJson = sendParseRequestToContentScript() // Funkcja pomocnicza
+            val responseString = sendParseRequestToContentScript()
 
-            if (responseJson == null) {
+            if (responseString == null) {
                 statusMessage = "Nie udało się sparsować strony lub nie znaleziono parsera."
                 return@LaunchedEffect
             }
 
-            val screenToShow = extensionModules.firstNotNullOfOrNull { module ->
-                val data = module.deserializeData(responseJson)
-                // Jeśli się udało, tworzymy parę (moduł, dane).
-                if (data != null) module to data else null
+            val parseResult = try {
+                Json.decodeFromString<ParseResult>(responseString)
+            } catch (e: Exception) {
+                println("Błąd deserializacji kontenera ParseResult: ${e.message}")
+                null
             }
-                // Jeśli znaleźliśmy parę, tworzymy z niej ekran.
-                ?.let { (module, data) ->
-                    module.createScreenFromData(data)
-                }
+
+            if (parseResult == null) {
+                statusMessage = "Otrzymano nieprawidłowe dane ze skryptu."
+                return@LaunchedEffect
+            }
+
+            val targetModule = modulesById[parseResult.moduleId]
+
+            if (targetModule == null) {
+                statusMessage = "Nie znaleziono modułu obsługującego: ${parseResult.moduleId}"
+                return@LaunchedEffect
+            }
+
+            // 3. Poproś ten konkretny moduł o deserializację jego danych i utworzenie ekranu
+            val screenToShow = targetModule.createScreenFromJson(parseResult.dataJson)
 
             if (screenToShow != null) {
                 currentScreen = screenToShow
             } else {
-                statusMessage = "Wystąpił błąd podczas przetwarzania danych."
+                statusMessage = "Wystąpił błąd podczas przetwarzania danych przez moduł."
             }
         }
 

@@ -10,20 +10,11 @@ interface ExtensionModule {
     /** Unikalne ID modułu, np. "asian-media" */
     val id: String
 
-    /**
-     * Deserializuje string JSON do konkretnego obiektu ParsedData,
-     * który jest obsługiwany przez ten moduł.
-     *
-     * @param jsonString Surowy JSON z content scriptu.
-     * @return Zdeserializowany obiekt ParsedData lub null, jeśli dane nie są w oczekiwanym formacie.
-     */
-    fun deserializeData(jsonString: String): ParsedData? // TODO sprawdzić czy nie lepiej filtrować po moduleId
 
     /**
-     * Główna metoda "fabryczna". Na podstawie konkretnego typu danych
-     * decyduje, który ekran stworzyć.
-     * @param data Dane sparsowane przez content script.
-     * @return Obiekt Screen gotowy do wyświetlenia, lub null jeśli dane nie pasują.
+     * Tworzy ekran na podstawie stringa JSON z danymi specyficznymi dla tego modułu.
+     * Moduł sam jest odpowiedzialny za deserializację.
+     * @return Screen do wyświetlenia lub null, jeśli dane są nieprawidłowe.
      */
-    fun createScreenFromData(data: ParsedData): Screen?
+    fun createScreenFromJson(jsonData: String): Screen?
 }

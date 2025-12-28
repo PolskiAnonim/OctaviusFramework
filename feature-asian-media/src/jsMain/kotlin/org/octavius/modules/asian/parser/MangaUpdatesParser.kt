@@ -1,10 +1,12 @@
 package org.octavius.modules.asian.parser
 
 import kotlinx.browser.document
+import kotlinx.serialization.json.Json
 import org.octavius.api.contract.ParsedData
 import org.octavius.api.contract.Parser
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationType
+import org.octavius.modules.asian.AsianMediaExtensionModule
 import org.octavius.modules.asian.model.AsianPublicationData
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLElement
@@ -14,9 +16,16 @@ import org.w3c.dom.asList
  * Prosty parser do wyciągania danych ze strony MangaUpdates.
  * Używa selektorów CSS do znalezienia odpowiednich elementów.
  */
-object MangaUpdatesParser: Parser {
+object MangaUpdatesParser: Parser<AsianPublicationData> {
+
+    override val moduleId: String = AsianMediaExtensionModule.id
+
     override fun canParse(url: String): Boolean {
         return "mangaupdates.com/series/" in url
+    }
+
+    override fun serialize(data: AsianPublicationData): String {
+        return Json.encodeToString(data)
     }
 
     override suspend fun parse(): ParsedData {

@@ -1,19 +1,18 @@
 package org.octavius.api.contract
 
 /**
- * Interfejs dla parsera specyficznego dla danej strony.
+ * Generyczny interfejs parsera.
+ * @param T Typ danych, który ten parser produkuje (musi dziedziczyć po ParsedData).
  */
-interface Parser {
-    /**
-     * Sprawdza, czy ten parser jest odpowiedni dla danego URL.
-     * @param url Aktualny adres URL strony.
-     * @return `true` jeśli parser może obsłużyć tę stronę.
-     */
+interface Parser<T : ParsedData> {
+    // Identyfikator modułu, do którego należy ten parser. Niezbędny.
+    val moduleId: String
+
     fun canParse(url: String): Boolean
 
-    /**
-     * Parsuje stronę i zwraca ustrukturyzowane dane.
-     * @return Obiekt implementujący `ParsedData` lub `null`, jeśli parsowanie się nie powiodło.
-     */
+    // Zwraca konkretny, silnie typowany obiekt danych lub null.
     suspend fun parse(): ParsedData?
+
+    // Serializuje obiekt *swojego* typu do stringa JSON.
+    fun serialize(data: T): String
 }
