@@ -3,8 +3,7 @@
     "actions": {
       "containsErrors": "Formularz zawiera błędy",
       "errorsLabel": "Błędy:",
-      "itemLabel": "Element {0}",
-      "savedSuccessfully": "Formularz został zapisany pomyślnie"
+      "itemLabel": "Element {0}"
     },
     "dropdown": {
       "noResults": "Brak wyników",

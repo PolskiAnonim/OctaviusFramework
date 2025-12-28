@@ -9,8 +9,7 @@
     "ok": "OK",
     "overwrite": "Nadpisz",
     "remove": "Usuń",
-    "save": "Zapisz",
-    "select": "Wybierz"
+    "save": "Zapisz"
   },
   "asianMedia": {
     "publicationLanguage": {
@@ -47,9 +46,11 @@
   },
   "tabs": {
     "asianMedia": "Azjatyckie",
-    "games": "Gry"
+    "games": "Gry",
+    "books": "Książki"
   },
   "error": {
+    "dataLoading": "Bład ładowania danych",
     "dialog": {
       "dismiss": "Odrzuć"
     },

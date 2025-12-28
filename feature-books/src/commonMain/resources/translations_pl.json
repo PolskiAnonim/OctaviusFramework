@@ -1,0 +1,19 @@
+{
+  "books": {
+    "home": {
+      "addBook": "Dodaj książkę",
+      "allAuthors": "Wszyscy autorzy",
+      "allBooks": "Wszystkie książki",
+      "currentlyReading": "Obecnie czytane",
+      "noItems": "Brak danych",
+      "recentlyAdded": "Ostatnio dodane",
+      "title": "Strona główna"
+    },
+    "stats": {
+      "authors": "Autorzy",
+      "completed": "Ukończone",
+      "reading": "Czytane",
+      "total": "Razem"
+    }
+  }
+}
