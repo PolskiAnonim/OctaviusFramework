@@ -12,6 +12,5 @@ data class AsianPublicationData(
     override val source: String,
     val titles: List<String>,
     val type: PublicationType,
-    val language: PublicationLanguage,
-    override val moduleId: String = "asian-media"
+    val language: PublicationLanguage
 ) : ParsedData
