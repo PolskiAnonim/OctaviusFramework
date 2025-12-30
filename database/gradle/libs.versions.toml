@@ -2,8 +2,8 @@
 classgraph = "4.8.184"
 postgres = "42.7.8"
 hikari = "7.0.2"
-spring-jdbc = "7.0.1"
-flyway = "11.19.1"
+spring-jdbc = "7.0.2"
+flyway = "11.20.0"
 
 [libraries]
 classgraph = { group = "io.github.classgraph", name = "classgraph", version.ref = "classgraph" }

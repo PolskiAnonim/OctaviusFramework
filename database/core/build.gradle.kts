@@ -10,7 +10,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlin.reflect)
     implementation(libs.logback.classic)
-    implementation(libs.kotlin.logging.jvm)
+    implementation(libs.kotlin.logging)
 
     // Database-specific dependencies
     implementation(dbLibs.postgres)
