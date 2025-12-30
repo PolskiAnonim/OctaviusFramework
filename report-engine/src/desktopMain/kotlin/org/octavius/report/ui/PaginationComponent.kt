@@ -197,10 +197,12 @@ fun ActualPage(pagination: ReportPaginationState, onEvent: (ReportEvent) -> Unit
                         val newPage = pageInputValue.text.toLongOrNull()
                         if (newPage != null && newPage > 0 && newPage <= pagination.totalPages) {
                             onEvent(ReportEvent.PageChanged(newPage - 1))
+                        } else {
+                            pageInputValue = TextFieldValue(
+                                text = (pagination.currentPage + 1).toString(),
+                                selection = TextRange((pagination.currentPage + 1).toString().length)
+                            )
                         }
-                        // Jeśli wpisano złą wartość, pole samo się zresetuje
-                        // przy następnej rekompozycji, bo `remember(pagination.currentPage)`
-                        // zobaczy, że stan globalny się nie zmienił.
                         isEditingPage = false
                     }
                 )
