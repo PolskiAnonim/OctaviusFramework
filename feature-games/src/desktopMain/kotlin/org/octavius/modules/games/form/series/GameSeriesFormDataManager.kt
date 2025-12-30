@@ -17,10 +17,10 @@ class GameSeriesFormDataManager : FormDataManager() {
 
     override fun initData(
         loadedId: Int?,
-        payload: Map<String, Any?>?
+        payload: Map<String, Any?>
     ): Map<String, Any?> {
         val loadedData = loadData(loadedId)
-        return loadedData + (payload ?: emptyMap())
+        return loadedData + payload
     }
 
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {

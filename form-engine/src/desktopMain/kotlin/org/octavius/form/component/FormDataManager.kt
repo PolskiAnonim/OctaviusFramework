@@ -35,9 +35,10 @@ abstract class FormDataManager: KoinComponent {
      * Dostarcza wartości początkowe dla kontrolek formularza.
      *
      * @param loadedId ID edytowanej encji (null dla nowych rekordów)
+     * @param payload dodatkowe dane dla formularza (pusta mapa dla braku dodatkowych danych)
      * @return mapa kontrolka->wartość z wartościami domyślnymi lub obliczonymi
      */
-    abstract fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?>
+    abstract fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?>
 
     /**
     * Definiuje logikę dla wszystkich akcji formularza (Zapisz, Anuluj, Usuń, etc.).

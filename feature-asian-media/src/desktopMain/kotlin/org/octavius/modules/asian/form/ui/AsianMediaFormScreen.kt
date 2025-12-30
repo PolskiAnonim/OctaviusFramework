@@ -11,7 +11,7 @@ class AsianMediaFormScreen {
     companion object {
         fun create(
             entityId: Int? = null,
-            payload: Map<String, Any?>? = null
+            payload: Map<String, Any?> = emptyMap()
         ): FormScreen {
             val title =
                 if (entityId == null) T.get("asianMedia.form.newTitle") else T.get("asianMedia.form.editTitle")

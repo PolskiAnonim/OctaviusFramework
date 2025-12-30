@@ -43,11 +43,11 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
     }
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
+    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
         val loadedData = loadAsianMediaData(loadedId)
 
         // Kolejność łączenia: Załadowane z DB -> Payload (nadpisuje wszystko)
-        return loadedData + (payload ?: emptyMap())
+        return loadedData + payload
     }
 
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {

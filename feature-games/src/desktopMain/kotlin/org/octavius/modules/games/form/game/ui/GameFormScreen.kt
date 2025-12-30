@@ -11,7 +11,7 @@ class GameFormScreen {
     companion object {
         fun create(
             entityId: Int? = null,
-            payload: Map<String, Any?>? = null
+            payload: Map<String, Any?> = emptyMap()
         ): FormScreen {
             val title =
                 if (entityId == null) T.get("games.form.newGame") else T.get("games.form.editGame")

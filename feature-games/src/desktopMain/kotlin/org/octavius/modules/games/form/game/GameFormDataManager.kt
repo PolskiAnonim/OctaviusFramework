@@ -66,7 +66,7 @@ class GameFormDataManager : FormDataManager() {
         }
     }
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
+    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
         val loadedData = loadGameData(loadedId)
 
         val defaultData = if (loadedId == null) {
@@ -82,7 +82,7 @@ class GameFormDataManager : FormDataManager() {
         }
 
         // Kolejność łączenia: Domyślne -> Załadowane z DB -> Payload (nadpisuje wszystko)
-        return defaultData + loadedData + (payload ?: emptyMap())
+        return defaultData + loadedData + payload
     }
 
     override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {

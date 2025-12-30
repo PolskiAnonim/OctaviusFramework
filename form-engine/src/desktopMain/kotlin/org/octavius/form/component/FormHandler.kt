@@ -34,7 +34,7 @@ class FormHandler(
     formSchemaBuilder: FormSchemaBuilder,
     val formDataManager: FormDataManager,
     val formValidator: FormValidator = FormValidator(),
-    private val payload: Map<String, Any?>? = null
+    private val payload: Map<String, Any?> = emptyMap()
 ) : FormActionTrigger {
     internal val errorManager: ErrorManager = ErrorManager()
     private val formState: FormState = FormState()
