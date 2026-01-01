@@ -124,6 +124,14 @@ abstract class Control<T : Any> internal constructor(
         validator.validate(renderContext, state, this)
     }
 
+    /**
+     * Flaga określająca, czy ta kontrolka powinna być walidowana przez globalny
+     * proces `validateFields`. Jeśli `false`, oznacza to, że walidacja jest
+     * inicjowana przez kontrolkę-rodzica (np. SectionControl, RepeatableControl).
+     */
+    internal var independentValidation: Boolean = true
+
+
     // --- 6. Obsługa Akcji ---
     /**
      * Wykonuje zdefiniowane akcje dla tej kontrolki, zazwyczaj po zmianie wartości.

@@ -37,16 +37,19 @@ open class FormValidator() : KoinComponent {
      * 2. Uruchamia walidację każdej kontrolki przez jej validator
      * 3. Sprawdza wymagalność, format, zależności
      *
-     * @param controls mapa wszystkich kontrolek formularza
-     * @param states mapa stanów wszystkich kontrolek
      * @return true jeśli wszystkie pola są poprawne
      */
     internal fun validateFields(): Boolean {
 
         for ((controlName, control) in formSchema.getAllControls()) {
-            val state = formState.getControlState(controlName)!!
+            // Dzieci sekcji i repeatable zostaną pominięte, bo ich
+            // walidację uruchomi walidator rodzica.
+            if (control.independentValidation) {
+                val state = formState.getControlState(controlName)!!
 
-            control.validateControl(RenderContext(controlName), state)
+                // Zwykłe kontrolki nie mają rodzica, tworzymy prosty kontekst.
+                control.validateControl(RenderContext(localName = controlName), state)
+            }
         }
 
         // Sprawdź czy są jakieś błędy pól

@@ -7,12 +7,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import org.octavius.form.component.ErrorManager
+import org.octavius.form.component.FormActionTrigger
+import org.octavius.form.component.FormSchema
+import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlState
+import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.layout.section.SectionContent
 import org.octavius.form.control.layout.section.SectionHeader
+import org.octavius.form.control.validator.section.SectionValidator
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -30,6 +36,23 @@ class SectionControl(
     label: String,
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Unit>(label, false, dependencies, hasStandardLayout = false) {
+
+    override val validator: ControlValidator<Unit> = SectionValidator(controls)
+
+    override fun setupFormReferences(
+        formState: FormState,
+        formSchema: FormSchema,
+        errorManager: ErrorManager,
+        formActionTrigger: FormActionTrigger
+    ) {
+        super.setupFormReferences(formState, formSchema, errorManager, formActionTrigger)
+        // Kluczowy moment: informujemy dzieci, że ich walidacja nie jest niezależna.
+        controls.forEach { controlName ->
+            formSchema.getControl(controlName)?.let { childControl ->
+                childControl.independentValidation = false
+            }
+        }
+    }
 
     @Composable
     override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
