@@ -20,7 +20,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                 required = true
             ),
             "basicInfo" to SectionControl(
-                ctrls = listOf("name"),
+                controls = listOf("name"),
                 collapsible = false,
                 initiallyExpanded = true,
                 columns = 1,

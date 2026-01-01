@@ -23,7 +23,7 @@ import org.octavius.ui.theme.FormSpacing
  * Umożliwia logiczne organizowanie formularza w tematyczne sekcje.
  */
 class SectionControl(
-    val ctrls: List<String>,
+    val controls: List<String>,
     val collapsible: Boolean = true,
     val initiallyExpanded: Boolean = true,
     val columns: Int = 1,
@@ -32,7 +32,7 @@ class SectionControl(
 ) : Control<Unit>(label, false, dependencies, hasStandardLayout = false) {
 
     override fun setupParentRelationships(parentControlRenderContext: RenderContext, controls: Map<String, Control<*>>) {
-        ctrls.forEach { childControlName ->
+        this.controls.forEach { childControlName ->
             controls[childControlName]?.parentControlRenderContext = parentControlRenderContext
         }
     }
@@ -56,7 +56,7 @@ class SectionControl(
 
                 AnimatedVisibility(visible = isExpanded.value) {
                     SectionContent(
-                        controlNames = ctrls,
+                        controlNames = controls,
                         columns = columns,
                         formSchema = this@SectionControl.formSchema,
                         formState = this@SectionControl.formState,
