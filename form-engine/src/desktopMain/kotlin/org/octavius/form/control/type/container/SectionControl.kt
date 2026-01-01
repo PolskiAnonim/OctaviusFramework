@@ -31,12 +31,6 @@ class SectionControl(
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Unit>(label, false, dependencies, hasStandardLayout = false) {
 
-    override fun setupParentRelationships(parentControlRenderContext: RenderContext, controls: Map<String, Control<*>>) {
-        this.controls.forEach { childControlName ->
-            controls[childControlName]?.parentControlRenderContext = parentControlRenderContext
-        }
-    }
-
     @Composable
     override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
         val isExpanded = remember { mutableStateOf(initiallyExpanded) }
@@ -56,11 +50,11 @@ class SectionControl(
 
                 AnimatedVisibility(visible = isExpanded.value) {
                     SectionContent(
+                        renderContext = renderContext,
                         controlNames = controls,
                         columns = columns,
                         formSchema = this@SectionControl.formSchema,
-                        formState = this@SectionControl.formState,
-                        basePath = renderContext.basePath
+                        formState = this@SectionControl.formState
                     )
                 }
             }

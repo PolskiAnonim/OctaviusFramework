@@ -25,25 +25,6 @@ class FormSchema(
     val actionBarOrder: List<String>
 ) {
     /**
-     * Inicjalizuje relacje hierarchiczne między kontrolkami.
-     *
-     * Ustawia relacje rodzic-dziecko, szczególnie ważne dla kontrolek-kontenerów
-     * takich jak sekcje, które zawierają inne kontrolki.
-     */
-    init {
-        setupParentChildRelationships()
-    }
-
-    /**
-     * Funkcja ustawia relacje nadrzędnych kontrolek
-     */
-    private fun setupParentChildRelationships() {
-        controls.forEach { control ->
-            control.value.setupParentRelationships(RenderContext(control.key), controls)
-        }
-    }
-
-    /**
      * Zwraca kontrolkę o danej nazwie
      */
     fun getControl(name: String): Control<*>? = controls[name]

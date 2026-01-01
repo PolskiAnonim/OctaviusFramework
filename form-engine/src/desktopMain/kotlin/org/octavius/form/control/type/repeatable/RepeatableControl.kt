@@ -55,13 +55,6 @@ class RepeatableControl(
         this.rowManager = RepeatableRowManager(rowControls, formState, validationOptions as RepeatableValidation?)
     }
 
-    override fun setupParentRelationships(parentControlRenderContext: RenderContext, controls: Map<String, Control<*>>) {
-        // Ustaw parent dla wszystkich kontrolek w wierszu
-        rowControls.values.forEach { childControl ->
-            childControl.parentControlRenderContext = parentControlRenderContext
-        }
-    }
-
     override val validator: ControlValidator<List<RepeatableRow>> = RepeatableValidator(
         validationOptions
     )

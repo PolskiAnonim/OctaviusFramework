@@ -52,17 +52,6 @@ abstract class Control<T : Any> internal constructor(
         validator.setupFormReferences(formState, formSchema, errorManager)
     }
 
-    // --- 3. Zarządzanie Hierarchią ---
-    internal var parentControlRenderContext: RenderContext? = null
-
-    /**
-     * Ustawia relacje hierarchiczne między kontrolkami. Używane przez kontrolki-kontenery
-     * (np. SectionControl), aby poinformować kontrolki-dzieci o swoim istnieniu.
-     */
-    internal open fun setupParentRelationships(parentControlRenderContext: RenderContext, controls: Map<String, Control<*>>) {
-        // Domyślnie puste, implementują to kontenery.
-    }
-
     // --- 4. Zarządzanie Stanem i Danymi ---
     /**
      * Ustawia początkową wartość kontrolki i tworzy jej stan (`ControlState`).

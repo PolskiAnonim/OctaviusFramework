@@ -36,26 +36,41 @@ data class ControlState<T>(
     val revision: MutableState<Int> = mutableStateOf(0)
 )
 
+/**
+ * Kontekst renderowania i stanu kontrolki w hierarchii formularza.
+ *
+ * @param localName Nazwa kontrolki w jej bezpośrednim kontekście (np. "firstName", "publications").
+ * @param basePath Ścieżka do kontenera nadrzędnego (np. "user", "publications[uuid]").
+ * @param parent Kontekst renderowania nadrzędnej kontrolki. Umożliwia nawigację w górę drzewa.
+ */
 data class RenderContext(
-    val localName: String, // "status", "publications", "subtasks"
-    val basePath: String = ""  // "projects[uuid1]", "projects[uuid1].tasks[uuid2]"
+    val localName: String,
+    val basePath: String = "",
+    val parent: RenderContext? = null
 ) {
     // To jest teraz pełna, globalnie unikalna ścieżka do stanu w FormState
     val fullPath: String by lazy {
         if (basePath.isEmpty()) localName else "$basePath.$localName"
     }
 
-    // Tworzy nowy, zagnieżdżony kontekst dla kontrolki-dziecka
-    fun forChild(childLocalName: String): RenderContext {
+    fun forSectionChild(childLocalName: String): RenderContext {
+        // Sekcja nie zmienia ścieżek
         return RenderContext(
             localName = childLocalName,
-            basePath = this.fullPath
+            basePath = this.fullPath,
+            parent = this
         )
     }
 
+    /**
+     * Tworzy kontekst dla kontrolki-dziecka w kontenerze powtarzalnym (Repeatable).
+     */
     fun forRepeatableChild(childLocalName: String, rowId: String): RenderContext {
-        // Specjalna wersja dla wierszy w RepeatableControl
-        return RenderContext(localName = childLocalName, basePath = "${this.fullPath}[$rowId]")
+        return RenderContext(
+            localName = childLocalName,
+            basePath = "${this.fullPath}[$rowId]",
+            parent = this // Przekazujemy siebie jako rodzica
+        )
     }
 }
 

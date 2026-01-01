@@ -64,7 +64,7 @@ abstract class ControlValidator<T : Any> {
         renderContext: RenderContext
     ): Boolean {
         // Krok 1: Sprawdź widoczność rodzica (rekurencja)
-        control.parentControlRenderContext?.let { parentContext ->
+        renderContext.parent?.let { parentContext ->
             val parentControl = formSchema.getControl(parentContext.fullPath)!!
             if (!isControlVisible(parentControl, parentContext)) {
                 return false
