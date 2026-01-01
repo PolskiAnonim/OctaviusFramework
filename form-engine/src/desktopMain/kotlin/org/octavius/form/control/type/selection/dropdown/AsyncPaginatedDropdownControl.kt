@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
@@ -37,7 +37,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
 
     @Composable
     override fun ColumnScope.RenderMenuItems(
-        renderContext: RenderContext,
+        controlContext: ControlContext,
         scope: CoroutineScope,
         controlState: MutableState<T?>,
         closeMenu: () -> Unit
@@ -81,7 +81,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
             onPageChange = { newPage -> currentPage = newPage },
             onOptionSelected = { selectedValue ->
                 controlState.value = selectedValue
-                executeActions(renderContext, selectedValue, scope)
+                executeActions(controlContext, selectedValue, scope)
                 closeMenu()
             }
         )

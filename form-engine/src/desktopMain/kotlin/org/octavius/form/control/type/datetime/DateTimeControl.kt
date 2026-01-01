@@ -19,7 +19,7 @@ class DateTimeControl<T : Any>(
     override val validator: ControlValidator<T> = DateTimeValidator(validationOptions, adapter)
 
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<T>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<T>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()
         var showDialog by remember { mutableStateOf(false) }
 
@@ -28,7 +28,7 @@ class DateTimeControl<T : Any>(
             onClick = { showDialog = true },
             onClear = if (!isRequired) { {
                 controlState.value.value = null
-                executeActions(renderContext, null, scope)
+                executeActions(controlContext, null, scope)
             } } else null,
             isRequired = isRequired
         )
@@ -41,7 +41,7 @@ class DateTimeControl<T : Any>(
                 onConfirm = { newValue ->
                     showDialog = false
                     controlState.value.value = newValue
-                    executeActions(renderContext, newValue, scope)
+                    executeActions(controlContext, newValue, scope)
                 }
             )
         }

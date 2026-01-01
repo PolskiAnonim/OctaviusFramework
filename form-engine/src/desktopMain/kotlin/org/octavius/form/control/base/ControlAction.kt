@@ -21,7 +21,7 @@ class ControlAction<T>(
  *
  * @param T typ wartości kontrolki, która wyzwoliła akcję.
  * @property sourceValue Nowa wartość kontrolki, która wyzwoliła akcję.
- * @property sourceRenderContext Kontekst kontrolki, która wyzwoliła akcję.
+ * @property sourceControlContext Kontekst kontrolki, która wyzwoliła akcję.
  * @property formState Dostęp do globalnego stanu formularza.
  * @property formSchema Dostęp do schemy formularza.
  * @property errorManager Dostęp do managera błędów.
@@ -29,7 +29,7 @@ class ControlAction<T>(
  */
 data class ActionContext<T>(
     val sourceValue: T?,
-    val sourceRenderContext: RenderContext,
+    val sourceControlContext: ControlContext,
     val formState: FormState,
     val formSchema: FormSchema,
     val errorManager: ErrorManager,
@@ -56,7 +56,7 @@ data class ActionContext<T>(
      * Jeśli kontrolka nie jest w RepeatableControl, działa jak updateControl.
      */
     fun <V: Any> updateLocalControl(controlName: String, newValue: V?) {
-        val path = sourceRenderContext.basePath
+        val path = sourceControlContext.statePath
         val resolvedName ="$path.$controlName"
         updateControl(resolvedName, newValue)
     }

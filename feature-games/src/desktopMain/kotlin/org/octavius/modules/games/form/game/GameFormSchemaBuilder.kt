@@ -42,7 +42,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             required = true
         ),
         "basicInfo" to SectionControl(
-            ctrls = listOf("name", "series", "status", "visibleCharactersSection"),
+            controls = listOf("name", "series", "status", "visibleCharactersSection"),
             collapsible = false,
             initiallyExpanded = true,
             columns = 1,
@@ -67,7 +67,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             validationOptions = IntegerValidation(min = 0)
         ),
         "playTimeSection" to SectionControl(
-            ctrls = listOf("playTimeHours", "completionCount"),
+            controls = listOf("playTimeHours", "completionCount"),
             collapsible = false,
             initiallyExpanded = true,
             columns = 2,
@@ -100,7 +100,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             validationOptions = IntegerValidation(min = 0, max = 10)
         ),
         "ratingsSection" to SectionControl(
-            ctrls = listOf("storyRating", "gameplayRating", "atmosphereRating"),
+            controls = listOf("storyRating", "gameplayRating", "atmosphereRating"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 3,
@@ -128,7 +128,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             required = true
         ),
         "charactersSection" to SectionControl(
-            ctrls = listOf("hasDistinctiveCharacter", "hasDistinctiveProtagonist", "hasDistinctiveAntagonist"),
+            controls = listOf("hasDistinctiveCharacter", "hasDistinctiveProtagonist", "hasDistinctiveAntagonist"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 1,

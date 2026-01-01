@@ -53,15 +53,15 @@ abstract class Control<T : Any> internal constructor(
     }
 
     // --- 3. Zarządzanie Hierarchią ---
-    internal var parentControl: String? = null
 
     /**
-     * Ustawia relacje hierarchiczne między kontrolkami. Używane przez kontrolki-kontenery
-     * (np. SectionControl), aby poinformować kontrolki-dzieci o swoim istnieniu.
+     * Funkcja do rejestracji dzieci na globalnej mapie
+     * Zawiera referencje do kontrolek zdefiniowanych w kontrolce posiadającej własne
      */
-    internal open fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
-        // Domyślnie puste, implementują to kontenery.
+    internal open fun registerChildrenInGlobalMap(controlContext: ControlContext): Map<String, Control<*>> {
+        return emptyMap()
     }
+
 
     // --- 4. Zarządzanie Stanem i Danymi ---
     /**
@@ -102,10 +102,10 @@ abstract class Control<T : Any> internal constructor(
      * Pobiera wynik kontrolki (wartość bieżącą i początkową) do dalszego przetwarzania.
      * Jeśli kontrolka jest niewidoczna, jej `currentValue` jest ustawiane na null.
      */
-    internal fun getResult(renderContext: RenderContext, state: ControlState<*>): ControlResultData {
-        val result = convertToResult(renderContext, state)
+    internal fun getResult(controlContext: ControlContext, state: ControlState<*>): ControlResultData {
+        val result = convertToResult(controlContext, state)
         // Niewidoczne kontrolki nie powinny przekazywać swojej wartości do zapisu.
-        return if (!validator.isControlVisible(this, renderContext)) {
+        return if (!validator.isControlVisible(this, controlContext)) {
             result.copy(currentValue = null)
         } else {
             result
@@ -116,7 +116,7 @@ abstract class Control<T : Any> internal constructor(
      * Konwertuje wewnętrzny stan kontrolki (`ControlState`) na wynik do zapisu (`ControlResultData`).
      * Może być przesłonięta dla niestandardowych konwersji (np. w `RepeatableControl`).
      */
-    protected open fun convertToResult(renderContext: RenderContext, state: ControlState<*>): ControlResultData {
+    protected open fun convertToResult(controlContext: ControlContext, state: ControlState<*>): ControlResultData {
         return ControlResultData(currentValue = state.value.value, initialValue = state.initValue.value)
     }
 
@@ -131,16 +131,24 @@ abstract class Control<T : Any> internal constructor(
     /**
      * Uruchamia proces walidacji dla tej kontrolki przy użyciu przypisanego walidatora.
      */
-    internal fun validateControl(renderContext: RenderContext, state: ControlState<*>) {
-        validator.validate(renderContext, state, this)
+    internal fun validateControl(controlContext: ControlContext, state: ControlState<*>) {
+        validator.validate(controlContext, state, this)
     }
+
+    /**
+     * Flaga określająca, czy ta kontrolka powinna być walidowana przez globalny
+     * proces `validateFields`. Jeśli `false`, oznacza to, że walidacja jest
+     * inicjowana przez kontrolkę-rodzica (np. SectionControl, RepeatableControl).
+     */
+    internal var independentValidation: Boolean = true
+
 
     // --- 6. Obsługa Akcji ---
     /**
      * Wykonuje zdefiniowane akcje dla tej kontrolki, zazwyczaj po zmianie wartości.
      */
     protected fun executeActions(
-        renderContext: RenderContext,
+        controlContext: ControlContext,
         newValue: T?,
         scope: CoroutineScope,
         payload: Any? = null
@@ -148,7 +156,7 @@ abstract class Control<T : Any> internal constructor(
         actions?.forEach { action ->
             val context = ActionContext(
                 sourceValue = newValue,
-                sourceRenderContext = renderContext,
+                sourceControlContext = controlContext,
                 formState = formState,
                 formSchema = formSchema,
                 errorManager = errorManager,
@@ -166,9 +174,9 @@ abstract class Control<T : Any> internal constructor(
      * Ta metoda jest publicznym API dla `FormScreen`. Obsługuje logikę widoczności.
      */
     @Composable
-    internal fun Render(renderContext: RenderContext, controlState: ControlState<*>) {
-        val isVisible = validator.isControlVisible(this, renderContext)
-        val isRequired = validator.isControlRequired(this, renderContext)
+    internal fun Render(controlContext: ControlContext, controlState: ControlState<*>) {
+        val isVisible = validator.isControlVisible(this, controlContext)
+        val isRequired = validator.isControlRequired(this, controlContext)
 
         AnimatedVisibility(visible = isVisible) {
             @Suppress("UNCHECKED_CAST")
@@ -177,12 +185,12 @@ abstract class Control<T : Any> internal constructor(
                 // Standardowy układ: Etykieta nad kontrolką, błędy pod.
                 Column {
                     RenderNormalLabel(label, isRequired)
-                    Display(renderContext, typedState, isRequired)
-                    DisplayFieldErrors(renderContext)
+                    Display(controlContext, typedState, isRequired)
+                    DisplayFieldErrors(controlContext)
                 }
             } else {
                 // Układ niestandardowy: Kontrolka sama zarządza swoim layoutem.
-                Display(renderContext, typedState, isRequired)
+                Display(controlContext, typedState, isRequired)
             }
         }
     }
@@ -193,7 +201,7 @@ abstract class Control<T : Any> internal constructor(
      */
     @Composable
     protected abstract fun Display(
-        renderContext: RenderContext,
+        controlContext: ControlContext,
         controlState: ControlState<T>,
         isRequired: Boolean
     )
@@ -202,11 +210,11 @@ abstract class Control<T : Any> internal constructor(
      * Pomocnicza funkcja renderująca błędy walidacji dla tej kontrolki.
      */
     @Composable
-    protected fun DisplayFieldErrors(renderContext: RenderContext) {
-        val formatError = errorManager.getFormatError(renderContext.fullPath)
+    protected fun DisplayFieldErrors(controlContext: ControlContext) {
+        val formatError = errorManager.getFormatError(controlContext.fullStatePath)
         formatError?.let { error -> RenderFieldError(error) }
 
-        val fieldErrors = errorManager.getFieldErrors(renderContext.fullPath)
+        val fieldErrors = errorManager.getFieldErrors(controlContext.fullStatePath)
         fieldErrors.forEach { error ->
             RenderFieldError(error)
         }

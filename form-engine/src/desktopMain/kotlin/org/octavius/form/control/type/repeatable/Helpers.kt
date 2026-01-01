@@ -4,7 +4,7 @@ import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.FormResultData
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 
 /**
  * Reprezentuje jeden wiersz w kontrolce powtarzalnej.
@@ -62,14 +62,14 @@ internal fun createRow(
  * Używa globalnego stanu zamiast lokalnych stanów wierszy.
  *
  * @param controlState stan kontrolki powtarzalnej
- * @param renderContext kontekst kontrolki powtarzalnej (do budowania hierarchicznych nazw)
+ * @param controlContext kontekst kontrolki powtarzalnej (do budowania hierarchicznych nazw)
  * @param rowControls mapa kontrolek w wierszu
  * @param globalStates mapa wszystkich stanów formularza
  * @return Triple(nowe wiersze, usunięte wiersze, zmienione wiersze)
  */
 internal fun getRowTypes(
     controlState: ControlState<List<RepeatableRow>>,
-    renderContext: RenderContext,
+    controlContext: ControlContext,
     rowControls: Map<String, Control<*>>,
     globalStates: Map<String, ControlState<*>>
 ): Triple<List<RepeatableRow>, List<RepeatableRow>, List<RepeatableRow>> {
@@ -88,8 +88,8 @@ internal fun getRowTypes(
 
         // Sprawdź czy jakiekolwiek pole w tym wierszu jest zmienione
         rowControls.keys.any { fieldName ->
-            val hierarchicalContext = renderContext.forRepeatableChild(fieldName, currentRow.id)
-            val state = globalStates[hierarchicalContext.fullPath]!!
+            val hierarchicalContext = controlContext.forRepeatableChild(fieldName, currentRow.id)
+            val state = globalStates[hierarchicalContext.fullStatePath]!!
             state.initValue.value != state.value.value
         }
     }

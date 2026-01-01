@@ -36,26 +36,48 @@ data class ControlState<T>(
     val revision: MutableState<Int> = mutableStateOf(0)
 )
 
-data class RenderContext(
-    val localName: String, // "status", "publications", "subtasks"
-    val basePath: String = ""  // "projects[uuid1]", "projects[uuid1].tasks[uuid2]"
+/**
+ * Kontekst renderowania i stanu kontrolki w hierarchii formularza.
+ *
+ * @param localName Nazwa kontrolki w jej bezpośrednim kontekście (np. "firstName", "publications").
+ * @param statePath Ścieżka do kontenera nadrzędnego (np. "user", "publications[uuid]") dla stanu.
+ * @param controlPath Ścieżka do kontenera nadrzędnego (np. "user", "publications") dla kontrolek
+ * @param parent  Kontekst renderowania nadrzędnej kontrolki. Umożliwia nawigację w górę drzewa.
+ */
+data class ControlContext(
+    val localName: String,
+    val statePath: String = "",
+    val controlPath: String = "",
+    val parent: ControlContext? = null
 ) {
-    // To jest teraz pełna, globalnie unikalna ścieżka do stanu w FormState
-    val fullPath: String by lazy {
-        if (basePath.isEmpty()) localName else "$basePath.$localName"
+    val fullControlPath: String by lazy {
+        if (controlPath.isEmpty()) localName else "$controlPath.$localName"
     }
 
-    // Tworzy nowy, zagnieżdżony kontekst dla kontrolki-dziecka
-    fun forChild(childLocalName: String): RenderContext {
-        return RenderContext(
+    val fullStatePath: String by lazy {
+        if (statePath.isEmpty()) localName else "$statePath.$localName"
+    }
+
+    fun forSectionChild(childLocalName: String): ControlContext {
+        // Sekcja nie zmienia ścieżek
+        return ControlContext(
             localName = childLocalName,
-            basePath = this.fullPath
+            statePath = this.statePath,
+            controlPath = this.controlPath,
+            parent = this
         )
     }
 
-    fun forRepeatableChild(childLocalName: String, rowId: String): RenderContext {
-        // Specjalna wersja dla wierszy w RepeatableControl
-        return RenderContext(localName = childLocalName, basePath = "${this.fullPath}[$rowId]")
+    /**
+     * Tworzy kontekst dla kontrolki-dziecka w kontenerze powtarzalnym (Repeatable).
+     */
+    fun forRepeatableChild(childLocalName: String, rowId: String): ControlContext {
+        return ControlContext(
+            localName = childLocalName,
+            statePath = "$fullStatePath[$rowId]",
+            controlPath = fullControlPath,
+            parent = this
+        )
     }
 }
 

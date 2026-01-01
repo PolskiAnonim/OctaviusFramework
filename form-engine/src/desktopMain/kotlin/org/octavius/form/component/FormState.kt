@@ -4,7 +4,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import org.octavius.form.control.base.ControlResultData
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.FormResultData
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 
 /**
  * Reaktywne zarządzanie stanem wszystkich kontrolek formularza.
@@ -50,7 +50,7 @@ class FormState {
      */
     internal fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>) {
         // Potem inicjalizuj stany kontrolek
-        schema.getAllControls().forEach { (controlName, control) ->
+        schema.getMainLevelControls().forEach { (controlName, control) ->
             val value = initValues[controlName]
             _controlStates[controlName] = control.setInitValue(controlName, value)
         }
@@ -94,9 +94,9 @@ class FormState {
     internal fun collectFormData(schema: FormSchema): FormResultData {
         val result = mutableMapOf<String, ControlResultData>()
 
-        schema.getAllControls().forEach { (controlName, control) ->
+        schema.getMainLevelControls().forEach { (controlName, control) ->
             val state = _controlStates[controlName]!! // Stan musi istnieć, jeśli kontrolka jest w schemacie
-            result[controlName] = control.getResult(RenderContext(controlName), state)
+            result[controlName] = control.getResult(ControlContext(controlName), state)
         }
 
         return result.toMap()

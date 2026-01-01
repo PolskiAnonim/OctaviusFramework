@@ -35,7 +35,7 @@ abstract class PrimitiveNumberControl<T : Number>(
     protected abstract fun parseValue(text: String): T?
 
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<T>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<T>, isRequired: Boolean) {
         // Stan widoku, który jest synchronizowany z modelem.
         var textValue by remember { mutableStateOf(controlState.value.value?.toString() ?: "") }
         val scope = rememberCoroutineScope()
@@ -47,7 +47,7 @@ abstract class PrimitiveNumberControl<T : Number>(
             // widoku (textValue) ze stanem modelu (controlState.value).
             // To kasuje błędne wpisy użytkownika i czyści błędy.
             textValue = controlState.value.value?.toString() ?: ""
-            errorManager.setFormatError(renderContext.fullPath, null)
+            errorManager.setFormatError(controlContext.fullStatePath, null)
         }
 
         OutlinedTextField(
@@ -58,23 +58,23 @@ abstract class PrimitiveNumberControl<T : Number>(
                 if (newText.isEmpty()) {
                     if (controlState.value.value != null) {
                         controlState.value.value = null
-                        executeActions(renderContext, null, scope)
+                        executeActions(controlContext, null, scope)
                     }
-                    errorManager.setFormatError(renderContext.fullPath, null)
+                    errorManager.setFormatError(controlContext.fullStatePath, null)
                 } else {
                     val parsed = parseValue(newText)
                     if (parsed != null) {
                         if (controlState.value.value != parsed) {
                             controlState.value.value = parsed
-                            executeActions(renderContext, parsed, scope)
+                            executeActions(controlContext, parsed, scope)
                         }
-                        errorManager.setFormatError(renderContext.fullPath, null)
+                        errorManager.setFormatError(controlContext.fullStatePath, null)
                     } else {
-                        errorManager.setFormatError(renderContext.fullPath, "Nieprawidłowy format liczby")
+                        errorManager.setFormatError(controlContext.fullStatePath, "Nieprawidłowy format liczby")
                     }
                 }
             },
-            modifier = Modifier.Companion.fillMaxWidth().padding(
+            modifier = Modifier.fillMaxWidth().padding(
                 vertical = FormSpacing.fieldPaddingVertical,
                 horizontal = FormSpacing.fieldPaddingHorizontal
             ),

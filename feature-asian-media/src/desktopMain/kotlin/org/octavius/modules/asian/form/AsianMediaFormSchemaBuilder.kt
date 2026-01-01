@@ -27,7 +27,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             null
         ),
         "titleInfo" to SectionControl(
-            ctrls = listOf("titles", "language"),
+            controls = listOf("titles", "language"),
             collapsible = false,
             initiallyExpanded = true,
             columns = 2,

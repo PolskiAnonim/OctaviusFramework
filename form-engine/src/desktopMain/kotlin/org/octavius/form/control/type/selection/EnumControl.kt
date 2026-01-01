@@ -10,7 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlDependency
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
 import org.octavius.form.control.type.selection.dropdown.DropdownOption
 import org.octavius.localization.T
@@ -39,7 +39,7 @@ class EnumControl<T>(
 
     @Composable
     override fun ColumnScope.RenderMenuItems(
-        renderContext: RenderContext,
+        controlContext: ControlContext,
         scope: CoroutineScope,
         controlState: MutableState<T?>,
         closeMenu: () -> Unit
@@ -54,7 +54,7 @@ class EnumControl<T>(
                 text = { Text(T.get("form.dropdown.noSelection")) },
                 onClick = {
                     controlState.value = null
-                    executeActions(renderContext, null, scope)
+                    executeActions(controlContext, null, scope)
                     closeMenu()
                 }
             )
@@ -67,7 +67,7 @@ class EnumControl<T>(
                 text = { Text(option.displayText) },
                 onClick = {
                     controlState.value = option.value
-                    executeActions(renderContext, option.value, scope)
+                    executeActions(controlContext, option.value, scope)
                     closeMenu()
                 }
             )

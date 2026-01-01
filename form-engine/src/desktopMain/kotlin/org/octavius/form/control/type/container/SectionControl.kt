@@ -1,24 +1,24 @@
 package org.octavius.form.control.type.container
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import org.octavius.form.component.ErrorManager
+import org.octavius.form.component.FormActionTrigger
+import org.octavius.form.component.FormSchema
+import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlState
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlValidator
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.layout.section.SectionContent
 import org.octavius.form.control.layout.section.SectionHeader
-import org.octavius.localization.T
+import org.octavius.form.control.validator.section.SectionValidator
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -29,7 +29,7 @@ import org.octavius.ui.theme.FormSpacing
  * Umożliwia logiczne organizowanie formularza w tematyczne sekcje.
  */
 class SectionControl(
-    val ctrls: List<String>,
+    val controls: List<String>,
     val collapsible: Boolean = true,
     val initiallyExpanded: Boolean = true,
     val columns: Int = 1,
@@ -37,14 +37,25 @@ class SectionControl(
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Unit>(label, false, dependencies, hasStandardLayout = false) {
 
-    override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
-        ctrls.forEach { childControlName ->
-            controls[childControlName]?.parentControl = parentControlName
+    override val validator: ControlValidator<Unit> = SectionValidator(controls)
+
+    override fun setupFormReferences(
+        formState: FormState,
+        formSchema: FormSchema,
+        errorManager: ErrorManager,
+        formActionTrigger: FormActionTrigger
+    ) {
+        super.setupFormReferences(formState, formSchema, errorManager, formActionTrigger)
+        // Kluczowy moment: informujemy dzieci, że ich walidacja nie jest niezależna.
+        controls.forEach { controlName ->
+            formSchema.getControl(controlName)?.let { childControl ->
+                childControl.independentValidation = false
+            }
         }
     }
 
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<Unit>, isRequired: Boolean) {
         val isExpanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(
@@ -62,11 +73,11 @@ class SectionControl(
 
                 AnimatedVisibility(visible = isExpanded.value) {
                     SectionContent(
-                        controlNames = ctrls,
+                        controlContext = controlContext,
+                        controlNames = controls,
                         columns = columns,
                         formSchema = this@SectionControl.formSchema,
-                        formState = this@SectionControl.formState,
-                        basePath = renderContext.basePath
+                        formState = this@SectionControl.formState
                     )
                 }
             }

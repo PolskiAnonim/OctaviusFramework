@@ -36,27 +36,14 @@ abstract class ControlValidator<T : Any> {
         this.errorManager = errorManager
     }
 
-    private fun createContextFromName(fullPath: String): RenderContext {
-
-        val lastDotIndex = fullPath.lastIndexOf('.')
-        if (lastDotIndex == -1) {
-            // Nie ma kropek, to jest kontrolka na najwyższym poziomie
-            return RenderContext(localName = fullPath, basePath = "")
-        }
-
-        val basePath = fullPath.substring(0, lastDotIndex)
-        val localName = fullPath.substring(lastDotIndex + 1)
-        return RenderContext(localName = localName, basePath = basePath)
-    }
-
     private fun isDependencyMet(
         dependency: ControlDependency<*>,
-        renderContext: RenderContext
+        controlContext: ControlContext
     ): Boolean {
         // Pobieramy stan z nadrzędnej klasy.
         val states = formState.getAllStates()
 
-        val resolvedControlName = resolveDependencyControlName(dependency, renderContext)
+        val resolvedControlName = resolveDependencyControlName(dependency, controlContext)
         val dependentState = states[resolvedControlName] ?: return true // Jeśli kontrolka nie istnieje, traktujemy zależność jako spełnioną
 
         val dependentValue = dependentState.value.value
@@ -74,12 +61,11 @@ abstract class ControlValidator<T : Any> {
 
     internal fun isControlVisible(
         control: Control<*>,
-        renderContext: RenderContext
+        controlContext: ControlContext
     ): Boolean {
         // Krok 1: Sprawdź widoczność rodzica (rekurencja)
-        control.parentControl?.let { parentName ->
-            val parentControl = formSchema.getControl(parentName)!!
-            val parentContext = createContextFromName(parentName)
+        controlContext.parent?.let { parentContext ->
+            val parentControl = formSchema.getControl(parentContext.fullControlPath)!!
             if (!isControlVisible(parentControl, parentContext)) {
                 return false
             }
@@ -88,7 +74,7 @@ abstract class ControlValidator<T : Any> {
         // Krok 2: Sprawdź, czy WSZYSTKIE zależności typu Visible są spełnione.
         return control.dependencies
             ?.filter { it.value.dependencyType == DependencyType.Visible }
-            ?.all { (_, dependency) -> isDependencyMet(dependency, renderContext) }
+            ?.all { (_, dependency) -> isDependencyMet(dependency, controlContext) }
             ?: true // Jeśli nie ma zależności, jest widoczna.
     }
 
@@ -104,7 +90,7 @@ abstract class ControlValidator<T : Any> {
      */
     internal fun isControlRequired(
         control: Control<*>,
-        renderContext: RenderContext
+        controlContext: ControlContext
     ): Boolean {
         // Podstawowy warunek: jest wymagana, jeśli tak ustawiono w definicji.
         if (control.required == true) return true
@@ -112,7 +98,7 @@ abstract class ControlValidator<T : Any> {
         // Dodatkowy warunek: jest wymagana, jeśli JAKAKOLWIEK zależność typu Required jest spełniona.
         return control.dependencies
             ?.filter { it.value.dependencyType == DependencyType.Required }
-            ?.any { (_, dependency) -> isDependencyMet(dependency, renderContext) }
+            ?.any { (_, dependency) -> isDependencyMet(dependency, controlContext) }
             ?: false // Jeśli nie ma zależności, nie jest wymagana (chyba że `required == true`).
     }
 
@@ -141,14 +127,14 @@ abstract class ControlValidator<T : Any> {
      */
     private fun resolveDependencyControlName(
         dependency: ControlDependency<*>,
-        renderContext: RenderContext
+        controlContext: ControlContext
     ): String {
         return if (dependency.scope == DependencyScope.Local) {
             // Jeśli to lokalna zależność, składamy pełną ścieżkę
             // do "sąsiada" w tym samym basePath.
             // basePath to np. "publications[123]"
             // dependency.controlName to np. "trackProgress"
-            "${renderContext.basePath}.${dependency.controlName}"
+            "${controlContext.statePath}.${dependency.controlName}"
         } else {
             // Globalna zależność - użyj oryginalnej nazwy z definicji zależności
             dependency.controlName
@@ -168,26 +154,26 @@ abstract class ControlValidator<T : Any> {
      * @param control definicja kontrolki
      */
     open fun validate(
-        renderContext: RenderContext,
+        controlContext: ControlContext,
         state: ControlState<*>,
         control: Control<*>
     ) {
         // Jeśli kontrolka nie jest widoczna, pomijamy walidację
-        if (!isControlVisible(control, renderContext)) {
+        if (!isControlVisible(control, controlContext)) {
             return
         }
 
         // Sprawdzamy, czy pole jest wymagane
-        val isRequired = isControlRequired(control, renderContext)
+        val isRequired = isControlRequired(control, controlContext)
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd
         if (isRequired && isValueEmpty(state.value.value)) {
-            errorManager.setFieldErrors(renderContext.fullPath, listOf("To pole jest wymagane"))
+            errorManager.setFieldErrors(controlContext.fullStatePath, listOf("To pole jest wymagane"))
             return
         }
 
         // Wywołujemy dodatkową walidację specyficzną dla kontrolki
-        validateSpecific(renderContext, state)
+        validateSpecific(controlContext, state)
     }
 
     /**
@@ -202,8 +188,8 @@ abstract class ControlValidator<T : Any> {
      * @param controlName nazwa kontrolki
      * @param state stan kontrolki do walidacji
      */
-    open fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
+    open fun validateSpecific(controlContext: ControlContext, state: ControlState<*>) {
         // Domyślnie czyścimy błędy jeśli nie ma problemów
-        errorManager.clearFieldErrors(renderContext.fullPath)
+        errorManager.clearFieldErrors(controlContext.fullStatePath)
     }
 }

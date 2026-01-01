@@ -34,14 +34,14 @@ class StringControl(
 
 
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<String>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<String>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()
 
         OutlinedTextField(
             value = controlState.value.value.orEmpty(),
             onValueChange = {
                 controlState.value.value = it
-                executeActions(renderContext, it, scope)
+                executeActions(controlContext, it, scope)
             },
             modifier = Modifier.fillMaxWidth().padding(
                 vertical = FormSpacing.fieldPaddingVertical,

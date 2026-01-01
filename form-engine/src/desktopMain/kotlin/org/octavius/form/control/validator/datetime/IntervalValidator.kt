@@ -3,7 +3,7 @@ package org.octavius.form.control.validator.datetime
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntervalValidation
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.localization.T
 import kotlin.time.Duration
 
@@ -17,7 +17,7 @@ class IntervalValidator(
         }
     }
 
-    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
+    override fun validateSpecific(controlContext: ControlContext, state: ControlState<*>) {
         val value = state.value.value as? Duration ?: return
         val errors = mutableListOf<String>()
 
@@ -33,6 +33,6 @@ class IntervalValidator(
                 }
             }
         }
-        errorManager.setFieldErrors(renderContext.fullPath, errors)
+        errorManager.setFieldErrors(controlContext.fullStatePath, errors)
     }
 }

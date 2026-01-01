@@ -35,7 +35,7 @@ abstract class DropdownControlBase<T : Any>(
      */
     @Composable
     protected abstract fun ColumnScope.RenderMenuItems(
-        renderContext: RenderContext,
+        controlContext: ControlContext,
         scope: CoroutineScope,
         controlState: MutableState<T?>,
         closeMenu: () -> Unit
@@ -43,7 +43,7 @@ abstract class DropdownControlBase<T : Any>(
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<T>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<T>, isRequired: Boolean) {
         var expanded by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
@@ -72,14 +72,14 @@ abstract class DropdownControlBase<T : Any>(
                     onDismissRequest = { expanded = false }
                 ) {
                     RenderMenuItems(
-                        renderContext = renderContext,
+                        controlContext = controlContext,
                         scope = scope,
                         controlState = controlState.value,
                         closeMenu = { expanded = false }
                     )
                 }
             }
-            DisplayFieldErrors(renderContext)
+            DisplayFieldErrors(controlContext)
         }
     }
 }

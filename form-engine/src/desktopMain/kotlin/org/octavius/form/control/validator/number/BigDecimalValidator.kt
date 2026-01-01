@@ -3,7 +3,7 @@ package org.octavius.form.control.validator.number
 import org.octavius.form.control.base.BigDecimalValidation
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.localization.T
 import java.math.BigDecimal
 
@@ -14,7 +14,7 @@ class BigDecimalValidator(
     private val validationOptions: BigDecimalValidation? = null
 ) : ControlValidator<BigDecimal>() {
 
-    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
+    override fun validateSpecific(controlContext: ControlContext, state: ControlState<*>) {
         val value = state.value.value as? BigDecimal ?: return
         val errors = mutableListOf<String>()
 
@@ -48,6 +48,6 @@ class BigDecimalValidator(
             }
         }
 
-        errorManager.setFieldErrors(renderContext.fullPath, errors)
+        errorManager.setFieldErrors(controlContext.fullStatePath, errors)
     }
 }

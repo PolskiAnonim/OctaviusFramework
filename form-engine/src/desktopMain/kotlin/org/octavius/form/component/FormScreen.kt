@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.localization.T
 import org.octavius.navigation.Screen
 
@@ -44,7 +44,7 @@ class FormScreen(
                 formHandler.getContentControlsInOrder().forEach { controlName ->
                     val control = formHandler.getControl(controlName)!!
                     val state = formHandler.getControlState(controlName)!!
-                    control.Render(renderContext = RenderContext(controlName), controlState = state)
+                    control.Render(controlContext = ControlContext(controlName), controlState = state)
                 }
             } // Koniec strefy scrollowanej
 
@@ -64,7 +64,7 @@ class FormScreen(
                         val control = formHandler.getControl(controlName)!!
                         val state = formHandler.getControlState(controlName)!!
                         Box(modifier = Modifier.weight(1f)) {
-                            control.Render(renderContext = RenderContext(controlName), controlState = state)
+                            control.Render(controlContext = ControlContext(controlName), controlState = state)
                         }
                     }
                 }

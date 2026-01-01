@@ -1,6 +1,7 @@
 package org.octavius.form.component
 
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.ControlContext
 
 /**
  * Schemat formularza - definicja struktury i układu kontrolek.
@@ -19,27 +20,19 @@ import org.octavius.form.control.base.Control
  * @throws IllegalArgumentException jeśli nazwy w listach porządkujących nie istnieją w mapie controls.
  */
 class FormSchema(
-    private val controls: Map<String, Control<*>>,
+    definedControls: Map<String, Control<*>>,
     val contentOrder: List<String>,
     val actionBarOrder: List<String>
 ) {
-    /**
-     * Inicjalizuje relacje hierarchiczne między kontrolkami.
-     *
-     * Ustawia relacje rodzic-dziecko, szczególnie ważne dla kontrolek-kontenerów
-     * takich jak sekcje, które zawierają inne kontrolki.
-     */
-    init {
-        setupParentChildRelationships()
-    }
 
-    /**
-     * Funkcja ustawia relacje nadrzędnych kontrolek
-     */
-    private fun setupParentChildRelationships() {
-        controls.forEach { control ->
-            control.value.setupParentRelationships(control.key, controls)
+    val controls: Map<String, Control<*>>
+
+    init {
+        val ctrls = definedControls.toMutableMap()
+        definedControls.forEach { (key, value) ->
+            ctrls.putAll(value.registerChildrenInGlobalMap(ControlContext(key)))
         }
+        controls = ctrls.toMap()
     }
 
     /**
@@ -50,7 +43,7 @@ class FormSchema(
     /**
      * Zwraca wszystkie kontrolki zdefiniowane w tej klasie
      */
-    fun getAllControls(): Map<String, Control<*>> = controls
+    fun getMainLevelControls(): Map<String, Control<*>> = controls.filter { !it.key.contains(".") }
 }
 
 /**

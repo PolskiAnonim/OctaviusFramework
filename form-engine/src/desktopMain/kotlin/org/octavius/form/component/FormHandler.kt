@@ -52,7 +52,7 @@ class FormHandler(
      * dostęp do globalnego stanu, schemy i menedżera błędów.
      */
     private fun setupFormReferences() {
-        formSchema.getAllControls().values.forEach { control ->
+        formSchema.getMainLevelControls().values.forEach { control ->
             control.setupFormReferences(formState, formSchema, errorManager, this)
         }
         formValidator.setupFormReferences(formState, formSchema, errorManager)

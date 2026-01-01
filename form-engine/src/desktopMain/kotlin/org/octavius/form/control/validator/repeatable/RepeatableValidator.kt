@@ -2,7 +2,7 @@ package org.octavius.form.control.validator.repeatable
 
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.RepeatableValidation
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.repeatable.RepeatableRow
@@ -34,17 +34,17 @@ class RepeatableValidator(
      *
      * Sprawdzanie odbywa się tylko gdy lista uniqueFields nie jest pusta.
      *
-     * @param renderContext nazwa kontrolki z kontekstem wiersza (potrzebna do budowania hierarchicznych nazw)
+     * @param controlContext nazwa kontrolki z kontekstem wiersza (potrzebna do budowania hierarchicznych nazw)
      * @param state stan kontrolki powtarzalnej zawierający listę wierszy
      */
-    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
+    override fun validateSpecific(controlContext: ControlContext, state: ControlState<*>) {
         @Suppress("UNCHECKED_CAST")
         val rows = state.value.value as List<RepeatableRow>
 
-        val control = formSchema.getControl(renderContext.fullPath) as? RepeatableControl ?: return
+        val control = formSchema.getControl(controlContext.fullStatePath) as? RepeatableControl ?: return
 
         // 1. Walidacja kontrolek-dzieci (zawsze musi być wykonana)
-        validateChildControls(rows, control, renderContext)
+        validateChildControls(rows, control, controlContext)
 
         // 2. Walidacja reguł samej listy
         val allErrors = mutableListOf<String>()
@@ -54,19 +54,19 @@ class RepeatableValidator(
             allErrors.addAll(validateListRules(rows, options))
 
             // Sprawdź unikalność
-            validateUniqueness(rows, options, renderContext)?.let { uniquenessError ->
+            validateUniqueness(rows, options, controlContext)?.let { uniquenessError ->
                 allErrors.add(uniquenessError)
             }
         }
 
         // 3. Ustaw błędy dla GŁÓWNEJ kontrolki
-        errorManager.setFieldErrors(renderContext.fullPath, allErrors)
+        errorManager.setFieldErrors(controlContext.fullStatePath, allErrors)
     }
 
     private fun validateUniqueness(
         rows: List<RepeatableRow>,
         options: RepeatableValidation,
-        renderContext: RenderContext
+        controlContext: ControlContext
     ): String? { // Zwraca string błędu lub null
         if (options.uniqueFields.isEmpty()) {
             return null
@@ -78,8 +78,8 @@ class RepeatableValidator(
         for ((index, row) in rows.withIndex()) {
             // Bierzemy pod uwagę tylko wiersze, które nie mają błędów w polach unikalności
             val uniqueKey = options.uniqueFields.map { field ->
-                val hierarchicalContext = renderContext.forRepeatableChild(field, row.id)
-                allStates[hierarchicalContext.fullPath]?.value?.value
+                val hierarchicalContext = controlContext.forRepeatableChild(field, row.id)
+                allStates[hierarchicalContext.fullStatePath]?.value?.value
             }
 
             // Ignoruj klucze z pustymi polami
@@ -122,13 +122,13 @@ class RepeatableValidator(
     private fun validateChildControls(
         rows: List<RepeatableRow>,
         control: RepeatableControl,
-        renderContext: RenderContext
+        controlContext: ControlContext
     ) {
         val allStates = formState.getAllStates()
         for (row in rows) {
             for ((fieldName, fieldControl) in control.rowControls) {
-                val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
-                val fieldState = allStates.getValue(hierarchicalContext.fullPath)
+                val hierarchicalContext = controlContext.forRepeatableChild(fieldName, row.id)
+                val fieldState = allStates.getValue(hierarchicalContext.fullStatePath)
                 fieldControl.validateControl(hierarchicalContext, fieldState)
             }
         }

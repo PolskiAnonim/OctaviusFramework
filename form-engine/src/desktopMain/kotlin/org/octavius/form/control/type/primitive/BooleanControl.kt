@@ -36,7 +36,7 @@ class BooleanControl(
     actions = actions
 ) {
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<Boolean>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<Boolean>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()
         Surface(
             modifier = Modifier
@@ -60,7 +60,7 @@ class BooleanControl(
                             checked = currentValue,
                             onCheckedChange = {
                                 controlState.value.value = it
-                                executeActions(renderContext, it, scope)
+                                executeActions(controlContext, it, scope)
                             }
                         )
                     } else {
@@ -71,14 +71,14 @@ class BooleanControl(
                                 val mapping = mapOf(null to false, false to true, true to null)
                                 val newValue = mapping[controlState.value.value]
                                 controlState.value.value = newValue
-                                executeActions(renderContext, newValue, scope)
+                                executeActions(controlContext, newValue, scope)
                             }
                         )
                     }
                     RenderCheckboxLabel(label, isRequired)
                 }
 
-                DisplayFieldErrors(renderContext)
+                DisplayFieldErrors(controlContext)
             }
         }
     }

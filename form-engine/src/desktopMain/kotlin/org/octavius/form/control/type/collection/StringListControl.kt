@@ -38,7 +38,7 @@ class StringListControl(
     }
 
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<List<String>>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<List<String>>, isRequired: Boolean) {
         var currentList by remember { mutableStateOf(controlState.value.value ?: listOf()) }
         var newItemText by remember { mutableStateOf("") }
 
@@ -178,7 +178,7 @@ class StringListControl(
                 }
             }
             
-            DisplayFieldErrors(renderContext)
+            DisplayFieldErrors(controlContext)
         }
     }
 }
