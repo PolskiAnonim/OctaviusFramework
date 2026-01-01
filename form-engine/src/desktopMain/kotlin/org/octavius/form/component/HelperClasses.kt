@@ -3,29 +3,6 @@ package org.octavius.form.component
 import org.octavius.navigation.Screen
 
 
-/**
- * Definicja relacji między tabelami w zapytaniach JOIN dla formularzy.
- *
- * Data class opisująca jak tabele powinny być połączone w zapytaniach SQL
- * generowanych przez system formularzy. Umożliwia definiowanie złożonych
- * relacji między tabelami główną a tabelami powiązanymi.
- *
- * @param tableName Nazwa tabeli w relacji
- * @param joinCondition Warunek JOIN SQL (pusty string dla tabeli głównej)
- * @param primaryKey Nazwa kolumny klucza głównego (domyślnie "id")
- *
- * Przykład:
- * ```kotlin
- * TableRelation("users") // Tabela główna
- * TableRelation("profiles", "LEFT JOIN profiles p ON p.user_id = users.id")
- * ```
- */
-data class TableRelation(
-    val tableName: String,
-    val joinCondition: String = "",
-    val primaryKey: String = "id"
-)
-
 sealed class FormActionResult {
     // Akcje zmieniające UI
     data class Navigate(val screen: Screen) : FormActionResult() // Przekierowanie
