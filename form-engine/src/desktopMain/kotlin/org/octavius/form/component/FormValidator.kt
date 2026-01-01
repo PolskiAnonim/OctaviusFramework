@@ -4,7 +4,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
 import org.octavius.form.control.base.FormResultData
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 
 /**
  * Klasa odpowiedzialna za walidację formularza na dwóch poziomach:
@@ -41,14 +41,14 @@ open class FormValidator() : KoinComponent {
      */
     internal fun validateFields(): Boolean {
 
-        for ((controlName, control) in formSchema.getAllControls()) {
+        for ((controlName, control) in formSchema.getMainLevelControls()) {
             // Dzieci sekcji i repeatable zostaną pominięte, bo ich
             // walidację uruchomi walidator rodzica.
             if (control.independentValidation) {
                 val state = formState.getControlState(controlName)!!
 
                 // Zwykłe kontrolki nie mają rodzica, tworzymy prosty kontekst.
-                control.validateControl(RenderContext(localName = controlName), state)
+                control.validateControl(ControlContext(localName = controlName), state)
             }
         }
 

@@ -15,7 +15,7 @@ import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.layout.section.SectionContent
 import org.octavius.form.control.layout.section.SectionHeader
 import org.octavius.form.control.validator.section.SectionValidator
@@ -55,7 +55,7 @@ class SectionControl(
     }
 
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<Unit>, isRequired: Boolean) {
         val isExpanded = remember { mutableStateOf(initiallyExpanded) }
 
         ElevatedCard(
@@ -73,7 +73,7 @@ class SectionControl(
 
                 AnimatedVisibility(visible = isExpanded.value) {
                     SectionContent(
-                        renderContext = renderContext,
+                        controlContext = controlContext,
                         controlNames = controls,
                         columns = columns,
                         formSchema = this@SectionControl.formSchema,

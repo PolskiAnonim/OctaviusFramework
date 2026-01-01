@@ -38,7 +38,7 @@ class ButtonControl(
     actions = actions
 ) {
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<Unit>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<Unit>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()
 
         val modifier = Modifier
@@ -51,7 +51,7 @@ class ButtonControl(
         when (buttonType) {
             ButtonType.Filled -> {
                 Button(
-                    onClick = { executeActions(renderContext, Unit, scope) },
+                    onClick = { executeActions(controlContext, Unit, scope) },
                     modifier = modifier
                 ) {
                     Text(text)
@@ -59,7 +59,7 @@ class ButtonControl(
             }
             ButtonType.Outlined -> {
                 OutlinedButton(
-                    onClick = { executeActions(renderContext, Unit, scope) },
+                    onClick = { executeActions(controlContext, Unit, scope) },
                     modifier = modifier
                 ) {
                     Text(text)
@@ -67,7 +67,7 @@ class ButtonControl(
             }
             ButtonType.Text -> {
                 TextButton(
-                    onClick = { executeActions(renderContext, Unit, scope) },
+                    onClick = { executeActions(controlContext, Unit, scope) },
                     modifier = modifier
                 ) {
                     Text(text)

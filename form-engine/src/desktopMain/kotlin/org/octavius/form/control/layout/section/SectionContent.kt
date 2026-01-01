@@ -12,12 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.ui.theme.FormSpacing
 
 @Composable
 internal fun SectionContent(
-    renderContext: RenderContext,
+    controlContext: ControlContext,
     controlNames: List<String>,
     columns: Int,
     formSchema: FormSchema,
@@ -34,10 +34,10 @@ internal fun SectionContent(
         ) {
             if (columns > 1) {
                 // Logika dla wielu kolumn
-                RenderMultiColumnContent(renderContext, controlNames, columns, formSchema, formState)
+                RenderMultiColumnContent(controlContext, controlNames, columns, formSchema, formState)
             } else {
                 // Logika dla jednej kolumny
-                RenderSingleColumnContent(renderContext, controlNames, formSchema, formState)
+                RenderSingleColumnContent(controlContext, controlNames, formSchema, formState)
             }
         }
     }
@@ -45,7 +45,7 @@ internal fun SectionContent(
 
 @Composable
 private fun RenderMultiColumnContent(
-    renderContext: RenderContext,
+    controlContext: ControlContext,
     controlNames: List<String>,
     columns: Int,
     formSchema: FormSchema,
@@ -64,7 +64,7 @@ private fun RenderMultiColumnContent(
                     .padding(horizontal = FormSpacing.fieldPaddingHorizontal)
             ) {
                 group.forEach { controlName ->
-                    RenderControlByName(renderContext, controlName, formSchema, formState)
+                    RenderControlByName(controlContext, controlName, formSchema, formState)
                     Spacer(modifier = Modifier.height(FormSpacing.sectionContentSpacing))
                 }
             }
@@ -74,14 +74,14 @@ private fun RenderMultiColumnContent(
 
 @Composable
 private fun RenderSingleColumnContent(
-    renderContext: RenderContext,
+    controlContext: ControlContext,
     controlNames: List<String>,
     formSchema: FormSchema,
     formState: FormState,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         controlNames.forEach { controlName ->
-            RenderControlByName(renderContext, controlName, formSchema, formState)
+            RenderControlByName(controlContext, controlName, formSchema, formState)
             Spacer(modifier = Modifier.height(FormSpacing.sectionHeaderPaddingBottom))
         }
     }
@@ -90,14 +90,14 @@ private fun RenderSingleColumnContent(
 // Wyodrębniamy powtarzającą się logikę renderowania pojedynczej kontrolki
 @Composable
 private fun RenderControlByName(
-    renderContext: RenderContext,
+    controlContext: ControlContext,
     controlName: String,
     formSchema: FormSchema,
     formState: FormState
 ) {
     formSchema.getControl(controlName)?.let { control ->
         formState.getControlState(controlName)?.let { state ->
-            control.Render(renderContext.forSectionChild(controlName), state)
+            control.Render(controlContext.forSectionChild(controlName), state)
         }
     }
 }

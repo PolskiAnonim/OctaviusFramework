@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.type.repeatable.RepeatableRow
 import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
@@ -158,7 +158,7 @@ private fun RepeatableRowHeader(
 @Composable
 internal fun RepeatableRowContent(
     row: RepeatableRow,
-    renderContext: RenderContext,
+    controlContext: ControlContext,
     rowOrder: List<String>,
     rowControls: Map<String, Control<*>>,
     formState: FormState
@@ -166,11 +166,11 @@ internal fun RepeatableRowContent(
     Column(modifier = Modifier.fillMaxWidth()) {
         rowOrder.forEach { fieldName ->
             rowControls[fieldName]?.let { control ->
-                val hierarchicalContext = renderContext.forRepeatableChild(fieldName, row.id)
-                val state = formState.getControlState(hierarchicalContext.fullPath)
+                val hierarchicalContext = controlContext.forRepeatableChild(fieldName, row.id)
+                val state = formState.getControlState(hierarchicalContext.fullStatePath)
                 if (state != null) {
                     control.Render(
-                        renderContext = hierarchicalContext,
+                        controlContext = hierarchicalContext,
                         controlState = state
                     )
 

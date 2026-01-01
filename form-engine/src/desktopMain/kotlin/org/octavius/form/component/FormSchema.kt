@@ -1,7 +1,7 @@
 package org.octavius.form.component
 
 import org.octavius.form.control.base.Control
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 
 /**
  * Schemat formularza - definicja struktury i układu kontrolek.
@@ -20,10 +20,21 @@ import org.octavius.form.control.base.RenderContext
  * @throws IllegalArgumentException jeśli nazwy w listach porządkujących nie istnieją w mapie controls.
  */
 class FormSchema(
-    private val controls: Map<String, Control<*>>,
+    definedControls: Map<String, Control<*>>,
     val contentOrder: List<String>,
     val actionBarOrder: List<String>
 ) {
+
+    val controls: Map<String, Control<*>>
+
+    init {
+        val ctrls = definedControls.toMutableMap()
+        definedControls.forEach { (key, value) ->
+            ctrls.putAll(value.registerChildrenInGlobalMap(ControlContext(key)))
+        }
+        controls = ctrls.toMap()
+    }
+
     /**
      * Zwraca kontrolkę o danej nazwie
      */
@@ -32,7 +43,7 @@ class FormSchema(
     /**
      * Zwraca wszystkie kontrolki zdefiniowane w tej klasie
      */
-    fun getAllControls(): Map<String, Control<*>> = controls
+    fun getMainLevelControls(): Map<String, Control<*>> = controls.filter { !it.key.contains(".") }
 }
 
 /**

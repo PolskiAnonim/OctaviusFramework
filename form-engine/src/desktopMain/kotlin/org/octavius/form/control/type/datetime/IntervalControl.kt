@@ -26,7 +26,7 @@ class IntervalControl(
     }
 
     @Composable
-    override fun Display(renderContext: RenderContext, controlState: ControlState<Duration>, isRequired: Boolean) {
+    override fun Display(controlContext: ControlContext, controlState: ControlState<Duration>, isRequired: Boolean) {
         val scope = rememberCoroutineScope()
         var showDialog by remember { mutableStateOf(false) }
 
@@ -36,7 +36,7 @@ class IntervalControl(
             onClear = if (!isRequired) {
                 {
                     controlState.value.value = null
-                    executeActions(renderContext, null, scope)
+                    executeActions(controlContext, null, scope)
                 }
             } else null,
             isRequired = isRequired
@@ -48,7 +48,7 @@ class IntervalControl(
                 onDismiss = { showDialog = false },
                 onConfirm = { newDuration ->
                     controlState.value.value = newDuration
-                    executeActions(renderContext, newDuration, scope)
+                    executeActions(controlContext, newDuration, scope)
                     showDialog = false
                 }
             )

@@ -3,7 +3,7 @@ package org.octavius.form.control.validator.datetime
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.DateTimeValidation
-import org.octavius.form.control.base.RenderContext
+import org.octavius.form.control.base.ControlContext
 import org.octavius.localization.T
 import org.octavius.util.DateTimeAdapter
 
@@ -12,7 +12,7 @@ class DateTimeValidator<T: Any>(
     private val adapter: DateTimeAdapter<T>
 ) : ControlValidator<T>() {
 
-    override fun validateSpecific(renderContext: RenderContext, state: ControlState<*>) {
+    override fun validateSpecific(controlContext: ControlContext, state: ControlState<*>) {
         @Suppress("UNCHECKED_CAST")
         val value = state.value.value as T
         val errors = mutableListOf<String>()
@@ -32,6 +32,6 @@ class DateTimeValidator<T: Any>(
                 }
             }
         }
-        errorManager.setFieldErrors(renderContext.fullPath, errors)
+        errorManager.setFieldErrors(controlContext.fullStatePath, errors)
     }
 }
