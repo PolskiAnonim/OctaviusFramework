@@ -69,7 +69,7 @@ abstract class Control<T : Any> internal constructor(
      * @param value Wartość z bazy danych lub wartość domyślna.
      * @return Utworzony stan kontrolki.
      */
-    internal open fun setInitValue(controlName: String, value: Any?): ControlState<T> {
+    internal open fun setInitValue(controlContext: ControlContext, value: Any?): ControlState<T> {
         val state = ControlState<T>()
         if (value == null) {
             return state

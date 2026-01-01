@@ -188,8 +188,5 @@ abstract class ControlValidator<T : Any> {
      * @param controlName nazwa kontrolki
      * @param state stan kontrolki do walidacji
      */
-    open fun validateSpecific(controlContext: ControlContext, state: ControlState<*>) {
-        // Domyślnie czyścimy błędy jeśli nie ma problemów
-        errorManager.clearFieldErrors(controlContext.fullStatePath)
-    }
+    abstract fun validateSpecific(controlContext: ControlContext, state: ControlState<*>)
 }

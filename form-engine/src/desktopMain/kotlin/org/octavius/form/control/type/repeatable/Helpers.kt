@@ -43,16 +43,16 @@ data class RepeatableResultValue(
  */
 internal fun createRow(
     index: Int,
-    parentControlName: String, // Np. "publications" lub "projects[uuid].tasks"
+    parentContext: ControlContext, // Np. "publications" lub "projects[uuid].tasks"
     rowControls: Map<String, Control<*>>,
     formState: FormState
 ): RepeatableRow {
     val row = RepeatableRow(index = index)
     // Utwórz stany dla wszystkich kontrolek w wierszu
-    rowControls.forEach { (fieldName, control) ->
-        val hierarchicalName = "$parentControlName[${row.id}].$fieldName"
-        val state = control.setInitValue(hierarchicalName, null) // Inicjalizujemy z null
-        formState.setControlState(hierarchicalName, state)
+    rowControls.forEach { (controlName, control) ->
+        val childControlContext = parentContext.forRepeatableChild(controlName, row.id)
+        val state = control.setInitValue(childControlContext, null) // Inicjalizujemy z null
+        formState.setControlState(childControlContext.fullStatePath, state)
     }
     return row
 }

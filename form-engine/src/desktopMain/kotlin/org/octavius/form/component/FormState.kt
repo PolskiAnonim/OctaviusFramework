@@ -52,7 +52,7 @@ class FormState {
         // Potem inicjalizuj stany kontrolek
         schema.getMainLevelControls().forEach { (controlName, control) ->
             val value = initValues[controlName]
-            _controlStates[controlName] = control.setInitValue(controlName, value)
+            _controlStates[controlName] = control.setInitValue(ControlContext(controlName), value)
         }
     }
     /**

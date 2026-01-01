@@ -76,7 +76,7 @@ class RepeatableControl(
         return value.map { RepeatableRow(id = it.id, index = it.index) }
     }
 
-    override fun setInitValue(controlName: String, value: Any?): ControlState<List<RepeatableRow>> {
+    override fun setInitValue(controlContext: ControlContext, value: Any?): ControlState<List<RepeatableRow>> {
 
         @Suppress("UNCHECKED_CAST")
         val initialDataRows = value as? List<Map<String, Any?>> ?: emptyList()
@@ -88,11 +88,11 @@ class RepeatableControl(
             // Dla każdego pola w danych, stwórz stan kontrolki-dziecka
             rowControls.forEach { (fieldName, control) ->
                 val fieldValue = dataRow[fieldName]
-                val hierarchicalName = "$controlName[${row.id}].$fieldName"
+                val childContext = controlContext.forRepeatableChild(fieldName, row.id)
 
                 // Rekurencyjne wywołanie! Tworzymy stan dla dziecka.
-                val childState = control.setInitValue(hierarchicalName, fieldValue)
-                formState.setControlState(hierarchicalName, childState)
+                val childState = control.setInitValue(childContext, fieldValue)
+                formState.setControlState(childContext.fullStatePath, childState)
             }
             row
         }
@@ -104,7 +104,7 @@ class RepeatableControl(
             val index = initialModelRows.size + additionalModelRows.size
 
             // Używamy nowej funkcji pomocniczej
-            val newRow = createRow(index, controlName, rowControls, formState)
+            val newRow = createRow(index, controlContext, rowControls, formState)
             additionalModelRows.add(newRow)
         }
 

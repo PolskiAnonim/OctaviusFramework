@@ -15,7 +15,7 @@ class RepeatableRowManager(
     fun addRow(controlContext: ControlContext, controlState: ControlState<List<RepeatableRow>>) {
         val currentRows = controlState.value.value!!.toMutableList()
         val newIndex = currentRows.size
-        val newRow = createRow(newIndex, controlContext.fullStatePath, rowControls, formState)
+        val newRow = createRow(newIndex, controlContext, rowControls, formState)
         currentRows.add(newRow)
         controlState.value.value = currentRows
     }
