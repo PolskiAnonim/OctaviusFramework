@@ -55,10 +55,10 @@ class RepeatableControl(
         this.rowManager = RepeatableRowManager(rowControls, formState, validationOptions as RepeatableValidation?)
     }
 
-    override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
+    override fun setupParentRelationships(parentControlRenderContext: RenderContext, controls: Map<String, Control<*>>) {
         // Ustaw parent dla wszystkich kontrolek w wierszu
         rowControls.values.forEach { childControl ->
-            childControl.parentControl = parentControlName
+            childControl.parentControlRenderContext = parentControlRenderContext
         }
     }
 

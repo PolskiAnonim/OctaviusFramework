@@ -1,16 +1,11 @@
 package org.octavius.form.control.type.container
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlDependency
@@ -18,7 +13,6 @@ import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.RenderContext
 import org.octavius.form.control.layout.section.SectionContent
 import org.octavius.form.control.layout.section.SectionHeader
-import org.octavius.localization.T
 import org.octavius.ui.theme.FormSpacing
 
 /**
@@ -37,9 +31,9 @@ class SectionControl(
     dependencies: Map<String, ControlDependency<*>>? = null
 ) : Control<Unit>(label, false, dependencies, hasStandardLayout = false) {
 
-    override fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
+    override fun setupParentRelationships(parentControlRenderContext: RenderContext, controls: Map<String, Control<*>>) {
         ctrls.forEach { childControlName ->
-            controls[childControlName]?.parentControl = parentControlName
+            controls[childControlName]?.parentControlRenderContext = parentControlRenderContext
         }
     }
 

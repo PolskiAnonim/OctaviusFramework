@@ -1,6 +1,7 @@
 package org.octavius.form.component
 
 import org.octavius.form.control.base.Control
+import org.octavius.form.control.base.RenderContext
 
 /**
  * Schemat formularza - definicja struktury i układu kontrolek.
@@ -38,7 +39,7 @@ class FormSchema(
      */
     private fun setupParentChildRelationships() {
         controls.forEach { control ->
-            control.value.setupParentRelationships(control.key, controls)
+            control.value.setupParentRelationships(RenderContext(control.key), controls)
         }
     }
 

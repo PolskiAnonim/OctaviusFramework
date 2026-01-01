@@ -53,13 +53,13 @@ abstract class Control<T : Any> internal constructor(
     }
 
     // --- 3. Zarządzanie Hierarchią ---
-    internal var parentControl: String? = null
+    internal var parentControlRenderContext: RenderContext? = null
 
     /**
      * Ustawia relacje hierarchiczne między kontrolkami. Używane przez kontrolki-kontenery
      * (np. SectionControl), aby poinformować kontrolki-dzieci o swoim istnieniu.
      */
-    internal open fun setupParentRelationships(parentControlName: String, controls: Map<String, Control<*>>) {
+    internal open fun setupParentRelationships(parentControlRenderContext: RenderContext, controls: Map<String, Control<*>>) {
         // Domyślnie puste, implementują to kontenery.
     }
 

@@ -36,19 +36,6 @@ abstract class ControlValidator<T : Any> {
         this.errorManager = errorManager
     }
 
-    private fun createContextFromName(fullPath: String): RenderContext {
-
-        val lastDotIndex = fullPath.lastIndexOf('.')
-        if (lastDotIndex == -1) {
-            // Nie ma kropek, to jest kontrolka na najwyższym poziomie
-            return RenderContext(localName = fullPath, basePath = "")
-        }
-
-        val basePath = fullPath.substring(0, lastDotIndex)
-        val localName = fullPath.substring(lastDotIndex + 1)
-        return RenderContext(localName = localName, basePath = basePath)
-    }
-
     private fun isDependencyMet(
         dependency: ControlDependency<*>,
         renderContext: RenderContext
@@ -77,9 +64,8 @@ abstract class ControlValidator<T : Any> {
         renderContext: RenderContext
     ): Boolean {
         // Krok 1: Sprawdź widoczność rodzica (rekurencja)
-        control.parentControl?.let { parentName ->
-            val parentControl = formSchema.getControl(parentName)!!
-            val parentContext = createContextFromName(parentName)
+        control.parentControlRenderContext?.let { parentContext ->
+            val parentControl = formSchema.getControl(parentContext.fullPath)!!
             if (!isControlVisible(parentControl, parentContext)) {
                 return false
             }
