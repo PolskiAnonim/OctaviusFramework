@@ -43,7 +43,7 @@ class FormSchema(
     /**
      * Zwraca wszystkie kontrolki zdefiniowane w tej klasie
      */
-    fun getMainLevelControls(): Map<String, Control<*>> = controls.filter { !it.key.contains(".") }
+    fun getAllControls(): Map<String, Control<*>> = controls
 }
 
 /**

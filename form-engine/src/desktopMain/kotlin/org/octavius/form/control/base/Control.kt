@@ -28,7 +28,19 @@ abstract class Control<T : Any> internal constructor(
     private val actions: List<ControlAction<T>>? = null,
     protected val hasStandardLayout: Boolean = true
 ) {
-    // --- 2. Cykl Życia i Kontekst Formularza ---
+
+    // --- 2. Zarządzanie Hierarchią ---
+
+    /**
+     * Funkcja do rejestracji dzieci na globalnej mapie
+     * Zawiera referencje do kontrolek zdefiniowanych w kontrolce posiadającej własne
+     */
+    internal open fun registerChildrenInGlobalMap(controlContext: ControlContext): Map<String, Control<*>> {
+        return emptyMap()
+    }
+
+
+    // --- 3. Cykl Życia i Kontekst Formularza ---
     // Referencje wstrzykiwane przez FormHandler przy inicjalizacji.
     protected lateinit var formState: FormState
     protected lateinit var formSchema: FormSchema
@@ -38,8 +50,9 @@ abstract class Control<T : Any> internal constructor(
     /**
      * Ustawia referencje do komponentów formularza. Jest to drugi etap inicjalizacji kontrolki,
      * wywoływany przez FormHandler. Daje dostęp do globalnego stanu, schemy i managera błędów.
+     * Dodatkowo umożliwia wykonanie dodatkowych kroków inicjalizacyjnych wymaganych przez określone kontrolki
      */
-    internal open fun setupFormReferences(
+    internal open fun initializeControlLifecycle(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager,
@@ -51,17 +64,6 @@ abstract class Control<T : Any> internal constructor(
         this.formActionTrigger = formActionTrigger
         validator.setupFormReferences(formState, formSchema, errorManager)
     }
-
-    // --- 3. Zarządzanie Hierarchią ---
-
-    /**
-     * Funkcja do rejestracji dzieci na globalnej mapie
-     * Zawiera referencje do kontrolek zdefiniowanych w kontrolce posiadającej własne
-     */
-    internal open fun registerChildrenInGlobalMap(controlContext: ControlContext): Map<String, Control<*>> {
-        return emptyMap()
-    }
-
 
     // --- 4. Zarządzanie Stanem i Danymi ---
     /**
@@ -136,12 +138,9 @@ abstract class Control<T : Any> internal constructor(
     }
 
     /**
-     * Flaga określająca, czy ta kontrolka powinna być walidowana przez globalny
-     * proces `validateFields`. Jeśli `false`, oznacza to, że walidacja jest
-     * inicjowana przez kontrolkę-rodzica (np. SectionControl, RepeatableControl).
+     * Flaga określająca, rolę kontrolki w hierarchii.
      */
-    internal var independentValidation: Boolean = true
-
+    internal var hierarchyRole: ControlHierarchyRole = ControlHierarchyRole.ROOT
 
     // --- 6. Obsługa Akcji ---
     /**

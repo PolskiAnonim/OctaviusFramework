@@ -16,6 +16,7 @@ import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.ControlContext
+import org.octavius.form.control.base.ControlHierarchyRole
 import org.octavius.form.control.layout.section.SectionContent
 import org.octavius.form.control.layout.section.SectionHeader
 import org.octavius.form.control.validator.section.SectionValidator
@@ -39,18 +40,16 @@ class SectionControl(
 
     override val validator: ControlValidator<Unit> = SectionValidator(controls)
 
-    override fun setupFormReferences(
+    override fun initializeControlLifecycle(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager,
         formActionTrigger: FormActionTrigger
     ) {
-        super.setupFormReferences(formState, formSchema, errorManager, formActionTrigger)
+        super.initializeControlLifecycle(formState, formSchema, errorManager, formActionTrigger)
         // Kluczowy moment: informujemy dzieci, że ich walidacja nie jest niezależna.
         controls.forEach { controlName ->
-            formSchema.getControl(controlName)?.let { childControl ->
-                childControl.independentValidation = false
-            }
+            formSchema.getControl(controlName)?.hierarchyRole = ControlHierarchyRole.GROUPED_CHILD
         }
     }
 

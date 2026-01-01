@@ -41,7 +41,7 @@ class FormHandler(
     private val formSchema: FormSchema = formSchemaBuilder.build()
 
     init {
-        setupFormReferences()
+        initializeControlsLifecycle()
         loadData()
     }
 
@@ -51,9 +51,9 @@ class FormHandler(
      * Ta metoda jest kluczowa dla działania systemu - umożliwia kontrolkom
      * dostęp do globalnego stanu, schemy i menedżera błędów.
      */
-    private fun setupFormReferences() {
-        formSchema.getMainLevelControls().values.forEach { control ->
-            control.setupFormReferences(formState, formSchema, errorManager, this)
+    private fun initializeControlsLifecycle() {
+        formSchema.getAllControls().values.forEach { control ->
+            control.initializeControlLifecycle(formState, formSchema, errorManager, this)
         }
         formValidator.setupFormReferences(formState, formSchema, errorManager)
         formDataManager.setupFormReferences(errorManager)

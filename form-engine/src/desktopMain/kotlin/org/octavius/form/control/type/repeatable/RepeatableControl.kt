@@ -42,15 +42,15 @@ class RepeatableControl(
 ) {
     private lateinit var rowManager: RepeatableRowManager
 
-    override fun setupFormReferences(
+    override fun initializeControlLifecycle(
         formState: FormState,
         formSchema: FormSchema,
         errorManager: ErrorManager,
         formActionTrigger: FormActionTrigger
     ) {
-        super.setupFormReferences(formState, formSchema, errorManager, formActionTrigger)
-        rowControls.values.forEach { rowControl ->
-            rowControl.setupFormReferences(formState, formSchema, errorManager, formActionTrigger)
+        super.initializeControlLifecycle(formState, formSchema, errorManager, formActionTrigger)
+        rowControls.values.forEach { childControl ->
+            childControl.hierarchyRole = ControlHierarchyRole.AGGREGATED_CHILD
         }
         this.rowManager = RepeatableRowManager(rowControls, formState, validationOptions as RepeatableValidation?)
     }

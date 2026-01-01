@@ -5,6 +5,7 @@ import org.octavius.form.control.base.ControlResultData
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.ControlContext
+import org.octavius.form.control.base.ControlHierarchyRole
 
 /**
  * Reaktywne zarządzanie stanem wszystkich kontrolek formularza.
@@ -50,9 +51,11 @@ class FormState {
      */
     internal fun initializeStates(schema: FormSchema, initValues: Map<String, Any?>) {
         // Potem inicjalizuj stany kontrolek
-        schema.getMainLevelControls().forEach { (controlName, control) ->
-            val value = initValues[controlName]
-            _controlStates[controlName] = control.setInitValue(ControlContext(controlName), value)
+        schema.getAllControls().forEach { (controlName, control) ->
+            if (control.hierarchyRole != ControlHierarchyRole.AGGREGATED_CHILD) {
+                val value = initValues[controlName]
+                _controlStates[controlName] = control.setInitValue(ControlContext(controlName), value)
+            }
         }
     }
     /**
@@ -94,9 +97,11 @@ class FormState {
     internal fun collectFormData(schema: FormSchema): FormResultData {
         val result = mutableMapOf<String, ControlResultData>()
 
-        schema.getMainLevelControls().forEach { (controlName, control) ->
-            val state = _controlStates[controlName]!! // Stan musi istnieć, jeśli kontrolka jest w schemacie
-            result[controlName] = control.getResult(ControlContext(controlName), state)
+        schema.getAllControls().forEach { (controlName, control) ->
+            if (control.hierarchyRole != ControlHierarchyRole.AGGREGATED_CHILD) {
+                val state = _controlStates[controlName]!!
+                result[controlName] = control.getResult(ControlContext(controlName), state) // TODO poprawienie kontekstu dla sekcji - nie jest używany ale technicznie jest niespójność
+            }
         }
 
         return result.toMap()
