@@ -31,7 +31,7 @@ abstract class SpecialColumn(width: Dp) : ReportColumn(
      * Specjalne kolumny nie obsługują filtrowania.
      * Ta metoda rzuca wyjątek jeśli zostanie wywołana.
      */
-    override fun createFilter(): Filter<*> = throw NotImplementedError("SpecialColumn does not support filtering.")
+    final override fun createFilter(): Filter<*> = throw NotImplementedError("SpecialColumn does not support filtering.")
 
     /**
      * Ta metoda jest nadpisywana jako final aby zapewnić, że nikt jej nie wywoła dla SpecialColumn.

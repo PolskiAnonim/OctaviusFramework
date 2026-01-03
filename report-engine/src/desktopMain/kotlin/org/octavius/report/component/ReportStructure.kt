@@ -50,10 +50,10 @@ class ReportStructure(
     fun initSpecialColumns() {
         val specialColumns = mutableMapOf<String, ReportColumn>()
         if (rowActions.isNotEmpty()) {
-            specialColumns.put("_actions", ActionColumn(rowActions))
+            specialColumns["_actions"] = ActionColumn(rowActions)
         }
         if (defaultRowAction != null) {
-            specialColumns.put("_quick_action", QuickActionColumn(defaultRowAction))
+            specialColumns["_quick_action"] = QuickActionColumn(defaultRowAction)
         }
         columns = specialColumns + initColumns
     }
