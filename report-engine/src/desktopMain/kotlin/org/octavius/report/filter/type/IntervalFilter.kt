@@ -179,7 +179,6 @@ class IntervalFilter : Filter<IntervalFilterData>() {
             IntervalFilterDataType.GreaterEquals -> {
                 QueryFragment("$columnName >= :$columnName", mapOf(columnName to singleValue))
             }
-            else -> throw IllegalArgumentException("Range is handled above")
         }
     }
 
@@ -262,7 +261,6 @@ class IntervalFilter : Filter<IntervalFilterData>() {
             IntervalFilterDataType.LessEquals -> "<="
             IntervalFilterDataType.GreaterThan -> ">"
             IntervalFilterDataType.GreaterEquals -> ">="
-            else -> throw IllegalStateException("Should not be reached")
         }
 
         val sql = buildExistsForOperator(columnName, operator, columnName, isAllMode)

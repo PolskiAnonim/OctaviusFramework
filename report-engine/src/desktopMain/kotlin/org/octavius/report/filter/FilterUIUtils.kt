@@ -13,12 +13,12 @@ import org.octavius.domain.EnumWithFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun <T : EnumWithFormatter<T>> EnumDropdownMenu(
+fun <T> EnumDropdownMenu(
     currentValue: T,
     options: List<T>,
     onValueChange: (T) -> Unit,
     modifier: Modifier = Modifier
-) {
+) where T : Enum<T>, T : EnumWithFormatter<T> {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
