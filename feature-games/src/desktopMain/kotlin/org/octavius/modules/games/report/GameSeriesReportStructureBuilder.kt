@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import org.octavius.data.QueryFragment
 import org.octavius.localization.T
+import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.ReportMainAction
@@ -61,6 +62,16 @@ class GameSeriesReportStructureBuilder : ReportStructureBuilder() {
             icon = Icons.Default.Add
         ) {
             AppRouter.navigateTo(GameSeriesFormScreen.create())
+        }
+    )
+
+    override fun buildRowActions(): List<ReportRowAction> = listOf(
+        ReportRowAction(T.get("games.report.addGameInSeries"), Icons.Default.Add) {
+            val seriesId = rowData["id"] as? Int
+            if (seriesId != null) {
+                val payload = mapOf("series" to seriesId)
+                AppRouter.navigateTo(GameFormScreen.create(null, payload))
+            }
         }
     )
 }

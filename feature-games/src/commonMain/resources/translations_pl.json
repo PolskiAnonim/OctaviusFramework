@@ -56,7 +56,8 @@
     "report": {
       "newGame": "Nowa gra",
       "newSeries": "Nowa seria",
-      "title": "Gry"
+      "title": "Gry",
+      "addGameInSeries": "Dodaj nową grę w serii"
     },
     "series": {
       "basicInfo": "Informacje o serii",
