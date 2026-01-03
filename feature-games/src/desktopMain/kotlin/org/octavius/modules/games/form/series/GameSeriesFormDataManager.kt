@@ -1,6 +1,7 @@
 package org.octavius.modules.games.form.series
 
 import org.octavius.data.DataResult
+import org.octavius.data.builder.execute
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
@@ -36,12 +37,12 @@ class GameSeriesFormDataManager : FormDataManager() {
         val plan = TransactionPlan()
         if (loadedId != null) {
             plan.add(
-                dataAccess.update("games.series").setValues(seriesData).where("id = :id").asStep()
-                    .execute(seriesData + mapOf("id" to loadedId))
+                dataAccess.update("games.series").setValues(listOf("name")).where("id = :id").asStep()
+                    .execute("name" to formResultData.getCurrent("name"), "id" to loadedId)
             )
         } else {
             plan.add(
-                dataAccess.insertInto("games.series").values(seriesData).asStep().execute()
+                dataAccess.insertInto("games.series").values(listOf("name")).asStep().execute("name" to formResultData.getCurrent("name"))
             )
         }
         return when (val result = dataAccess.executeTransactionPlan(plan)) {
