@@ -94,7 +94,7 @@ typealias FormResultData = Map<String, ControlResultData>
  * Pobiera bieżącą wartość kontrolki jako określony typ `T`.
  * Obsługuje rzutowanie na typ T
  *
- * Zastępuje: `formData["name"]?.currentValue as String`
+ * Zastępuje: `formData["name"]!!.currentValue as String`
  * Użycie: `formData.getCurrent<String>("name")`
  */
 inline fun <reified T> FormResultData.getCurrentAs(key: String): T {
@@ -113,7 +113,7 @@ fun FormResultData.getCurrent(key: String): Any? {
 /**
  * Pobiera początkową wartość kontrolki jako określony typ `T`.
  *
- * Zastępuje: `rowData["id"]?.initialValue!! as Int`
+ * Zastępuje: `rowData["id"]!!.initialValue!! as Int`
  * Użycie: `rowData.getInitial<Int>("id")`
  */
 inline fun <reified T> FormResultData.getInitialAs(key: String): T {
@@ -123,7 +123,7 @@ inline fun <reified T> FormResultData.getInitialAs(key: String): T {
 /**
  * Pobiera początkową wartość kontrolki jako Any?
  *
- * Zastępuje: `rowData["id"]?.initialValue as? Int`
+ * Zastępuje: `rowData["id"]!!.initialValue`
  * Użycie: `rowData.getInitial<Int>("id")`
  */
 fun FormResultData.getInitial(key: String): Any? {
