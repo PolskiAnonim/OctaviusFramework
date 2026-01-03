@@ -1,7 +1,9 @@
 package org.octavius.modules.asian.form
 
 import org.octavius.data.DataResult
+import org.octavius.data.QueryFragment
 import org.octavius.data.builder.toField
+import org.octavius.data.join
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator
@@ -30,9 +32,13 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
         if (titles.isEmpty()) return true
 
-        val params = if (entityId != null) mapOf("titles" to titles, "id" to entityId) else mapOf("titles" to titles)
+        val whereClause = listOfNotNull(
+            QueryFragment("title = ANY(:titles)", mapOf("titles" to titles)),
+            entityId?.let { QueryFragment("id != :id", mapOf("id" to entityId)) }
+        ).join(separator = " AND ")
+
         val result = dataAccess.select("COUNT(*)").from("(SELECT id, UNNEST(titles) AS title FROM titles)")
-            .where("title = ANY(:titles) ${if (entityId != null) "AND id != :id" else ""}").toField<Long>(params)
+            .where(whereClause.sql).toField<Long>(whereClause.params)
 
 
         return when (result) {
