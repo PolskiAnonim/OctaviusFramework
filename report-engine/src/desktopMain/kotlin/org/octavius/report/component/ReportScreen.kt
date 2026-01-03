@@ -22,25 +22,20 @@ import org.octavius.report.ui.table.ReportTable
 
 class ReportScreen(
     override val title: String,
-    private val structureBuilder: ReportStructureBuilder
+    val reportHandler: ReportHandler
 ) : Screen {
-    @Composable
-    private fun rememberReportHandler(): ReportHandler {
-        val scope = rememberCoroutineScope()
-        val reportStructure = remember { structureBuilder.build() }
-
-        return remember(scope, reportStructure) {
-            ReportHandler(
-                coroutineScope = scope,
-                reportStructure = reportStructure
-            )
-        }
-    }
 
     @Composable
     override fun Content() {
-        val reportHandler: ReportHandler = rememberReportHandler()
         val state by reportHandler.state.collectAsState()
+
+        DisposableEffect(Unit) {
+            reportHandler.onEvent(ReportEvent.Initialize)
+            onDispose {
+                reportHandler.cancelJobs()
+            }
+        }
+
         val uiState = rememberReportUIState()
 
         // Przy zmianie danych

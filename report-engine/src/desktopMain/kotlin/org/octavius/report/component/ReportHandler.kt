@@ -1,11 +1,9 @@
 package org.octavius.report.component
 
 import androidx.compose.runtime.compositionLocalOf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.report.ReportDataResult
@@ -31,13 +29,19 @@ val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHan
  * 3. Jeśli potrzeba, wysyła żądanie pobrania danych
  * 4. UI automatycznie się przerysowuje na podstawie nowego stanu
  *
- * @param coroutineScope Scope dla operacji asynchronicznych (pobieranie danych).
- * @param reportStructure Definicja struktury raportu (kolumny, zapytania, akcje).
+ * @param reportStructureBuilder Builder definicji struktury raportu (kolumny, zapytania, akcje).
+ * @param handlerScope opcjonalny CoroutineScope
  */
 class ReportHandler(
-    private val coroutineScope: CoroutineScope,
-    val reportStructure: ReportStructure
+    reportStructureBuilder: ReportStructureBuilder,
+    private val handlerScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
+    val reportStructure: ReportStructure = reportStructureBuilder.build()
+
+
+    fun cancelJobs() {
+        handlerScope.coroutineContext[Job]?.cancelChildren()
+    }
 
     private var dataFetchJob: Job? = null
 
@@ -120,7 +124,7 @@ class ReportHandler(
 
     private fun fetchData(state: ReportState) {
         dataFetchJob?.cancel()
-        dataFetchJob = coroutineScope.launch {
+        dataFetchJob = handlerScope.launch {
 
             _state.value = _state.value.copy(isLoading = true, error = null)
 
@@ -176,9 +180,7 @@ class ReportHandler(
     private fun loadDefaultConfiguration() {
         val defaultConfig = configManager.loadDefaultConfiguration(reportStructure.reportName)
         if (defaultConfig != null) {
-            onEvent(ReportEvent.ApplyConfiguration(defaultConfig))
-        } else {
-            onEvent(ReportEvent.Initialize)
+            _state.value = applyConfiguration(_state.value, defaultConfig)
         }
     }
 
