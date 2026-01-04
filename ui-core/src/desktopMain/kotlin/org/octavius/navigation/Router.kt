@@ -70,7 +70,6 @@ data class AppNavigationState(
  *
  * ## Bezpieczeństwo typów
  *
- * - Duplikaty ekranów tego samego typu są ignorowane w `navigateTo()`
  * - `goBack()` nie pozwala opuścić ekranu głównego zakładki
  * - Wszystkie operacje są null-safe względem stanu inicjalizacji
  *
@@ -148,8 +147,6 @@ object AppRouter {
             val activeTab = currentState!!.activeTab
             val currentStack = currentState.tabStacks[activeTab]!!
 
-            if (currentStack.last()::class == screen::class) return@update currentState
-
             val newStack = currentStack + screen
             currentState.copy(
                 tabStacks = currentState.tabStacks + (activeTab to newStack)
@@ -174,8 +171,6 @@ object AppRouter {
         _state.update { currentState ->
             val stateWithSwitchedTab = currentState!!.copy(activeTab = targetTab)
             val targetStack = stateWithSwitchedTab.tabStacks[targetTab]!!
-
-            if (targetStack.last()::class == screen::class) return@update stateWithSwitchedTab
 
             val newStack = targetStack + screen
             stateWithSwitchedTab.copy(
