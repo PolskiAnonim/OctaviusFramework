@@ -1,9 +1,9 @@
 package org.octavius.form.control.validator.number
 
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.DoubleValidation
-import org.octavius.form.control.base.ControlContext
 import org.octavius.localization.T
 import kotlin.math.abs
 import kotlin.math.pow

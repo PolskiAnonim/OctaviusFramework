@@ -4,17 +4,10 @@ import kotlinx.browser.window
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
-import kotlinx.serialization.serializer
 import org.octavius.api.contract.ParseResult
-import org.octavius.api.contract.ParsedData
 import org.octavius.api.contract.Parser
 import org.octavius.extension.util.chrome
-import org.octavius.modules.asian.model.AsianPublicationData
 import org.octavius.modules.asian.parser.MangaUpdatesParser
 
 @OptIn(DelicateCoroutinesApi::class)

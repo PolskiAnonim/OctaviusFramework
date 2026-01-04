@@ -1,8 +1,8 @@
 package org.octavius.form.control.validator.repeatable
 
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.RepeatableValidation
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.repeatable.RepeatableRow

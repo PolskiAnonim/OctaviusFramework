@@ -3,9 +3,9 @@ package org.octavius.form.component
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
-import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlHierarchyRole
+import org.octavius.form.control.base.FormResultData
 
 /**
  * Klasa odpowiedzialna za walidację formularza na dwóch poziomach:
