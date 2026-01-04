@@ -2,8 +2,8 @@ package org.octavius.form.control.type.repeatable
 
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
-import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlContext
+import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.RepeatableValidation
 
 class RepeatableRowManager(

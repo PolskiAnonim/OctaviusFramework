@@ -1,8 +1,8 @@
 package org.octavius.form.control.validator
 
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.ControlContext
 
 /**
  * Domyślna implementacja walidatora kontrolek formularza.

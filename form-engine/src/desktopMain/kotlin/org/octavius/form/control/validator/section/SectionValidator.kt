@@ -1,8 +1,8 @@
 package org.octavius.form.control.validator.section
 
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.ControlContext
 
 class SectionValidator(
     private val childControlNames: List<String>

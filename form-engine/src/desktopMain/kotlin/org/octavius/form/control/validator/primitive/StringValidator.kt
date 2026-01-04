@@ -1,8 +1,8 @@
 package org.octavius.form.control.validator.primitive
 
+import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
-import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.StringValidation
 import org.octavius.localization.T
 
