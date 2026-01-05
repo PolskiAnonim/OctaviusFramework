@@ -298,10 +298,12 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     private fun unescapeValue(source: CharSequence, start: Int, end: Int): String? {
-        if (start >= end) return null
-
-        if (source[start] == '"') {
-            return buildString {
+        return if (start >= end) {
+            // Puste pole kompozytu (dwa przecinki obok siebie)
+            null
+        } else if (source[start] == '"') {
+            // Wartość w cudzysłowie - escapujemy cudzysłów wewnątrz (") oraz backslash (\)
+            buildString {
                 var i = start + 1
                 while (i < end - 1) {
                     val char = source[i]
@@ -314,9 +316,10 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                     i++
                 }
             }
+        } else {
+            // Pole bez cudzysłowu
+            val rawValue = source.subSequence(start, end).toString()
+            if (rawValue == "NULL") null else rawValue
         }
-
-        val rawValue = source.subSequence(start, end).toString()
-        return if (rawValue == "NULL") null else rawValue
     }
 }
