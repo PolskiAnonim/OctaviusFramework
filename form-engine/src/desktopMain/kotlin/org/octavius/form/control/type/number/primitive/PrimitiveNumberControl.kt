@@ -6,7 +6,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import org.octavius.form.control.base.*
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 /**
  * Abstrakcyjna klasa bazowa dla kontrolek numerycznych (Integer, Double, etc.).

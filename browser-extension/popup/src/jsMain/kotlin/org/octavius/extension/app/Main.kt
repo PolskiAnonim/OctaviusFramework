@@ -18,7 +18,7 @@ import org.octavius.api.contract.ParseResult
 import org.octavius.extension.util.chrome
 import org.octavius.modules.asian.AsianMediaExtensionModule
 import org.octavius.navigation.Screen
-import org.octavius.ui.theme.AppTheme
+import org.octavius.theme.AppTheme
 import kotlin.coroutines.resume
 
 

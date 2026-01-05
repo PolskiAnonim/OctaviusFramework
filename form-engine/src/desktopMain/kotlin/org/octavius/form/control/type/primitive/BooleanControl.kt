@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import org.octavius.form.control.base.*
 import org.octavius.form.control.layout.RenderCheckboxLabel
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 /**
  * Kontrolka do wprowadzania wartości logicznych (prawda/fałsz).

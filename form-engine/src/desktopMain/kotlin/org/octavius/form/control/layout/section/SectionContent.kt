@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
 import org.octavius.form.control.base.ControlContext
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 @Composable
 internal fun SectionContent(

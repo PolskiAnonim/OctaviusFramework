@@ -36,7 +36,7 @@ data class RepeatableResultValue(
  * Tworzy nowy wiersz i dodaje stany jego kontrolek do globalnego FormState.
  *
  * @param index pozycja wiersza w liście
- * @param parentControlName nazwa kontrolki powtarzalnej (do budowania hierarchicznych nazw)
+ * @param parentContext kontekst kontrolki powtarzalnej
  * @param rowControls mapa kontrolek które mają być w wierszu
  * @param formState globalny stan formularza
  * @return nowy wiersz z ustawionym indeksem

@@ -8,7 +8,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import org.octavius.form.control.base.*
 import org.octavius.form.control.validator.primitive.StringValidator
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 /**
  * Kontrolka do wprowadzania tekstu jednoliniowego.

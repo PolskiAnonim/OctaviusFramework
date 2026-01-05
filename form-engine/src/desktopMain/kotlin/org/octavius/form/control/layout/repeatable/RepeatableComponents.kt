@@ -18,7 +18,7 @@ import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.type.repeatable.RepeatableRow
 import org.octavius.localization.T
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 @Composable
 internal fun RepeatableHeader(

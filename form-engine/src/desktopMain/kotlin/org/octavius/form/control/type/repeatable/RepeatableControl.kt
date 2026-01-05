@@ -16,7 +16,7 @@ import org.octavius.form.control.layout.repeatable.RepeatableHeader
 import org.octavius.form.control.layout.repeatable.RepeatableRowCard
 import org.octavius.form.control.layout.repeatable.RepeatableRowContent
 import org.octavius.form.control.validator.repeatable.RepeatableValidator
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 /**
  * Kontrolka do tworzenia dynamicznych list kontrolek (wierszy).

@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import org.octavius.form.control.base.*
 import org.octavius.form.control.validator.collection.StringListValidator
 import org.octavius.localization.T
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 /**
  * Kontrolka do wprowadzania i zarządzania listą tekstów.

@@ -22,8 +22,8 @@ import org.octavius.data.util.CaseConvention
  * @param name Opcjonalna, jawna nazwa odpowiadającego typu w bazie danych PostgreSQL.
  *             Jeśli pozostawiona pusta, nazwa zostanie wygenerowana automatycznie
  *             zgodnie z konwencją `CamelCase` -> `snake_case`.
- * @param enumConvention Konwencja nazewnicza dla wartości enuma podczas mapowania
- *                       na odpowiedniki w PostgreSQL. Domyślnie `SNAKE_CASE_UPPER`.
+ * @param pgConvention Konwencja nazewnicza dla wartości enuma w Postgresie
+ * @param kotlinConvention Konwencja nazewnicza dla wartości enum w Kotlinie
  *
  * ### Przykłady
  * ```kotlin

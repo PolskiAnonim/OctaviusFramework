@@ -17,7 +17,7 @@ import org.octavius.form.control.base.*
 import org.octavius.form.control.layout.section.SectionContent
 import org.octavius.form.control.layout.section.SectionHeader
 import org.octavius.form.control.validator.section.SectionValidator
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 /**
  * Kontrolka do grupowania i organizacji innych kontrolek w sekcje.

@@ -20,7 +20,7 @@ import org.octavius.localization.T
 import org.octavius.modules.settings.report.ui.ApiIntegrationsReportScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 class SettingsScreen() : Screen {
     override val title = T.get("settings.title")

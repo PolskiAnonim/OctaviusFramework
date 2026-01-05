@@ -29,7 +29,7 @@ import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
 import org.octavius.navigation.Tab
-import org.octavius.ui.theme.AppTheme
+import org.octavius.theme.AppTheme
 import java.awt.Frame
 
 // Prosty enum do zarządzania stanem aplikacji

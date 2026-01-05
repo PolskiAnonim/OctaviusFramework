@@ -16,7 +16,7 @@ import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.localization.T
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 /**
  * Abstrakcyjna baza dla kontrolek dropdown, które ładują dane asynchronicznie,

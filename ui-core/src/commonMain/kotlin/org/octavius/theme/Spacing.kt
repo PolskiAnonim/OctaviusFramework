@@ -1,4 +1,4 @@
-package org.octavius.ui.theme
+package org.octavius.theme
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp

@@ -185,7 +185,7 @@ abstract class ControlValidator<T : Any> {
      *
      * Domyślna implementacja nie wykonuje żadnej dodatkowej walidacji.
      *
-     * @param controlName nazwa kontrolki
+     * @param controlContext kontekst kontrolki
      * @param state stan kontrolki do walidacji
      */
     abstract fun validateSpecific(controlContext: ControlContext, state: ControlState<*>)

@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.octavius.localization.T
-import org.octavius.ui.theme.FormSpacing
+import org.octavius.theme.FormSpacing
 
 @Composable
 internal fun SectionHeader(
