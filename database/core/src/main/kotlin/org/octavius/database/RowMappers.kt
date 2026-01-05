@@ -42,8 +42,7 @@ internal class RowMappers(
      * Używany dla zapytań typu `SELECT COUNT(*)`, `SELECT id FROM ...` itp.
      */
     fun <T : Any> SingleValueMapper(kType: KType): RowMapper<T?> = RowMapper { rs, _ ->
-        val value = valueExtractor.extract(rs, 1)
-        if (value == null) return@RowMapper null
+        val value = valueExtractor.extract(rs, 1) ?: return@RowMapper null
 
         @Suppress("UNCHECKED_CAST")
         validateValue(value, kType) as T?
