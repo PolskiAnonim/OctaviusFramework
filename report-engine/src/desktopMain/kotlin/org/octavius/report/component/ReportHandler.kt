@@ -92,16 +92,12 @@ class ReportHandler(
                 pagination = currentState.pagination.resetPage()
             )
             is ReportEvent.FilterChanged -> {
-                val newFilters = currentState.filterData.toMutableMap().apply {
-                    this[event.columnKey] = event.newFilterData
-                }
+                val newFilters = currentState.filterData + (event.columnKey to event.newFilterData)
                 currentState.copy(filterData = newFilters, pagination = currentState.pagination.resetPage())
             }
             is ReportEvent.ClearFilter -> {
-                val newFilters = currentState.filterData.toMutableMap().apply {
-                    val defaultFilterData = reportStructure.getColumn(event.columnKey).createFilterAndFilterData()!!
-                    this[event.columnKey] = defaultFilterData
-                }
+                val defaultFilterData = reportStructure.getColumn(event.columnKey).createFilterAndFilterData()!!
+                val newFilters = currentState.filterData + (event.columnKey to defaultFilterData)
                 currentState.copy(filterData = newFilters, pagination = currentState.pagination.resetPage())
             }
             is ReportEvent.PageChanged -> currentState.copy(
