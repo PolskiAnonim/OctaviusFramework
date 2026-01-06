@@ -78,7 +78,9 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @param value Surowa wartość z bazy w formacie kompozytu `("typeName", "jsonData")`.
      * @return Instancja odpowiedniej `data class` z adnotacją `@DynamicallyMappable`.
      */
-    private fun convertDynamicType(value: String): Any? {
+    private fun convertDynamicType(value: String): Any {
+        // null obsłużony w metodzie convert
+        // sam json nie może być nullem w kompozycie - jest to także zgodne z zapisem gdzie wartość to nie może być null
 
         val parts: List<String?> = parseNestedStructure(value)
 
@@ -113,7 +115,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @return Przekonwertowana wartość.
      * @throws ConversionException jeśli konwersja się nie powiedzie.
      */
-    private fun convertStandardType(value: String, pgTypeName: String): Any? {
+    private fun convertStandardType(value: String, pgTypeName: String): Any { // null obsłużony w metodzie convert
         // 1. Znajdź odpowiedni handler w centralnym rejestrze
         val handler = StandardTypeMappingRegistry.getHandler(pgTypeName)
 
@@ -149,7 +151,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * @throws TypeRegistryException jeśli nie znaleziono klasy enum.
      * @throws ConversionException jeśli konwersja się nie powiedzie.
      */
-    private fun convertEnum(value: String, typeInfo: PgEnumDefinition): Any? {
+    private fun convertEnum(value: String, typeInfo: PgEnumDefinition): Any { // null obsłużony w metodzie convert
 
         return typeInfo.valueToEnumMap[value]
             ?: throw ConversionException(
@@ -196,7 +198,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * Konwertuje typ kompozytowy PostgreSQL na `data class` Kotlina.
      * Wykorzystuje cache dla KClass i deleguje do `toDataObject` (które samo ma cache).
      */
-    private fun convertCompositeType(value: String, typeInfo:  PgCompositeDefinition): Any? {
+    private fun convertCompositeType(value: String, typeInfo:  PgCompositeDefinition): Any { // null obsłużony w metodzie convert
 
         logger.trace { "Converting composite type ${typeInfo.typeName} to class: ${typeInfo.kClass.qualifiedName}" }
 

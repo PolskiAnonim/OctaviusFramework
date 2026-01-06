@@ -31,7 +31,7 @@ import kotlin.time.toKotlinInstant
 internal data class StandardTypeHandler(
     val kotlinClass: KClass<*>,
     val fromResultSet: ((ResultSet, Int) -> Any?)?,
-    val fromString: (String) -> Any?
+    val fromString: (String) -> Any
 )
 
 /**
