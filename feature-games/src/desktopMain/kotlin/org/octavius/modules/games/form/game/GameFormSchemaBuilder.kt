@@ -147,7 +147,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             rowControls = mapOf(
                 "category" to DatabaseControl(
                     label = T.getPlural("games.form.category", 1),
-                    relatedTable = "categories",
+                    relatedTable = "games.categories",
                     displayColumn = "name",
                     required = true
                 )
