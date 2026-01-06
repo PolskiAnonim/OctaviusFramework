@@ -40,12 +40,12 @@ tasks.register("assembleBrowserExtension") {
 
         // Użyjmy wbudowanego w Gradle API do kopiowania - jest bardziej zwięzłe
         copy {
-            from(project(":browser-extension:popup").buildDir.resolve("kotlin-webpack/js/productionExecutable"))
+            from(project(":browser-extension:popup").layout.buildDirectory.dir("kotlin-webpack/js/productionExecutable"))
             into(extensionDir)
             println("  -> Copied files from popup JS build")
         }
         copy {
-            from(project(":browser-extension:content-script").buildDir.resolve("kotlin-webpack/js/productionExecutable")) {
+            from(project(":browser-extension:content-script").layout.buildDirectory.dir("kotlin-webpack/js/productionExecutable")) {
                 include("content-script.js")
             }
             into(extensionDir)
