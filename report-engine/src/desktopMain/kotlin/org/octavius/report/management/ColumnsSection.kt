@@ -19,8 +19,9 @@ import androidx.compose.ui.unit.dp
 import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
-import org.octavius.ui.draganddrop.ChipConstants
-import org.octavius.ui.draganddrop.DraggableChip
+import org.octavius.report.draganddrop.ChipConstants
+import org.octavius.report.draganddrop.ColumnDragData
+import org.octavius.report.draganddrop.DraggableChip
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -51,7 +52,7 @@ fun ColumnsSection(
                 val index = allColumns.indexOf(columnKey)
                 DraggableChip(
                     text = reportHandler.reportStructure.getColumn(columnKey).header,
-                    dragData = "$columnKey:$index",
+                    dragData = ColumnDragData(columnKey, index, false),
                     backgroundColor = if (isVisible) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(
                         alpha = 0.8f
                     ),
@@ -66,11 +67,9 @@ fun ColumnsSection(
                         )
                     } else Modifier,
                     onDrop = { transferData ->
-                        val parts = transferData.split(":")
-                        if (parts.size == 2) {
-                            val draggedColumnKey = parts[0]
-                            val fromIndex = parts[1].toIntOrNull() ?: return@DraggableChip false
-
+                        if (transferData.sort == false) {
+                            val draggedColumnKey = transferData.columnKey
+                            val fromIndex = transferData.index
                             if (draggedColumnKey != columnKey) {
                                 reportHandler.reorderColumns(fromIndex, index)
                                 return@DraggableChip true

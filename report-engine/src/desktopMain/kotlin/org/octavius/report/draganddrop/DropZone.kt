@@ -1,4 +1,7 @@
-package org.octavius.ui.draganddrop
+//TODO wydzielenie z powrotem do Ui-Core
+
+
+package org.octavius.report.draganddrop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,7 +25,7 @@ object DropZoneConstants {
 @Composable
 fun DropZone(
     modifier: Modifier = Modifier,
-    onDrop: (String) -> Boolean,
+    onDrop: (ColumnDragData) -> Boolean,
     content: @Composable BoxScope.(isHovered: Boolean) -> Unit
 ) {
     var isHovered by remember { mutableStateOf(false) }
@@ -39,8 +42,8 @@ fun DropZone(
 
             override fun onDrop(event: DragAndDropEvent): Boolean {
                 isHovered = false // Resetuj stan po zrzuceniu
-                val transferData = extractTransferData(event) ?: return false
-                return onDrop(transferData)
+                val data = event.getLocalData<ColumnDragData>() ?: return false
+                return onDrop(data)
             }
         }
     }
