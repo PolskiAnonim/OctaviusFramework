@@ -20,9 +20,10 @@ import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.report.configuration.SortDirection
-import org.octavius.ui.draganddrop.DraggableChip
-import org.octavius.ui.draganddrop.DropZone
-import org.octavius.ui.draganddrop.DropZoneConstants
+import org.octavius.report.draganddrop.ColumnDragData
+import org.octavius.report.draganddrop.DraggableChip
+import org.octavius.report.draganddrop.DropZone
+import org.octavius.report.draganddrop.DropZoneConstants
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -58,20 +59,16 @@ fun SortingSection(
                     val sortIndex = currentSort.indexOfFirst { it.first == columnKey }
                     DraggableChip(
                         text = reportHandler.reportStructure.getColumn(columnKey).header,
-                        dragData = "SORT:$columnKey:$sortIndex",
+                        dragData = ColumnDragData(columnKey, sortIndex, true),
                         backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                         textColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         onDrop = { transferData ->
-                            if (transferData.startsWith("SORT:")) {
-                                val parts = transferData.removePrefix("SORT:").split(":")
-                                if (parts.size == 2) {
-                                    val draggedColumnKey = parts[0]
-                                    val fromIndex = parts[1].toIntOrNull() ?: return@DraggableChip false
-
-                                    if (draggedColumnKey != columnKey) {
-                                        reportHandler.reorderSortColumns(fromIndex, sortIndex)
-                                        return@DraggableChip true
-                                    }
+                            if (transferData.sort) {
+                                val draggedColumnKey = transferData.columnKey
+                                val fromIndex = transferData.index
+                                if (draggedColumnKey != columnKey) {
+                                    reportHandler.reorderSortColumns(fromIndex, sortIndex)
+                                    return@DraggableChip true
                                 }
                             }
                             false
@@ -118,13 +115,9 @@ fun SortingSection(
                 .padding(16.dp)
                 .height(DropZoneConstants.dropZoneHeight),
             onDrop = { transferData ->
-                val columnKey = if (transferData.contains(":")) {
-                    transferData.split(":")[0]
-                } else {
-                    transferData
-                }
+                if (reportState.sortOrder.any { it.first == transferData.columnKey }) return@DropZone false
 
-                return@DropZone reportHandler.addSortColumn(columnKey)
+                return@DropZone reportHandler.addSortColumn(transferData.columnKey)
             }
         ) { isHovered ->
             val text = if (reportState.sortOrder.isEmpty()) {
