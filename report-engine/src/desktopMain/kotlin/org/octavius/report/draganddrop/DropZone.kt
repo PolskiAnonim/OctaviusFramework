@@ -1,3 +1,6 @@
+//TODO wydzielenie z powrotem do Ui-Core
+
+
 package org.octavius.report.draganddrop
 
 import androidx.compose.foundation.background
