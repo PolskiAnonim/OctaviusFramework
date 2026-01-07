@@ -55,13 +55,14 @@ fun SortingSection(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(currentSort) { (columnKey, direction) ->
+                items(currentSort, key = { it.first }) { (columnKey, direction) ->
                     val sortIndex = currentSort.indexOfFirst { it.first == columnKey }
                     DraggableChip(
                         text = reportHandler.reportStructure.getColumn(columnKey).header,
                         dragData = ColumnDragData(columnKey, sortIndex, true),
                         backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                         textColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.animateItem(),
                         onDrop = { transferData ->
                             if (transferData.sort) {
                                 val draggedColumnKey = transferData.columnKey

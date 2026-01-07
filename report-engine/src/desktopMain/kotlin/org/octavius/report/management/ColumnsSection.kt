@@ -47,7 +47,7 @@ fun ColumnsSection(
         ) {
             // Iterujemy po aktualnej kolejności WSZYSTKICH kolumn, ale filtrujemy te,
             // które nie są zarządzalne
-            items(allColumns.filter { reportHandler.reportStructure.manageableColumnKeys.contains(it) }) { columnKey ->
+            items(allColumns.filter { reportHandler.reportStructure.manageableColumnKeys.contains(it) }, key = { it }) { columnKey ->
                 val isVisible = visibleColumns.contains(columnKey)
                 val index = allColumns.indexOf(columnKey)
                 DraggableChip(
@@ -64,10 +64,10 @@ fun ColumnsSection(
                             width = ChipConstants.borderWidth,
                             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                             shape = ChipConstants.chipShape
-                        )
-                    } else Modifier,
+                        ).animateItem()
+                    } else Modifier.animateItem(),
                     onDrop = { transferData ->
-                        if (transferData.sort == false) {
+                        if (!transferData.sort) {
                             val draggedColumnKey = transferData.columnKey
                             val fromIndex = transferData.index
                             if (draggedColumnKey != columnKey) {

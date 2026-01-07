@@ -21,7 +21,10 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
+import java.awt.Cursor
 
 object ChipConstants {
     val chipShape = RoundedCornerShape(16.dp)
@@ -50,6 +53,7 @@ fun DraggableChip(
         shape = ChipConstants.chipShape,
         color = backgroundColor,
         modifier = modifier
+            .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)))
             .drawWithContent {
                 graphicsLayer.record {
                     this@drawWithContent.drawContent()
