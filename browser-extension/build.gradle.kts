@@ -11,8 +11,7 @@ val popupConfiguration = project(":browser-extension:popup").configurations.getB
 
 // Rejestrujemy task, przekazując obiekt konfiguracji oraz projekt, który ma być skanowany
 val mergeExtensionTranslations = registerMergeTranslationsTask(
-    configuration = popupConfiguration,
-    projectsToScanInitially = setOf(project(":browser-extension:popup"))
+    configuration = popupConfiguration
 )
 
 // 2. Główny task do składania wtyczki

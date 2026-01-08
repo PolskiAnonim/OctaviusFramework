@@ -31,8 +31,7 @@ private fun mergeJsonMaps(target: MutableMap<String, Any?>, source: Map<String, 
  * @return Zarejestrowany TaskProvider.
  */
 fun Project.registerMergeTranslationsTask(
-    configuration: Configuration,
-    projectsToScanInitially: Set<Project> = setOf(project) // Domyślnie skanuj bieżący projekt
+    configuration: Configuration
 ): TaskProvider<*> {
     return tasks.register("mergeTranslations") {
         group = "build"

@@ -5,22 +5,28 @@ package org.octavius.util
  * Używa ClassLoader do przeszukania całego classpath i znalezienia
  * wszystkich pasujących plików zasobów z różnych modułów (JAR-ów).
  */
-actual fun loadResources(name: String): List<String> {
-    val resources = mutableListOf<String>()
+/**
+ * Implementacja `loadResource` dla platformy JVM.
+ * Po wprowadzeniu taska Gradle'a, ta funkcja ładuje jeden,
+ * wcześniej połączony plik zasobów, który znajduje się w classpath.
+ */
+actual fun loadResource(name: String): String? {
     try {
         val classLoader = Thread.currentThread().contextClassLoader
-        val resourceUrls = classLoader.getResources(name)
 
-        resourceUrls.asSequence().forEach { url ->
-            try {
-                resources.add(url.readText())
+        val resourceUrl = classLoader.getResource(name)
+
+        if (resourceUrl != null) {
+            return try {
+                resourceUrl.readText()
             } catch (e: Exception) {
-                println("WARNING: Could not read resource: $url. Reason: ${e.message}")
+                println("WARNING: Could not read resource: $resourceUrl. Reason: ${e.message}")
+                null
             }
         }
     } catch (e: Exception) {
-        println("ERROR: Could not scan for resources '$name'. Reason: ${e.message}")
+        println("ERROR: Could not load resource '$name'. Reason: ${e.message}")
         e.printStackTrace()
     }
-    return resources
+    return null
 }

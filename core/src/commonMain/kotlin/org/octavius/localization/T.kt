@@ -1,7 +1,7 @@
 package org.octavius.localization
 
 import kotlinx.serialization.json.*
-import org.octavius.util.loadResources
+import org.octavius.util.loadResource
 
 // Ta stała może być w przyszłości dynamiczna, np. z ustawień
 const val LANGUAGE = "pl"
@@ -57,7 +57,7 @@ object T {
      * Ładowanie odbywa się tylko raz, przy pierwszym wywołaniu `Translations.get()` lub podobnej metody.
      */
     private val translations: JsonObject by lazy {
-        loadAndMergeTranslations()
+        loadMergedTranslations()
     }
 
     /**
@@ -66,45 +66,12 @@ object T {
      *
      * @return Połączony obiekt JsonObject zawierający wszystkie tłumaczenia.
      */
-    private fun loadAndMergeTranslations(): JsonObject {
+    private fun loadMergedTranslations(): JsonObject {
         val fileName = "translations_$LANGUAGE.json"
 
-        val jsonStrings = loadResources(fileName)
-        var combinedJsonMap = mutableMapOf<String, JsonElement>()
-
-        jsonStrings.forEach { jsonString ->
-            try {
-                val jsonElement = json.parseToJsonElement(jsonString)
-                if (jsonElement is JsonObject) {
-                    combinedJsonMap = mergeJsonMaps(combinedJsonMap, jsonElement)
-                }
-            } catch (e: Exception) {
-                println("WARNING: Failed to parse a translation string. Reason: ${e.message}")
-            }
-        }
-        return JsonObject(combinedJsonMap)
-    }
-
-    /**
-     * Rekursywnie łączy dwie mapy reprezentujące obiekty JSON.
-     * Wartości z `source` nadpisują wartości w `target`, chyba że obie wartości są obiektami - wtedy są łączone.
-     */
-    private fun mergeJsonMaps(
-        target: MutableMap<String, JsonElement>,
-        source: JsonObject
-    ): MutableMap<String, JsonElement> {
-        source.forEach { (key, sourceValue) ->
-            val targetValue = target[key]
-
-            // Jeśli oba klucze wskazują na obiekty JSON, połącz je rekursywnie
-            if (targetValue is JsonObject && sourceValue is JsonObject) {
-                target[key] = JsonObject(mergeJsonMaps(targetValue.toMutableMap(), sourceValue))
-            } else {
-                // W przeciwnym razie, wartość ze źródła (później załadowanego modułu) wygrywa
-                target[key] = sourceValue
-            }
-        }
-        return target
+        val jsonString = loadResource(fileName)
+        return if (jsonString.isNullOrBlank()) JsonObject(emptyMap())
+        else json.parseToJsonElement(jsonString).jsonObject
     }
 
     /**
