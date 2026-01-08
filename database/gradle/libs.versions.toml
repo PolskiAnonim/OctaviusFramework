@@ -10,5 +10,4 @@ classgraph = { group = "io.github.classgraph", name = "classgraph", version.ref 
 postgres = { group = "org.postgresql", name = "postgresql", version.ref = "postgres" }
 hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
 spring-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "spring-jdbc" }
-flyway-core = { group = "org.flywaydb",  name = "flyway-core", version.ref = "flyway" }
 flyway-postgres = { group = "org.flywaydb", name = "flyway-database-postgresql", version.ref = "flyway" }

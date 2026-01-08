@@ -85,7 +85,7 @@ fun Project.registerMergeTranslationsTask(
             } else {
                 mergedByLang.forEach { (lang, mergedMap) ->
                     val finalJsonString = gson.toJson(mergedMap)
-                    val outputFile = outputDir.get().file("translations_$lang.json").asFile
+                    val outputFile = outputDir.get().file("merged_translations_$lang.json").asFile
                     outputFile.writeText(finalJsonString, StandardCharsets.UTF_8)
                     logger.lifecycle("Successfully merged and wrote translations for '$lang' to ${outputFile.path}")
                 }

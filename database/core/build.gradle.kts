@@ -18,7 +18,6 @@ dependencies {
     implementation(dbLibs.spring.jdbc)
     implementation(dbLibs.classgraph)
 
-    implementation(dbLibs.flyway.core)
     implementation(dbLibs.flyway.postgres)
 
 

@@ -67,7 +67,7 @@ object T {
      * @return Połączony obiekt JsonObject zawierający wszystkie tłumaczenia.
      */
     private fun loadMergedTranslations(): JsonObject {
-        val fileName = "translations_$LANGUAGE.json"
+        val fileName = "merged_translations_$LANGUAGE.json"
 
         val jsonString = loadResource(fileName)
         return if (jsonString.isNullOrBlank()) JsonObject(emptyMap())
