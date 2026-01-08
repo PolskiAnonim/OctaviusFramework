@@ -8,7 +8,6 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toListOf
 import org.octavius.data.builder.toSingleOf
 import org.octavius.data.toMap
-import org.octavius.data.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
@@ -71,21 +70,18 @@ class ReportConfigurationManager : KoinComponent {
     }
 
     fun deleteConfiguration(name: String, reportName: String): Boolean {
-        val plan = TransactionPlan()
 
-        val ref = plan.add(
-            dataAccess.deleteFrom("report_configurations").where("name = :name AND report_name = :report_name").asStep().execute("name" to name, "report_name" to reportName)
-        )
+        val result = dataAccess.deleteFrom("report_configurations")
+            .where("name = :name AND report_name = :report_name").execute("name" to name, "report_name" to reportName)
 
-        return when(val result = dataAccess.executeTransactionPlan(plan)) {
+        return when(result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
 
             is DataResult.Success -> {
-                val firstStepResult = result.value.get(ref)
-                firstStepResult > 0
+                result.value > 0
             }
         }
     }
