@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.shadow)
 }
 
 kotlin {
@@ -70,4 +71,15 @@ val mergeTranslations = registerMergeTranslationsTask(
 // Upewniamy się, że zasoby są procesowane dopiero po zmergowaniu tłumaczeń
 tasks.named("desktopProcessResources") {
     dependsOn(mergeTranslations)
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    mergeServiceFiles {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+
+    exclude("translations_*.json")
+    manifest {
+        attributes["Main-Class"] = "org.octavius.app.MainKt"
+    }
 }
