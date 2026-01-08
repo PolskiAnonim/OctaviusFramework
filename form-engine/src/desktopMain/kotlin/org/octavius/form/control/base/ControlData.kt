@@ -124,7 +124,7 @@ inline fun <reified T> FormResultData.getInitialAs(key: String): T {
  * Pobiera początkową wartość kontrolki jako Any?
  *
  * Zastępuje: `rowData["id"]!!.initialValue`
- * Użycie: `rowData.getInitial<Int>("id")`
+ * Użycie: `rowData.getInitial("id")`
  */
 fun FormResultData.getInitial(key: String): Any? {
     return this[key]!!.initialValue
