@@ -1,6 +1,4 @@
-//TODO wydzielenie z powrotem do Ui-Core
-
-package org.octavius.report.draganddrop
+package org.octavius.ui.draganddrop
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draganddrop.DragAndDropEvent

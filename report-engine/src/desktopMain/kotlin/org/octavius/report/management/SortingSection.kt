@@ -20,10 +20,10 @@ import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.report.configuration.SortDirection
-import org.octavius.report.draganddrop.ColumnDragData
-import org.octavius.report.draganddrop.DraggableChip
-import org.octavius.report.draganddrop.DropZone
-import org.octavius.report.draganddrop.DropZoneConstants
+import org.octavius.report.management.ColumnDragData
+import org.octavius.ui.draganddrop.DraggableChip
+import org.octavius.ui.draganddrop.DropZone
+import org.octavius.ui.draganddrop.DropZoneConstants
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -110,7 +110,7 @@ fun SortingSection(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        DropZone(
+        DropZone<ColumnDragData>(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)

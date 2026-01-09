@@ -1,6 +1,4 @@
-//TODO wydzielenie z powrotem do Ui-Core
-
-package org.octavius.report.draganddrop
+package org.octavius.ui.draganddrop
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.draganddrop.dragAndDropSource
@@ -37,13 +35,13 @@ object ChipConstants {
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun DraggableChip(
+fun <T: Any> DraggableChip(
     text: String,
-    dragData: ColumnDragData,
+    dragData: T,
     backgroundColor: Color,
     textColor: Color,
     modifier: Modifier = Modifier,
-    onDrop: (ColumnDragData) -> Boolean = { false },
+    onDrop: (T) -> Boolean = { false },
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
@@ -64,7 +62,7 @@ fun DraggableChip(
                 shouldStartDragAndDrop = { true },
                 target = object : DragAndDropTarget {
                     override fun onDrop(event: DragAndDropEvent): Boolean {
-                        val data = event.getLocalData<ColumnDragData>() ?: return false
+                        val data = event.getLocalData<T>() ?: return false
                         return onDrop(data)
                     }
                 }

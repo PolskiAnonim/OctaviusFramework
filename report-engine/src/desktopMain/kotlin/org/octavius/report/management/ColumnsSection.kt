@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
-import org.octavius.report.draganddrop.ChipConstants
-import org.octavius.report.draganddrop.ColumnDragData
-import org.octavius.report.draganddrop.DraggableChip
+import org.octavius.ui.draganddrop.ChipConstants
+import org.octavius.report.management.ColumnDragData
+import org.octavius.ui.draganddrop.DraggableChip
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
