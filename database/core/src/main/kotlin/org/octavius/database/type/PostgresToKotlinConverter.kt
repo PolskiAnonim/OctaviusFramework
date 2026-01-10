@@ -234,6 +234,13 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     // --- PARSER STRUKTUR POSTGRESQL ---
     // =================================================================
 
+    private data class ParserState(
+        var i: Int = 0,
+        var inQuotes: Boolean = false,
+        var nestingLevel: Int = 0,
+        var currentElementStart: Int = 0
+    )
+
     /**
      * Uniwersalny parser dla zagnieżdżonych struktur (tablic i kompozytów).
      * Obsługuje cudzysłowy, escapowanie, wartości `NULL` i zagnieżdżenia.
@@ -261,13 +268,6 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
         elements.add(unescapeValue(contentView, state.currentElementStart, contentView.length))
         return elements
     }
-
-    private data class ParserState(
-        var i: Int = 0,
-        var inQuotes: Boolean = false,
-        var nestingLevel: Int = 0,
-        var currentElementStart: Int = 0
-    )
 
     private fun processInQuotes(contentView: CharSequence, state: ParserState) {
         val char = contentView[state.i]
