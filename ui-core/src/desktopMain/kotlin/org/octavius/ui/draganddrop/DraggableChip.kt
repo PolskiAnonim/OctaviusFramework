@@ -11,12 +11,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.*
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -25,7 +31,8 @@ import androidx.compose.ui.unit.dp
 import java.awt.Cursor
 
 object ChipConstants {
-    val chipShape = RoundedCornerShape(16.dp)
+    val cornerRadius = 16.dp
+    val chipShape = RoundedCornerShape(cornerRadius)
     val horizontalPadding = 12.dp
     val verticalPadding = 6.dp
     val iconSpacing = 4.dp
@@ -41,12 +48,14 @@ fun <T: Any> DraggableChip(
     backgroundColor: Color,
     textColor: Color,
     modifier: Modifier = Modifier,
+    canAccept: (T) -> Boolean = { true },
     onDrop: (T) -> Boolean = { false },
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     val graphicsLayer = rememberGraphicsLayer()
-
+    val borderColor = MaterialTheme.colorScheme.primary
+    var isHovered by remember { mutableStateOf(false) }
     Surface(
         shape = ChipConstants.chipShape,
         color = backgroundColor,
@@ -57,12 +66,35 @@ fun <T: Any> DraggableChip(
                     this@drawWithContent.drawContent()
                 }
                 drawLayer(graphicsLayer)
+
+                if (isHovered) {
+                    drawRoundRect(
+                        color = borderColor,
+                        style = Stroke(width = 2.dp.toPx()),
+                        cornerRadius = CornerRadius(ChipConstants.cornerRadius.toPx())
+                    )
+                }
             }
             .dragAndDropTarget(
                 shouldStartDragAndDrop = { true },
                 target = object : DragAndDropTarget {
+                    override fun onEntered(event: DragAndDropEvent) {
+                        val data = event.getLocalData<T>()
+
+                        if (data != null && canAccept(data)) {
+                            isHovered = true
+                        }
+                    }
+
+                    override fun onExited(event: DragAndDropEvent) {
+                        isHovered = false
+                    }
+
+
                     override fun onDrop(event: DragAndDropEvent): Boolean {
+                        isHovered = false
                         val data = event.getLocalData<T>() ?: return false
+                        if (!canAccept(data)) return false
                         return onDrop(data)
                     }
                 }

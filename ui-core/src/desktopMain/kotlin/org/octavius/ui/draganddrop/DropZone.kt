@@ -22,6 +22,7 @@ object DropZoneConstants {
 @Composable
 fun <T: Any> DropZone(
     modifier: Modifier = Modifier,
+    canAccept: (T) -> Boolean = { true },
     onDrop: (T) -> Boolean,
     content: @Composable BoxScope.(isHovered: Boolean) -> Unit
 ) {
@@ -30,7 +31,11 @@ fun <T: Any> DropZone(
     val dropTarget = remember(onDrop) {
         object : DragAndDropTarget {
             override fun onEntered(event: DragAndDropEvent) {
-                isHovered = true
+                val data = event.getLocalData<T>()
+
+                if (data != null && canAccept(data)) {
+                    isHovered = true
+                }
             }
 
             override fun onExited(event: DragAndDropEvent) {
@@ -38,8 +43,9 @@ fun <T: Any> DropZone(
             }
 
             override fun onDrop(event: DragAndDropEvent): Boolean {
-                isHovered = false // Resetuj stan po zrzuceniu
+                isHovered = false
                 val data = event.getLocalData<T>() ?: return false
+                if (!canAccept(data)) return false
                 return onDrop(data)
             }
         }

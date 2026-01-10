@@ -20,7 +20,6 @@ import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.report.configuration.SortDirection
-import org.octavius.report.management.ColumnDragData
 import org.octavius.ui.draganddrop.DraggableChip
 import org.octavius.ui.draganddrop.DropZone
 import org.octavius.ui.draganddrop.DropZoneConstants
@@ -63,16 +62,13 @@ fun SortingSection(
                         backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                         textColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.animateItem(),
+                        canAccept = { transferData ->
+                            transferData.sort && transferData.columnKey != columnKey
+                        },
                         onDrop = { transferData ->
-                            if (transferData.sort) {
-                                val draggedColumnKey = transferData.columnKey
-                                val fromIndex = transferData.index
-                                if (draggedColumnKey != columnKey) {
-                                    reportHandler.reorderSortColumns(fromIndex, sortIndex)
-                                    return@DraggableChip true
-                                }
-                            }
-                            false
+                            val fromIndex = transferData.index
+                            reportHandler.reorderSortColumns(fromIndex, sortIndex)
+                            true
                         },
                         leadingIcon = {
                             Icon(
@@ -115,9 +111,10 @@ fun SortingSection(
                 .fillMaxWidth()
                 .padding(16.dp)
                 .height(DropZoneConstants.dropZoneHeight),
+            canAccept = { transferData ->
+                !transferData.sort && !reportState.sortOrder.any { it.first == transferData.columnKey }
+            },
             onDrop = { transferData ->
-                if (reportState.sortOrder.any { it.first == transferData.columnKey }) return@DropZone false
-
                 return@DropZone reportHandler.addSortColumn(transferData.columnKey)
             }
         ) { isHovered ->

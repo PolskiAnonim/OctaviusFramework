@@ -66,16 +66,14 @@ fun ColumnsSection(
                             shape = ChipConstants.chipShape
                         ).animateItem()
                     } else Modifier.animateItem(),
+                    canAccept = { transferData ->
+                        !transferData.sort && transferData.columnKey != columnKey
+                    },
                     onDrop = { transferData ->
-                        if (!transferData.sort) {
-                            val draggedColumnKey = transferData.columnKey
-                            val fromIndex = transferData.index
-                            if (draggedColumnKey != columnKey) {
-                                reportHandler.reorderColumns(fromIndex, index)
-                                return@DraggableChip true
-                            }
-                        }
-                        false
+                        val fromIndex = transferData.index
+                        reportHandler.reorderColumns(fromIndex, index)
+                        return@DraggableChip true
+
                     },
                     leadingIcon = {
                         Box(modifier = Modifier.clickable {
