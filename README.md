@@ -4,7 +4,7 @@
 
 **A modular desktop application for managing media collections, built with custom-engineered frameworks**
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![KDoc](https://img.shields.io/badge/KDoc-Documentation-blue)](https://polskianonim.github.io/OctaviusFramework/)
@@ -119,7 +119,7 @@ val books = dataAccess.select("id", "title", "author", "status")
 
 - JDK 24+
 - PostgreSQL 17+
-- Database `octavius` initialized with `baza.sql`
+- Database `octavius`
 
 ### Run
 
