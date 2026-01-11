@@ -15,6 +15,7 @@ import java.util.*
  * @property setSearchPath Czy HikariCP ma ustawiać `search_path` przy inicjalizacji połączenia na wszystkie schematy.
  * @property packagesToScan Lista pakietów do przeskanowania przez ClassGraph w poszukiwaniu adnotacji typów.
  * @property dynamicDtoStrategy Strategia zapisu klas jako DynamicDto
+ * @property flywayBaselineVersion Jeżeli nie jest nullem wskazuje jako jaką wersję flyway ma traktować istniejący schemat
  */
 data class DatabaseConfig(
     val dbUrl: String,
@@ -23,7 +24,8 @@ data class DatabaseConfig(
     val dbSchemas: List<String>,
     val setSearchPath: Boolean,
     val packagesToScan: List<String>,
-    val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
+    val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS,
+    val flywayBaselineVersion: String? = null,
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -67,13 +69,17 @@ data class DatabaseConfig(
             val dynamicDtoStrategyString: String? = props.getProperty("db.dynamicDtoStrategy")
             val dynamicDtoStrategy =
                 dynamicDtoStrategyString?.let { DynamicDtoSerializationStrategy.valueOf(dynamicDtoStrategyString) }
-                    ?: DynamicDtoSerializationStrategy.EXPLICIT_ONLY
+                    ?: DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
+
+            val flywayBaselineVersion: String? = props.getProperty("db.flywayBaselineVersion")
 
             logger.info { "Database configuration loaded successfully" }
             logger.debug { "Database URL: '$url'" }
             logger.debug { "Database schemas: ${schemas.joinToString()}" }
             logger.debug { "Set search_path on connect: $setSearchPath" }
             logger.debug { "Packages to scan for types: ${packages.joinToString()}" }
+            logger.debug { "DynamicDTO strategy: $dynamicDtoStrategy" }
+            logger.debug { "Flyway baseline version: $flywayBaselineVersion" }
 
             return DatabaseConfig(
                 dbUrl = url,
@@ -82,7 +88,8 @@ data class DatabaseConfig(
                 dbSchemas = schemas,
                 setSearchPath = setSearchPath,
                 packagesToScan = packages,
-                dynamicDtoStrategy
+                dynamicDtoStrategy,
+                flywayBaselineVersion
             )
         }
     }

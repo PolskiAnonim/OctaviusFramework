@@ -16,7 +16,8 @@ val databaseModule = module {
                 dbPassword = "1234",
                 dbSchemas = listOf("public", "asian_media", "games", "books"),
                 setSearchPath = true,
-                packagesToScan = listOf("org.octavius")
+                packagesToScan = listOf("org.octavius"),
+                flywayBaselineVersion = "2025.12.21.15.13"
             )
         )
     }

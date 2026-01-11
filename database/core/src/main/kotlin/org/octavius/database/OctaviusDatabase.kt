@@ -60,7 +60,8 @@ object OctaviusDatabase {
             dataSource = dataSource,
             packagesToScan = config.packagesToScan,
             dbSchemas = config.dbSchemas,
-            dynamicDtoStrategy = config.dynamicDtoStrategy
+            dynamicDtoStrategy = config.dynamicDtoStrategy,
+            flywayBaselineVersion = config.flywayBaselineVersion,
         )
     }
 
@@ -68,14 +69,15 @@ object OctaviusDatabase {
         dataSource: DataSource,
         packagesToScan: List<String>,
         dbSchemas: List<String>,
-        dynamicDtoStrategy: DynamicDtoSerializationStrategy
+        dynamicDtoStrategy: DynamicDtoSerializationStrategy,
+        flywayBaselineVersion: String?
     ): DataAccess {
         logger.info { "Initializing OctaviusDatabase..." }
 
         val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         val transactionManager = JdbcTransactionManager(dataSource)
 
-        runMigrations(dataSource, dbSchemas)
+        runMigrations(dataSource, dbSchemas, flywayBaselineVersion)
         logger.debug { "Loading type registry from database..." }
         val typeRegistry: TypeRegistry
         val typeRegistryLoadTime = measureTime {
@@ -104,19 +106,24 @@ object OctaviusDatabase {
         )
     }
 
-    private fun runMigrations(dataSource: DataSource, schemas: List<String>) {
+    private fun runMigrations(dataSource: DataSource, schemas: List<String>, flywayBaselineVersion: String?) {
         logger.info { "Checking database migrations..." }
 
         // Konfiguracja Flyway
-        val flyway = Flyway.configure()
+        val flywayConfig = Flyway.configure()
             .dataSource(dataSource)
             .schemas(*schemas.toTypedArray())
             // Domyślna lokalizacja to classpath:db/migration
             .locations("classpath:db/migration")
             .createSchemas(true)
-            .baselineOnMigrate(true)
-            .baselineVersion("2025.12.21.15.13")
-            .load()
+
+        if (flywayBaselineVersion != null) {
+            flywayConfig
+                .baselineOnMigrate(true)
+                .baselineVersion(flywayBaselineVersion)
+        }
+
+        val flyway = flywayConfig.load()
 
         try {
             val result = flyway.migrate()
