@@ -55,7 +55,6 @@ data class DynamicDto private constructor(
         inline fun <reified T: Any> from(value: T): DynamicDto {
             @Suppress("UNCHECKED_CAST")
             val kClass = value::class as KClass<Any>
-
             // 1. Znajdź nazwę typu (refleksja)
             val annotation = kClass.findAnnotation<DynamicallyMappable>()
                 ?: throw ConversionException(

@@ -7,6 +7,11 @@ import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
+import org.octavius.database.type.registry.PgArrayDefinition
+import org.octavius.database.type.registry.PgCompositeDefinition
+import org.octavius.database.type.registry.PgEnumDefinition
+import org.octavius.database.type.registry.TypeCategory
+import org.octavius.database.type.registry.TypeRegistry
 
 /**
  * Konwertuje wartości z PostgreSQL (jako `String`) na odpowiednie typy Kotlina.
@@ -198,7 +203,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
      * Konwertuje typ kompozytowy PostgreSQL na `data class` Kotlina.
      * Wykorzystuje cache dla KClass i deleguje do `toDataObject` (które samo ma cache).
      */
-    private fun convertCompositeType(value: String, typeInfo:  PgCompositeDefinition): Any { // null obsłużony w metodzie convert
+    private fun convertCompositeType(value: String, typeInfo: PgCompositeDefinition): Any { // null obsłużony w metodzie convert
 
         logger.trace { "Converting composite type ${typeInfo.typeName} to class: ${typeInfo.kClass.qualifiedName}" }
 

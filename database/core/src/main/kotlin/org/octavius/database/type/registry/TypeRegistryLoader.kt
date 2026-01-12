@@ -1,5 +1,6 @@
-package org.octavius.database.type
+package org.octavius.database.type.registry
 
+import io.github.classgraph.AnnotationEnumValue
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ScanResult
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -135,9 +136,9 @@ internal class TypeRegistryLoader(
                 )
             }
 
-            val pgConv = (annotation.parameterValues.getValue("pgConvention") as io.github.classgraph.AnnotationEnumValue)
+            val pgConv = (annotation.parameterValues.getValue("pgConvention") as AnnotationEnumValue)
                 .loadClassAndReturnEnumValue() as CaseConvention
-            val ktConv = (annotation.parameterValues.getValue("kotlinConvention") as io.github.classgraph.AnnotationEnumValue)
+            val ktConv = (annotation.parameterValues.getValue("kotlinConvention") as AnnotationEnumValue)
                 .loadClassAndReturnEnumValue() as CaseConvention
             val kClass = classInfo.loadClass().kotlin
             target.add(KtEnumInfo(kClass, name, pgConv, ktConv))

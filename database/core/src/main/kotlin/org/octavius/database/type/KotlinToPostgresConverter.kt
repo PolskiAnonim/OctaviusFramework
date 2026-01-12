@@ -13,6 +13,7 @@ import org.octavius.data.type.DynamicDto
 import org.octavius.data.type.PgTyped
 import org.octavius.data.util.clean
 import org.octavius.database.config.DynamicDtoSerializationStrategy
+import org.octavius.database.type.registry.TypeRegistry
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
 import kotlin.reflect.KClass

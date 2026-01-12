@@ -16,8 +16,8 @@ import org.octavius.database.RowMappers
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.ResultSetValueExtractor
-import org.octavius.database.type.TypeRegistry
-import org.octavius.database.type.TypeRegistryLoader
+import org.octavius.database.type.registry.TypeRegistry
+import org.octavius.database.type.registry.TypeRegistryLoader
 import org.octavius.domain.test.dynamic.DynamicProfile
 import org.octavius.domain.test.dynamic.UserStats
 import org.octavius.domain.test.dynamic.UserWithDynamicProfile
