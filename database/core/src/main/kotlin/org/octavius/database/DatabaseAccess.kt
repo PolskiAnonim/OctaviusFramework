@@ -13,13 +13,14 @@ import org.octavius.data.transaction.TransactionPropagation
 import org.octavius.database.builder.*
 import org.octavius.database.transaction.TransactionPlanExecutor
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.support.TransactionTemplate
 
 internal class DatabaseAccess(
-    private val jdbcTemplate: NamedParameterJdbcTemplate,
+    private val jdbcTemplate: JdbcTemplate,
     private val transactionManager: DataSourceTransactionManager,
     private val rowMappers: RowMappers,
     private val kotlinToPostgresConverter: KotlinToPostgresConverter

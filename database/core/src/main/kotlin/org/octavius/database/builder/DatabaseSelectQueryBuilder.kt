@@ -3,6 +3,7 @@ package org.octavius.database.builder
 import org.octavius.data.builder.SelectQueryBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 /**
@@ -11,7 +12,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
  * klauzuli WITH i metod terminalnych.
  */
 internal class DatabaseSelectQueryBuilder(
-    jdbcTemplate: NamedParameterJdbcTemplate,
+    jdbcTemplate: JdbcTemplate,
     rowMappers: RowMappers,
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     private val selectClause: String

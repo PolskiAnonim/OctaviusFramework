@@ -3,10 +3,11 @@ package org.octavius.database.builder
 import org.octavius.data.builder.DeleteQueryBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 internal class DatabaseDeleteQueryBuilder(
-    jdbcTemplate: NamedParameterJdbcTemplate,
+    jdbcTemplate: JdbcTemplate,
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     table: String

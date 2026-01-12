@@ -101,7 +101,7 @@ object OctaviusDatabase {
 
         logger.info { "OctaviusDatabase initialization completed" }
         return DatabaseAccess(
-            jdbcTemplate,
+            jdbcTemplate.jdbcTemplate,
             transactionManager,
             rowMappers,
             kotlinToPostgresConverter
