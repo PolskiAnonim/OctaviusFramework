@@ -5,7 +5,7 @@ package org.octavius.database.config
  *
  * Uwaga
  *
- * Jawne użycie klasy z PgTyped wymusza traktowanie klasy jako `@PgComposite`
+ * Jawne użycie klasy z PgTyped wymusza traktowanie klasy jako `@PgComposite/@PgEnum`
  * Natomiast jawne użycie DynamicDto wymusza traktowanie klasy jako `@DynamicallyMappable`
  *
  * Pod warunkiem że posiadają takie adnotacje
