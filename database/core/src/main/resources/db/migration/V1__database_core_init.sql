@@ -1,3 +1,5 @@
+-- Jest to plik w którym jest przede wszystkim wymagy przez DAL typ dynamic_dto
+
 -- Typ dynamic_dto: Umożliwia obsługę polimorficznych danych w PostgreSQL.
 --
 -- CEL: Służy jako uniwersalny kontener do przesyłania dynamicznych struktur danych,
@@ -54,13 +56,3 @@ BEGIN
     RETURN p_dto.data_payload;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
--- dodatkowa funkcja do aktualizacji kolumny updated_at
-CREATE FUNCTION public.update_modified_column() RETURNS trigger
-    LANGUAGE plpgsql
-AS
-$$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$;

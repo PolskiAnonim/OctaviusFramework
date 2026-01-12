@@ -62,6 +62,7 @@ object OctaviusDatabase {
             dbSchemas = config.dbSchemas,
             dynamicDtoStrategy = config.dynamicDtoStrategy,
             flywayBaselineVersion = config.flywayBaselineVersion,
+            disableFlyway = config.disableFlyway
         )
     }
 
@@ -69,15 +70,16 @@ object OctaviusDatabase {
         dataSource: DataSource,
         packagesToScan: List<String>,
         dbSchemas: List<String>,
-        dynamicDtoStrategy: DynamicDtoSerializationStrategy,
-        flywayBaselineVersion: String?
+        dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS,
+        flywayBaselineVersion: String? = null,
+        disableFlyway: Boolean = false
     ): DataAccess {
         logger.info { "Initializing OctaviusDatabase..." }
 
         val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
         val transactionManager = JdbcTransactionManager(dataSource)
 
-        runMigrations(dataSource, dbSchemas, flywayBaselineVersion)
+        if (!disableFlyway) runMigrations(dataSource, dbSchemas, flywayBaselineVersion)
         logger.debug { "Loading type registry from database..." }
         val typeRegistry: TypeRegistry
         val typeRegistryLoadTime = measureTime {

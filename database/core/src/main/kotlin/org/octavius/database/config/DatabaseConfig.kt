@@ -16,6 +16,7 @@ import java.util.*
  * @property packagesToScan Lista pakietów do przeskanowania przez ClassGraph w poszukiwaniu adnotacji typów.
  * @property dynamicDtoStrategy Strategia zapisu klas jako DynamicDto
  * @property flywayBaselineVersion Jeżeli nie jest nullem wskazuje jako jaką wersję flyway ma traktować istniejący schemat
+ * @property disableFlyway Wyłącz automatyczne migracje flyway
  */
 data class DatabaseConfig(
     val dbUrl: String,
@@ -26,6 +27,7 @@ data class DatabaseConfig(
     val packagesToScan: List<String>,
     val dynamicDtoStrategy: DynamicDtoSerializationStrategy = DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS,
     val flywayBaselineVersion: String? = null,
+    val disableFlyway: Boolean = false,
 ) {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -72,6 +74,7 @@ data class DatabaseConfig(
                     ?: DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
 
             val flywayBaselineVersion: String? = props.getProperty("db.flywayBaselineVersion")
+            val disableFlyway: Boolean = props.getProperty("db.disableFlyway").toBoolean()
 
             logger.info { "Database configuration loaded successfully" }
             logger.debug { "Database URL: '$url'" }
@@ -80,6 +83,7 @@ data class DatabaseConfig(
             logger.debug { "Packages to scan for types: ${packages.joinToString()}" }
             logger.debug { "DynamicDTO strategy: $dynamicDtoStrategy" }
             logger.debug { "Flyway baseline version: $flywayBaselineVersion" }
+            logger.debug { "Disable flyway migrations: $disableFlyway" }
 
             return DatabaseConfig(
                 dbUrl = url,
@@ -89,7 +93,8 @@ data class DatabaseConfig(
                 setSearchPath = setSearchPath,
                 packagesToScan = packages,
                 dynamicDtoStrategy,
-                flywayBaselineVersion
+                flywayBaselineVersion,
+                disableFlyway
             )
         }
     }

@@ -1,3 +1,15 @@
+-- dodatkowa funkcja do aktualizacji kolumny updated_at
+
+CREATE FUNCTION public.update_modified_column() RETURNS trigger
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
 CREATE TYPE public.filter_config AS
 (
     column_name text,

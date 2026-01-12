@@ -61,7 +61,8 @@ class DynamicDtoSerializationTest {
             dataSource,
             listOf("org.octavius.domain.test.dynamic"),
             baseConfig.dbSchemas,
-            DynamicDtoSerializationStrategy.PREFER_DYNAMIC_DTO
+            DynamicDtoSerializationStrategy.PREFER_DYNAMIC_DTO,
+            disableFlyway = true
         )
 
         // Instancja z WYŁĄCZONĄ diaboliczną funkcją
@@ -69,7 +70,8 @@ class DynamicDtoSerializationTest {
             dataSource,
             baseConfig.packagesToScan.filter { it != "org.octavius.domain.test.existing" && it != "org.octavius.performance" },
             baseConfig.dbSchemas,
-            DynamicDtoSerializationStrategy.EXPLICIT_ONLY
+            DynamicDtoSerializationStrategy.EXPLICIT_ONLY,
+            disableFlyway = true
         )
     }
 

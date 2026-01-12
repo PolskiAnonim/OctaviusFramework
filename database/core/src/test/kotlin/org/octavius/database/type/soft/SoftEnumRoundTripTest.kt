@@ -70,7 +70,8 @@ class SoftEnumRoundTripTest {
             // Skanujemy ten sam pakiet, w którym zdefiniowany jest FeatureFlag
             listOf("org.octavius.database.type.soft"),
             baseConfig.dbSchemas,
-            DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
+            DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS,
+            disableFlyway = true
         )
     }
 

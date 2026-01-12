@@ -65,7 +65,8 @@ class PolymorphicPrimitivesRoundTripTest {
             // Skanujemy pakiet, w którym zdefiniowaliśmy nasze testowe value class
             listOf("org.octavius.database.type.value"),
             baseConfig.dbSchemas,
-            DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS
+            DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS,
+            disableFlyway = true
         )
     }
 
