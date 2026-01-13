@@ -1,3 +1,6 @@
+import org.jetbrains.dokka.gradle.DokkaExtension
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
+
 plugins {
     id("translation-validation")
     // this is necessary to avoid the plugins to be loaded multiple times
@@ -39,16 +42,26 @@ dependencies {
 
 // Aplikujemy plugin Dokka do wszystkich subprojektów z kodem Kotlin
 subprojects {
-    // Pomijamy moduły bez kodu źródłowego
     val excludedModules = setOf("browser-extension", "buildSrc")
     if (name !in excludedModules) {
         apply(plugin = "org.jetbrains.dokka")
 
-        // Ustawiamy unikalną nazwę modułu na podstawie pełnej ścieżki projektu
-        // np. :database:api -> database-api, :core -> core
-        afterEvaluate {
-            extensions.findByType<org.jetbrains.dokka.gradle.DokkaExtension>()?.apply {
-                moduleName.set(path.removePrefix(":").replace(":", "-"))
+        // Konfigurujemy Dokkę dla KAŻDEGO subprojektu
+        extensions.configure<DokkaExtension> {
+            // Ustawiamy unikalną nazwę modułu na podstawie pełnej ścieżki projektu
+            // np. :database:api -> database-api, :core -> core
+            moduleName.set(path.removePrefix(":").replace(":", "-"))
+
+            dokkaSourceSets.configureEach {
+                documentedVisibilities.set(
+                    setOf(
+                        VisibilityModifier.Public,
+                        VisibilityModifier.Private,
+                        VisibilityModifier.Protected,
+                        VisibilityModifier.Internal
+                    )
+                )
+                skipEmptyPackages.set(true)
             }
         }
     }
