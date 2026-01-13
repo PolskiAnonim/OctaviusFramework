@@ -20,23 +20,36 @@ sealed class DatabaseException(message: String, cause: Throwable? = null) : Runt
 class QueryExecutionException(
     val sql: String,
     val params: Map<String, Any?>,
+    val expandedSql: String? = null,
+    val expandedParams: List<Any?>? = null,
     message: String? = null,
     cause: Throwable? = null
 ) : DatabaseException(message ?: "Error during query execution", cause) {
     override fun toString(): String {
-        val nestedError = cause.toString().prependIndent("|   ")
+        val nestedError = cause?.toString()?.prependIndent("|   ") ?: "No cause available"
+
+        // ZMIANA: Dynamicznie budujemy blok z dodatkowymi informacjami, jeśli istnieją
+        val executionDetails = if (expandedSql != null) {
+            """
+            |
+            |---[ Execution Details ]---
+            | expandedSql: $expandedSql
+            | expandedParams: $expandedParams
+            """.trimMargin()
+        } else ""
+
         return """
 
-------------------------------------
-|  QUERY EXECUTION FAILED     
-| message: $message
-| sql: $sql
-| params: $params
--------------------------------------
-| Error details:
-$nestedError
--------------------------------------
-"""
+        ------------------------------------
+        |  QUERY EXECUTION FAILED
+        | message: $message
+        | sql: $sql
+        | params: $params$executionDetails
+        -------------------------------------
+        | Error details:
+        $nestedError
+        -------------------------------------
+        """.trimIndent()
     }
 }
 

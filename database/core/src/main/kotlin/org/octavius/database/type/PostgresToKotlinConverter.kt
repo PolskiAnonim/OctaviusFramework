@@ -7,11 +7,7 @@ import org.octavius.data.exception.ConversionExceptionMessage
 import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import org.octavius.data.toDataObject
-import org.octavius.database.type.registry.PgArrayDefinition
-import org.octavius.database.type.registry.PgCompositeDefinition
-import org.octavius.database.type.registry.PgEnumDefinition
-import org.octavius.database.type.registry.TypeCategory
-import org.octavius.database.type.registry.TypeRegistry
+import org.octavius.database.type.registry.*
 
 /**
  * Konwertuje wartości z PostgreSQL (jako `String`) na odpowiednie typy Kotlina.

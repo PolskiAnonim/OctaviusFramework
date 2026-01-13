@@ -14,7 +14,6 @@ import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.PositionalQuery
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 

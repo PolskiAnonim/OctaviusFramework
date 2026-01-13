@@ -3,11 +3,7 @@ package org.octavius.database.type.utils
 import org.octavius.data.type.DynamicDto
 import org.octavius.data.util.CaseConvention
 import org.octavius.data.util.CaseConverter
-import org.octavius.database.type.registry.PgArrayDefinition
-import org.octavius.database.type.registry.PgCompositeDefinition
-import org.octavius.database.type.registry.PgEnumDefinition
-import org.octavius.database.type.registry.TypeCategory
-import org.octavius.database.type.registry.TypeRegistry
+import org.octavius.database.type.registry.*
 import org.octavius.domain.test.pgtype.*
 import kotlin.reflect.KClass
 

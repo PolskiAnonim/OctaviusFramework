@@ -8,9 +8,6 @@ import org.octavius.database.type.PositionalQuery
 import org.springframework.jdbc.core.PreparedStatementSetter
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.RowMapper
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.jdbc.core.namedparam.NamedParameterUtils
-import java.sql.ResultSet
 import kotlin.reflect.KClass
 
 internal class StreamingQueryBuilder(

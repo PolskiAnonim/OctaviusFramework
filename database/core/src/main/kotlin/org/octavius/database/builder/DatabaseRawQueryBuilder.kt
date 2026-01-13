@@ -4,7 +4,6 @@ import org.octavius.data.builder.RawQueryBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 /**
  * Wykonuje surowe zapytanie SQL, które zwraca wyniki.

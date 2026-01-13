@@ -4,7 +4,6 @@ import org.octavius.data.builder.UpdateQueryBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 
 internal class DatabaseUpdateQueryBuilder(
     jdbcTemplate: JdbcTemplate,
