@@ -1,5 +1,7 @@
 package org.octavius.database.type
 
+import org.octavius.database.type.registry.TypeCategory
+import org.octavius.database.type.registry.TypeRegistry
 import java.sql.ResultSet
 
 /**

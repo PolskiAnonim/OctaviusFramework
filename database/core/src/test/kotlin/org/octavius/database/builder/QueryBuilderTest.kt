@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 
 
 internal object TestQueryBuilderFactory {
-    private val mockJdbcTemplate = mockk<NamedParameterJdbcTemplate>()
+    private val mockJdbcTemplate = mockk<JdbcTemplate>()
     private val mockConverter = mockk<KotlinToPostgresConverter>()
     private val mockMappers = mockk<RowMappers>()
 

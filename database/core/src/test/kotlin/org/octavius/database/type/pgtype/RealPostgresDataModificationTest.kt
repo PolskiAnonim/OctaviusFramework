@@ -13,9 +13,9 @@ import org.octavius.database.RowMappers
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.ResultSetValueExtractor
-import org.octavius.database.type.TypeRegistryLoader
+import org.octavius.database.type.registry.TypeRegistryLoader
 import org.octavius.domain.test.pgtype.*
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 import java.math.BigDecimal
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -37,7 +37,7 @@ import kotlin.reflect.typeOf
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RealPostgresDataModificationTest {
 
-    private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
+    private lateinit var jdbcTemplate: JdbcTemplate
     private lateinit var kotlinToPostgresConverter: KotlinToPostgresConverter
     private lateinit var mappers: RowMappers // Potrzebne do odczytu w celu weryfikacji
 
@@ -61,10 +61,10 @@ class RealPostgresDataModificationTest {
             password = databaseConfig.dbPassword
         }
         val dataSource = HikariDataSource(hikariConfig)
-        jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
+        jdbcTemplate = JdbcTemplate(dataSource)
 
-        jdbcTemplate.jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
-        jdbcTemplate.jdbcTemplate.execute("CREATE SCHEMA public;")
+        jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
+        jdbcTemplate.execute("CREATE SCHEMA public;")
         val initSql = String(
             Files.readAllBytes(
                 Paths.get(
@@ -72,7 +72,7 @@ class RealPostgresDataModificationTest {
                 )
             )
         )
-        jdbcTemplate.jdbcTemplate.execute(initSql)
+        jdbcTemplate.execute(initSql)
         println("Complex test DB schema and data initialized successfully.")
 
         // --- Krok 3: Inicjalizacja obu konwerterów ---
@@ -92,7 +92,7 @@ class RealPostgresDataModificationTest {
     fun cleanup() {
         // Czyści tabelę przed każdym testem, zostawiając tylko oryginalny "złoty" rekord
         // To zapewnia, że testy są od siebie niezależne.
-        jdbcTemplate.update("DELETE FROM complex_test_data WHERE id > 1", emptyMap<String, Any>())
+        jdbcTemplate.update("DELETE FROM complex_test_data WHERE id > 1")
     }
 
     @Test
@@ -119,17 +119,17 @@ class RealPostgresDataModificationTest {
         // Act: Konwertujemy i wykonujemy zapytanie INSERT
         val expandedQuery = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
         val newId = jdbcTemplate.queryForObject(
-            expandedQuery.expandedSql,
-            expandedQuery.expandedParams,
-            Long::class.java
+            expandedQuery.sql,
+            Long::class.java,
+            *expandedQuery.params.toTypedArray()
         )
         assertThat(newId).isNotNull()
 
         // Assert: Odczytujemy wstawiony wiersz i porównujemy z oryginałem
         val retrievedMap = jdbcTemplate.queryForObject(
-            "SELECT project_data, person_array FROM complex_test_data WHERE id = :id",
-            mapOf("id" to newId),
-            mappers.ColumnNameMapper()
+            "SELECT project_data, person_array FROM complex_test_data WHERE id = ?",
+            mappers.ColumnNameMapper(),
+            newId
         )
 
         val retrievedProject = retrievedMap["project_data"] as TestProject
@@ -152,13 +152,12 @@ class RealPostgresDataModificationTest {
 
         // Act: Konwertujemy i wykonujemy zapytanie UPDATE
         val expandedQuery = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-        val updatedRows = jdbcTemplate.update(expandedQuery.expandedSql, expandedQuery.expandedParams)
+        val updatedRows = jdbcTemplate.update(expandedQuery.sql, *expandedQuery.params.toTypedArray())
         assertThat(updatedRows).isEqualTo(1)
 
         // Assert: Odczytujemy tylko zaktualizowane pole i weryfikujemy
         val retrievedTeam = jdbcTemplate.queryForObject(
             "SELECT person_array FROM complex_test_data WHERE id = 1",
-            emptyMap<String, Any>(),
             mappers.SingleValueMapper<List<TestPerson>>(typeOf<List<TestPerson>>())
         ) as List<TestPerson>
 

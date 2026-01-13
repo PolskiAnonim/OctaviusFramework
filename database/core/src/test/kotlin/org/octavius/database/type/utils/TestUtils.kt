@@ -3,7 +3,7 @@ package org.octavius.database.type.utils
 import org.octavius.data.type.DynamicDto
 import org.octavius.data.util.CaseConvention
 import org.octavius.data.util.CaseConverter
-import org.octavius.database.type.*
+import org.octavius.database.type.registry.*
 import org.octavius.domain.test.pgtype.*
 import kotlin.reflect.KClass
 

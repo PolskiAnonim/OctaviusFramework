@@ -3,10 +3,10 @@ package org.octavius.database.builder
 import org.octavius.data.builder.UpdateQueryBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 
 internal class DatabaseUpdateQueryBuilder(
-    jdbcTemplate: NamedParameterJdbcTemplate,
+    jdbcTemplate: JdbcTemplate,
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     table: String

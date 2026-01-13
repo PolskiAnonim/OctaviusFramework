@@ -12,8 +12,8 @@ import org.octavius.database.RowMappers
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.ResultSetValueExtractor
-import org.octavius.database.type.TypeRegistryLoader
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.octavius.database.type.registry.TypeRegistryLoader
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import java.util.concurrent.ConcurrentHashMap
 import javax.sql.DataSource
@@ -64,11 +64,11 @@ class ComprehensiveBulkInsertBenchmark {
             password = databaseConfig.dbPassword
         }
         this.dataSource = hikariDataSource
-        val jdbcTemplate = NamedParameterJdbcTemplate(hikariDataSource)
+        val jdbcTemplate = JdbcTemplate(hikariDataSource)
 
         // --- Krok 2: Stworzenie tabeli testowej ---
-        jdbcTemplate.jdbcTemplate.execute("DROP TABLE IF EXISTS performance_test CASCADE;")
-        jdbcTemplate.jdbcTemplate.execute(
+        jdbcTemplate.execute("DROP TABLE IF EXISTS performance_test CASCADE;")
+        jdbcTemplate.execute(
             """
             CREATE TABLE performance_test (id SERIAL PRIMARY KEY, val1 INT, val2 VARCHAR(50));
             -- Uniwersalny typ-przenośnik - będzie obecny także na zwykłej bazie. Wymagany przez rejestr

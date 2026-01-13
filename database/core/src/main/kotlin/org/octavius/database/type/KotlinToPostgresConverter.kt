@@ -13,6 +13,7 @@ import org.octavius.data.type.DynamicDto
 import org.octavius.data.type.PgTyped
 import org.octavius.data.util.clean
 import org.octavius.database.config.DynamicDtoSerializationStrategy
+import org.octavius.database.type.registry.TypeRegistry
 import org.postgresql.util.PGobject
 import java.time.ZoneOffset
 import kotlin.reflect.KClass
@@ -22,13 +23,13 @@ import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 /**
- * Wynik ekspansji zapytania.
- * @param expandedSql Zapytanie z rozszerzonymi placeholderami (np. `ARRAY[...]`, `ROW(...)`).
- * @param expandedParams Mapa spłaszczonych parametrów do użycia w `PreparedStatement`.
+ * Wynik ekspansji zapytania do formatu pozycjonowanego (JDBC).
+ * @param sql Zapytanie z placeholderami '?' zamiast nazwanych parametrów.
+ * @param params Uporządkowana lista parametrów do użycia w `PreparedStatement`.
  */
-data class ExpandedQuery(
-    val expandedSql: String,
-    val expandedParams: Map<String, Any?>
+data class PositionalQuery(
+    val sql: String,
+    val params: List<Any?>
 )
 
 /**
@@ -86,56 +87,65 @@ internal class KotlinToPostgresConverter(
      * @param params Mapa parametrów do ekspansji, może zawierać złożone typy Kotlin.
      * @return `ExpandedQuery` z przetworzonym SQL i spłaszczonymi parametrami.
      */
-    fun expandParametersInQuery(sql: String, params: Map<String, Any?>): ExpandedQuery {
-        logger.debug { "Expanding parameters in query. Original params count: ${params.size}" }
+    fun expandParametersInQuery(sql: String, params: Map<String, Any?>): PositionalQuery {
+        logger.debug { "Expanding parameters to positional query. Original params count: ${params.size}" }
         logger.trace { "Original SQL: $sql" }
 
-        var expandedSql = sql
-        val expandedParams = mutableMapOf<String, Any?>()
+        val parsedParameters = PostgresqlNamedParameterParser.parse(sql)
 
-        params.forEach { (paramName, paramValue) ->
-            val placeholderRegex = Regex("(?<!:):$paramName\\b")
-
-            // Sprawdzamy, czy placeholder w ogóle istnieje w SQL
-            if (placeholderRegex.containsMatchIn(expandedSql)) {
-                logger.trace { "Expanding parameter ':$paramName' of type ${paramValue?.javaClass?.simpleName}" }
-                // Ekspanduj parametr na odpowiednią konstrukcję SQL
-                val (newPlaceholder, newParams) = expandParameter(paramName, paramValue)
-
-                expandedSql = placeholderRegex.replace(expandedSql, newPlaceholder)
-
-                expandedParams.putAll(newParams)
-                logger.trace { "Parameter ':$paramName' expanded to: $newPlaceholder" }
-            } else {
-                expandedParams[paramName] = paramValue
-            }
+        if (parsedParameters.isEmpty()) {
+            logger.debug { "No named parameters found, returning original query." }
+            // Zwracamy pustą listę parametrów, bo żadne nie zostały użyte
+            return PositionalQuery(sql, emptyList())
         }
 
-        logger.debug { "Parameter expansion completed. Expanded params count: ${expandedParams.size}" }
-        logger.trace { "Expanded SQL: $expandedSql" }
-        return ExpandedQuery(expandedSql, expandedParams)
+        val expandedSqlBuilder = StringBuilder(sql.length)
+        val expandedParamsList = mutableListOf<Any?>() // ZMIANA: Zamiast mapy, mamy listę
+        var lastIndex = 0
+
+        parsedParameters.forEach { parsedParam ->
+            val paramName = parsedParam.name
+
+            if (!params.containsKey(paramName)) {
+                throw IllegalArgumentException("Missing value for required SQL parameter: $paramName")
+            }
+
+            val paramValue = params[paramName]
+
+            // ZMIANA: expandParameter zwraca teraz listę wartości
+            val (newPlaceholder, newParams) = expandParameter(paramValue)
+
+            expandedSqlBuilder.append(sql, lastIndex, parsedParam.startIndex)
+            expandedSqlBuilder.append(newPlaceholder)
+
+            expandedParamsList.addAll(newParams) // ZMIANA: Dodajemy do listy
+
+            lastIndex = parsedParam.endIndex
+        }
+
+        expandedSqlBuilder.append(sql, lastIndex, sql.length)
+
+        logger.debug { "Parameter expansion completed. Positional params count: ${expandedParamsList.size}" }
+        logger.trace { "Expanded SQL: $expandedSqlBuilder" }
+
+        return PositionalQuery(expandedSqlBuilder.toString(), expandedParamsList)
     }
 
     /**
      * Rozszerza pojedynczy parametr na odpowiednią konstrukcję SQL.
-     *
-     * @param paramName Nazwa parametru (bez dwukropka).
      * @param paramValue Wartość parametru do konwersji.
-     * @return Para: placeholder SQL i mapa spłaszczonych parametrów.
+     * @return Para: placeholder SQL (z `?`) i lista spłaszczonych parametrów.
      */
     private fun expandParameter(
-        paramName: String,
         paramValue: Any?,
         appendTypeCast: Boolean = true
-    ): Pair<String, Map<String, Any?>> {
+    ): Pair<String, List<Any?>> {
         if (paramValue == null) {
-            return ":$paramName" to mapOf(paramName to null)
+            return "?" to listOf(null) // ZMIANA: Prosty placeholder i lista z nullem
         }
 
-        // Krok 1: Obsługa typów opakowujących, które muszą być przetworzone jako pierwsze.
         if (paramValue is PgTyped) {
             val (innerPlaceholder, innerParams) = expandParameter(
-                paramName,
                 paramValue.value,
                 appendTypeCast = false
             )
@@ -143,9 +153,8 @@ internal class KotlinToPostgresConverter(
             return finalPlaceholder to innerParams
         }
 
-        // Krok 2: Szybka konwersja dla znanych, płaskich typów z kotlinx.datetime, itp.
         KOTLIN_TO_JDBC_CONVERTERS[paramValue::class]?.let { converter ->
-            return ":$paramName" to mapOf(paramName to converter(paramValue))
+            return "?" to listOf(converter(paramValue)) // ZMIANA
         }
 
         return when {
@@ -154,44 +163,32 @@ internal class KotlinToPostgresConverter(
                     type = "jsonb"
                     value = paramValue.toString()
                 }
-                ":$paramName" to mapOf(paramName to pgObject)
+                "?" to listOf(pgObject) // ZMIANA
             }
             isDataClass(paramValue) -> {
                 if (appendTypeCast) {
-                    // Najpierw spróbuj "diabolicznej" magii jako specjalnego przypadku
-                    tryExpandAsDynamicDto(paramName, paramValue)
-                    // Jeśli się nie uda, użyj standardowej konwersji do ROW().
-                        ?: expandRowParameter(paramName, paramValue, true)
+                    tryExpandAsDynamicDto(paramValue) ?: expandRowParameter(paramValue, true)
                 } else {
-                    expandRowParameter(paramName, paramValue, false)
+                    expandRowParameter(paramValue, false)
                 }
             }
-            // Pozostałe typy złożone
-            paramValue is Array<*> -> validateTypedArrayParameter(paramName, paramValue)
-            paramValue is List<*> -> expandArrayParameter(paramName, paramValue)
+            paramValue is Array<*> -> validateTypedArrayParameter(paramValue)
+            paramValue is List<*> -> expandArrayParameter(paramValue)
             paramValue is Enum<*> -> {
-                //Najpierw sprawdzamy, czy to jest "Soft Enum" (@DynamicallyMappable)
-                // Jeśli tak -> zamieniamy go w DynamicDto (ROW z JSON-em)
-                // Jeśli nie -> traktujemy jak zwykły Postgresowy ENUM (PGobject)
                 if (appendTypeCast) {
-                    tryExpandAsDynamicDto(paramName, paramValue)
-                        ?: createEnumParameter(paramName, paramValue)
+                    tryExpandAsDynamicDto(paramValue) ?: createEnumParameter(paramValue)
                 } else {
-                    createEnumParameter(paramName, paramValue)
+                    createEnumParameter(paramValue)
                 }
             }
-            isValueClass(paramValue) -> tryExpandAsDynamicDto(paramName, paramValue)
+            isValueClass(paramValue) -> tryExpandAsDynamicDto(paramValue)
                 ?: throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED,
                     typeName = paramValue::class.qualifiedName,
-                    cause = IllegalStateException(
-                        "Value class '${paramValue::class.simpleName}' must be annotated with @DynamicallyMappable to be used as a query parameter."
-                    )
+                    cause = IllegalStateException("Value class must be annotated with @DynamicallyMappable.")
                 )
-            // String jest oczyszczony z cudzysłowów i apostrofów drukarskich
-            paramValue is String -> ":$paramName" to mapOf(paramName to paramValue.clean())
-            // Fallback dla wszystkich innych typów prostych (Int, Double, etc.)
-            else -> ":$paramName" to mapOf(paramName to paramValue)
+            paramValue is String -> "?" to listOf(paramValue.clean()) // ZMIANA
+            else -> "?" to listOf(paramValue) // ZMIANA
         }
     }
 
@@ -202,60 +199,37 @@ internal class KotlinToPostgresConverter(
      * @return Wynik ekspansji jako `Pair` lub `null`, jeśli konwersja nie jest możliwa/dozwolona.
      */
     private fun tryExpandAsDynamicDto(
-        paramName: String,
         paramValue: Any
-    ): Pair<String, Map<String, Any?>>? {
-        // 1. Sprawdź, czy strategia w ogóle pozwala na automatyczną konwersję
-        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.EXPLICIT_ONLY) {
-            return null
-        }
-        // 2. Dla strategii "bez dwuznaczności", sprawdź, czy nie ma konfliktu z @PgComposite
-        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS && typeRegistry.isPgType(
-                paramValue::class
-            )
-        ) {
-            return null
-        }
+    ): Pair<String, List<Any?>>? {
+        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.EXPLICIT_ONLY) return null
+        if (dynamicDtoStrategy == DynamicDtoSerializationStrategy.AUTOMATIC_WHEN_UNAMBIGUOUS && typeRegistry.isPgType(paramValue::class)) return null
 
-        // Sprawdź w rejestrze, czy ta klasa jest oznaczona jako @DynamicallyMappable
-        val dynamicTypeName = typeRegistry.getDynamicTypeNameForClass(paramValue::class)
-            ?: return null // Jeśli nie jest, to nie nasza działka
+        val dynamicTypeName = typeRegistry.getDynamicTypeNameForClass(paramValue::class) ?: return null
         val serializer = typeRegistry.getDynamicSerializer(dynamicTypeName)
-        // Jeśli jest, wykonaj "diaboliczną" magię
-
         logger.trace { "Dynamically converting ${paramValue::class.simpleName} to dynamic_dto '$dynamicTypeName'" }
 
-        val dynamicDtoWrapper: DynamicDto
-        try {
-            dynamicDtoWrapper = DynamicDto.from(paramValue, dynamicTypeName, serializer)
-        } catch (ex: Exception) { // To zawsze powinien być ConversionException
-            logger.error(ex) { ex }
-            throw ex
+        val dynamicDtoWrapper = try {
+            DynamicDto.from(paramValue, dynamicTypeName, serializer)
+        } catch (ex: Exception) {
+            logger.error(ex) { ex }; throw ex
         }
-        // Rekurencyjnie wywołaj expandParameter na tym wrapperze.
-        // Framework już wie, jak obsłużyć `DynamicDto` jako zwykły @PgComposite.
-        return expandParameter(paramName, dynamicDtoWrapper)
+        return expandParameter(dynamicDtoWrapper)
     }
 
     /**
      * Waliduje tablicę typowaną (`Array<*>`) przeznaczoną do bezpośredniego przekazania do JDBC.
      * Rzuca wyjątek, jeśli typ elementów nie jest typem prostym.
      */
-    private fun validateTypedArrayParameter(paramName: String, arrayValue: Array<*>): Pair<String, Map<String, Any?>> {
-        val componentType = arrayValue::class.java.componentType!!.kotlin // To musi być tablica
-
+    private fun validateTypedArrayParameter(arrayValue: Array<*>): Pair<String, List<Any?>> {
+        val componentType = arrayValue::class.java.componentType!!.kotlin
         if (isComplexComponentType(componentType)) {
-            val ex = ConversionException(
+            throw ConversionException(
                 ConversionExceptionMessage.UNSUPPORTED_COMPONENT_TYPE_IN_ARRAY,
                 arrayValue,
-                targetType = componentType.qualifiedName ?: componentType.simpleName ?: "unknown"
+                targetType = componentType.qualifiedName ?: "unknown"
             )
-            logger.error(ex) { ex }
-            throw ex
         }
-
-        // Jeśli walidacja przejdzie, traktujemy to jak prosty parametr - sterownik JDBC go obsłuży.
-        return ":$paramName" to mapOf(paramName to arrayValue)
+        return "?" to listOf(arrayValue)
     }
 
     /**
@@ -268,23 +242,14 @@ internal class KotlinToPostgresConverter(
     }
 
     /** Tworzy parametr dla enuma, mapując `CamelCase` na `snake_case` dla typu i wartości. */
-    private fun createEnumParameter(paramName: String, enumValue: Enum<*>): Pair<String, Map<String, Any?>> {
-        val enumKClass = enumValue::class
-        logger.trace { "Creating enum parameter for ${enumKClass.simpleName}.${enumValue.name}" }
-
-        val dbTypeName = typeRegistry.getPgTypeNameForClass(enumKClass)
-
+    private fun createEnumParameter(enumValue: Enum<*>): Pair<String, List<Any?>> {
+        val dbTypeName = typeRegistry.getPgTypeNameForClass(enumValue::class)
         val typeInfo = typeRegistry.getEnumDefinition(dbTypeName)
-
         val finalDbValue = typeInfo.enumToValueMap[enumValue]
-
-        logger.trace { "Converted Kotlin enum '${enumValue.name}' to DB value '$finalDbValue'" }
-
         val pgObject = PGobject().apply {
-            value = finalDbValue
-            type = dbTypeName
+            value = finalDbValue; type = dbTypeName
         }
-        return ":$paramName" to mapOf(paramName to pgObject)
+        return "?" to listOf(pgObject)
     }
 
     /**
@@ -297,24 +262,19 @@ internal class KotlinToPostgresConverter(
      * @param arrayValue Lista do konwersji.
      * @return Para: placeholder ARRAY[...] i mapa parametrów elementów.
      */
-    private fun expandArrayParameter(paramName: String, arrayValue: List<*>): Pair<String, Map<String, Any?>> {
-        logger.trace { "Expanding array parameter '$paramName' with ${arrayValue.size} elements" }
-
+    private fun expandArrayParameter(arrayValue: List<*>): Pair<String, List<Any?>> {
         if (arrayValue.isEmpty()) {
-            logger.trace { "Array parameter '$paramName' is empty, using empty array literal" }
-            return "'{}'" to emptyMap() // Pusta tablica PostgreSQL
+            return "'{}'" to emptyList()
         }
 
-        val expandedParams = mutableMapOf<String, Any?>()
-        val placeholders = arrayValue.mapIndexed { index, value ->
-            val elementParamName = "${paramName}_p${index + 1}" // Unikalna nazwa dla każdego elementu
-            val (placeholder, params) = expandParameter(elementParamName, value)
-            expandedParams.putAll(params)
+        val expandedParams = mutableListOf<Any?>()
+        val placeholders = arrayValue.map { value ->
+            val (placeholder, params) = expandParameter(value)
+            expandedParams.addAll(params)
             placeholder
         }
 
         val arrayPlaceholder = "ARRAY[${placeholders.joinToString(", ")}]"
-        logger.trace { "Array parameter '$paramName' expanded to: $arrayPlaceholder" }
         return arrayPlaceholder to expandedParams
     }
 
@@ -330,31 +290,19 @@ internal class KotlinToPostgresConverter(
      * @throws org.octavius.data.exception.TypeRegistryException jeśli klasa nie jest zarejestrowana.
      */
     private fun expandRowParameter(
-        paramName: String,
         compositeValue: Any,
         appendTypeCast: Boolean = true
-    ): Pair<String, Map<String, Any?>> {
+    ): Pair<String, List<Any?>> {
         val kClass = compositeValue::class
-        logger.trace { "Expanding row parameter '$paramName' for class ${kClass.simpleName}" }
-
-        // 1. Pobierz informacje o typie z rejestru (bez zmian)
         val dbTypeName = typeRegistry.getPgTypeNameForClass(kClass)
         val typeInfo = typeRegistry.getCompositeDefinition(dbTypeName)
-
-        logger.trace { "Found database type '$dbTypeName' with ${typeInfo.attributes.size} attributes" }
-
         val valueMap = compositeValue.toMap()
+        val expandedParams = mutableListOf<Any?>()
 
-        val expandedParams = mutableMapOf<String, Any?>()
-
-        // 3. Iteruj po ATRYBUTACH Z BAZY DANYCH, aby ZAGWARANTOWAĆ poprawną kolejność
-        val placeholders = typeInfo.attributes.keys.mapIndexed { index, dbAttributeName ->
-
+        val placeholders = typeInfo.attributes.keys.map { dbAttributeName ->
             val value = valueMap[dbAttributeName]
-
-            val fieldParamName = "${paramName}_f${index + 1}"
-            val (placeholder, params) = expandParameter(fieldParamName, value)
-            expandedParams.putAll(params)
+            val (placeholder, params) = expandParameter(value)
+            expandedParams.addAll(params)
             placeholder
         }
 
@@ -363,7 +311,6 @@ internal class KotlinToPostgresConverter(
         } else {
             "ROW(${placeholders.joinToString(", ")})"
         }
-        logger.trace { "Row parameter '$paramName' expanded to: $rowPlaceholder" }
 
         return rowPlaceholder to expandedParams
     }

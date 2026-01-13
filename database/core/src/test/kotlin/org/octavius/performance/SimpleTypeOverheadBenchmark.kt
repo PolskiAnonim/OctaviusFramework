@@ -11,11 +11,11 @@ import org.octavius.database.RowMappers
 import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.PostgresToKotlinConverter
 import org.octavius.database.type.ResultSetValueExtractor
-import org.octavius.database.type.TypeRegistry
-import org.octavius.database.type.TypeRegistryLoader
+import org.octavius.database.type.registry.TypeRegistry
+import org.octavius.database.type.registry.TypeRegistryLoader
 import org.postgresql.jdbc.PgResultSetMetaData
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.ResultSet
@@ -42,7 +42,7 @@ class SimpleTypeOverheadBenchmark {
     private val oldFrameworkTimings = mutableListOf<Long>()
     private val optimizedFrameworkTimings = mutableListOf<Long>() // NOWA LISTA
 
-    private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
+    private lateinit var jdbcTemplate: JdbcTemplate
     private lateinit var typesConverter: PostgresToKotlinConverter
     private lateinit var typeRegistry: TypeRegistry
     private lateinit var valueExtractor: ResultSetValueExtractor // NOWY EKSTRAKTOR
@@ -67,7 +67,7 @@ class SimpleTypeOverheadBenchmark {
             maximumPoolSize = 5
         }
 
-        jdbcTemplate = NamedParameterJdbcTemplate(hikariDataSource)
+        jdbcTemplate = JdbcTemplate(hikariDataSource)
 
         typeRegistry = runBlocking {
             TypeRegistryLoader(
@@ -89,7 +89,7 @@ class SimpleTypeOverheadBenchmark {
                     )
                 )
             )
-            jdbcTemplate.jdbcTemplate.execute(initSql)
+            jdbcTemplate.execute(initSql)
             println("Simple test DB schema and data initialized successfully.")
         } catch (e: Exception) {
             e.printStackTrace()

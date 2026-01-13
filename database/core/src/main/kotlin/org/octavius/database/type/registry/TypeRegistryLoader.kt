@@ -1,5 +1,6 @@
-package org.octavius.database.type
+package org.octavius.database.type.registry
 
+import io.github.classgraph.AnnotationEnumValue
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ScanResult
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -18,11 +19,11 @@ import org.octavius.data.type.PgStandardType
 import org.octavius.data.util.CaseConvention
 import org.octavius.data.util.CaseConverter
 import org.octavius.data.util.toSnakeCase
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 import kotlin.reflect.KClass
 
 internal class TypeRegistryLoader(
-    private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate,
+    private val jdbcTemplate: JdbcTemplate,
     private val packagesToScan: List<String>,
     private val dbSchemas: List<String>
 ) {
@@ -135,9 +136,9 @@ internal class TypeRegistryLoader(
                 )
             }
 
-            val pgConv = (annotation.parameterValues.getValue("pgConvention") as io.github.classgraph.AnnotationEnumValue)
+            val pgConv = (annotation.parameterValues.getValue("pgConvention") as AnnotationEnumValue)
                 .loadClassAndReturnEnumValue() as CaseConvention
-            val ktConv = (annotation.parameterValues.getValue("kotlinConvention") as io.github.classgraph.AnnotationEnumValue)
+            val ktConv = (annotation.parameterValues.getValue("kotlinConvention") as AnnotationEnumValue)
                 .loadClassAndReturnEnumValue() as CaseConvention
             val kClass = classInfo.loadClass().kotlin
             target.add(KtEnumInfo(kClass, name, pgConv, ktConv))
@@ -217,7 +218,8 @@ internal class TypeRegistryLoader(
         val composites = mutableMapOf<String, MutableMap<String, String>>()
 
         try {
-            namedParameterJdbcTemplate.query(SQL_QUERY_ALL_TYPES, mapOf("schemas" to dbSchemas.toTypedArray())) { rs, _ ->
+            val schemas = dbSchemas.toTypedArray()
+            jdbcTemplate.query(SQL_QUERY_ALL_TYPES, { rs, _ ->
                 val type = rs.getString("info_type")
                 val name = rs.getString("type_name")
                 val col1 = rs.getString("col1")
@@ -227,7 +229,7 @@ internal class TypeRegistryLoader(
                     "enum" -> enums.getOrPut(name) { mutableListOf() }.add(col1)
                     "composite" -> composites.getOrPut(name) { mutableMapOf() }[col1] = col2
                 }
-            }
+            }, schemas, schemas)
         } catch (e: Exception) {
             throw TypeRegistryException(TypeRegistryExceptionMessage.DB_QUERY_FAILED, cause = e)
         }
@@ -353,7 +355,7 @@ internal class TypeRegistryLoader(
                 JOIN pg_enum e ON t.oid = e.enumtypid
                 JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE
-                n.nspname = ANY(:schemas)
+                n.nspname = ANY(?)
         """
 
         private const val SQL_QUERY_COMPOSITE_TYPES = """
@@ -373,7 +375,7 @@ internal class TypeRegistryLoader(
                 t.typtype = 'c'
                 AND a.attnum > 0
                 AND NOT a.attisdropped
-                AND n.nspname = ANY(:schemas)
+                AND n.nspname = ANY(?)
         """
 
         private const val SQL_QUERY_ALL_TYPES = """

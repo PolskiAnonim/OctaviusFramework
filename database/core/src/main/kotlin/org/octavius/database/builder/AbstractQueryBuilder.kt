@@ -11,8 +11,9 @@ import org.octavius.data.builder.StreamingTerminalMethods
 import org.octavius.data.exception.QueryExecutionException
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
+import org.octavius.database.type.PositionalQuery
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -25,7 +26,7 @@ import kotlin.reflect.KType
  * interfejs (fluent API) w podklasach.
  */
 internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
-    val jdbcTemplate: NamedParameterJdbcTemplate,
+    val jdbcTemplate: JdbcTemplate,
     val kotlinToPostgresConverter: KotlinToPostgresConverter,
     val rowMappers: RowMappers,
     protected val table: String? = null,
@@ -172,8 +173,8 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     fun execute(params: Map<String, Any?>): DataResult<Int> {
         check(returningClause == null) { "Użyj metod toList(), toSingle() etc., gdy zdefiniowano klauzulę RETURNING." }
         val sql = buildSql()
-        return execute(sql, params) { expandedSql, expandedParams ->
-            val affectedRows = jdbcTemplate.update(expandedSql, expandedParams)
+        return execute(sql, params) { positionalSql, positionalParams ->
+            val affectedRows = jdbcTemplate.update(positionalSql, *positionalParams.toTypedArray())
             DataResult.Success(affectedRows)
         }
     }
@@ -195,8 +196,8 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     ): DataResult<R> {
         check(canReturnResultsByDefault || returningClause != null) { "Nie można wywołać toList(), toSingle() etc. na zapytaniu modyfikującym bez klauzuli RETURNING. Użyj .returning()." }
         val sql = buildSql()
-        return execute(sql, params) { expandedSql, expandedParams ->
-            val results: List<M> = jdbcTemplate.query(expandedSql, expandedParams, rowMapper)
+        return execute(sql, params) { positionalSql, positionalParams ->
+            val results: List<M> = jdbcTemplate.query(positionalSql, rowMapper, *positionalParams.toTypedArray())
             transform(results)
         }
     }
@@ -215,25 +216,30 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     protected fun <R> execute(
         sql: String,
         params: Map<String, Any?>,
-        action: (expandedSql: String, expandedParams: Map<String, Any?>) -> DataResult<R>
+        action: (positionalSql: String, positionalParams: List<Any?>) -> DataResult<R>
     ): DataResult<R> {
-        var expandedSql: String? = null
-        var expandedParams: Map<String, Any?>? = null
+        var positionalQuery: PositionalQuery? = null
         return try {
-            val expanded = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
-            expandedSql = expanded.expandedSql
-            expandedParams = expanded.expandedParams
-            logger.debug { "Executing query (expanded): $expandedSql with params: $expandedParams" }
-            action(expandedSql, expandedParams)
+            positionalQuery = kotlinToPostgresConverter.expandParametersInQuery(sql, params)
+            logger.debug {
+                """
+                Executing query (original): $sql with params: $params
+                  -> (expanded): ${positionalQuery.sql} with positional params: ${positionalQuery.params}
+                """.trimIndent()
+            }
+            action(positionalQuery.sql, positionalQuery.params)
         } catch (e: Exception) {
-            logger.error(e) { "Database error executing query: $expandedSql with params: $expandedParams" }
-            DataResult.Failure(
-                QueryExecutionException(
-                    sql = expandedSql ?: sql,
-                    params = expandedParams ?: params,
-                    cause = e
-                )
+            val executionException = QueryExecutionException(
+                sql = sql,
+                params = params,
+                expandedSql = positionalQuery?.sql,
+                expandedParams = positionalQuery?.params,
+                cause = e
             )
+
+            logger.error(executionException) { "Database error occurred" }
+
+            DataResult.Failure(executionException)
         }
     }
 

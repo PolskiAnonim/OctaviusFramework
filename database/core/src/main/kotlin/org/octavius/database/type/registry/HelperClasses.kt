@@ -1,4 +1,4 @@
-package org.octavius.database.type
+package org.octavius.database.type.registry
 
 import kotlin.reflect.KClass
 

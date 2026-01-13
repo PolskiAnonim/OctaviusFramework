@@ -4,10 +4,10 @@ import org.octavius.data.builder.InsertQueryBuilder
 import org.octavius.data.builder.OnConflictClauseBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 
 internal class DatabaseInsertQueryBuilder(
-    jdbcTemplate: NamedParameterJdbcTemplate,
+    jdbcTemplate: JdbcTemplate,
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     table: String,

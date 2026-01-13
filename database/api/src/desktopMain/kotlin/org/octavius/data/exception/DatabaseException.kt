@@ -20,23 +20,50 @@ sealed class DatabaseException(message: String, cause: Throwable? = null) : Runt
 class QueryExecutionException(
     val sql: String,
     val params: Map<String, Any?>,
+    val expandedSql: String? = null,
+    val expandedParams: List<Any?>? = null,
     message: String? = null,
     cause: Throwable? = null
 ) : DatabaseException(message ?: "Error during query execution", cause) {
-    override fun toString(): String {
-        val nestedError = cause.toString().prependIndent("|   ")
-        return """
 
-------------------------------------
-|  QUERY EXECUTION FAILED     
-| message: $message
-| sql: $sql
-| params: $params
--------------------------------------
-| Error details:
-$nestedError
--------------------------------------
-"""
+    override fun toString(): String {
+        val nestedError = cause?.toString()?.prependIndent("|   ") ?: "|   No cause available"
+
+        // Formatowanie parametrów, żeby nie zalały logów
+        val formattedExpandedParams = expandedParams?.mapIndexed { index, value ->
+            "\n|    [$index] -> $value"
+        }?.joinToString("") ?: "null"
+
+        val formattedOriginalParams = params.entries.joinToString(
+            prefix = "\n| ",
+            separator = "\n| "
+        ) { (k, v) -> "$k = $v" }
+
+        val executionDetails = if (expandedSql != null) {
+            """
+            |
+            |---[ Execution Details (Low Level) ]---
+            | expandedSql: $expandedSql
+            | expandedParams ($expandedParams?.size): $formattedExpandedParams
+            """.trimMargin()
+        } else ""
+
+        return """
+        
+        ------------------------------------------------------------
+        |  QUERY EXECUTION FAILED
+        ------------------------------------------------------------
+        | Message: $message
+        |
+        |---[ Original Query ]---
+        | SQL: $sql
+        | Params: $formattedOriginalParams
+        $executionDetails
+        ------------------------------------------------------------
+        | Error Cause:
+        $nestedError
+        ------------------------------------------------------------
+        """.trimIndent()
     }
 }
 

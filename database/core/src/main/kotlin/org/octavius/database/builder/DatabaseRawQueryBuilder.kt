@@ -3,14 +3,14 @@ package org.octavius.database.builder
 import org.octavius.data.builder.RawQueryBuilder
 import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 
 /**
  * Wykonuje surowe zapytanie SQL, które zwraca wyniki.
  * Umożliwia przekazanie dowolnego SQLa do wykonania oferując wygodne metody terminalne
  */
 internal class DatabaseRawQueryBuilder(
-    jdbcTemplate: NamedParameterJdbcTemplate,
+    jdbcTemplate: JdbcTemplate,
     kotlinToPostgresConverter: KotlinToPostgresConverter,
     rowMappers: RowMappers,
     private val sql: String
