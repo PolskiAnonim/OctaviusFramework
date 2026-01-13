@@ -22,7 +22,7 @@ import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.ResultSetValueExtractor
 import org.octavius.database.type.registry.TypeRegistryLoader
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -31,7 +31,7 @@ import java.nio.file.Paths
 class TransactionPlanExecutorTest {
 
     private lateinit var dataAccess: DataAccess
-    private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
+    private lateinit var jdbcTemplate: JdbcTemplate
 
     @BeforeAll
     fun setup() {
@@ -47,11 +47,11 @@ class TransactionPlanExecutorTest {
             username = dbConfig.dbUsername
             password = dbConfig.dbPassword
         })
-        jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
+        jdbcTemplate = JdbcTemplate(dataSource)
 
         // --- Krok 2: Inicjalizacja schematu bazy danych ---
         val initSql = String(Files.readAllBytes(Paths.get(this::class.java.classLoader.getResource("init-transaction-test-db.sql")!!.toURI())))
-        jdbcTemplate.jdbcTemplate.execute(initSql)
+        jdbcTemplate.execute(initSql)
 
         // --- Krok 3: Stworzenie pełnej instancji DataAccess ---
         val typeRegistry = runBlocking { TypeRegistryLoader(jdbcTemplate, listOf(), dbConfig.dbSchemas).load() }
@@ -65,7 +65,7 @@ class TransactionPlanExecutorTest {
     @BeforeEach
     fun cleanup() {
         // Czyścimy tabele przed każdym testem, aby zapewnić izolację
-        jdbcTemplate.update("TRUNCATE TABLE users, profiles, logs RESTART IDENTITY", emptyMap<String, Any>())
+        jdbcTemplate.update("TRUNCATE TABLE users, profiles, logs RESTART IDENTITY")
     }
 
     @Test
@@ -93,7 +93,7 @@ class TransactionPlanExecutorTest {
         assertThat(successResult.get(userHandle)).isEqualTo(1)
         assertThat(successResult.get(logHandle)).isEqualTo(1)
 
-        val userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", emptyMap<String, Any>(), Long::class.java)
+        val userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Long::class.java)
         assertThat(userCount).isEqualTo(1)
     }
 
@@ -121,7 +121,7 @@ class TransactionPlanExecutorTest {
 
         // Assert
         assertThat(result).isInstanceOf(DataResult.Success::class.java)
-        val profileUserId = jdbcTemplate.queryForObject("SELECT user_id FROM profiles WHERE bio = :bio", mapOf("bio" to "A bio for John"), Int::class.java)
+        val profileUserId = jdbcTemplate.queryForObject("SELECT user_id FROM profiles WHERE bio = ?", Int::class.java, "A bio for John")
         assertThat(profileUserId).isEqualTo(1) // Powinno być ID Johna
     }
 
@@ -151,14 +151,14 @@ class TransactionPlanExecutorTest {
 
         // Assert
         assertThat(result).isInstanceOf(DataResult.Success::class.java)
-        val logCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM logs", emptyMap<String, Any>(), Long::class.java)
+        val logCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM logs", Long::class.java)
         assertThat(logCount).isEqualTo(3)
     }
 
     @Test
     fun `should roll back all changes if a step fails`() {
         // Arrange: User "Admin" już istnieje w schemacie (UNIQUE constraint)
-        jdbcTemplate.update("INSERT INTO users (name) VALUES ('Admin')", emptyMap<String, Any>())
+        jdbcTemplate.update("INSERT INTO users (name) VALUES ('Admin')")
 
         val plan = TransactionPlan()
         // Krok 1: Wstaw log (powinien się udać)
@@ -178,7 +178,7 @@ class TransactionPlanExecutorTest {
         assertThat((failure as TransactionStepExecutionException).stepIndex).isEqualTo(1) // Błąd w drugim kroku (indeks 1)
 
         // Kluczowa asercja: Sprawdzamy, czy Krok 1 został wycofany
-        val logCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM logs", emptyMap<String, Any>(), Long::class.java)
+        val logCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM logs", Long::class.java)
         assertThat(logCount).isEqualTo(0)
     }
 
@@ -227,9 +227,9 @@ class TransactionPlanExecutorTest {
 
         // Assert
         assertThat(result).isInstanceOf(DataResult.Success::class.java)
-        val userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", emptyMap<String, Any>(), Long::class.java)
-        val logCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM logs", emptyMap<String, Any>(), Long::class.java)
-        val profileCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM profiles", emptyMap<String, Any>(), Long::class.java)
+        val userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Long::class.java)
+        val logCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM logs", Long::class.java)
+        val profileCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM profiles",  Long::class.java)
 
         assertThat(userCount).isEqualTo(1)
         assertThat(logCount).isEqualTo(1)

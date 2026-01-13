@@ -21,7 +21,7 @@ import org.octavius.database.type.registry.TypeRegistryLoader
 import org.octavius.domain.test.dynamic.DynamicProfile
 import org.octavius.domain.test.dynamic.UserStats
 import org.octavius.domain.test.dynamic.UserWithDynamicProfile
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -49,11 +49,11 @@ class DynamicDtoMappingTest {
             username = databaseConfig.dbUsername
             password = databaseConfig.dbPassword
         })
-        val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
+        val jdbcTemplate = JdbcTemplate(dataSource)
         val transactionManager = DataSourceTransactionManager(dataSource)
 
-        jdbcTemplate.jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
-        jdbcTemplate.jdbcTemplate.execute("CREATE SCHEMA public;")
+        jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
+        jdbcTemplate.execute("CREATE SCHEMA public;")
         val initSql = String(
             Files.readAllBytes(
                 Paths.get(
@@ -61,7 +61,7 @@ class DynamicDtoMappingTest {
                 )
             )
         )
-        jdbcTemplate.jdbcTemplate.execute(initSql)
+        jdbcTemplate.execute(initSql)
         println("Dynamic DTO test DB schema initialized successfully.")
 
         // --- Krok 3: Załadowanie TypeRegistry i stworzenie pełnego DAL-a ---

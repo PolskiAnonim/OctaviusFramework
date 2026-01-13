@@ -25,30 +25,44 @@ class QueryExecutionException(
     message: String? = null,
     cause: Throwable? = null
 ) : DatabaseException(message ?: "Error during query execution", cause) {
-    override fun toString(): String {
-        val nestedError = cause?.toString()?.prependIndent("|   ") ?: "No cause available"
 
-        // ZMIANA: Dynamicznie budujemy blok z dodatkowymi informacjami, jeśli istnieją
+    override fun toString(): String {
+        val nestedError = cause?.toString()?.prependIndent("|   ") ?: "|   No cause available"
+
+        // Formatowanie parametrów, żeby nie zalały logów
+        val formattedExpandedParams = expandedParams?.mapIndexed { index, value ->
+            "\n|    [$index] -> $value"
+        }?.joinToString("") ?: "null"
+
+        val formattedOriginalParams = params.entries.joinToString(
+            prefix = "\n| ",
+            separator = "\n| "
+        ) { (k, v) -> "$k = $v" }
+
         val executionDetails = if (expandedSql != null) {
             """
             |
-            |---[ Execution Details ]---
+            |---[ Execution Details (Low Level) ]---
             | expandedSql: $expandedSql
-            | expandedParams: $expandedParams
+            | expandedParams ($expandedParams?.size): $formattedExpandedParams
             """.trimMargin()
         } else ""
 
         return """
-
-        ------------------------------------
+        
+        ------------------------------------------------------------
         |  QUERY EXECUTION FAILED
-        | message: $message
-        | sql: $sql
-        | params: $params$executionDetails
-        -------------------------------------
-        | Error details:
+        ------------------------------------------------------------
+        | Message: $message
+        |
+        |---[ Original Query ]---
+        | SQL: $sql
+        | Params: $formattedOriginalParams
+        $executionDetails
+        ------------------------------------------------------------
+        | Error Cause:
         $nestedError
-        -------------------------------------
+        ------------------------------------------------------------
         """.trimIndent()
     }
 }

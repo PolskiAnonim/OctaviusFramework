@@ -18,7 +18,7 @@ import org.octavius.database.config.DatabaseConfig
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.octavius.database.type.ResultSetValueExtractor
 import org.octavius.database.type.registry.TypeRegistryLoader
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
 // Definicja Soft Enuma w kodzie testowym
@@ -53,11 +53,11 @@ class SoftEnumReadIntegrationTest {
             username = databaseConfig.dbUsername
             password = databaseConfig.dbPassword
         })
-        val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
+        val jdbcTemplate = JdbcTemplate(dataSource)
         val transactionManager = DataSourceTransactionManager(dataSource)
 
         // Upewniamy się, że typ i funkcja istnieją (idempotentnie)
-        jdbcTemplate.jdbcTemplate.execute("""
+        jdbcTemplate.execute("""
             DO $$ BEGIN
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dynamic_dto') THEN
                     CREATE TYPE dynamic_dto AS (type_name text, data_payload jsonb);

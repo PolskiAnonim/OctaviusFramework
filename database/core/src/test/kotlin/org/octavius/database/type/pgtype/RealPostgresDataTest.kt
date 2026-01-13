@@ -16,7 +16,7 @@ import org.octavius.domain.test.pgtype.TestPerson
 import org.octavius.domain.test.pgtype.TestPriority
 import org.octavius.domain.test.pgtype.TestProject
 import org.octavius.domain.test.pgtype.TestStatus
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.JdbcTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -24,7 +24,7 @@ import java.nio.file.Paths
 class RealPostgresDataTest {
 
     // Te pola będą dostępne we wszystkich testach w tej klasie
-    private lateinit var jdbcTemplate: NamedParameterJdbcTemplate
+    private lateinit var jdbcTemplate: JdbcTemplate
     private lateinit var typeRegistry: TypeRegistry
 
     @BeforeAll
@@ -53,13 +53,13 @@ class RealPostgresDataTest {
             password = databaseConfig.dbPassword
         }
         val dataSource = HikariDataSource(hikariConfig)
-        jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
+        jdbcTemplate = JdbcTemplate(dataSource)
 
         // 3. Wrzucamy skrypt testowy do bazy DOKŁADNIE RAZ
         try {
             // Najpierw usuwamy stary schemat, żeby mieć pewność czystego startu
-            jdbcTemplate.jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
-            jdbcTemplate.jdbcTemplate.execute("CREATE SCHEMA public;")
+            jdbcTemplate.execute("DROP SCHEMA IF EXISTS public CASCADE;")
+            jdbcTemplate.execute("CREATE SCHEMA public;")
 
             // Wczytujemy i wykonujemy cały skrypt SQL (łącznie z INSERT)
             val initSql = String(
@@ -69,7 +69,7 @@ class RealPostgresDataTest {
                     )
                 )
             )
-            jdbcTemplate.jdbcTemplate.execute(initSql)
+            jdbcTemplate.execute(initSql)
             println("Complex test DB schema and data initialized successfully.")
         } catch (e: Exception) {
             e.printStackTrace()
@@ -96,7 +96,6 @@ class RealPostgresDataTest {
         // When: Używamy RowMappers (które używają konwertera) do pobrania danych
         val result: Map<String, Any?> = jdbcTemplate.queryForObject(
             "SELECT * FROM complex_test_data WHERE id = 1",
-            emptyMap<String, Any>(),
             RowMappers(ResultSetValueExtractor(typeRegistry)).ColumnNameMapper()
         )
 
