@@ -20,7 +20,7 @@ internal data class ParsedParameter(val name: String, val startIndex: Int, val e
  */
 internal object PostgresqlNamedParameterParser {
 
-    private val PARAMETER_SEPARATORS = "\"':&,;()|=+-*%/\\<>^"
+    private const val PARAMETER_SEPARATORS = "\"':&,;()|=+-*%/\\<>^"
     private val separatorIndex = BooleanArray(128).apply {
         PARAMETER_SEPARATORS.forEach { this[it.code] = true }
     }
