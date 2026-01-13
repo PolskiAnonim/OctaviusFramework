@@ -132,6 +132,36 @@ internal class PostgresNamedParameterParserTest {
         }
 
         @Test
+        fun `should ignore parameters inside nested multi-line comments`() {
+            val sql = """
+            SELECT id FROM products 
+            /* 
+            Główny komentarz
+                /* 
+                Zagnieżdżony komentarz z parametrem :ignored1 
+                */
+            I jeszcze jeden parametr :ignored2 w głównym komentarzu
+            */
+            WHERE price > :minPrice
+            """.trimIndent()
+
+            val result = PostgresNamedParameterParser.parse(sql)
+
+            // Powinien znaleźć tylko :minPrice
+            assertThat(result).hasSize(1)
+            assertThat(result[0].name).isEqualTo("minPrice")
+        }
+
+        @Test
+        fun `should handle multiple levels of nested comments`() {
+            val sql = "/* level 1 /* level 2 /* level 3 :ignored */ */ */ SELECT :realParam"
+            val result = PostgresNamedParameterParser.parse(sql)
+
+            assertThat(result).hasSize(1)
+            assertThat(result[0].name).isEqualTo("realParam")
+        }
+
+        @Test
         fun `should ignore postgres type cast operator`() {
             val sql = "SELECT '2024-01-01'::date, field FROM table WHERE id = :id"
             val result = PostgresNamedParameterParser.parse(sql)

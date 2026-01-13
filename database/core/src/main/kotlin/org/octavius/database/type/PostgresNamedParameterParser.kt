@@ -79,7 +79,7 @@ internal object PostgresNamedParameterParser {
                     i = skipUntil(statement, i, '\n')
                 }
                 '/' -> if (i + 1 < statement.size && statement[i + 1] == '*') {
-                    i = skipUntil(statement, i, "*/")
+                    i = skipComment(statement, i)
                 }
                 // Check for dollar-quote last, as it's less common
                 '$' -> {
@@ -172,17 +172,23 @@ internal object PostgresNamedParameterParser {
         return i
     }
 
-    /** Skips to the next occurrence of the specified character sequence. Returns the index of the last character of the sequence. */
-    private fun skipUntil(statement: CharArray, start: Int, endSequence: String): Int {
-        val endChars = endSequence.toCharArray()
-        var i = start + endChars.size
-        while (i < statement.size) {
-            if (regionMatches(statement, i - endChars.size + 1, endChars, 0, endChars.size)) {
-                return i
+    /** Skips comment. */
+    private fun skipComment(statement: CharArray, start: Int): Int {
+        var i = start + 2 // skip initial /*
+        var depth = 1
+        while (i < statement.size && depth > 0) {
+            if (i + 1 < statement.size) {
+                if (statement[i] == '/' && statement[i + 1] == '*') {
+                    depth++
+                    i++
+                } else if (statement[i] == '*' && statement[i + 1] == '/') {
+                    depth--
+                    i++
+                }
             }
             i++
         }
-        return statement.size
+        return i - 1
     }
 
     /**
