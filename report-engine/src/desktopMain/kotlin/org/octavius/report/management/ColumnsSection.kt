@@ -20,7 +20,6 @@ import org.octavius.localization.T
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.ui.draganddrop.ChipConstants
-import org.octavius.report.management.ColumnDragData
 import org.octavius.ui.draganddrop.DraggableChip
 
 @OptIn(ExperimentalComposeUiApi::class)

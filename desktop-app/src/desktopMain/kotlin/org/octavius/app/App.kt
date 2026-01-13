@@ -2,8 +2,8 @@ package org.octavius.app
 
 import androidx.compose.runtime.Composable
 import org.octavius.navigation.Tab
-import org.octavius.ui.screen.MainScreen
 import org.octavius.theme.AppTheme
+import org.octavius.ui.screen.MainScreen
 
 /**
  * Główny komponent aplikacji desktopowej.
