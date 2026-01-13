@@ -1,22 +1,31 @@
 package org.octavius.database.type
 
-/** Reprezentuje znaleziony w SQL nazwany parametr wraz z jego pozycją. */
+/** Represents a named parameter found in SQL with its position. */
 internal data class ParsedParameter(val name: String, val startIndex: Int, val endIndex: Int)
 
 
 /**
- * Parsuje zapytanie SQL w dialekcie PostgreSQL w celu znalezienia nazwanych parametrów (np. `:param`).
+ * Parses PostgreSQL SQL queries to find named parameters (e.g., `:param`).
  *
- * Implementacja jest inspirowana `org.springframework.jdbc.core.namedparam.NamedParameterUtils`,
- * ale została dostosowana i rozszerzona, aby poprawnie obsługiwać specyficzne konstrukcje PostgreSQL,
- * takie jak "dollar-quoted string constants" (np. `$$...$$` lub `$tag$...$tag$`).
+ * Implementation is inspired by `org.springframework.jdbc.core.namedparam.NamedParameterUtils`,
+ * but has been adapted and extended to correctly handle PostgreSQL-specific constructs.
  *
- * Parser poprawnie ignoruje placeholdery znajdujące się wewnątrz:
- * - Komentarzy jednoliniowych (`-- ...`)
- * - Komentarzy wieloliniowych (`/* ... */`)
- * - Literałów tekstowych (`'...'`)
- * - Identyfikatorów w cudzysłowach (`"..."`)
+ * The parser correctly ignores placeholders found inside:
+ * - Single-line comments (`-- ...`)
+ * - Multi-line comments (`/* ... */`)
+ * - String literals (`'...'`)
+ * - Escape string literals (`E'...'` or `e'...'`) with backslash escapes
+ * - Quoted identifiers (`"..."`)
  * - Dollar-quoted strings (`$$...$$`, `$tag$...$tag$`)
+ * - Type casting operators (`::`)
+ *
+ * **PostgreSQL-Specific Features**:
+ * - **Escape Strings**: `E'text with \n newline'` - properly handles backslash escape sequences
+ * - **Dollar Quoting**: `$$text$$` or `$tag$text$tag$` - supports custom tags for avoiding quote escaping
+ * - **Type Casting**: `column::integer` - distinguishes `::` operator from `:param` syntax
+ *
+ * This prevents false parameter detection inside string literals, which is critical for
+ * complex SQL queries containing PostgreSQL-specific syntax.
  */
 internal object PostgresqlNamedParameterParser {
 
@@ -30,7 +39,7 @@ internal object PostgresqlNamedParameterParser {
     }
 
     /**
-     * Analizuje podany ciąg SQL i zwraca listę znalezionych parametrów w kolejności ich występowania.
+     * Analyzes the given SQL string and returns a list of found parameters in order of occurrence.
      */
     fun parse(sql: String): List<ParsedParameter> {
 
@@ -40,28 +49,28 @@ internal object PostgresqlNamedParameterParser {
         while (i < statement.size) {
             when (statement[i]) {
                 '\'' -> {
-                    // Sprawdzamy, czy to literał typu E'...'
+                    // Check if this is an E'...' escape string literal
                     i = if (i > 0 && (statement[i - 1] == 'E' || statement[i - 1] == 'e')) {
                         skipBackslashEscapedLiteral(statement, i)
                     } else {
-                        // Zwykły literał ('...' lub U&'...'),
+                        // Regular literal ('...' or U&'...')
                         skipUntil(statement, i, '\'')
                     }
                 }
                 ':' -> {
-                    // Potencjalny parametr lub operator rzutowania `::`
+                    // Potential parameter or type casting operator `::`
                     if (i + 1 < statement.size && statement[i + 1] == ':') {
-                        // To jest operator rzutowania '::', ignorujemy
-                        i++ // Przeskakujemy drugie ':'
+                        // This is the type casting operator '::', ignore it
+                        i++ // Skip the second ':'
                     } else {
                         var j = i + 1
                         while (j < statement.size && !isParameterSeparator(statement[j])) {
                             j++
                         }
-                        if (j - i > 1) { // Znaleziono nazwę parametru (dłuższą niż 0 znaków)
+                        if (j - i > 1) { // Found parameter name (longer than 0 characters)
                             val paramName = sql.substring(i + 1, j)
                             foundParameters.add(ParsedParameter(paramName, i, j))
-                            i = j - 1 // Ustawiamy i na ostatni znak parametru
+                            i = j - 1 // Set i to the last character of the parameter
                         }
                     }
                 }
@@ -72,7 +81,7 @@ internal object PostgresqlNamedParameterParser {
                 '/' -> if (i + 1 < statement.size && statement[i + 1] == '*') {
                     i = skipUntil(statement, i, "*/")
                 }
-                // Sprawdzanie dollar-quote na końcu, bo jest rzadsze
+                // Check for dollar-quote last, as it's less common
                 '$' -> {
                     val endPos = findDollarQuoteEnd(statement, i)
                     if (endPos != -1) {
@@ -85,23 +94,31 @@ internal object PostgresqlNamedParameterParser {
         return foundParameters
     }
 
-    /** Przeskakuje do końca bloku dollar-quoted. Zwraca indeks ostatniego znaku. */
+    /** Skips to the end of a dollar-quoted block. Returns the index of the last character. */
     private fun findDollarQuoteEnd(statement: CharArray, start: Int): Int {
         if (start + 1 >= statement.size) return -1
 
-        // 1. Znajdź tag otwierający (np. $tag$)
+        // 1. Find the opening tag (e.g., $tag$)
+        // Tag must follow unquoted identifier rules: [a-zA-Z_][a-zA-Z0-9_]* (no dollar signs)
         var tagEnd = start
         while (tagEnd + 1 < statement.size && statement[tagEnd + 1] != '$') {
+            val char = statement[tagEnd + 1]
+
+            // Validate tag character according to PostgreSQL unquoted identifier rules
+            if (!isValidTagCharacter(char, isFirstChar = tagEnd == start)) {
+                return -1 // Invalid tag character, not a valid dollar-quote
+            }
+
             tagEnd++
         }
 
         if (tagEnd + 1 >= statement.size || statement[tagEnd + 1] != '$') {
-            return -1 // Nie znaleziono pełnego tagu otwierającego
+            return -1 // Complete opening tag not found
         }
 
         val tagLength = (tagEnd + 1) - start + 1
 
-        // 2. Szukaj tagu zamykającego
+        // 2. Search for the closing tag
         var searchPos = tagEnd + 2
         while (searchPos + tagLength <= statement.size) {
             if (regionMatches(statement, searchPos, statement, start, tagLength)) {
@@ -110,17 +127,32 @@ internal object PostgresqlNamedParameterParser {
             searchPos++
         }
 
-        return -1 // Nie znaleziono tagu zamykającego
+        return -1 // Closing tag not found
+    }
+
+    /**
+     * Checks if a character is valid for a dollar-quote tag.
+     * Tags follow PostgreSQL unquoted identifier rules:
+     * - First character: [a-zA-Z_]
+     * - Subsequent characters: [a-zA-Z0-9_]
+     * - Dollar signs are NOT allowed in tags
+     */
+    private fun isValidTagCharacter(char: Char, isFirstChar: Boolean): Boolean {
+        return when {
+            char in 'a'..'z' || char in 'A'..'Z' || char == '_' -> true
+            !isFirstChar && char in '0'..'9' -> true
+            else -> false
+        }
     }
 
     private fun skipBackslashEscapedLiteral(statement: CharArray, start: Int): Int {
         var i = start + 1
         while (i < statement.size) {
             if (statement[i] == '\\') {
-                // To jest znak ucieczki, zignoruj następny znak
+                // This is an escape character, ignore the next character
                 i++
             } else if (statement[i] == '\'') {
-                // To jest koniec literału
+                // This is the end of the literal
                 return i
             }
             i++
@@ -128,7 +160,7 @@ internal object PostgresqlNamedParameterParser {
         return i
     }
 
-    /** Przeskakuje do następnego wystąpienia określonego znaku. Zwraca jego indeks. */
+    /** Skips to the next occurrence of the specified character. Returns its index. */
     private fun skipUntil(statement: CharArray, start: Int, endChar: Char): Int {
         var i = start + 1
         while (i < statement.size) {
@@ -140,7 +172,7 @@ internal object PostgresqlNamedParameterParser {
         return i
     }
 
-    /** Przeskakuje do następnego wystąpienia określonego ciągu znaków. Zwraca indeks ostatniego znaku sekwencji. */
+    /** Skips to the next occurrence of the specified character sequence. Returns the index of the last character of the sequence. */
     private fun skipUntil(statement: CharArray, start: Int, endSequence: String): Int {
         val endChars = endSequence.toCharArray()
         var i = start + endChars.size
@@ -154,7 +186,7 @@ internal object PostgresqlNamedParameterParser {
     }
 
     /**
-     * NOWA FUNKCJA POMOCNICZA: Sprawdza, czy region w tablicy `source` pasuje do regionu w tablicy `target`.
+     * Checks whether a region in the `source` array matches a region in the `target` array.
      */
     private fun regionMatches(source: CharArray, sourceOffset: Int, target: CharArray, targetOffset: Int, len: Int): Boolean {
         if (sourceOffset < 0 || targetOffset < 0 || sourceOffset + len > source.size || targetOffset + len > target.size) {
