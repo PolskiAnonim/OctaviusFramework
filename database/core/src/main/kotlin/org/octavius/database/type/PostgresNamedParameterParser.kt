@@ -27,7 +27,7 @@ internal data class ParsedParameter(val name: String, val startIndex: Int, val e
  * This prevents false parameter detection inside string literals, which is critical for
  * complex SQL queries containing PostgreSQL-specific syntax.
  */
-internal object PostgresqlNamedParameterParser {
+internal object PostgresNamedParameterParser {
 
     private const val PARAMETER_SEPARATORS = "\"':&,;()|=+-*%/\\<>^"
     private val separatorIndex = BooleanArray(128).apply {

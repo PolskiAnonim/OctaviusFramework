@@ -96,7 +96,7 @@ internal class KotlinToPostgresConverter(
         logger.debug { "Expanding parameters to positional query. Original params count: ${params.size}" }
         logger.trace { "Original SQL: $sql" }
 
-        val parsedParameters = PostgresqlNamedParameterParser.parse(sql)
+        val parsedParameters = PostgresNamedParameterParser.parse(sql)
 
         if (parsedParameters.isEmpty()) {
             logger.debug { "No named parameters found, returning original query." }
