@@ -36,22 +36,22 @@ internal class DatabaseDeleteQueryBuilder(
     }
 
     override fun copy(): DatabaseDeleteQueryBuilder {
-        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        // 1. Create a new, "clean" instance using the main constructor
         val newBuilder = DatabaseDeleteQueryBuilder(
             this.jdbcTemplate,
             this.kotlinToPostgresConverter,
             this.rowMappers,
-            this.table!! // Wynika z faktu że w AbstractQueryBuilder jest to własność nullowalna
+            this.table!! // Non-null because table is nullable in AbstractQueryBuilder
         )
 
-        // 2. Skopiuj stan z klasy bazowej używając metody pomocniczej
+        // 2. Copy state from base class using helper method
         newBuilder.copyBaseStateFrom(this)
 
-        // 3. Skopiuj stan specyficzny dla TEJ klasy
+        // 3. Copy state specific to THIS class
         newBuilder.whereClause = this.whereClause
         newBuilder.usingClause = this.usingClause
 
-        // 4. Zwróć w pełni skonfigurowaną kopię
+        // 4. Return fully configured copy
         return newBuilder
     }
 }

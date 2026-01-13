@@ -1,34 +1,34 @@
 package org.octavius.database.config
 
 /**
- * Strategia serializacji klas oznaczonych @DynamicallyMappable
+ * Serialization strategy for classes annotated with @DynamicallyMappable.
  *
- * Uwaga
+ * Note:
  *
- * Jawne użycie klasy z PgTyped wymusza traktowanie klasy jako `@PgComposite/@PgEnum`
- * Natomiast jawne użycie DynamicDto wymusza traktowanie klasy jako `@DynamicallyMappable`
+ * Explicit use of a class with PgTyped forces treating the class as `@PgComposite/@PgEnum`.
+ * Explicit use of DynamicDto forces treating the class as `@DynamicallyMappable`.
  *
- * Pod warunkiem że posiadają takie adnotacje
+ * Provided they have such annotations.
  */
 enum class DynamicDtoSerializationStrategy {
     /**
-     * NIGDY nie konwertuje automatycznie do dynamic_dto.
-     * Użycie wymaga jawnego opakowania w `DynamicDto.from()`.
-     * Maksymalne bezpieczeństwo i jawność.
+     * NEVER automatically converts to dynamic_dto.
+     * Usage requires explicit wrapping in `DynamicDto.from()`.
+     * Maximum safety and explicitness.
      */
     EXPLICIT_ONLY,
 
     /**
-     * Automatycznie konwertuje do dynamic_dto, ale TYLKO wtedy,
-     * gdy nie ma dwuznaczności (tj. klasa NIE ma adnotacji @PgComposite lub @PgEnum).
-     * W przypadku konfliktu, @PgComposite zawsze wygrywa.
+     * Automatically converts to dynamic_dto, but ONLY when
+     * there is no ambiguity (i.e., the class does NOT have @PgComposite or @PgEnum annotations).
+     * In case of conflict, @PgComposite always wins.
      */
     AUTOMATIC_WHEN_UNAMBIGUOUS,
 
     /**
-     * Agresywnie konwertuje do dynamic_dto, jeśli tylko klasa ma
-     * adnotację @DynamicallyMappable. Ta strategia ma wyższy priorytet
-     * niż @PgComposite i @PgEnum w przypadku konfliktu.
+     * Aggressively converts to dynamic_dto if the class has
+     * the @DynamicallyMappable annotation. This strategy has higher priority
+     * than @PgComposite and @PgEnum in case of conflict.
      */
     PREFER_DYNAMIC_DTO
 }

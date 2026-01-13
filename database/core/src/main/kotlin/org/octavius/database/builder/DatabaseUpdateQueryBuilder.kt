@@ -17,7 +17,7 @@ internal class DatabaseUpdateQueryBuilder(
     private var whereClause: String? = null
 
     override fun setExpression(column: String, value: String): UpdateQueryBuilder = apply {
-        // Podobnie jak niżej, ale dla pojedynczej kolumny
+        // Similar to below, but for a single column
         setClauses[column] = value
     }
 
@@ -28,13 +28,13 @@ internal class DatabaseUpdateQueryBuilder(
     }
 
     override fun setValues(values: Map<String, Any?>): UpdateQueryBuilder {
-        // Generujemy mapę placeholderów dla istniejącej metody setExpressions
+        // Generate placeholder map for the existing setExpressions method
         val placeholders = values.keys.associateWith { key -> ":$key" }
         return this.setExpressions(placeholders)
     }
 
     override fun setValues(values: List<String>): UpdateQueryBuilder {
-        // Generujemy mapę placeholderów dla istniejącej metody setExpressions
+        // Generate placeholder map for the existing setExpressions method
         val placeholders = values.associateWith { key -> ":$key" }
         return this.setExpressions(placeholders)
     }
@@ -70,23 +70,23 @@ internal class DatabaseUpdateQueryBuilder(
     }
 
     override fun copy(): DatabaseUpdateQueryBuilder {
-        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        // 1. Create a new, "clean" instance using the main constructor
         val newBuilder = DatabaseUpdateQueryBuilder(
             this.jdbcTemplate,
             this.kotlinToPostgresConverter,
             this.rowMappers,
-            this.table!! // Wynika z faktu że w AbstractQueryBuilder jest to własność nullowalna
+            this.table!! // Non-null because table is nullable in AbstractQueryBuilder
         )
 
-        // 2. Skopiuj stan z klasy bazowej używając metody pomocniczej
+        // 2. Copy state from base class using helper method
         newBuilder.copyBaseStateFrom(this)
 
-        // 3. Skopiuj stan specyficzny dla TEJ klasy
+        // 3. Copy state specific to THIS class
         newBuilder.fromClause = this.fromClause
         newBuilder.whereClause = this.whereClause
         newBuilder.setClauses.putAll(setClauses)
 
-        // 4. Zwróć w pełni skonfigurowaną kopię
+        // 4. Return fully configured copy
         return newBuilder
     }
 }

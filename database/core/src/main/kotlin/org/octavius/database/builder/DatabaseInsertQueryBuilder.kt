@@ -33,20 +33,20 @@ internal class DatabaseInsertQueryBuilder(
     override fun values(data: Map<String, Any?>): InsertQueryBuilder {
         check(selectSource == null) { "Cannot use values() when fromSelect() has already been called." }
         val placeholders = data.keys.associateWith { key -> ":$key" }
-        // Delegujemy do metody niskopoziomowej
+        // Delegate to low-level method
         return this.valuesExpressions(placeholders)
     }
 
     override fun values(values: List<String>): InsertQueryBuilder {
         check(selectSource == null) { "Cannot use values() when fromSelect() has already been called." }
         val placeholders = values.associateWith { key -> ":$key" }
-        // Delegujemy do metody niskopoziomowej
+        // Delegate to low-level method
         return this.valuesExpressions(placeholders)
     }
 
     override fun value(column: String): InsertQueryBuilder {
         check(selectSource == null) { "Cannot use value() when fromSelect() has already been called." }
-        // Delegujemy do metody niskopoziomowej
+        // Delegate to low-level method
         return this.valueExpression(column, ":$column")
     }
 
@@ -57,8 +57,8 @@ internal class DatabaseInsertQueryBuilder(
     }
 
     /**
-     * Konfiguruje klauzulę ON CONFLICT w sposób płynny i bezpieczny.
-     * Przykład:
+     * Configures the ON CONFLICT clause in a fluent and safe manner.
+     * Example:
      * .onConflict {
      *   onColumns("email")
      *   doUpdate("last_login = NOW()")
@@ -94,7 +94,7 @@ internal class DatabaseInsertQueryBuilder(
             val target = builder.target ?: throw IllegalStateException("ON CONFLICT target (columns or constraint) must be specified.")
             val action = builder.action ?: throw IllegalStateException("ON CONFLICT action (doNothing or doUpdate) must be specified.")
 
-            // onConstraint już zawiera "ON CONSTRAINT", więc nie dodajemy nawiasów
+            // onConstraint already contains "ON CONSTRAINT", so we don't add parentheses
             val targetSql = if (target.startsWith("ON CONSTRAINT")) target else "($target)"
 
             sql.append("\nON CONFLICT $targetSql $action")
@@ -106,31 +106,31 @@ internal class DatabaseInsertQueryBuilder(
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                          KOPIA
+    //                                          COPY
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Tworzy i zwraca głęboką kopię tego buildera.
-     * Umożliwia bezpieczne tworzenie wariantów zapytania bez modyfikowania oryginału.
+     * Creates and returns a deep copy of this builder.
+     * Enables safe creation of query variants without modifying the original.
      */
     override fun copy(): DatabaseInsertQueryBuilder {
-        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        // 1. Create a new, "clean" instance using the main constructor
         val newBuilder = DatabaseInsertQueryBuilder(
             this.jdbcTemplate,
             this.kotlinToPostgresConverter,
             this.rowMappers,
-            this.table!!, // Wiemy, że table nie jest nullem dla INSERT
+            this.table!!, // We know table is not null for INSERT
             this.columns
         )
 
         newBuilder.copyBaseStateFrom(this)
 
-        newBuilder.valuePlaceholders.putAll(this.valuePlaceholders) // Kopiujemy zawartość mapy, a nie referencję!
+        newBuilder.valuePlaceholders.putAll(this.valuePlaceholders) // Copy map contents, not reference!
         newBuilder.selectSource = this.selectSource
-        // Kopiujemy także onConflictBuilder, jeśli istnieje! Używamy jego własnej metody copy().
+        // Also copy onConflictBuilder if it exists! Use its own copy() method.
         newBuilder.onConflictBuilder = this.onConflictBuilder?.copy()
 
-        // 4. Zwróć w pełni skonfigurowaną kopię
+        // 4. Return fully configured copy
         return newBuilder
     }
 
@@ -140,23 +140,23 @@ internal class DatabaseOnConflictClauseBuilder : OnConflictClauseBuilder {
     internal var target: String? = null
     internal var action: String? = null
 
-    /** Definiuje cel konfliktu (kolumny). */
+    /** Defines the conflict target (columns). */
     override fun onColumns(vararg columns: String) {
         target = columns.joinToString(", ")
     }
 
-    /** Definiuje cel konfliktu (nazwa ograniczenia). */
+    /** Defines the conflict target (constraint name). */
     override fun onConstraint(constraintName: String) {
         target = "ON CONSTRAINT $constraintName"
     }
 
-    /** Definiuje akcję DO NOTHING. */
+    /** Defines the DO NOTHING action. */
     override fun doNothing() {
         action = "DO NOTHING"
     }
 
     /**
-     * Definiuje akcję DO UPDATE.
+     * Defines the DO UPDATE action.
      */
     override fun doUpdate(setExpression: String, whereCondition: String?) {
         require(setExpression.isNotBlank()) { "doUpdate cannot be blank." }
@@ -168,19 +168,19 @@ internal class DatabaseOnConflictClauseBuilder : OnConflictClauseBuilder {
     }
 
     /**
-     * Przeciążenie dla vararg Pair
+     * Overload for vararg Pair
      */
     override fun doUpdate(vararg setPairs: Pair<String, String>, whereCondition: String?) {
         val setExpression = setPairs.joinToString(",\n") { (column, expression) ->
             "$column = $expression"
         }
 
-        // Wywołujemy oryginalną metodę, aby nie duplikować logiki budowania klauzuli
+        // Call the original method to avoid duplicating clause building logic
         doUpdate(setExpression, whereCondition)
     }
 
     /**
-     * Przeciążenie dla Map
+     * Overload for Map
      */
     override fun doUpdate(setMap: Map<String, String>, whereCondition: String?) {
         val setExpression = setMap.map { (column, expression) ->
@@ -191,7 +191,7 @@ internal class DatabaseOnConflictClauseBuilder : OnConflictClauseBuilder {
     }
 
     /**
-     * Tworzy kopię tego buildera klauzuli ON CONFLICT.
+     * Creates a copy of this ON CONFLICT clause builder.
      */
     fun copy(): DatabaseOnConflictClauseBuilder {
         val newBuilder = DatabaseOnConflictClauseBuilder()

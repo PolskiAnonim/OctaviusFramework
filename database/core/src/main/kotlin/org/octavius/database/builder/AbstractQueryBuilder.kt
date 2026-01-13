@@ -18,12 +18,12 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 /**
- * Klasa bazowa dla wszystkich builderów, które mogą zwracać wyniki w postaci wierszy danych
- * (przez `SELECT` lub klauzulę `RETURNING`).
+ * Base class for all builders that can return results as data rows
+ * (via `SELECT` or `RETURNING` clause).
  *
- * Unifikuje API dla metod terminalnych (`toList`, `toSingle`, `toField` itd.) oraz logikę budowy
- * zapytań z klauzulą WITH (Common Table Expressions). Używa generyków, aby zapewnić płynny
- * interfejs (fluent API) w podklasach.
+ * Unifies the API for terminal methods (`toList`, `toSingle`, `toField`, etc.) and the logic
+ * for building queries with WITH clauses (Common Table Expressions). Uses generics to provide
+ * a fluent interface in subclasses.
  */
 internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     val jdbcTemplate: JdbcTemplate,
@@ -34,26 +34,26 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     companion object {
         private val logger = KotlinLogging.logger {}
     }
-    // Bardzo nie chcemy żeby SELECT umierał przy wykonywaniu zapytań
+    // We really don't want SELECT to die when executing queries
     protected abstract val canReturnResultsByDefault: Boolean
     //------------------------------------------------------------------------------------------------------------------
-    //                                 ABSTRAKCYJNA METODA DO IMPLEMENTACJI
+    //                                 ABSTRACT METHOD TO IMPLEMENT
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Buduje finalne zapytanie SQL na podstawie stanu buildera.
-     * Musi być zaimplementowane przez każdą konkretną klasę buildera.
+     * Builds the final SQL query based on the builder's state.
+     * Must be implemented by each concrete builder class.
      */
     abstract fun buildSql(): String
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                         RETURNING CLAUSE (dla INSERT/UPDATE/DELETE)
+    //                                         RETURNING CLAUSE (for INSERT/UPDATE/DELETE)
     //------------------------------------------------------------------------------------------------------------------
     protected var returningClause: String? = null
 
     /**
-     * Dodaje klauzulę RETURNING do zapytania modyfikującego (INSERT, UPDATE, DELETE).
-     * @param columns Kolumny do zwrócenia po wykonaniu operacji.
+     * Adds a RETURNING clause to the modifying query (INSERT, UPDATE, DELETE).
+     * @param columns Columns to return after executing the operation.
      */
     @Suppress("UNCHECKED_CAST")
     fun returning(vararg columns: String): R = apply {
@@ -61,7 +61,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     } as R
 
     /**
-     * Buduje fragment SQL dla klauzuli RETURNING.
+     * Builds the SQL fragment for the RETURNING clause.
      */
     protected fun buildReturningClause(): String {
         return returningClause?.let { "\nRETURNING $it" } ?: ""
@@ -75,9 +75,9 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
 
 
     /**
-     * Dodaje zapytanie do klauzuli WITH (Common Table Expression).
-     * @param name Nazwa (alias) dla CTE.
-     * @param query Zapytanie SQL definiujące CTE.
+     * Adds a query to the WITH clause (Common Table Expression).
+     * @param name Name (alias) for the CTE.
+     * @param query SQL query defining the CTE.
      */
     @Suppress("UNCHECKED_CAST")
     fun with(name: String, query: String): R = apply {
@@ -85,7 +85,7 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     } as R
 
     /**
-     * Oznacza klauzulę WITH jako rekurencyjną.
+     * Marks the WITH clause as recursive.
      */
     @Suppress("UNCHECKED_CAST")
     fun recursive(): R = apply {
@@ -93,8 +93,8 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     } as R
 
     /**
-     * Tworzy sformatowany fragment SQL dla klauzuli WITH na podstawie dodanych zapytań.
-     * Każde CTE jest w nowej linii dla czytelności.
+     * Creates a formatted SQL fragment for the WITH clause based on added queries.
+     * Each CTE is on a new line for readability.
      */
     protected fun buildWithClause(): String {
         if (withClauses.isEmpty()) return ""
@@ -102,37 +102,37 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
         if (recursiveWith) {
             sb.append("RECURSIVE ")
         }
-        // Każde CTE w nowej linii z wcięciem
+        // Each CTE on a new line with indentation
         sb.append(withClauses.joinToString(",\n  ") { "${it.first} AS (${it.second})" })
-        // Nowa linia oddzielająca WITH od głównego zapytania
+        // New line separating WITH from main query
         sb.append("\n")
         return sb.toString()
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                            METODY TERMINALNE
+    //                                            TERMINAL METHODS
     //------------------------------------------------------------------------------------------------------------------
 
-    // --- Mapowanie do Map<String, Any?> ---
+    // --- Mapping to Map<String, Any?> ---
 
-    /** Wykonuje zapytanie i zwraca listę wierszy jako `List<Map<String, Any?>>`. */
+    /** Executes the query and returns a list of rows as `List<Map<String, Any?>>`. */
     fun toList(params: Map<String, Any?>): DataResult<List<Map<String, Any?>>> {
         return executeReturningQuery(params, rowMappers.ColumnNameMapper()) { DataResult.Success(it) }
     }
 
-    /** Wykonuje zapytanie i zwraca pojedynczy wiersz jako `Map<String, Any?>?`. */
+    /** Executes the query and returns a single row as `Map<String, Any?>?`. */
     fun toSingle(params: Map<String, Any?>): DataResult<Map<String, Any?>?> {
         return executeReturningQuery(params, rowMappers.ColumnNameMapper()) { DataResult.Success(it.firstOrNull()) }
     }
 
-    // --- Mapowanie do obiektów na podstawie KClass ---
+    // --- Mapping to objects based on KClass ---
 
-    /** Wykonuje zapytanie i mapuje wyniki na listę obiektów podanej klasy. */
+    /** Executes the query and maps results to a list of objects of the given class. */
     fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?>): DataResult<List<T>> {
         return executeReturningQuery(params, rowMappers.DataObjectMapper(kClass)) { DataResult.Success(it) }
     }
 
-    /** Wykonuje zapytanie i mapuje wynik na pojedynczy obiekt podanej klasy. */
+    /** Executes the query and maps the result to a single object of the given class. */
     fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?>): DataResult<T?> {
         return executeReturningQuery(
             params,
@@ -140,23 +140,23 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
         ) { DataResult.Success(it.firstOrNull()) }
     }
 
-    // --- Mapowanie do pojedynczych wartości (skalarne) ---
+    // --- Mapping to single values (scalar) ---
 
-    /** Wykonuje zapytanie i zwraca wartość z pierwszej kolumny pierwszego wiersza. */
+    /** Executes the query and returns the value from the first column of the first row. */
     fun <T: Any> toField(targetType: KType, params: Map<String, Any?>): DataResult<T?> {
         return executeReturningQuery(params, rowMappers.SingleValueMapper<T>(targetType)) {
             DataResult.Success(it.firstOrNull())
         }
     }
 
-    /** Wykonuje zapytanie i zwraca listę wartości z pierwszej kolumny wszystkich wierszy. */
+    /** Executes the query and returns a list of values from the first column of all rows. */
     fun <T: Any> toColumn(targetType: KType, params: Map<String, Any?>): DataResult<List<T?>> {
         return executeReturningQuery(params, rowMappers.SingleValueMapper<T>(targetType)) {
             DataResult.Success(it)
         }
     }
 
-    /** Zwraca wygenerowany string SQL bez wykonywania zapytania. */
+    /** Returns the generated SQL string without executing the query. */
     fun toSql(): String {
         return buildSql()
     }
@@ -166,12 +166,12 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     }
 
     /**
-     * Wykonuje zapytanie modyfikujące (bez RETURNING) i zwraca liczbę zmienionych wierszy.
-     * Rzuca wyjątek, jeśli klauzula RETURNING została użyta - w takim przypadku należy
-     * użyć metod `toList()`, `toSingle()` itp.
+     * Executes a modifying query (without RETURNING) and returns the number of affected rows.
+     * Throws an exception if a RETURNING clause was used - in that case, use
+     * `toList()`, `toSingle()`, etc. methods instead.
      */
     fun execute(params: Map<String, Any?>): DataResult<Int> {
-        check(returningClause == null) { "Użyj metod toList(), toSingle() etc., gdy zdefiniowano klauzulę RETURNING." }
+        check(returningClause == null) { "Use toList(), toSingle(), etc. methods when RETURNING clause is defined." }
         val sql = buildSql()
         return execute(sql, params) { positionalSql, positionalParams ->
             val affectedRows = jdbcTemplate.update(positionalSql, *positionalParams.toTypedArray())
@@ -180,21 +180,21 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                          WYKONYWANIE ZAPYTAŃ
+    //                                          QUERY EXECUTION
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Prywatna metoda pomocnicza do wykonywania zapytań zwracających wiersze.
-     * @param params Parametry zapytania.
-     * @param rowMapper Sposób mapowania pojedynczego wiersza.
-     * @param transform Funkcja przekształcająca zmapowaną listę wyników w finalny [DataResult].
+     * Private helper method for executing queries that return rows.
+     * @param params Query parameters.
+     * @param rowMapper Method for mapping a single row.
+     * @param transform Function that transforms the mapped result list into the final [DataResult].
      */
     private fun <R, M> executeReturningQuery(
         params: Map<String, Any?>,
         rowMapper: RowMapper<M>,
         transform: (List<M>) -> DataResult<R>
     ): DataResult<R> {
-        check(canReturnResultsByDefault || returningClause != null) { "Nie można wywołać toList(), toSingle() etc. na zapytaniu modyfikującym bez klauzuli RETURNING. Użyj .returning()." }
+        check(canReturnResultsByDefault || returningClause != null) { "Cannot call toList(), toSingle(), etc. on a modifying query without RETURNING clause. Use .returning()." }
         val sql = buildSql()
         return execute(sql, params) { positionalSql, positionalParams ->
             val results: List<M> = jdbcTemplate.query(positionalSql, rowMapper, *positionalParams.toTypedArray())
@@ -202,16 +202,16 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
         }
     }
 
-    //  ---GŁÓWNA METODA WYKONUJĄCA ZAPYTANIA---
+    //  ---MAIN QUERY EXECUTION METHOD---
 
     /**
-     * Generyczna funkcja do wykonywania zapytań, opakowująca logikę w obsługę błędów,
-     * konwersję typów i logowanie.
+     * Generic function for executing queries, wrapping logic in error handling,
+     * type conversion, and logging.
      *
-     * @param sql Zapytanie SQL do wykonania.
-     * @param params Mapa parametrów.
-     * @param action Lambda, która zostanie wykonana z przygotowanym zapytaniem i parametrami.
-     * @return Wynik operacji jako [DataResult].
+     * @param sql SQL query to execute.
+     * @param params Parameter map.
+     * @param action Lambda that will be executed with the prepared query and parameters.
+     * @return Operation result as [DataResult].
      */
     protected fun <R> execute(
         sql: String,
@@ -248,8 +248,8 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Konwertuje ten builder na StepBuilder, który umożliwia lazy execution w ramach transakcji.
-     * Zwraca wrapper z metodami terminalnymi, które tworzą ExtendedDatabaseStep zamiast wykonywać zapytanie.
+     * Converts this builder to a StepBuilder, which enables lazy execution within a transaction.
+     * Returns a wrapper with terminal methods that create TransactionStep instead of executing the query.
      */
     override fun asStep(): StepBuilderMethods {
         @Suppress("UNCHECKED_CAST")
@@ -262,18 +262,17 @@ internal abstract class AbstractQueryBuilder<R : QueryBuilder<R>>(
     }
 
     override fun asStream(fetchSize: Int): StreamingTerminalMethods {
-        // Po prostu tworzymy i zwracamy nową instancję naszego egzekutora
         return StreamingQueryBuilder(this, fetchSize)
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                          KOPIA BUILDERA
+    //                                          BUILDER COPY
     //------------------------------------------------------------------------------------------------------------------
 
 
     /**
-     * Kopiuje stan z innego buildera tego samego typu.
-     * Używane przez metody `copy()` w klasach pochodnych.
+     * Copies state from another builder of the same type.
+     * Used by `copy()` methods in derived classes.
      */
     protected fun copyBaseStateFrom(source: AbstractQueryBuilder<R>) {
         this.returningClause = source.returningClause

@@ -6,9 +6,9 @@ import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.JdbcTemplate
 
 /**
- * Wewnętrzna implementacja [SelectQueryBuilder] do budowania zapytań SQL SELECT.
- * Dziedziczy z [AbstractQueryBuilder], aby ponownie wykorzystać logikę
- * klauzuli WITH i metod terminalnych.
+ * Internal implementation of [SelectQueryBuilder] for building SQL SELECT queries.
+ * Inherits from [AbstractQueryBuilder] to reuse WITH clause logic
+ * and terminal methods.
  */
 internal class DatabaseSelectQueryBuilder(
     jdbcTemplate: JdbcTemplate,
@@ -18,7 +18,7 @@ internal class DatabaseSelectQueryBuilder(
 ) : AbstractQueryBuilder<SelectQueryBuilder>(jdbcTemplate, kotlinToPostgresConverter, rowMappers, null), SelectQueryBuilder {
     override val canReturnResultsByDefault = true
     //------------------------------------------------------------------------------------------------------------------
-    //                                    STAN WEWNĘTRZNY KLAUZULI SELECT
+    //                                    INTERNAL SELECT CLAUSE STATE
     //------------------------------------------------------------------------------------------------------------------
 
     private var fromClause: String? = null
@@ -30,15 +30,15 @@ internal class DatabaseSelectQueryBuilder(
     private var offsetValue: Long? = null
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                      BUDOWANIE KLAUZULI SELECT
+    //                                      BUILDING SELECT CLAUSE
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Ustawia klauzulę FROM.
-     * Programista jest w pełni odpowiedzialny za przekazanie poprawnej składni.
-     * Metoda nie dokonuje żadnego formatowania ani opakowywania w nawiasy.
+     * Sets the FROM clause.
+     * The programmer is fully responsible for passing correct syntax.
+     * The method does not perform any formatting or wrapping in parentheses.
      *
-     * Przykłady poprawnych wartości:
+     * Examples of valid values:
      * - "users"
      * - "users u"
      * - "users AS u JOIN profiles p ON u.id = p.user_id"
@@ -91,12 +91,12 @@ internal class DatabaseSelectQueryBuilder(
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                              BUDOWANIE SQL
+    //                                              BUILDING SQL
     //------------------------------------------------------------------------------------------------------------------
 
     override fun buildSql(): String {
         check(!selectClause.isBlank()) { "Cannot build a SELECT query without a SELECT clause." }
-        // Warunek: FROM musi istnieć LUB żadna z zależnych klauzul nie może istnieć.
+        // Condition: FROM must exist OR none of the dependent clauses can exist
         check(
             !fromClause.isNullOrBlank() || (whereCondition == null && groupByClause == null && orderByClause == null)
         ) {
@@ -122,11 +122,11 @@ internal class DatabaseSelectQueryBuilder(
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    //                                          KOPIA
+    //                                          COPY
     //------------------------------------------------------------------------------------------------------------------
 
     override fun copy(): DatabaseSelectQueryBuilder {
-        // 1. Stwórz nową, "czystą" instancję za pomocą głównego konstruktora
+        // 1. Create a new, "clean" instance using the main constructor
         val newBuilder = DatabaseSelectQueryBuilder(
             this.jdbcTemplate,
             this.rowMappers,
@@ -134,10 +134,10 @@ internal class DatabaseSelectQueryBuilder(
             this.selectClause
         )
 
-        // 2. Skopiuj stan z klasy bazowej używając metody pomocniczej
+        // 2. Copy state from base class using helper method
         newBuilder.copyBaseStateFrom(this)
 
-        // 3. Skopiuj stan specyficzny dla TEJ klasy
+        // 3. Copy state specific to THIS class
         newBuilder.fromClause = this.fromClause
         newBuilder.whereCondition = this.whereCondition
         newBuilder.groupByClause = this.groupByClause
@@ -146,7 +146,7 @@ internal class DatabaseSelectQueryBuilder(
         newBuilder.limitValue = this.limitValue
         newBuilder.offsetValue = this.offsetValue
 
-        // 4. Zwróć w pełni skonfigurowaną kopię
+        // 4. Return fully configured copy
         return newBuilder
     }
 }

@@ -24,7 +24,7 @@ internal class StreamingQueryBuilder(
         rowMapper: RowMapper<T>,
         action: (item: T) -> Unit
     ): DataResult<Unit> {
-        // Deklarujemy zmienne na zewnątrz, aby były dostępne w `catch`
+        // Declare variables outside to make them accessible in `catch`
         val originalSql = builder.buildSql()
         var positionalQuery: PositionalQuery? = null
 
@@ -41,12 +41,12 @@ internal class StreamingQueryBuilder(
 
 
             val pss = PreparedStatementSetter { ps ->
-                // Ustawiamy parametry (pętla jest tu schowana, w dedykowanym miejscu)
+                // Set parameters (loop is encapsulated here)
                 positionalQuery.params.forEachIndexed { index, value ->
                     ps.setObject(index + 1, value)
                 }
 
-                // Konfiguracja streamingu (teraz też jest w logicznym miejscu)
+                // Configure streaming
                 if (ps.connection.autoCommit) {
                     logger.warn {
                         "POTENTIAL PERFORMANCE ISSUE: Streaming query executed with autoCommit=true. " +
@@ -57,8 +57,8 @@ internal class StreamingQueryBuilder(
                 ps.fetchSize = this.fetchSize
             }
 
-            // ZMIANA: Krok 2 - Przygotuj ResultSetExtractor
-            // Jego jedynym zadaniem jest iteracja po wynikach i wywołanie akcji
+            // Step 2: Prepare ResultSetExtractor
+            // Its only job is to iterate over results and invoke the action
             val rse = ResultSetExtractor<Unit> { rs ->
                 var rowNum = 0
                 while (rs.next()) {
@@ -85,7 +85,7 @@ internal class StreamingQueryBuilder(
         }
     }
 
-    // --- Publiczne metody terminalne, które używają metody pomocniczej ---
+    // --- Public terminal methods that use the helper method ---
 
     override fun forEachRow(params: Map<String, Any?>, action: (row: Map<String, Any?>) -> Unit): DataResult<Unit> {
         return executeStream(params, builder.rowMappers.ColumnNameMapper(), action)

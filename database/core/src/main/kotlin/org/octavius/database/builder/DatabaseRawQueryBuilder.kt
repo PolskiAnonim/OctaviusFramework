@@ -6,8 +6,8 @@ import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.JdbcTemplate
 
 /**
- * Wykonuje surowe zapytanie SQL, które zwraca wyniki.
- * Umożliwia przekazanie dowolnego SQLa do wykonania oferując wygodne metody terminalne
+ * Executes a raw SQL query that returns results.
+ * Allows passing arbitrary SQL for execution with convenient terminal methods.
  */
 internal class DatabaseRawQueryBuilder(
     jdbcTemplate: JdbcTemplate,
@@ -18,8 +18,8 @@ internal class DatabaseRawQueryBuilder(
     override val canReturnResultsByDefault = true
     override fun buildSql(): String = sql
 
-    // UWAGA! Ta funkcja nie ma realnie żadnego zastosowania
-    // ze względu na fakt iż ten builder jest niemutowalny
+    // NOTE: This function has no practical use
+    // due to the fact that this builder is immutable
     override fun copy(): DatabaseRawQueryBuilder {
         return this
     }

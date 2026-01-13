@@ -7,7 +7,10 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 /**
- * Wewnętrzna implementacja AsyncTerminalMethods.
+ * Internal implementation of AsyncTerminalMethods.
+ *
+ * Executes database queries asynchronously on the IO dispatcher and returns results
+ * to the original coroutine context (e.g., UI).
  */
 internal class AsyncQueryBuilder(
     private val builder: AbstractQueryBuilder<*>,
@@ -22,7 +25,7 @@ internal class AsyncQueryBuilder(
         val result = withContext(ioDispatcher) {
             query()
         }
-        withContext(scope.coroutineContext) { // Wracamy na oryginalny kontekst (np. UI)
+        withContext(scope.coroutineContext) { // Return to original context (e.g., UI)
             onResult(result)
         }
     }

@@ -23,9 +23,9 @@ import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 /**
- * Wynik ekspansji zapytania do formatu pozycjonowanego (JDBC).
- * @param sql Zapytanie z placeholderami '?' zamiast nazwanych parametrów.
- * @param params Uporządkowana lista parametrów do użycia w `PreparedStatement`.
+ * Result of query expansion to JDBC positional format.
+ * @param sql Query with '?' placeholders instead of named parameters.
+ * @param params Ordered list of parameters for use in `PreparedStatement`.
  */
 data class PositionalQuery(
     val sql: String,
@@ -33,15 +33,26 @@ data class PositionalQuery(
 )
 
 /**
- * Konwertuje złożone typy Kotlin na odpowiednie konstrukcje SQL dla PostgreSQL.
+ * Converts complex Kotlin types to appropriate SQL constructs for PostgreSQL.
  *
- * Umożliwia używanie w zapytaniach zaawansowanych typów bez manualnej konwersji.
- * Obsługiwane transformacje:
- * - `List<T>` -> `ARRAY[...]`
- * - `data class` -> `ROW(...)::type_name`
- * - `Enum` -> `PGobject` (z mapowaniem `CamelCase` na `snake_case`)
- * - `JsonObject` -> `JSONB`
- * - `PgTyped` -> jak wyżej oraz dodaje rzutowanie `::type_name` - należy uważać na data class
+ * Enables using advanced types in queries without manual conversion.
+ *
+ * **Supported transformations:**
+ * - `List<T>` → `ARRAY[...]`
+ * - `data class` → `ROW(...)::type_name` (if registered as `@PgComposite`) or `dynamic_dto(...)` (if `@DynamicallyMappable`)
+ * - `Enum` → `PGobject` (if registered as `@PgEnum`) or `dynamic_dto(...)` (if `@DynamicallyMappable`)
+ * - `value class` → `dynamic_dto(...)` (must have `@DynamicallyMappable`, otherwise exception)
+ * - `JsonElement` → `JSONB`
+ * - `PgTyped<T>` → wraps value and adds explicit `::type_name` cast (highest priority)
+ * - Date/time types → `java.sql.*` equivalents
+ * - `Duration` → PostgreSQL `interval`
+ *
+ * **Dynamic DTO Strategy:**
+ * Controls automatic conversion to `dynamic_dto` for `@DynamicallyMappable` types:
+ * - `EXPLICIT_ONLY`: Only explicit `DynamicDto` wrappers are serialized as `dynamic_dto`
+ * - `AUTOMATIC_WHEN_UNAMBIGUOUS` (default): Automatically converts to `dynamic_dto` if type is NOT registered
+ *   as a formal PostgreSQL type (`@PgComposite`/`@PgEnum`). Avoids conflicts between formal and dynamic types.
+ *
  */
 internal class KotlinToPostgresConverter(
     private val typeRegistry: TypeRegistry,
@@ -73,19 +84,13 @@ internal class KotlinToPostgresConverter(
 
 
     /**
-     * Przetwarza zapytanie SQL, rozszerzając parametry złożone na konstrukcje PostgreSQL.
+     * Processes SQL query, expanding complex parameters into PostgreSQL constructs.
      *
-     * Obsługuje:
-     * - List<T> -> ARRAY[...]
-     * - data class -> ROW(...)::type_name
-     * - Enum -> PGobject z odpowiednią konwencją nazw
-     * - JsonObject -> JSONB
-     * - PgTyped -> dodaje rzutowanie ::type_name
-     * - Typy daty/czasu -> odpowiednie typy java.sql
+     * Handles types as described in class KDoc
      *
-     * @param sql Zapytanie z nazwanymi parametrami (np. `:param`).
-     * @param params Mapa parametrów do ekspansji, może zawierać złożone typy Kotlin.
-     * @return `ExpandedQuery` z przetworzonym SQL i spłaszczonymi parametrami.
+     * @param sql Query with named parameters (e.g., `:param`).
+     * @param params Parameter map for expansion, may contain complex Kotlin types.
+     * @return `PositionalQuery` with processed SQL and flattened parameters.
      */
     fun expandParametersInQuery(sql: String, params: Map<String, Any?>): PositionalQuery {
         logger.debug { "Expanding parameters to positional query. Original params count: ${params.size}" }
@@ -95,12 +100,12 @@ internal class KotlinToPostgresConverter(
 
         if (parsedParameters.isEmpty()) {
             logger.debug { "No named parameters found, returning original query." }
-            // Zwracamy pustą listę parametrów, bo żadne nie zostały użyte
+            // Return empty parameter list since none were used
             return PositionalQuery(sql, emptyList())
         }
 
         val expandedSqlBuilder = StringBuilder(sql.length)
-        val expandedParamsList = mutableListOf<Any?>() // ZMIANA: Zamiast mapy, mamy listę
+        val expandedParamsList = mutableListOf<Any?>()
         var lastIndex = 0
 
         parsedParameters.forEach { parsedParam ->
@@ -112,13 +117,12 @@ internal class KotlinToPostgresConverter(
 
             val paramValue = params[paramName]
 
-            // ZMIANA: expandParameter zwraca teraz listę wartości
             val (newPlaceholder, newParams) = expandParameter(paramValue)
 
             expandedSqlBuilder.append(sql, lastIndex, parsedParam.startIndex)
             expandedSqlBuilder.append(newPlaceholder)
 
-            expandedParamsList.addAll(newParams) // ZMIANA: Dodajemy do listy
+            expandedParamsList.addAll(newParams)
 
             lastIndex = parsedParam.endIndex
         }
@@ -132,16 +136,17 @@ internal class KotlinToPostgresConverter(
     }
 
     /**
-     * Rozszerza pojedynczy parametr na odpowiednią konstrukcję SQL.
-     * @param paramValue Wartość parametru do konwersji.
-     * @return Para: placeholder SQL (z `?`) i lista spłaszczonych parametrów.
+     * Expands a single parameter into the appropriate SQL construct.
+     * @param paramValue Parameter value to convert.
+     * @param appendTypeCast Whether to append type cast (e.g., `::type_name`).
+     * @return Pair: SQL placeholder (with `?`) and list of flattened parameters.
      */
     private fun expandParameter(
         paramValue: Any?,
         appendTypeCast: Boolean = true
     ): Pair<String, List<Any?>> {
         if (paramValue == null) {
-            return "?" to listOf(null) // ZMIANA: Prosty placeholder i lista z nullem
+            return "?" to listOf(null)
         }
 
         if (paramValue is PgTyped) {
@@ -154,7 +159,7 @@ internal class KotlinToPostgresConverter(
         }
 
         KOTLIN_TO_JDBC_CONVERTERS[paramValue::class]?.let { converter ->
-            return "?" to listOf(converter(paramValue)) // ZMIANA
+            return "?" to listOf(converter(paramValue))
         }
 
         return when {
@@ -163,7 +168,7 @@ internal class KotlinToPostgresConverter(
                     type = "jsonb"
                     value = paramValue.toString()
                 }
-                "?" to listOf(pgObject) // ZMIANA
+                "?" to listOf(pgObject)
             }
             isDataClass(paramValue) -> {
                 if (appendTypeCast) {
@@ -187,16 +192,21 @@ internal class KotlinToPostgresConverter(
                     typeName = paramValue::class.qualifiedName,
                     cause = IllegalStateException("Value class must be annotated with @DynamicallyMappable.")
                 )
-            paramValue is String -> "?" to listOf(paramValue.clean()) // ZMIANA
-            else -> "?" to listOf(paramValue) // ZMIANA
+            paramValue is String -> "?" to listOf(paramValue.clean())
+            else -> "?" to listOf(paramValue)
         }
     }
 
     /**
-     * Próbuje przekonwertować podaną wartość na wrapper `DynamicDto`, jeśli jest to
-     * dozwolone w konfiguracji i jeśli klasa jest oznaczona adnotacją @DynamicallyMappable.
+     * Attempts to convert the given value to a `DynamicDto` wrapper, if allowed
+     * by configuration and if the class is annotated with @DynamicallyMappable.
      *
-     * @return Wynik ekspansji jako `Pair` lub `null`, jeśli konwersja nie jest możliwa/dozwolona.
+     * **Strategy behavior:**
+     * - `EXPLICIT_ONLY`: Always returns null (only explicit DynamicDto wrappers allowed)
+     * - `AUTOMATIC_WHEN_UNAMBIGUOUS`: Returns null if type is already registered as formal PostgreSQL type
+     *   (`@PgComposite`/`@PgEnum`), otherwise attempts dynamic conversion
+     *
+     * @return Expansion result as `Pair` or `null` if conversion is not possible/allowed.
      */
     private fun tryExpandAsDynamicDto(
         paramValue: Any
@@ -217,8 +227,8 @@ internal class KotlinToPostgresConverter(
     }
 
     /**
-     * Waliduje tablicę typowaną (`Array<*>`) przeznaczoną do bezpośredniego przekazania do JDBC.
-     * Rzuca wyjątek, jeśli typ elementów nie jest typem prostym.
+     * Validates a typed array (`Array<*>`) intended for direct JDBC passing.
+     * Throws exception if element type is not a simple type.
      */
     private fun validateTypedArrayParameter(arrayValue: Array<*>): Pair<String, List<Any?>> {
         val componentType = arrayValue::class.java.componentType!!.kotlin
@@ -233,15 +243,14 @@ internal class KotlinToPostgresConverter(
     }
 
     /**
-     * Sprawdza, czy KClass reprezentuje typ złożony (np. data class),
-     * który nie może być użyty w tablicy typowanej JDBC.
+     * Checks whether KClass represents a complex type (e.g., data class)
+     * that cannot be used in a typed JDBC array.
      */
     private fun isComplexComponentType(kClass: KClass<*>): Boolean {
-        // Zwraca true, jeśli typ jest "złożony"
         return kClass.isData || kClass == Map::class || kClass == List::class
     }
 
-    /** Tworzy parametr dla enuma, mapując `CamelCase` na `snake_case` dla typu i wartości. */
+    /** Creates parameter for enum, mapping naming case for type and value. */
     private fun createEnumParameter(enumValue: Enum<*>): Pair<String, List<Any?>> {
         val dbTypeName = typeRegistry.getPgTypeNameForClass(enumValue::class)
         val typeInfo = typeRegistry.getEnumDefinition(dbTypeName)
@@ -253,14 +262,13 @@ internal class KotlinToPostgresConverter(
     }
 
     /**
-     * Rozszerza listę na konstrukcję ARRAY[...] PostgreSQL.
+     * Expands list into PostgreSQL ARRAY[...] construct.
      *
-     * Rekurencyjnie przetwarza elementy listy, obsługując zagnieżdżone struktury.
-     * Pusta lista zostaje przekonwertowana na '{}' (pusta tablica PostgreSQL).
+     * Recursively processes list elements, handling nested structures.
+     * Empty list is converted to '{}' (empty PostgreSQL array).
      *
-     * @param paramName Nazwa parametru bazowego.
-     * @param arrayValue Lista do konwersji.
-     * @return Para: placeholder ARRAY[...] i mapa parametrów elementów.
+     * @param arrayValue List to convert.
+     * @return Pair: ARRAY[...] placeholder and list of element parameters.
      */
     private fun expandArrayParameter(arrayValue: List<*>): Pair<String, List<Any?>> {
         if (arrayValue.isEmpty()) {
@@ -279,15 +287,15 @@ internal class KotlinToPostgresConverter(
     }
 
     /**
-     * Rozszerza data class na konstrukcję ROW(...)::type_name PostgreSQL.
+     * Expands data class into PostgreSQL ROW(...)::type_name construct.
      *
-     * Mapuje pola data class na atrybuty typu kompozytowego w kolejności
-     * określonej w TypeRegistry. Rekurencyjnie przetwarza zagnieżdżone pola.
+     * Maps data class fields to composite type attributes in order
+     * specified by TypeRegistry. Recursively processes nested fields.
      *
-     * @param paramName Nazwa parametru bazowego.
-     * @param compositeValue Instancja data class do konwersji.
-     * @return Para: placeholder ROW(...)::type_name i mapa parametrów pól.
-     * @throws org.octavius.data.exception.TypeRegistryException jeśli klasa nie jest zarejestrowana.
+     * @param compositeValue Data class instance to convert.
+     * @param appendTypeCast Whether to append type cast (e.g., `::type_name`).
+     * @return Pair: ROW(...)::type_name placeholder and list of field parameters.
+     * @throws TypeRegistryException if class is not registered.
      */
     private fun expandRowParameter(
         compositeValue: Any,
@@ -316,20 +324,14 @@ internal class KotlinToPostgresConverter(
     }
 
     /**
-     * Sprawdza, czy obiekt jest instancją data class.
-     *
-     * @param obj Obiekt do sprawdzenia.
-     * @return true jeśli obj jest instancją data class, false w przeciwnym razie.
+     * Checks whether an object is an instance of a data class.
      */
     private fun isDataClass(obj: Any): Boolean {
         return obj::class.isData
     }
 
     /**
-     * Sprawdza, czy obiekt jest instancją value class.
-     *
-     * @param obj Obiekt do sprawdzenia.
-     * @return true jeśli obj jest instancją value class, false w przeciwnym razie.
+     * Checks whether an object is an instance of a value class.
      */
     private fun isValueClass(obj: Any): Boolean {
         return obj::class.isValue

@@ -4,19 +4,19 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*
 
 /**
- * Niezmienna (immutable) konfiguracja połączenia z bazą danych PostgreSQL.
+ * Immutable configuration for PostgreSQL database connection.
  *
- * Przechowuje parametry połączenia oraz konfigurację dla komponentów systemu.
+ * Stores connection parameters and configuration for system components.
  *
- * @property dbUrl Adres URL połączenia JDBC.
- * @property dbUsername Nazwa użytkownika bazy danych.
- * @property dbPassword Hasło użytkownika bazy danych.
- * @property dbSchemas Lista schematów, które mają być obsługiwane.
- * @property setSearchPath Czy HikariCP ma ustawiać `search_path` przy inicjalizacji połączenia na wszystkie schematy.
- * @property packagesToScan Lista pakietów do przeskanowania przez ClassGraph w poszukiwaniu adnotacji typów.
- * @property dynamicDtoStrategy Strategia zapisu klas jako DynamicDto
- * @property flywayBaselineVersion Jeżeli nie jest nullem wskazuje jako jaką wersję flyway ma traktować istniejący schemat
- * @property disableFlyway Wyłącz automatyczne migracje flyway
+ * @property dbUrl JDBC connection URL.
+ * @property dbUsername Database user name.
+ * @property dbPassword Database user password.
+ * @property dbSchemas List of schemas to be handled.
+ * @property setSearchPath Whether HikariCP should set `search_path` on connection initialization to all schemas.
+ * @property packagesToScan List of packages to scan by ClassGraph for type annotations.
+ * @property dynamicDtoStrategy Strategy for serializing classes as DynamicDto.
+ * @property flywayBaselineVersion If not null, indicates which version Flyway should treat the existing schema as.
+ * @property disableFlyway Disable automatic Flyway migrations.
  */
 data class DatabaseConfig(
     val dbUrl: String,
@@ -33,13 +33,13 @@ data class DatabaseConfig(
         private val logger = KotlinLogging.logger {}
 
         /**
-         * Ładuje konfigurację z pliku `properties` i tworzy instancję `DatabaseConfig`.
+         * Loads configuration from a `properties` file and creates a `DatabaseConfig` instance.
          *
-         * @param fileName Nazwa pliku w zasobach (np. "database.properties").
-         * @return Utworzona, niezmienna instancja [DatabaseConfig].
-         * @throws IllegalArgumentException jeśli plik konfiguracyjny nie zostanie znaleziony
-         *         lub brakuje w nim wymaganego klucza.
-         * @throws java.io.IOException jeśli wystąpi błąd podczas odczytu pliku.
+         * @param fileName Name of the file in resources (e.g., "database.properties").
+         * @return Created, immutable [DatabaseConfig] instance.
+         * @throws IllegalArgumentException if the configuration file is not found
+         *         or a required key is missing.
+         * @throws java.io.IOException if an error occurs while reading the file.
          */
         fun loadFromFile(fileName: String): DatabaseConfig {
             logger.info { "Loading database configuration from file: $fileName" }
@@ -50,7 +50,7 @@ data class DatabaseConfig(
 
             resourceStream.use { props.load(it) }
 
-            // --- Podstawowa konfiguracja bazy ---
+            // --- Basic database configuration ---
             val url = props.getProperty("db.url")
                 ?: throw IllegalArgumentException("Missing required property 'db.url' in '$fileName'")
             val username = props.getProperty("db.username")
@@ -61,7 +61,7 @@ data class DatabaseConfig(
                 ?: throw IllegalArgumentException("Missing required property 'db.schemas' in '$fileName'")
             val schemas = schemasString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-            // --- Konfiguracja specyficzna dla aplikacji ---
+            // --- Application-specific configuration ---
             val setSearchPath = props.getProperty("db.setSearchPath", "true").toBoolean()
 
             val packagesString = props.getProperty("db.packagesToScan")
