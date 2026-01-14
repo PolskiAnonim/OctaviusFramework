@@ -6,22 +6,22 @@ import org.octavius.data.exception.TypeRegistryExceptionMessage
 import kotlin.reflect.KClass
 
 internal class TypeRegistry(
-    // Główny router: PgTypeName -> Category
+    // Main router: PgTypeName -> Category
     private val categoryMap: Map<String, TypeCategory>,
 
-    // Wyspecjalizowane mapy detali
+    // Specialized detail maps
     private val enums: Map<String, PgEnumDefinition>,
     private val composites: Map<String, PgCompositeDefinition>,
     private val arrays: Map<String, PgArrayDefinition>,
 
-    // Mapowania do zapisu (Kotlin Class -> PgType)
+    // Mappings for writing (Kotlin Class -> PgType)
     private val classToPgNameMap: Map<KClass<*>, String>,
 
-    // Mapowania dynamiczne (Dynamic Key -> Kotlin Class)
+    // Dynamic mappings (Dynamic Key -> Kotlin Class)
     private val dynamicSerializers: Map<String, KSerializer<Any>>,
     private val classToDynamicNameMap: Map<KClass<*>, String>
 ) {
-    // --- Sekcja ODCZYTU (DB -> Kotlin) ---
+    // --- READ Section (DB -> Kotlin) ---
 
     fun getCategory(pgTypeName: String): TypeCategory {
         return categoryMap[pgTypeName] ?: throw TypeRegistryException(
@@ -51,7 +51,7 @@ internal class TypeRegistry(
         )
     }
 
-    // Dla typu DYNAMIC potrzebujemy znaleźć serializator
+    // For DYNAMIC type we need to find the serializer
     fun getDynamicSerializer(dynamicTypeName: String): KSerializer<Any> {
         return dynamicSerializers[dynamicTypeName] ?: throw TypeRegistryException(
             TypeRegistryExceptionMessage.DYNAMIC_TYPE_NOT_FOUND,
@@ -59,10 +59,10 @@ internal class TypeRegistry(
         )
     }
 
-    // --- Sekcja ZAPISU (Kotlin -> DB) ---
+    // --- WRITE Section (Kotlin -> DB) ---
 
     fun getPgTypeNameForClass(clazz: KClass<*>): String {
-        // Bezpośrednie pobranie z mapy po obiekcie klasy
+        // Direct retrieval from map by class object
         return classToPgNameMap[clazz] ?: throw TypeRegistryException(
             TypeRegistryExceptionMessage.KOTLIN_CLASS_NOT_MAPPED,
             typeName = clazz.qualifiedName ?: clazz.simpleName ?: "unknown"
@@ -73,7 +73,7 @@ internal class TypeRegistry(
         return classToDynamicNameMap[clazz]
     }
 
-    // Metoda pomocnicza dla DynamicDTO
+    // Helper method for DynamicDTO
 
     fun isPgType(kClass: KClass<*>): Boolean {
         return classToPgNameMap.containsKey(kClass)

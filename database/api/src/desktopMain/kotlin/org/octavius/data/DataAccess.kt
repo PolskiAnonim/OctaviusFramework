@@ -6,75 +6,75 @@ import org.octavius.data.transaction.TransactionPlanResult
 import org.octavius.data.transaction.TransactionPropagation
 
 /**
- * Definiuje kontrakt dla podstawowych operacji na bazie danych (CRUD i zapytania surowe).
+ * Defines the contract for basic database operations (CRUD and raw queries).
  *
- * Ten interfejs stanowi fundament, który jest wykorzystywany zarówno do wykonywania
- * pojedynczych zapytań, jak i operacji wewnątrz bloku transakcyjnego.
+ * This interface provides the foundation that is used both for executing
+ * single queries and operations within a transaction block.
  */
 interface QueryOperations {
 
     /**
-     * Rozpoczyna budowanie zapytania SELECT.
+     * Starts building a SELECT query.
      *
-     * @param columns Lista kolumn do pobrania. Musi być podana co najmniej jedna.
-     * @return Nowa instancja buildera dla zapytania SELECT.
+     * @param columns List of columns to fetch. At least one must be provided.
+     * @return New builder instance for a SELECT query.
      */
     fun select(vararg columns: String): SelectQueryBuilder
 
     /**
-     * Rozpoczyna budowanie zapytania UPDATE.
+     * Starts building an UPDATE query.
      *
-     * @param table Nazwa tabeli do aktualizacji.
-     * @return Nowa instancja buildera dla zapytania UPDATE.
+     * @param table Name of the table to update.
+     * @return New builder instance for an UPDATE query.
      */
     fun update(table: String): UpdateQueryBuilder
 
     /**
-     * Rozpoczyna budowanie zapytania INSERT.
+     * Starts building an INSERT query.
      *
-     * @param table Nazwa tabeli, do której wstawiane są dane.
-     * @param columns Opcjonalna lista kolumn. Jeśli pominięta, wartości muszą być podane
-     *                dla wszystkich kolumn w tabeli w odpowiedniej kolejności.
-     * @return Nowa instancja buildera dla zapytania INSERT.
+     * @param table Name of the table into which data is being inserted.
+     * @param columns Optional list of columns. If omitted, values must be provided
+     *                for all columns in the table in the correct order.
+     * @return New builder instance for an INSERT query.
      */
     fun insertInto(table: String, columns: List<String> = emptyList()): InsertQueryBuilder
 
     /**
-     * Rozpoczyna budowanie zapytania DELETE.
+     * Starts building a DELETE query.
      *
-     * @param table Nazwa tabeli, z której usuwane są dane.
-     * @return Nowa instancja buildera dla zapytania DELETE.
+     * @param table Name of the table from which data is being deleted.
+     * @return New builder instance for a DELETE query.
      */
     fun deleteFrom(table: String): DeleteQueryBuilder
 
     /**
-     * Umożliwia wykonanie surowego zapytania SQL.
+     * Enables execution of a raw SQL query.
      *
-     * @param sql Zapytanie SQL do wykonania, może zawierać nazwane parametry (np. `:userId`).
-     * @return Nowa instancja buildera dla surowego zapytania.
+     * @param sql SQL query to execute, may contain named parameters (e.g., `:userId`).
+     * @return New builder instance for a raw query.
      */
     fun rawQuery(sql: String): RawQueryBuilder
 }
 
 /**
- * Główny punkt wejścia do warstwy danych, oferujący spójne API do interakcji z bazą danych.
+ * Main entry point to the data layer, offering a consistent API for database interaction.
  *
- * Fasada ta umożliwia:
- * 1. Wykonywanie pojedynczych zapytań (CRUD) w trybie auto-commit, dzięki implementacji [QueryOperations].
- * 2. Wykonywanie atomowych, złożonych operacji w ramach zarządzanych bloków transakcyjnych.
- * 3. Uruchamianie predefiniowanych, deklaratywnych planów transakcyjnych.
+ * This facade enables:
+ * 1. Executing single queries (CRUD) in auto-commit mode, through [QueryOperations] implementation.
+ * 2. Executing atomic, complex operations within managed transaction blocks.
+ * 3. Running predefined, declarative transaction plans.
  */
 interface DataAccess : QueryOperations {
 
     /**
-     * Wykonuje sekwencję operacji (plan) w ramach jednej, atomowej transakcji.
+     * Executes a sequence of operations (plan) within a single, atomic transaction.
      *
-     * Idealne rozwiązanie dla scenariuszy, gdzie kroki transakcji są budowane dynamicznie,
-     * np. na podstawie danych z formularza.
+     * Ideal solution for scenarios where transaction steps are built dynamically,
+     * e.g., based on form data.
      *
-     * @param plan Plan transakcji do wykonania.
-     * @param propagation Definiuje zachowanie transakcji (np. czy ma dołączyć do istniejącej, czy stworzyć nową).
-     * @return [DataResult] zawierający [TransactionPlanResult] w przypadku sukcesu lub błąd.
+     * @param plan Transaction plan to execute.
+     * @param propagation Defines transaction behavior (e.g., whether to join existing or create new).
+     * @return [DataResult] containing [TransactionPlanResult] on success or error.
      */
     fun executeTransactionPlan(
         plan: TransactionPlan,
@@ -82,16 +82,16 @@ interface DataAccess : QueryOperations {
     ): DataResult<TransactionPlanResult>
 
     /**
-     * Wykonuje podany blok kodu w ramach nowej, zarządzanej transakcji.
+     * Executes the given block of code within a new, managed transaction.
      *
-     * Zapewnia, że wszystkie operacje wewnątrz bloku `block` zostaną wykonane atomowo.
-     * Transakcja zostanie zatwierdzona (commit) tylko wtedy, gdy blok zakończy się sukcesem
-     * i zwróci [DataResult.Success]. W każdym innym przypadku (zwrócenie [DataResult.Failure]
-     * lub rzucenie wyjątku), transakcja zostanie automatycznie wycofana (rollback).
+     * Ensures that all operations inside the `block` are executed atomically.
+     * The transaction will be committed only if the block completes successfully
+     * and returns [DataResult.Success]. In any other case (returning [DataResult.Failure]
+     * or throwing an exception), the transaction will be automatically rolled back.
      *
-     * @param propagation Definiuje zachowanie transakcji (np. czy ma dołączyć do istniejącej, czy stworzyć nową).
-     * @param block Lambda, która otrzymuje kontekst [QueryOperations] do wykonywania operacji.
-     * @return [DataResult] z wynikiem operacji z bloku (`T`) lub błędem.
+     * @param propagation Defines transaction behavior (e.g., whether to join existing or create new).
+     * @param block Lambda that receives a [QueryOperations] context for performing operations.
+     * @return [DataResult] with the result of the block operation (`T`) or error.
      */
     fun <T> transaction(
         propagation: TransactionPropagation = TransactionPropagation.REQUIRED,

@@ -3,7 +3,7 @@ package org.octavius.data.util
 object CaseConverter {
 
     /**
-     * Główna funkcja konwertująca wartość z jednej konwencji na drugą.
+     * Main function converting a value from one convention to another.
      */
     fun convert(value: String, from: CaseConvention, to: CaseConvention): String {
         if (from == to) {
@@ -21,8 +21,8 @@ object CaseConverter {
 
             CaseConvention.PASCAL_CASE,
             CaseConvention.CAMEL_CASE -> {
-                // Rozdziela CamelCase/PascalCase (np. "myValue" -> "my", "Value")
-                // Regex łapie wielką literę, która jest poprzedzona małą literą lub cyfrą
+                // Splits CamelCase/PascalCase (e.g., "myValue" -> "my", "Value")
+                // Regex catches uppercase letter preceded by lowercase letter or digit
                 value.split(Regex("(?<=[a-z0-9])(?=[A-Z])"))
             }
         }
@@ -48,28 +48,28 @@ object CaseConverter {
     }
 }
 
-// --- Extension Functions (Kompatybilność wsteczna dla reszty projektu) ---
+// --- Extension Functions (Backward compatibility for the rest of the project) ---
 
 /**
- * Zamienia dowolny tekst w stylu Camel/Pascal na snake_case.
- * Używane np. do generowania nazw kolumn z nazw pól (userId -> user_id).
+ * Converts any Camel/Pascal case text to snake_case.
+ * Used e.g., to generate column names from field names (userId -> user_id).
  */
 fun String.toSnakeCase(): String {
-    // Zakładamy, że kod w Kotlinie jest w CamelCase lub PascalCase, a chcemy snake_case
+    // We assume Kotlin code is in CamelCase or PascalCase, and we want snake_case
     return CaseConverter.convert(this, CaseConvention.CAMEL_CASE, CaseConvention.SNAKE_CASE_LOWER)
 }
 
 /**
- * Zamienia snake_case na camelCase.
- * Używane np. przy mapowaniu z bazy (user_id -> userId).
+ * Converts snake_case to camelCase.
+ * Used e.g., when mapping from database (user_id -> userId).
  */
 fun String.toCamelCase(): String {
     return CaseConverter.convert(this, CaseConvention.SNAKE_CASE_LOWER, CaseConvention.CAMEL_CASE)
 }
 
 /**
- * Zamienia snake_case na PascalCase.
- * Używane np. przy mapowaniu nazw klas (table_name -> TableName).
+ * Converts snake_case to PascalCase.
+ * Used e.g., when mapping class names (table_name -> TableName).
  */
 fun String.toPascalCase(): String {
     return CaseConverter.convert(this, CaseConvention.SNAKE_CASE_LOWER, CaseConvention.PASCAL_CASE)

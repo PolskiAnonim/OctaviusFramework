@@ -25,7 +25,7 @@ internal class DatabaseAccess(
     private val kotlinToPostgresConverter: KotlinToPostgresConverter
 ) : DataAccess {
     val transactionPlanExecutor = TransactionPlanExecutor(transactionManager)
-    // --- Implementacja QueryOperations (dla pojedynczych zapytań i użycia w transakcji) ---
+    // --- QueryOperations implementation (for single queries and transaction usage) ---
 
     override fun select(vararg columns: String): SelectQueryBuilder {
         return DatabaseSelectQueryBuilder(
@@ -52,7 +52,7 @@ internal class DatabaseAccess(
         return DatabaseRawQueryBuilder(jdbcTemplate, kotlinToPostgresConverter, rowMappers, sql)
     }
 
-    //--- Implementacja zarządzania transakcjami ---
+    //--- Transaction management implementation ---
 
     override fun executeTransactionPlan(
         plan: TransactionPlan,
@@ -65,7 +65,7 @@ internal class DatabaseAccess(
         propagation: TransactionPropagation,
         block: (tx: QueryOperations) -> DataResult<T>
     ): DataResult<T> {
-        // Tworzymy i konfigurujemy szablon transakcji
+        // Create and configure transaction template
         val transactionTemplate = TransactionTemplate(transactionManager).apply {
             propagationBehavior = when (propagation) {
                 TransactionPropagation.REQUIRED -> TransactionDefinition.PROPAGATION_REQUIRED
@@ -75,26 +75,26 @@ internal class DatabaseAccess(
         }
         return transactionTemplate.execute { status ->
             try {
-                // `this` jest instancją `QueryOperations`, więc przekazujemy go bezpośrednio.
+                // `this` is an instance of `QueryOperations`, so we pass it directly.
                 val result = block(this)
 
-                // Jeśli jakakolwiek operacja wewnątrz bloku zwróciła Failure, wycofujemy transakcję.
-                // To pozwala na kontrolowane wycofanie bez rzucania wyjątku!
+                // If any operation inside the block returned Failure, we roll back the transaction.
+                // This allows controlled rollback without throwing an exception!
                 if (result is DataResult.Failure) {
                     logger.warn { "Transaction block returned Failure. Rolling back transaction." }
                     status.setRollbackOnly()
                 }
-                result // Zwracamy oryginalny wynik (Success lub Failure)
+                result // Return original result (Success or Failure)
             } catch (e: DatabaseException) {
-                // Łapiemy nasze własne wyjątki, żeby nie opakowywać ich ponownie
+                // Catch our own exceptions to avoid wrapping them again
                 status.setRollbackOnly()
                 logger.error(e) { "A DatabaseException was thrown inside the transaction block. Rolling back." }
                 DataResult.Failure(e)
             } catch (e: Exception) {
-                // Łapiemy każdy inny, nieoczekiwany wyjątek
+                // Catch any other unexpected exception
                 status.setRollbackOnly()
                 logger.error(e) { "An unexpected exception was thrown inside the transaction block. Rolling back." }
-                // Opakowujemy go w nasze standardowe Failure
+                // Wrap it in our standard Failure
                 DataResult.Failure(
                     TransactionException(cause = e)
                 )

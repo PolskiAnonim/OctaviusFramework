@@ -12,12 +12,12 @@ class TransactionPlan {
     }
 
     /**
-     * Dodaje wszystkie kroki z innego planu transakcji do bieżącego planu.
+     * Adds all steps from another transaction plan to the current plan.
      *
-     * @param otherPlan Plan transakcji, którego kroki zostaną dodane.
+     * @param otherPlan Transaction plan whose steps will be added.
      */
     fun addPlan(otherPlan: TransactionPlan) {
-        // Bezpośrednie dodanie wszystkich par (uchwyt, krok) z innego planu
+        // Direct addition of all (handle, step) pairs from another plan
         _steps.addAll(otherPlan.steps)
     }
 }

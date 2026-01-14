@@ -101,7 +101,7 @@ $nestedError
 /**
  * Exception thrown when execution of a transaction fails.
  *
- * Wraps the original exception (e.g., QueryExecutionException)
+ * Wraps the original exception (e.g., ConcurrencyFailureException)
  *
  * @param cause Original exception that caused the error.
  */

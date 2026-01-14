@@ -9,9 +9,9 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 /**
- * Fabryka dostarczająca różne implementacje `RowMapper` do konwersji `ResultSet`.
+ * Factory providing various `RowMapper` implementations for `ResultSet` conversion.
  *
- * @param valueExtractor Odzyskiwacz/wydobywacz wartości z bazy
+ * @param valueExtractor Value extractor from database
  */
 @Suppress("FunctionName")
 internal class RowMappers(
@@ -22,8 +22,8 @@ internal class RowMappers(
     }
 
     /**
-     * Mapper mapujący na `Map<String, Any?>`.
-     * Używa tylko nazwy kolumny jako klucza. Idealny do raportów i prostych zapytań.
+     * Mapper mapping to `Map<String, Any?>`.
+     * Uses only column name as key. Ideal for reports and simple queries.
      */
     fun ColumnNameMapper(): RowMapper<Map<String, Any?>> = RowMapper { rs, _ ->
         val data = mutableMapOf<String, Any?>()
@@ -38,8 +38,8 @@ internal class RowMappers(
     }
 
     /**
-     * Mapper mapujący wynik z pojedynczej kolumny na jego wartość.
-     * Używany dla zapytań typu `SELECT COUNT(*)`, `SELECT id FROM ...` itp.
+     * Mapper mapping result from a single column to its value.
+     * Used for queries like `SELECT COUNT(*)`, `SELECT id FROM ...` etc.
      */
     fun <T : Any> SingleValueMapper(kType: KType): RowMapper<T?> = RowMapper { rs, _ ->
         val value = valueExtractor.extract(rs, 1) ?: return@RowMapper null
@@ -49,10 +49,10 @@ internal class RowMappers(
     }
 
     /**
-     * Generyczny mapper, który konwertuje wiersz na obiekt data class.
-     * Najpierw mapuje wiersz na Map<String, Any?> za pomocą ColumnNameMapper,
-     * a następnie używa refleksji (przez `toDataObject`), aby utworzyć instancję klasy.
-     * @param kClass Klasa docelowego obiektu.
+     * Generic mapper that converts a row to a data class object.
+     * First maps the row to Map<String, Any?> using ColumnNameMapper,
+     * then uses reflection (via `toDataObject`) to create a class instance.
+     * @param kClass Target object class.
      */
     fun <T : Any> DataObjectMapper(kClass: KClass<T>): RowMapper<T> {
         val baseMapper = ColumnNameMapper()
@@ -61,11 +61,11 @@ internal class RowMappers(
             val map = baseMapper.mapRow(rs, rowNum)
 
             try {
-                // Używamy istniejącej logiki do konwersji mapy na obiekt
+                // Use existing logic to convert map to object
                 val result = map.toDataObject(kClass)
                 logger.trace { "Successfully mapped row to ${kClass.simpleName}" }
                 result
-            } catch (e: Exception) { // To powinien być zawsze ConversionException
+            } catch (e: Exception) { // This should always be ConversionException
                 logger.error(e) { e }
                 throw e
             }

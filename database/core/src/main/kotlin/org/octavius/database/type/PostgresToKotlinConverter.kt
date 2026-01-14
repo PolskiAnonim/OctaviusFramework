@@ -10,12 +10,12 @@ import org.octavius.data.toDataObject
 import org.octavius.database.type.registry.*
 
 /**
- * Konwertuje wartości z PostgreSQL (jako `String`) na odpowiednie typy Kotlina.
+ * Converts values from PostgreSQL (as `String`) to appropriate Kotlin types.
  *
- * Obsługuje typy standardowe, enumy, kompozyty i tablice, korzystając z metadanych
- * z `TypeRegistry` do dynamicznego mapowania.
+ * Supports standard types, enums, composites, and arrays, using metadata
+ * from `TypeRegistry` for dynamic mapping.
  *
- * @param typeRegistry Rejestr zawierający metadane o typach PostgreSQL.
+ * @param typeRegistry Registry containing metadata about PostgreSQL types.
  */
 internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry) {
     companion object {
@@ -23,15 +23,15 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     /**
-     * Główna funkcja konwertująca, delegująca do specjalistycznych handlerów.
+     * Main conversion function that delegates to specialized handlers.
      *
-     * Obsługuje wszystkie kategorie typów: STANDARD, ENUM, ARRAY, COMPOSITE i DYNAMIC.
+     * Supports all type categories: STANDARD, ENUM, ARRAY, COMPOSITE, and DYNAMIC.
      *
-     * @param value Wartość z bazy danych jako `String` (może być `null`).
-     * @param pgTypeName Nazwa typu w PostgreSQL (np. "int4", "my_enum", "dynamic_dto").
-     * @return Przekonwertowana wartość lub `null` jeśli `value` było `null`.
-     * @throws org.octavius.data.exception.TypeRegistryException jeśli typ jest nieznany.
-     * @throws ConversionException jeśli konwersja się nie powiedzie.
+     * @param value Value from database as `String` (can be `null`).
+     * @param pgTypeName Type name in PostgreSQL (e.g., "int4", "my_enum", "dynamic_dto").
+     * @return Converted value or `null` if `value` was `null`.
+     * @throws org.octavius.data.exception.TypeRegistryException if type is unknown.
+     * @throws ConversionException if conversion fails.
      */
     fun convert(value: String?, pgTypeName: String): Any? {
         if (value == null) {
@@ -74,14 +74,14 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     /**
-     * Deserializuje specjalny typ `dynamic_dto` na odpowiednią klasę Kotlina.
+     * Deserializes the special `dynamic_dto` type to an appropriate Kotlin class.
      *
-     * @param value Surowa wartość z bazy w formacie kompozytu `("typeName", "jsonData")`.
-     * @return Instancja odpowiedniej `data class` z adnotacją `@DynamicallyMappable`.
+     * @param value Raw value from database in composite format `("typeName", "jsonData")`.
+     * @return Instance of appropriate `data class` with `@DynamicallyMappable` annotation.
      */
     private fun convertDynamicType(value: String): Any {
-        // null obsłużony w metodzie convert
-        // sam json nie może być nullem w kompozycie - jest to także zgodne z zapisem gdzie wartość to nie może być null
+        // null handled in convert method
+        // json itself cannot be null in composite - this is also consistent with the write where value cannot be null
 
         val parts: List<String?> = parseNestedStructure(value)
 
@@ -96,7 +96,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             throw ConversionException(ConversionExceptionMessage.INVALID_DYNAMIC_DTO_FORMAT, value = value)
         }
 
-        // Użyj TypeRegistry do bezpiecznego znalezienia serializatora
+        // Use TypeRegistry to safely find the serializer
         val serializer = typeRegistry.getDynamicSerializer(typeName)
 
         return try {
@@ -107,25 +107,25 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     /**
-     * Konwertuje standardowe typy PostgreSQL na odpowiednie typy Kotlina.
+     * Converts standard PostgreSQL types to appropriate Kotlin types.
      *
-     * Deleguje do `StandardTypeMappingRegistry`, które jest jedynym źródłem prawdy.
+     * Delegates to `StandardTypeMappingRegistry`, which is the single source of truth.
      *
-     * @param value Wartość z bazy danych jako String.
-     * @param pgTypeName Nazwa standardowego typu PostgreSQL.
-     * @return Przekonwertowana wartość.
-     * @throws ConversionException jeśli konwersja się nie powiedzie.
+     * @param value Value from database as String.
+     * @param pgTypeName Name of standard PostgreSQL type.
+     * @return Converted value.
+     * @throws ConversionException if conversion fails.
      */
-    private fun convertStandardType(value: String, pgTypeName: String): Any { // null obsłużony w metodzie convert
-        // 1. Znajdź odpowiedni handler w centralnym rejestrze
+    private fun convertStandardType(value: String, pgTypeName: String): Any { // null handled in convert method
+        // 1. Find the appropriate handler in the central registry
         val handler = StandardTypeMappingRegistry.getHandler(pgTypeName)
 
         if (handler == null) {
             logger.warn { "No standard type handler found for PostgreSQL type '$pgTypeName'. Returning raw string value." }
-            return value // Domyślne zachowanie: zwróć string, jeśli typ jest nieznany
+            return value // Default behavior: return string if type is unknown
         }
 
-        // 2. Użyj funkcji 'fromString' z handlera do konwersji
+        // 2. Use the 'fromString' function from the handler for conversion
         return try {
             handler.fromString(value)
         } catch (e: Exception) {
@@ -139,20 +139,17 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     /**
-     * Konwertuje wartość enum z PostgreSQL na enum Kotlina.
+     * Converts enum value from PostgreSQL to Kotlin enum.
      *
-     * Mapuje nazwy wartości według konwencji określonej w TypeRegistry:
-     * - SNAKE_CASE_LOWER/UPPER -> CamelCase
-     * - PASCAL_CASE -> bez zmian
-     * - AS_IS -> bez zmian
+     * Maps value names according to conventions specified in TypeRegistry:
      *
-     * @param value Wartość enum z bazy danych.
-     * @param typeInfo Informacje o typie enum z TypeRegistry.
-     * @return Instancja enum Kotlina.
-     * @throws TypeRegistryException jeśli nie znaleziono klasy enum.
-     * @throws ConversionException jeśli konwersja się nie powiedzie.
+     * @param value Enum value from database.
+     * @param typeInfo Enum type information from TypeRegistry.
+     * @return Kotlin enum instance.
+     * @throws TypeRegistryException if enum class not found.
+     * @throws ConversionException if conversion fails.
      */
-    private fun convertEnum(value: String, typeInfo: PgEnumDefinition): Any { // null obsłużony w metodzie convert
+    private fun convertEnum(value: String, typeInfo: PgEnumDefinition): Any { // null handled in convert method
 
         return typeInfo.valueToEnumMap[value]
             ?: throw ConversionException(
@@ -163,15 +160,15 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     /**
-     * Konwertuje tablicę PostgreSQL na `List<Any?>`.
+     * Converts PostgreSQL array to `List<Any?>`.
      *
-     * Obsługuje zagnieżdżone tablice i rekurencyjnie przetwarza elementy
-     * zgodnie z typem elementu określonym w TypeRegistry.
+     * Supports nested arrays and recursively processes elements
+     * according to element type specified in TypeRegistry.
      *
-     * @param value String reprezentujący tablicę PostgreSQL (format: {elem1,elem2,...}).
-     * @param typeInfo Informacje o typie tablicowym z TypeRegistry.
-     * @return Lista przekonwertowanych elementów.
-     * @throws ConversionException jeśli parsowanie się nie powiedzie.
+     * @param value String representing PostgreSQL array (format: {elem1,elem2,...}).
+     * @param typeInfo Array type information from TypeRegistry.
+     * @return List of converted elements.
+     * @throws ConversionException if parsing fails.
      */
     private fun convertArray(value: String, typeInfo: PgArrayDefinition): List<Any?> {
 
@@ -181,14 +178,14 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
 
         logger.trace { "Parsed ${elements.size} array elements" }
 
-        // Rekurencyjnie konwertujemy każdy element tablicy używając głównej funkcji konwersji
+        // Recursively convert each array element using the main conversion function
         return elements.map { elementValue ->
-            // Sprawdzamy, czy string reprezentujący element SAM jest tablicą.
+            // Check if the string representing the element ITSELF is an array.
             val isNestedArray = elementValue?.startsWith('{') ?: false
 
-            // Jeśli to zagnieżdżona tablica, rekurencyjnie wywołujemy konwersję
-            // dla CAŁEGO typu tablicowego (np. "_text"), a nie dla jego elementu ("text").
-            // W przeciwnym razie, kontynuujemy standardową logikę z elementType.
+            // If it's a nested array, recursively invoke conversion
+            // for the ENTIRE array type (e.g., "_text"), not its element ("text").
+            // Otherwise, continue with standard elementType logic.
             val typeNameToUse = if (isNestedArray) typeInfo.typeName else typeInfo.elementTypeName
 
             convert(elementValue, typeNameToUse)
@@ -196,14 +193,14 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     }
 
     /**
-     * Konwertuje typ kompozytowy PostgreSQL na `data class` Kotlina.
-     * Wykorzystuje cache dla KClass i deleguje do `toDataObject` (które samo ma cache).
+     * Converts PostgreSQL composite type to Kotlin `data class`.
+     * Uses cache for KClass and delegates to `toDataObject` (which has its own cache).
      */
-    private fun convertCompositeType(value: String, typeInfo: PgCompositeDefinition): Any { // null obsłużony w metodzie convert
+    private fun convertCompositeType(value: String, typeInfo: PgCompositeDefinition): Any { // null handled in convert method
 
         logger.trace { "Converting composite type ${typeInfo.typeName} to class: ${typeInfo.kClass.qualifiedName}" }
 
-        // 1. Parsowanie stringa na listę surowych wartości
+        // 1. Parse string into list of raw values
         val fieldValues: List<String?> = parseNestedStructure(value)
 
 
@@ -225,14 +222,14 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
             val result = constructorArgsMap.toDataObject(typeInfo.kClass)
             logger.trace { "Successfully created instance of ${typeInfo.kClass.simpleName}" }
             result
-        } catch (e: Exception) { // To zawsze powinien być ConversionException
+        } catch (e: Exception) { // This should always be a ConversionException
             logger.error(e) { e }
             throw e
         }
     }
 
     // =================================================================
-    // --- PARSER STRUKTUR POSTGRESQL ---
+    // --- POSTGRESQL STRUCTURE PARSER ---
     // =================================================================
 
     private data class ParserState(
@@ -243,8 +240,8 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     )
 
     /**
-     * Uniwersalny parser dla zagnieżdżonych struktur (tablic i kompozytów).
-     * Obsługuje cudzysłowy, escapowanie, wartości `NULL` i zagnieżdżenia.
+     * Universal parser for nested structures (arrays and composites).
+     * Handles quotes, escaping, `NULL` values, and nesting.
      */
     private fun parseNestedStructure(input: String): List<String?> {
         if (input.length < 2) return emptyList()
@@ -273,10 +270,10 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
     private fun processInQuotes(contentView: CharSequence, state: ParserState) {
         val char = contentView[state.i]
         when (char) {
-            '\\' -> state.i++ // Pomiń następny znak
-            // W przypadku gdy jest to cudzysłów do escapowania innego (tj "")
-            // to przy kolejnym przejściu pętli parser po prostu z powrotem zmieni stan
-            // Bez celowa jest dodatkowa próba obsługi tego skoro dzielenie odbywa się na podstawie przecinka
+            '\\' -> state.i++ // Skip next character
+            // When it's a quote escaping another (i.e., "")
+            // on the next loop iteration the parser will simply change state back
+            // Additional handling is pointless since splitting is done by comma
             '"' -> state.inQuotes = false
         }
     }
@@ -302,10 +299,10 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
 
     private fun unescapeValue(source: CharSequence, start: Int, end: Int): String? {
         return if (start >= end) {
-            // Puste pole kompozytu (dwa przecinki obok siebie)
+            // Empty composite field (two commas next to each other)
             null
         } else if (source[start] == '"') {
-            // Wartość w cudzysłowie - escapujemy cudzysłów wewnątrz (") oraz backslash (\)
+            // Quoted value - escape quotes inside (") and backslash (\)
             buildString {
                 var i = start + 1
                 while (i < end - 1) {
@@ -320,7 +317,7 @@ internal class PostgresToKotlinConverter(private val typeRegistry: TypeRegistry)
                 }
             }
         } else {
-            // Pole bez cudzysłowu
+            // Field without quotes
             val rawValue = source.subSequence(start, end).toString()
             if (rawValue == "NULL") null else rawValue
         }

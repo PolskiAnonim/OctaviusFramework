@@ -27,7 +27,7 @@ internal class TypeRegistryLoader(
     private val packagesToScan: List<String>,
     private val dbSchemas: List<String>
 ) {
-    // --- DTO wewnętrzne loadera ---
+    // --- Internal loader DTOs ---
     private data class ClasspathData(
         val enums: List<KtEnumInfo>,
         val composites: List<KtCompositeInfo>,
@@ -37,7 +37,7 @@ internal class TypeRegistryLoader(
     private data class KtEnumInfo(val kClass: KClass<*>, val pgName: String, val pgConv: CaseConvention, val ktConv: CaseConvention)
     private data class KtCompositeInfo(val kClass: KClass<*>, val pgName: String)
 
-    // Wyniki z bazy
+    // Results from database
     private data class DatabaseData(
         val enums: Map<String, List<String>>, // TypeName -> Values
         val composites: Map<String, Map<String, String>> // TypeName -> (Col -> Type) [Ordered Map]
@@ -46,7 +46,7 @@ internal class TypeRegistryLoader(
     suspend fun load(): TypeRegistry = coroutineScope {
         logger.info { "Starting TypeRegistry initialization..." }
 
-        // 1. Równoległe pobieranie danych
+        // 1. Parallel data fetching
         val cpJob = async(Dispatchers.IO) { scanClasspath() }
         val dbJob = async(Dispatchers.IO) { scanDatabase() }
 
@@ -55,21 +55,21 @@ internal class TypeRegistryLoader(
 
         logger.debug { "Merging definitions..." }
 
-        // 2. Budowanie map z walidacją "Strict" (Musi być w kodzie I w bazie)
+        // 2. Building maps with "Strict" validation (Must be in both code AND database)
         val (finalEnums, enumClassMap) = mergeEnums(cpData.enums, dbData.enums)
         val (finalComposites, compositeClassMap) = mergeComposites(cpData.composites, dbData.composites)
 
-        // 3. Typy standardowe i tablicowe
+        // 3. Standard and array types
         val standardTypes = PgStandardType.entries.filter { !it.isArray }.map { it.typeName }.toSet()
 
-        // Tablice generujemy dla wszystkiego co mamy zarejestrowane
+        // Generate arrays for everything we have registered
         val allBaseTypes = finalEnums.keys + finalComposites.keys + standardTypes
         val finalArrays = buildArrays(allBaseTypes)
 
-        // 4. Budowanie routera (TypeCategory Map)
+        // 4. Building router (TypeCategory Map)
         val categoryMap = buildCategoryMap(finalEnums.keys, finalComposites.keys, finalArrays.keys, standardTypes)
 
-        // 5. Scalanie map klas
+        // 5. Merging class maps
         val classToPgNameMap = enumClassMap + compositeClassMap
 
         logger.info { "TypeRegistry initialized. Enums: ${finalEnums.size}, Composites: ${finalComposites.size}, Arrays: ${finalArrays.size}" }
@@ -86,7 +86,7 @@ internal class TypeRegistryLoader(
     }
 
     // -------------------------------------------------------------------------
-    // ETAP 1: CLASSPATH (Skanowanie adnotacji)
+    // STAGE 1: CLASSPATH (Annotation scanning)
     // -------------------------------------------------------------------------
 
     private fun scanClasspath(): ClasspathData {
@@ -95,7 +95,7 @@ internal class TypeRegistryLoader(
         val targetSerializers = mutableMapOf<String, KSerializer<Any>>()
         val targetReverseMap = mutableMapOf<KClass<*>, String>()
 
-        // Zbiór do śledzenia unikalności nazw typów w bazie (Enums + Composites współdzielą przestrzeń nazw w PG)
+        // Set for tracking uniqueness of database type names (Enums + Composites share namespace in PG)
         val seenPgNames = mutableSetOf<String>()
 
         try {
@@ -111,7 +111,7 @@ internal class TypeRegistryLoader(
                     processDynamicTypes(result, targetSerializers, targetReverseMap)
                 }
         } catch (e: TypeRegistryException) {
-            throw e // Przekazujemy dalej nasze wyjątki
+            throw e // Pass through our exceptions
         } catch (e: Exception) {
             throw TypeRegistryException(TypeRegistryExceptionMessage.CLASSPATH_SCAN_FAILED, cause = e)
         }
@@ -127,7 +127,7 @@ internal class TypeRegistryLoader(
             val annotation = classInfo.getAnnotationInfo(PgEnum::class.java)
             val name = (annotation.parameterValues.getValue("name") as String).ifBlank { classInfo.simpleName.toSnakeCase() }
 
-            // Sprawdzanie duplikatów
+            // Check for duplicates
             if (!seenNames.add(name)) {
                 throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.DUPLICATE_PG_TYPE_DEFINITION,
@@ -152,7 +152,7 @@ internal class TypeRegistryLoader(
             val annotation = classInfo.getAnnotationInfo(PgComposite::class.java)
             val name = (annotation.parameterValues.getValue("name") as String).ifBlank { classInfo.simpleName.toSnakeCase() }
 
-            // Sprawdzanie duplikatów (wspólna pula z Enumami)
+            // Check for duplicates (shared pool with Enums)
             if (!seenNames.add(name)) {
                 throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.DUPLICATE_PG_TYPE_DEFINITION,
@@ -180,7 +180,7 @@ internal class TypeRegistryLoader(
             val annotation = classInfo.getAnnotationInfo(DynamicallyMappable::class.java)
             val typeName = annotation.parameterValues.getValue("typeName") as String
 
-            // Sprawdzanie duplikatów kluczy DynamicDTO
+            // Check for duplicate DynamicDTO keys
             if (targetSerializers.containsKey(typeName)) {
                 throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.DUPLICATE_DYNAMIC_TYPE_DEFINITION,
@@ -199,7 +199,7 @@ internal class TypeRegistryLoader(
 
                 logger.trace { "Registered DynamicDTO serializer for '$typeName' -> ${kClass.simpleName}" }
             } catch (e: Exception) {
-                // Jeśli klasa jest uszkodzona (np. generyk bez kontekstu), wiemy to od razu.
+                // If the class is broken (e.g., generic without context), we know immediately.
                 throw TypeRegistryException(
                     TypeRegistryExceptionMessage.INITIALIZATION_FAILED,
                     typeName = typeName,
@@ -210,7 +210,7 @@ internal class TypeRegistryLoader(
     }
 
     // -------------------------------------------------------------------------
-    // ETAP 2: DATABASE (Pobieranie definicji)
+    // STAGE 2: DATABASE (Fetching definitions)
     // -------------------------------------------------------------------------
 
     private fun scanDatabase(): DatabaseData {
@@ -237,7 +237,7 @@ internal class TypeRegistryLoader(
     }
 
     // -------------------------------------------------------------------------
-    // ETAP 3: MERGE & VALIDATE (Strict Mode)
+    // STAGE 3: MERGE & VALIDATE (Strict Mode)
     // -------------------------------------------------------------------------
 
     private fun mergeEnums(
@@ -249,29 +249,29 @@ internal class TypeRegistryLoader(
         val classMap = mutableMapOf<KClass<*>, String>()
 
         ktEnums.forEach { kt ->
-            // VALIDATION: Sprawdź czy Enum istnieje w bazie
-            val dbValues = dbEnums[kt.pgName] ?: // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
+            // VALIDATION: Check if Enum exists in database
+            dbEnums[kt.pgName] ?: // Type declared in code but missing in database -> Critical error
             throw TypeRegistryException(
                 messageEnum = TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB,
                 typeName = kt.pgName,
                 cause = IllegalStateException("Class '${kt.kClass.qualifiedName}' expects DB type '${kt.pgName}'")
             )
 
-            // Pobieramy wszystkie stałe enuma raz przy starcie
+            // Get all enum constants once at startup
             val enumConstants = kt.kClass.java.enumConstants!!
 
-            // Budujemy mapę: DB_STRING -> ENUM_INSTANCE
+            // Build map: DB_STRING -> ENUM_INSTANCE
             val lookupMap: Map<String, Enum<*>> = enumConstants.associate { constant ->
                 val enumConst = constant as Enum<*>
 
-                // Konwersja nazwy (Kotlin -> DB)
+                // Name conversion (Kotlin -> DB)
                 val dbKey = CaseConverter.convert(
                     value = enumConst.name,
                     from = kt.ktConv,
                     to = kt.pgConv
                 )
 
-                // Zwracamy parę (Klucz, Wartość). Wartość jest teraz typu Enum<*>
+                // Return pair (Key, Value). Value is now of type Enum<*>
                 dbKey to enumConst
             }
 
@@ -297,7 +297,7 @@ internal class TypeRegistryLoader(
 
         ktComposites.forEach { kt ->
             val dbAttributes =
-                dbComposites[kt.pgName] ?: // Typ zadeklarowany w kodzie, ale brak w bazie -> Błąd krytyczny
+                dbComposites[kt.pgName] ?: // Type declared in code but missing in database -> Critical error
                 throw TypeRegistryException(
                     messageEnum = TypeRegistryExceptionMessage.TYPE_DEFINITION_MISSING_IN_DB,
                     typeName = kt.pgName,
@@ -306,7 +306,7 @@ internal class TypeRegistryLoader(
 
             defs[kt.pgName] = PgCompositeDefinition(
                 typeName = kt.pgName,
-                attributes = dbAttributes, // Mapa zachowuje kolejność z DB
+                attributes = dbAttributes, // Map preserves order from DB
                 kClass = kt.kClass
             )
             classMap[kt.kClass] = kt.pgName
@@ -331,7 +331,7 @@ internal class TypeRegistryLoader(
         enums.forEach { map[it] = TypeCategory.ENUM }
 
         composites.forEach {
-            // Jeśli struktura nazywa się "dynamic_dto", traktujemy ją specjalnie przy deserializacji.
+            // If structure is named "dynamic_dto", we treat it specially during deserialization.
             map[it] = if (it == "dynamic_dto") TypeCategory.DYNAMIC else TypeCategory.COMPOSITE
         }
 

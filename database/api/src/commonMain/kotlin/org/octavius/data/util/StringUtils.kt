@@ -2,7 +2,7 @@ package org.octavius.data.util
 
 
 /**
- * Prosta funkcja oczyszczająca String z apostrofów i cudzysłowów drukarskich
+ * Simple function cleaning String from typographic apostrophes and quotes
  */
 fun String.clean(): String {
     return buildString(this.length) {

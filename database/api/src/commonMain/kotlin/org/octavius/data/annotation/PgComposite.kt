@@ -3,35 +3,35 @@ package org.octavius.data.annotation
 
 
 /**
- * Oznacza klasę `data class` jako typ danych, który może być mapowany
- * na typ kompozytowy w bazie danych PostgreSQL.
+ * Marks a `data class` as a data type that can be mapped
+ * to a composite type in PostgreSQL database.
  *
- * Ta adnotacja jest kluczowa dla `TypeRegistry`, które skanuje classpath w poszukiwaniu
- * oznaczonych klas, aby automatycznie zbudować mapowanie między klasami Kotlina
- * a typami kompozytowymi PostgreSQL.
+ * This annotation is crucial for `TypeRegistry`, which scans the classpath for
+ * marked classes to automatically build mapping between Kotlin classes
+ * and PostgreSQL composite types.
  *
- * **Konwencja nazewnicza:**
- * Domyślnie, nazwa typu w PostgreSQL jest wyliczana na podstawie prostej nazwy klasy
- * poprzez konwersję z `CamelCase` na `snake_case` (np. klasa `TestPerson` zostanie
- * zmapowana na typ `test_person`).
+ * **Naming convention:**
+ * By default, the type name in PostgreSQL is derived from the simple class name
+ * by converting from `CamelCase` to `snake_case` (e.g., `TestPerson` class will be
+ * mapped to `test_person` type).
  *
- * **Jawne określenie nazwy:**
- * Można nadpisać domyślną nazwę, podając ją w parametrze [name]. Jest to przydatne,
- * gdy nazwa typu w bazie danych nie pasuje do konwencji.
+ * **Explicit name specification:**
+ * You can override the default name by providing it in the [name] parameter. This is useful
+ * when the type name in the database doesn't match the convention.
  *
- * @param name Opcjonalna, jawna nazwa odpowiadającego typu w bazie danych PostgreSQL.
- *             Jeśli pozostawiona pusta, nazwa zostanie wygenerowana automatycznie
- *             zgodnie z konwencją `CamelCase` -> `snake_case`.
+ * @param name Optional, explicit name of the corresponding type in PostgreSQL database.
+ *             If left empty, the name will be generated automatically
+ *             according to the `CamelCase` -> `snake_case` convention.
  *
- * ### Przykłady
+ * ### Examples
  * ```kotlin
- * // Przykład 1: Użycie domyślnej konwencji nazewniczej
- * // Klasa `UserInfo` zostanie zmapowana na typ `user_info` w PostgreSQL.
+ * // Example 1: Using default naming convention
+ * // `UserInfo` class will be mapped to `user_info` type in PostgreSQL.
  * @PgComposite
  * data class UserInfo(val id: Int, val username: String)
  *
- * // Przykład 2: Jawne określenie nazwy typu
- * // Klasa `AddressDetails` zostanie zmapowana na typ `address_type` w PostgreSQL.
+ * // Example 2: Explicit type name specification
+ * // `AddressDetails` class will be mapped to `address_type` type in PostgreSQL.
  * @PgComposite(name = "address_type")
  * data class AddressDetails(val street: String, val city: String)
  * ```

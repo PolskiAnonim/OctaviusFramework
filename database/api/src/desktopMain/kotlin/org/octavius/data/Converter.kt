@@ -10,14 +10,14 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
 /**
- * Adnotacja używana do określenia niestandardowego klucza dla właściwości
- * podczas konwersji obiektu do/z mapy.
+ * Annotation used to specify a custom key for a property
+ * during object to/from map conversion.
  *
- * Domyślnie używana jest nazwa właściwości z zamianą snake_case <-> camelCase. Ta adnotacja pozwala ją nadpisać,
- * co jest przydatne, gdy nazwy kluczy z mapy nie powinne odpowiadać nazwom właściwości
- * np userId vs user
+ * By default, the property name is used with snake_case <-> camelCase conversion. This annotation allows overriding it,
+ * which is useful when map key names should not match property names
+ * e.g., userId vs user
  *
- * @property name Nazwa klucza, która zostanie użyta w mapie.
+ * @property name Key name that will be used in the map.
  *
  * @see toDataObject
  * @see toMap
@@ -26,11 +26,11 @@ import kotlin.reflect.full.primaryConstructor
 @Retention(AnnotationRetention.RUNTIME)
 annotation class MapKey(val name: String)
 
-// --- Wspólny Cache i Metadane dla obu konwersji ---
+// --- Shared Cache and Metadata for both conversions ---
 
 /**
- * Przechowuje kompletne, pre-obliczone metadane dla parametru konstruktora.
- * Zapewnia wydajny dostęp bez potrzeby ponownej refleksji.
+ * Stores complete, pre-computed metadata for a constructor parameter.
+ * Provides efficient access without needing reflection again.
  */
 private data class ConstructorParamMetadata<T : Any>(
     val parameter: KParameter,
@@ -40,28 +40,28 @@ private data class ConstructorParamMetadata<T : Any>(
 )
 
 /**
- * Przechowuje metadane klasy oparte na jej głównym konstruktorze.
- * Służy jako centralny cache dla operacji `toDataObject` i `toMap`.
+ * Stores class metadata based on its primary constructor.
+ * Serves as a central cache for `toDataObject` and `toMap` operations.
  */
 private data class DataObjectClassMetadata<T : Any>(
     val constructor: KFunction<T>,
     val constructorProperties: List<ConstructorParamMetadata<T>>
 )
 
-// Używamy jednego, wspólnego cache'a dla obu operacji.
+// We use one shared cache for both operations.
 private val dataObjectCache = ConcurrentHashMap<KClass<*>, DataObjectClassMetadata<*>>()
 
 /**
- * Wewnętrzna funkcja do pobierania lub tworzenia metadanych dla danej klasy.
- * To jest jedyne miejsce, gdzie odbywa się kosztowna refleksja. Wyniki są cachowane.
+ * Internal function for getting or creating metadata for a given class.
+ * This is the only place where expensive reflection occurs. Results are cached.
  */
 @Suppress("UNCHECKED_CAST")
 private fun <T : Any> getOrCreateDataObjectMetadata(kClass: KClass<T>): DataObjectClassMetadata<T> {
     return dataObjectCache.getOrPut(kClass) {
         val constructor = kClass.primaryConstructor
-            ?: throw IllegalArgumentException("Klasa ${kClass.simpleName} musi mieć główny konstruktor.")
+            ?: throw IllegalArgumentException("Class ${kClass.simpleName} must have a primary constructor.")
 
-        // Mapowanie właściwości w klasie po nazwie dla łatwego dostępu
+        // Map properties in the class by name for easy access
         val propertiesByName = kClass.memberProperties.associateBy { it.name }
 
         val constructorProperties = constructor.parameters.map { param ->
@@ -81,7 +81,7 @@ private fun <T : Any> getOrCreateDataObjectMetadata(kClass: KClass<T>): DataObje
     } as DataObjectClassMetadata<T>
 }
 
-// --- Konwersja Z MAPY do OBIEKTU ---
+// --- Conversion FROM MAP to OBJECT ---
 
 inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
     return toDataObject(T::class)
@@ -94,19 +94,19 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
         val (param, _, type, keyName) = meta
 
         val valueToUse = when {
-            // Przypadek 1: Klucz istnieje w mapie. Zawsze używamy wartości z mapy,
-            // nawet jeśli jest to jawne null.
+            // Case 1: Key exists in the map. Always use the value from the map,
+            // even if it's an explicit null.
             this.containsKey(keyName) -> this[keyName]
-            // Przypadek 2: Klucz NIE istnieje w mapie.
-            // Parametr ma wartość domyślną, więc pomijamy go w mapie args.
-            // callBy() automatycznie użyje wartości domyślnej.
-            // mapNotNull usunie tę parę
+            // Case 2: Key does NOT exist in the map.
+            // Parameter has a default value, so we skip it in the args map.
+            // callBy() will automatically use the default value.
+            // mapNotNull will remove this pair
             param.isOptional -> return@mapNotNull null
-            // Przypadek 3: Parametr nie ma wartości domyślnej i nie ma go w mapie.
-            // Parametr jest nullable (np. String?), więc możemy wstawić null.
+            // Case 3: Parameter has no default value and is not in the map.
+            // Parameter is nullable (e.g., String?), so we can insert null.
             param.type.isMarkedNullable -> null
-            // Przypadek 4: Parametr jest non-nullable (np. String) i nie ma wartości domyślnej,
-            // a klucz nie został znaleziony w mapie. To jest błąd.
+            // Case 4: Parameter is non-nullable (e.g., String) and has no default value,
+            // and the key was not found in the map. This is an error.
             else -> throw ConversionException(
                 messageEnum = ConversionExceptionMessage.MISSING_REQUIRED_PROPERTY,
                 targetType = kClass.qualifiedName,
@@ -116,7 +116,7 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
             )
         }
 
-        // Walidacja z użyciem cachowanego KType
+        // Validation using cached KType
         val validatedValue = try {
             validateValue(valueToUse, type)
         } catch (e: ConversionException) {
@@ -132,7 +132,7 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
         param to validatedValue
     }.associate { it }
 
-    // Wywołaj główny konstruktor z przygotowanymi argumentami.
+    // Call the primary constructor with prepared arguments.
     try {
         return metadata.constructor.callBy(args)
     } catch (e: Exception) {
@@ -146,20 +146,20 @@ fun <T : Any> Map<String, Any?>.toDataObject(kClass: KClass<T>): T {
 }
 
 
-// --- Konwersja Z OBIEKTU do MAPY --
+// --- Conversion FROM OBJECT to MAP ---
 
 /**
- * Konwertuje obiekt data class na mapę, gdzie kluczami są nazwy właściwości
- * (lub wartości z adnotacji @MapKey), a wartościami są wartości tych właściwości.
+ * Converts a data class object to a map, where keys are property names
+ * (or values from @MapKey annotation), and values are the property values.
  *
- * @param excludeKeys Klucze do wykluczenia z wynikowej mapy
- * @return Mapa reprezentująca obiekt.
+ * @param excludeKeys Keys to exclude from the resulting map
+ * @return Map representing the object.
  */
 fun <T : Any> T.toMap(vararg excludeKeys: String): Map<String, Any?> {
     @Suppress("UNCHECKED_CAST")
     val metadata = getOrCreateDataObjectMetadata(this::class) as DataObjectClassMetadata<T>
 
-    // Konwersja do Set dla szybszego sprawdzania (O(1) zamiast O(n))
+    // Convert to Set for faster checking (O(1) instead of O(n))
     val exclusionSet = if (excludeKeys.isNotEmpty()) excludeKeys.toSet() else emptySet()
 
     return metadata.constructorProperties.mapNotNull { meta ->

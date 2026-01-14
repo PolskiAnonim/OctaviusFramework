@@ -4,8 +4,8 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.UtcOffset
 
 /**
- * Reprezentuje czas z offsetem UTC, w pełni oparty na kotlinx.datetime.
- * Zastępuje `java.time.OffsetTime`.
+ * Represents time with UTC offset, fully based on kotlinx.datetime.
+ * Replaces `java.time.OffsetTime`.
  */
 data class OffsetTime(val time: LocalTime, val offset: UtcOffset) {
     override fun toString(): String {

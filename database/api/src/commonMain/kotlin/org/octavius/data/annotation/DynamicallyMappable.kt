@@ -1,18 +1,18 @@
 package org.octavius.data.annotation
 
 /**
- * Oznacza klasę `data class`, `enum class` bądź `value class` jako cel dla dynamicznego mapowania z typu `dynamic_dto`
- * w PostgreSQL.
+ * Marks a `data class`, `enum class`, or `value class` as a target for dynamic mapping from `dynamic_dto` type
+ * in PostgreSQL.
  *
- * Ta adnotacja jest używana przez `TypeRegistryLoader` do zbudowania bezpiecznej mapy
- * kluczy (umownych nazw) na klasy Kotlina. Pozwala to na deserializację zagnieżdżonych
- * struktur tworzonych w locie w zapytaniach SQL, bez potrzeby definiowania
- * formalnego typu kompozytowego (`CREATE TYPE`) w bazie danych.
- * UWAGA: Użycie wymaga także adnotacji `@Serializable`!
+ * This annotation is used by `TypeRegistryLoader` to build a safe map of
+ * keys (conventional names) to Kotlin classes. This allows deserialization of nested
+ * structures created on the fly in SQL queries, without the need to define
+ * a formal composite type (`CREATE TYPE`) in the database.
+ * NOTE: Usage also requires `@Serializable` annotation!
  *
- * @param typeName Umowny identyfikator (klucz), który będzie używany w funkcji SQL
- *                 `dynamic_dto('typeName', ...)` do wskazania, na którą klasę
- *                 należy zamapować wynik.
+ * @param typeName Conventional identifier (key) that will be used in the SQL function
+ *                 `dynamic_dto('typeName', ...)` to indicate which class
+ *                 the result should be mapped to.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

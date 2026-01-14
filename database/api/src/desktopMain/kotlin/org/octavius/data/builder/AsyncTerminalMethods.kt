@@ -7,59 +7,59 @@ import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 /**
- * Interfejs dla buildera wykonującego zapytania asynchronicznie w podanym CoroutineScope.
- * Metody terminalne przyjmują callbacki i zwracają Job do kontroli cyklu życia.
+ * Interface for builder executing queries asynchronously in the provided CoroutineScope.
+ * Terminal methods accept callbacks and return Job for lifecycle control.
  */
 interface AsyncTerminalMethods {
-    // --- Metody zwracające pełne wiersze ---
+    // --- Methods returning full rows ---
 
-    /** Asynchronicznie pobiera listę wierszy i przekazuje wynik do callbacka onResult. */
+    /** Asynchronously fetches a list of rows and passes the result to the onResult callback. */
     fun toList(
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<List<Map<String, Any?>>>) -> Unit
     ): Job
 
-    /** Asynchronicznie pobiera pojedynczy wiersz i przekazuje wynik do callbacka onResult. */
+    /** Asynchronously fetches a single row and passes the result to the onResult callback. */
     fun toSingle(
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<Map<String, Any?>?>) -> Unit
     ): Job
 
-    // --- Metody zwracające obiekty data class ---
+    // --- Methods returning data class objects ---
 
-    /** Asynchronicznie mapuje wyniki na listę obiektów i przekazuje je do callbacka onResult. */
+    /** Asynchronously maps results to a list of objects and passes them to the onResult callback. */
     fun <T : Any> toListOf(
         kClass: KClass<T>,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<List<T>>) -> Unit
     ): Job
 
-    /** Asynchronicznie mapuje wynik na pojedynczy obiekt i przekazuje go do callbacka onResult. */
+    /** Asynchronously maps the result to a single object and passes it to the onResult callback. */
     fun <T : Any> toSingleOf(
         kClass: KClass<T>,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<T?>) -> Unit
     ): Job
 
-    // --- Metody zwracające wartości skalarne (NOWO DODANE) ---
+    // --- Methods returning scalar values ---
 
-    /** Asynchronicznie pobiera pojedynczą wartość z pierwszej kolumny i przekazuje wynik do callbacka onResult. */
+    /** Asynchronously fetches a single value from the first column and passes the result to the onResult callback. */
     fun <T : Any> toField(
         kType: KType,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<T?>) -> Unit
     ): Job
 
-    /** Asynchronicznie pobiera listę wartości z pierwszej kolumny i przekazuje wynik do callbacka onResult. */
+    /** Asynchronously fetches a list of values from the first column and passes the result to the onResult callback. */
     fun <T : Any> toColumn(
         kType: KType,
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<List<T?>>) -> Unit
     ): Job
 
-    // --- Metoda modyfikująca ---
+    // --- Modification method ---
 
-    /** Asynchronicznie wykonuje zapytanie modyfikujące i przekazuje wynik do callbacka onResult. */
+    /** Asynchronously executes a modification query and passes the result to the onResult callback. */
     fun execute(
         params: Map<String, Any?> = emptyMap(),
         onResult: (DataResult<Int>) -> Unit
@@ -76,7 +76,7 @@ fun AsyncTerminalMethods.toSingle(
     onResult: (DataResult<Map<String, Any?>?>) -> Unit
 ): Job = toSingle(params.toMap(), onResult)
 
-// Rozszerzenia inline
+// Inline extensions
 inline fun <reified T : Any> AsyncTerminalMethods.toListOf(
     params: Map<String, Any?> = emptyMap(),
     noinline onResult: (DataResult<List<T>>) -> Unit

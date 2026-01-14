@@ -1,29 +1,29 @@
 package org.octavius.data.transaction
 
 /**
- * Reprezentuje wartość w kroku transakcyjnym.
- * Umożliwia przekazywanie zarówno stałych wartości, jak i dynamicznych referencji
- * do wyników poprzednich kroków w tej samej transakcji.
+ * Represents a value in a transaction step.
+ * Enables passing both constant values and dynamic references
+ * to results of previous steps in the same transaction.
  */
 sealed class TransactionValue {
     /**
-     * Stała, predefiniowana wartość.
-     * @param value Wartość do użycia w operacji.
+     * Constant, predefined value.
+     * @param value Value to use in the operation.
      */
     data class Value(val value: Any?) : TransactionValue()
 
     /**
-     * Referencja do wyniku z poprzedniego kroku. Ta klasa jest bazą dla
-     * bardziej specyficznych typów referencji.
+     * Reference to the result from a previous step. This class is the base for
+     * more specific reference types.
      */
     sealed class FromStep(open val handle: StepHandle<*>) : TransactionValue() {
         /**
-         * Pobiera pojedynczą wartość z konkretnej komórki (`wiersz`, `kolumna`).
-         * Idealne do pobierania ID z właśnie wstawionego wiersza.
+         * Fetches a single value from a specific cell (`row`, `column`).
+         * Ideal for retrieving the ID from a just-inserted row.
          *
-         * @param handle Uchwyt do kroku, z którego pochodzą dane.
-         * @param columnName Nazwa kolumny, z której ma być pobrana wartość.
-         * @param rowIndex Indeks wiersza (domyślnie 0, czyli pierwszy).
+         * @param handle Handle to the step from which the data originates.
+         * @param columnName Name of the column from which the value should be fetched.
+         * @param rowIndex Row index (default 0, i.e., first).
          */
         data class Field(
             override val handle: StepHandle<*>,
@@ -34,13 +34,13 @@ sealed class TransactionValue {
         }
 
         /**
-         * Pobiera wszystkie wartości z jednej kolumny jako listę lub tablicę typowaną.
+         * Fetches all values from one column as a list or typed array.
          *
-         * Używane głównie do przekazywania wyników jednego zapytania jako parametrów
-         * dla kolejnego, np. w klauzulach `WHERE id = ANY(:ids)` lub `INSERT ... SELECT ... FROM UNNEST(...)`.
+         * Used mainly for passing results from one query as parameters
+         * to another, e.g., in clauses like `WHERE id = ANY(:ids)` or `INSERT ... SELECT ... FROM UNNEST(...)`.
          *
-         * @param handle Uchwyt do kroku, z którego pochodzą dane.
-         * @param columnName Nazwa kolumny, której wartości mają zostać pobrane.
+         * @param handle Handle to the step from which the data originates.
+         * @param columnName Name of the column whose values should be fetched.
          */
         data class Column(
             override val handle: StepHandle<*>,
@@ -50,13 +50,13 @@ sealed class TransactionValue {
         }
 
         /**
-         * Pobiera cały wiersz jako `Map<String, Any?>`.
-         * Użyteczne, gdy chcesz przekazać wiele pól z jednego wyniku jako parametry
-         * do kolejnego kroku (np. kopiowanie wiersza z modyfikacjami).
-         * Executor specjalnie obsługuje ten typ, "rozsmarowując" mapę na parametry.
+         * Fetches an entire row as `Map<String, Any?>`.
+         * Useful when you want to pass multiple fields from one result as parameters
+         * to the next step (e.g., copying a row with modifications).
+         * The Executor specially handles this type by "spreading" the map into parameters.
          *
-         * @param handle Uchwyt do kroku, z którego pochodzą dane.
-         * @param rowIndex Indeks wiersza (domyślnie 0, czyli pierwszy).
+         * @param handle Handle to the step from which the data originates.
+         * @param rowIndex Row index (default 0, i.e., first).
          */
         data class Row(
             override val handle: StepHandle<*>,
@@ -65,7 +65,7 @@ sealed class TransactionValue {
     }
 
     /**
-     * Wynik transformacji innej wartości.
+     * Result of transforming another value.
      */
     class Transformed(
         val source: TransactionValue,
@@ -78,15 +78,15 @@ fun TransactionValue.map(transformation: (Any?) -> Any?): TransactionValue {
 }
 
 /**
- * Konwertuje dowolną wartość (także null) na instancję [TransactionValue.Value].
+ * Converts any value (including null) to an instance of [TransactionValue.Value].
  *
- * Stanowi zwięzłą alternatywę dla jawnego wywołania konstruktora,
- * poprawiając czytelność operacji budujących kroki transakcji.
+ * Provides a concise alternative to explicit constructor invocation,
+ * improving readability of operations building transaction steps.
  *
- * Przykład użycia:
- * `val idRef = 123.toTransactionValue()` zamiast `val idRef = TransactionValue.Value(123)`
+ * Usage example:
+ * `val idRef = 123.toTransactionValue()` instead of `val idRef = TransactionValue.Value(123)`
  *
- * @return Instancja [TransactionValue.Value] opakowująca tę wartość.
+ * @return Instance of [TransactionValue.Value] wrapping this value.
  * @see TransactionValue
  */
 fun Any?.toTransactionValue(): TransactionValue = TransactionValue.Value(this)

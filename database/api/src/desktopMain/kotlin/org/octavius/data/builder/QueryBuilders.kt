@@ -5,276 +5,276 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * Definiuje publiczne API do budowania zapytań SQL SELECT.
+ * Defines the public API for building SQL SELECT queries.
  */
 interface SelectQueryBuilder: TerminalReturningMethods, QueryBuilder<SelectQueryBuilder> {
 
-    /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
+    /** Adds a Common Table Expression (CTE) to the query. */
     fun with(name: String, query: String): SelectQueryBuilder
 
-    /** Oznacza klauzulę WITH jako rekurencyjną. */
+    /** Marks the WITH clause as recursive. */
     fun recursive(): SelectQueryBuilder
 
-    /** Definiuje źródło danych (klauzula FROM). */
+    /** Defines the data source (FROM clause). */
     fun from(source: String): SelectQueryBuilder
 
     /**
-     * Używa wyniku innego zapytania jako źródła danych (tabela pochodna).
-     * Automatycznie opakowuje podzapytanie w nawiasy i dodaje alias gdy jest podany.
+     * Uses the result of another query as a data source (derived table).
+     * Automatically wraps the subquery in parentheses and adds an alias when provided.
      *
-     * @param subquery String SQL zawierający podzapytanie.
-     * @param alias Nazwa (alias), która zostanie nadana tabeli pochodnej.
+     * @param subquery SQL string containing the subquery.
+     * @param alias Name (alias) that will be assigned to the derived table.
      */
     fun fromSubquery(subquery: String, alias: String? = null): SelectQueryBuilder
 
-    /** Definiuje warunek filtrowania (klauzula WHERE). */
+    /** Defines a filter condition (WHERE clause). */
     fun where(condition: String?): SelectQueryBuilder
 
-    /** Definiuje grupowanie wierszy (klauzula GROUP BY). */
+    /** Defines row grouping (GROUP BY clause). */
     fun groupBy(columns: String?): SelectQueryBuilder
 
-    /** Filtruje wyniki po grupowaniu (klauzula HAVING). */
+    /** Filters results after grouping (HAVING clause). */
     fun having(condition: String?): SelectQueryBuilder
 
-    /** Definiuje sortowanie wyników (klauzula ORDER BY). */
+    /** Defines result ordering (ORDER BY clause). */
     fun orderBy(ordering: String?): SelectQueryBuilder
 
-    /** Ogranicza liczbę zwracanych wierszy (klauzula LIMIT). */
+    /** Limits the number of returned rows (LIMIT clause). */
     fun limit(count: Long?): SelectQueryBuilder
 
-    /** Określa liczbę wierszy do pominięcia (klauzula OFFSET). */
+    /** Specifies the number of rows to skip (OFFSET clause). */
     fun offset(position: Long): SelectQueryBuilder
 
-    /** Konfiguruje paginację, ustawiając LIMIT i OFFSET.
-     * @param page Numer strony (indeksowany od zera).
-     * @param size Rozmiar strony
+    /** Configures pagination by setting LIMIT and OFFSET.
+     * @param page Page number (zero-indexed).
+     * @param size Page size
      */
     fun page(page: Long, size: Long): SelectQueryBuilder
 }
 
 /**
- * Definiuje publiczne API do budowania zapytań SQL DELETE.
+ * Defines the public API for building SQL DELETE queries.
  */
 interface DeleteQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<DeleteQueryBuilder> {
 
-    /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
+    /** Adds a Common Table Expression (CTE) to the query. */
     fun with(name: String, query: String): DeleteQueryBuilder
 
-    /** Oznacza klauzulę WITH jako rekurencyjną.*/
+    /** Marks the WITH clause as recursive. */
     fun recursive(): DeleteQueryBuilder
 
-    /** Dodaje klauzulę USING */
+    /** Adds a USING clause. */
     fun using(tables: String): DeleteQueryBuilder
 
-    /** Definiuje warunek WHERE. Klauzula jest obowiązkowa ze względów bezpieczeństwa. */
+    /** Defines the WHERE condition. The clause is mandatory for security reasons. */
     fun where(condition: String): DeleteQueryBuilder
 
     /**
-     * Dodaje klauzulę RETURNING. Wymaga użycia metod `.toList()`, `.toSingle()` itp.
-     * zamiast `.execute()`.
+     * Adds a RETURNING clause. Requires using methods like `.toList()`, `.toSingle()`, etc.
+     * instead of `.execute()`.
      */
     fun returning(vararg columns: String): DeleteQueryBuilder
 }
 
 /**
- * Definiuje publiczne API do budowania zapytań SQL UPDATE.
+ * Defines the public API for building SQL UPDATE queries.
  */
 interface UpdateQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<UpdateQueryBuilder> {
 
-    /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
+    /** Adds a Common Table Expression (CTE) to the query. */
     fun with(name: String, query: String): UpdateQueryBuilder
 
-    /** Oznacza klauzulę WITH jako rekurencyjną. */
+    /** Marks the WITH clause as recursive. */
     fun recursive(): UpdateQueryBuilder
 
     /**
-     * Definiuje przypisania w klauzuli SET.
+     * Defines assignments in the SET clause.
      */
     fun setExpressions(values: Map<String, String>): UpdateQueryBuilder
 
-    /** Definiuje pojedyncze przypisanie w klauzuli SET. */
+    /** Defines a single assignment in the SET clause. */
     fun setExpression(column: String, value: String): UpdateQueryBuilder
 
-    /** Definiuje pojedyncze przypisanie w klauzuli SET Automatycznie generuje placeholder o nazwie klucza. */
+    /** Defines a single assignment in the SET clause. Automatically generates a placeholder with the key name. */
     fun setValue(column: String): UpdateQueryBuilder
 
     /**
-     * Ustawia wartości do aktualizacji. Automatycznie generuje placeholdery
-     * w formacie ":key" dla każdego klucza w mapie.
-     * Wartości z mapy muszą być przekazane w metodzie terminalnej (np. .execute()).
+     * Sets values to update. Automatically generates placeholders
+     * in ":key" format for each key in the map.
+     * Values from the map must be passed in the terminal method (e.g., .execute()).
      */
     fun setValues(values: Map<String, Any?>): UpdateQueryBuilder
 
     /**
-     * Ustawia wartości do aktualizacji. Automatycznie generuje placeholdery
-     * w formacie ":value" dla każdej wartości na liście.
+     * Sets values to update. Automatically generates placeholders
+     * in ":value" format for each value in the list.
      */
     fun setValues(values: List<String>): UpdateQueryBuilder
 
     /**
-     * Dodaje do zapytania UPDATE klauzulę FROM.
+     * Adds a FROM clause to the UPDATE query.
      */
     fun from(tables: String): UpdateQueryBuilder
 
     /**
-     * Definiuje warunek WHERE. Klauzula jest obowiązkowa ze względów bezpieczeństwa.
+     * Defines the WHERE condition. The clause is mandatory for security reasons.
      */
     fun where(condition: String): UpdateQueryBuilder
 
     /**
-     * Dodaje klauzulę RETURNING. Wymaga użycia metod `.toList()`, `.toSingle()` itp.
-     * zamiast `.execute()`.
+     * Adds a RETURNING clause. Requires using methods like `.toList()`, `.toSingle()`, etc.
+     * instead of `.execute()`.
      */
     fun returning(vararg columns: String): UpdateQueryBuilder
 }
 
 /**
- * Definiuje publiczne API do budowania zapytań SQL INSERT.
+ * Defines the public API for building SQL INSERT queries.
  */
 interface InsertQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<InsertQueryBuilder> {
 
-    /** Dodaje do zapytania Wspólne Wyrażenie Tabelaryczne (CTE). */
+    /** Adds a Common Table Expression (CTE) to the query. */
     fun with(name: String, query: String): InsertQueryBuilder
 
-    /** Oznacza klauzulę WITH jako rekurencyjną. */
+    /** Marks the WITH clause as recursive. */
     fun recursive(): InsertQueryBuilder
 
     /**
-     * Definiuje wartości do wstawienia jako wyrażenia SQL lub placeholdery.
-     * To jest metoda niskopoziomowa.
-     * @param expressions Mapa, gdzie klucz to nazwa kolumny, a wartość to string SQL (np. ":name", "NOW()").
+     * Defines values to insert as SQL expressions or placeholders.
+     * This is a low-level method.
+     * @param expressions Map where key is column name and value is SQL string (e.g., ":name", "NOW()").
      */
     fun valuesExpressions(expressions: Map<String, String>): InsertQueryBuilder
 
     /**
-     * Definiuje pojedynczą wartość do wstawienia jako wyrażenie SQL.
-     * @param column Nazwa kolumny.
-     * @param expression Wyrażenie SQL (np. ":user_id", "DEFAULT").
+     * Defines a single value to insert as an SQL expression.
+     * @param column Column name.
+     * @param expression SQL expression (e.g., ":user_id", "DEFAULT").
      */
     fun valueExpression(column: String, expression: String): InsertQueryBuilder
 
     /**
-     * Definiuje wartości do wstawienia, automatycznie generując placeholdery.
-     * To jest preferowana, wysokopoziomowa metoda do wstawiania danych.
-     * Wartości z mapy muszą być przekazane w metodzie terminalnej (np. .execute()).
+     * Defines values to insert, automatically generating placeholders.
+     * This is the preferred, high-level method for inserting data.
+     * Values from the map must be passed in the terminal method (e.g., .execute()).
      *
-     * @param data Mapa danych (kolumna -> wartość).
+     * @param data Data map (column -> value).
      */
     fun values(data: Map<String, Any?>): InsertQueryBuilder
 
     /**
-     * Definiuje wartości do wstawienia, automatycznie generując placeholdery
-     * w formacie ":value" dla każdej wartości na liście.
+     * Defines values to insert, automatically generating placeholders
+     * in ":value" format for each value in the list.
      */
     fun values(values: List<String>): InsertQueryBuilder
 
     /**
-     * Definiuje pojedynczą wartość, automatycznie generując placeholder.
-     * @param column Nazwa kolumny, dla której zostanie wygenerowany placeholder (np. ":nazwa_kolumny").
+     * Defines a single value, automatically generating a placeholder.
+     * @param column Column name for which a placeholder will be generated (e.g., ":column_name").
      */
     fun value(column: String): InsertQueryBuilder
 
     /**
-     * Definiuje zapytanie SELECT jako źródło danych do wstawienia.
-     * Wymaga, aby kolumny były zdefiniowane podczas tworzenia buildera (w `insertInto`).
-     * Wyklucza użycie wszelkiego rodzaju funkcji `value(s)`.
+     * Defines a SELECT query as the data source for insertion.
+     * Requires that columns be defined when creating the builder (in `insertInto`).
+     * Excludes the use of any `value(s)` functions.
      */
     fun fromSelect(query: String): InsertQueryBuilder
 
     /**
-     * Konfiguruje zachowanie w przypadku konfliktu klucza (klauzula ON CONFLICT).
+     * Configures behavior in case of key conflict (ON CONFLICT clause).
      */
     fun onConflict(config: OnConflictClauseBuilder.() -> Unit): InsertQueryBuilder
 
     /**
-     * Dodaje klauzulę RETURNING. Wymaga użycia `.toList()`, `.toSingle()` itp. zamiast `.execute()`.
+     * Adds a RETURNING clause. Requires using `.toList()`, `.toSingle()`, etc. instead of `.execute()`.
      */
     fun returning(vararg columns: String): InsertQueryBuilder
 }
 
 /**
- * Konfigurator dla klauzuli ON CONFLICT w zapytaniu INSERT.
+ * Configurator for the ON CONFLICT clause in an INSERT query.
  */
 interface OnConflictClauseBuilder {
 
-    /** Definiuje cel konfliktu jako listę kolumn. */
+    /** Defines the conflict target as a list of columns. */
     fun onColumns(vararg columns: String)
 
-    /** Definiuje cel konfliktu jako nazwę istniejącego ograniczenia (constraint). */
+    /** Defines the conflict target as an existing constraint name. */
     fun onConstraint(constraintName: String)
 
-    /** W przypadku konfliktu, nie rób nic (DO NOTHING). */
+    /** In case of conflict, do nothing (DO NOTHING). */
     fun doNothing()
 
     /**
-     * W przypadku konfliktu, wykonaj aktualizację (DO UPDATE).
-     * @param setExpression Wyrażenie SET, np. "counter = tbl.counter + 1". Użyj `EXCLUDED` do odwołania się do wartości, które próbowano wstawić.
-     * @param whereCondition Opcjonalny warunek WHERE dla akcji UPDATE.
+     * In case of conflict, perform an update (DO UPDATE).
+     * @param setExpression SET expression, e.g., "counter = tbl.counter + 1". Use `EXCLUDED` to reference the values that were attempted to insert.
+     * @param whereCondition Optional WHERE condition for the UPDATE action.
      */
     fun doUpdate(setExpression: String, whereCondition: String? = null)
 
     /**
-     * W przypadku konfliktu, wykonaj aktualizację (DO UPDATE) używając par kolumna-wartość.
-     * Jest to preferowany sposób, ponieważ jest bardziej czytelny i mniej podatny na błędy niż ręczne składanie stringa.
-     * Przykład użycia:
+     * In case of conflict, perform an update (DO UPDATE) using column-value pairs.
+     * This is the preferred way as it's more readable and less error-prone than manually assembling a string.
+     * Usage example:
      * doUpdate(
      *   "last_login" to "NOW()",
      *   "login_attempts" to "EXCLUDED.login_attempts + 1"
      * )
-     * @param setPairs Pary (kolumna, wyrażenie) do użycia w klauzuli SET.
-     * @param whereCondition Opcjonalny warunek WHERE dla akcji UPDATE.
+     * @param setPairs Pairs (column, expression) to use in the SET clause.
+     * @param whereCondition Optional WHERE condition for the UPDATE action.
      */
     fun doUpdate(vararg setPairs: Pair<String, String>, whereCondition: String? = null)
 
     /**
-     * W przypadku konfliktu, wykonaj aktualizację (DO UPDATE) używając mapy kolumna-wartość.
-     * Użyteczne, gdy logika aktualizacji jest budowana dynamicznie.
-     * @param setMap Mapa {kolumna -> wyrażenie} do użycia w klauzuli SET.
-     * @param whereCondition Opcjonalny warunek WHERE dla akcji UPDATE.
+     * In case of conflict, perform an update (DO UPDATE) using a column-value map.
+     * Useful when update logic is built dynamically.
+     * @param setMap Map {column -> expression} to use in the SET clause.
+     * @param whereCondition Optional WHERE condition for the UPDATE action.
      */
     fun doUpdate(setMap: Map<String, String>, whereCondition: String? = null)
 }
 
 /**
- * Definiuje publiczne API do przekazania pełnego zapytania.
+ * Defines the public API for passing a complete raw query.
  */
 interface RawQueryBuilder : TerminalReturningMethods, TerminalModificationMethods, QueryBuilder<RawQueryBuilder> {
-    // Tylko metody terminalne które są brane z innych interfejsów
+    // Only terminal methods taken from other interfaces
 }
 
 interface QueryBuilder<T : QueryBuilder<T>> {
     /**
-     * Konwertuje ten builder na StepBuilder, który umożliwia lazy execution w ramach transakcji.
-     * Zwraca wrapper z metodami terminalnymi, które tworzą TransactionStep zamiast wykonywać zapytanie.
+     * Converts this builder to a StepBuilder that enables lazy execution within a transaction.
+     * Returns a wrapper with terminal methods that create TransactionStep instead of executing the query.
      */
     fun asStep(): StepBuilderMethods
 
     /**
-     * Przełącza builder w tryb asynchroniczny.
-     * Wymaga podania CoroutineScope, w którym operacje zostaną uruchomione.
+     * Switches the builder to asynchronous mode.
+     * Requires providing a CoroutineScope in which operations will be launched.
      *
-     * @param scope Scope korutyn (zazwyczaj z ViewModelu/Handlera) do zarządzania cyklem życia.
-     * @param ioDispatcher Dispatcher na którym ma być wykonane zapytanie
-     * @return Nowa instancja buildera z asynchronicznymi metodami terminalnymi.
+     * @param scope Coroutine scope (typically from ViewModel/Handler) for lifecycle management.
+     * @param ioDispatcher Dispatcher on which the query should be executed
+     * @return New builder instance with asynchronous terminal methods.
      */
     fun async(scope: CoroutineScope, ioDispatcher: CoroutineDispatcher = Dispatchers.IO): AsyncTerminalMethods
 
     /**
-     * Przełącza builder w tryb streamingowy, optymalny dla dużych zbiorów danych.
-     * Wymaga użycia metod terminalnych specyficznych dla streamingu, jak forEachRow().
-     * WYMAGANA AKTYWNA TRANSAKCJA. Metoda ta musi być wywoływana wewnątrz bloku DataAccess.transaction { ... }.
-     * W przeciwnym razie PostgreSQL zignoruje fetchSize i załaduje wszystko do RAM-u.
+     * Switches the builder to streaming mode, optimal for large datasets.
+     * Requires using streaming-specific terminal methods like forEachRow().
+     * REQUIRES ACTIVE TRANSACTION. This method must be called inside a DataAccess.transaction { ... } block.
+     * Otherwise, PostgreSQL will ignore fetchSize and load everything into RAM.
      *
-     * @param fetchSize Liczba wierszy pobierana z bazy danych w jednej paczce.
-     *                  Kluczowe dla uniknięcia ładowania całego wyniku do pamięci.
-     * @return Nowa instancja buildera z metodami do streamingu.
+     * @param fetchSize Number of rows fetched from the database in one batch.
+     *                  Crucial for avoiding loading the entire result into memory.
+     * @return New builder instance with streaming methods.
      */
     fun asStream(fetchSize: Int = 100): StreamingTerminalMethods
 
     /**
-     * Tworzy i zwraca głęboką kopię tego buildera.
-     * Zwraca konkretny typ buildera (np. SelectQueryBuilder),
-     * zachowując płynność API.
+     * Creates and returns a deep copy of this builder.
+     * Returns the concrete builder type (e.g., SelectQueryBuilder),
+     * maintaining API fluency.
      */
     fun copy(): T
 

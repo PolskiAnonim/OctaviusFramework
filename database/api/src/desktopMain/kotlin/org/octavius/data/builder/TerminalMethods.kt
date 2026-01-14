@@ -5,43 +5,43 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
-/** Interfejs zawierający metody terminalne zwracające dane */
+/** Interface containing terminal methods that return data */
 interface TerminalReturningMethods {
-    // --- Zwracanie pełnych wierszy ---
+    // --- Returning full rows ---
 
-    /** Pobiera listę wierszy jako List<Map<String, Any?>>. */
+    /** Fetches a list of rows as List<Map<String, Any?>>. */
     fun toList(params: Map<String, Any?> = emptyMap()): DataResult<List<Map<String, Any?>>>
 
-    /** Pobiera pojedynczy wiersz jako Map<String, Any?>?. */
+    /** Fetches a single row as Map<String, Any?>?. */
     fun toSingle(params: Map<String, Any?> = emptyMap()): DataResult<Map<String, Any?>?>
 
-    // --- Zwracanie obiektów data class ---
+    // --- Returning data class objects ---
 
     /**
-     * Mapuje wyniki na listę obiektów danego typu.
-     * Wymaga, aby nazwy/aliasy kolumn w SQL (w konwencji snake_case) odpowiadały
-     * nazwom właściwości w klasie `kClass` (w konwencji camelCase) lub posiadały adnotację @MapKey
-     * z zapisaną nazwą kolumny.
+     * Maps results to a list of objects of the given type.
+     * Requires that column names/aliases in SQL (in snake_case convention) match
+     * property names in the `kClass` class (in camelCase convention) or have a @MapKey annotation
+     * with the stored column name.
      */
     fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<List<T>>
 
     /**
-     * Mapuje wynik na pojedynczy obiekt danego typu.
-     * Działa na tej samej zasadzie mapowania co `toListOf`.
+     * Maps the result to a single object of the given type.
+     * Works on the same mapping principle as `toListOf`.
      */
     fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
-    // --- Zwracanie wartości skalarnych ---
+    // --- Returning scalar values ---
 
-    /** Pobiera pojedynczą wartość z pierwszej kolumny pierwszego wiersza. */
+    /** Fetches a single value from the first column of the first row. */
     fun <T : Any> toField(targetType: KType, params: Map<String, Any?> = emptyMap()): DataResult<T?>
 
-    /** Pobiera listę wartości z pierwszej kolumny wszystkich wierszy. */
+    /** Fetches a list of values from the first column of all rows. */
     fun <T : Any> toColumn(targetType: KType, params: Map<String, Any?> = emptyMap()): DataResult<List<T?>>
 
-    // --- Pomocnicze ---
+    // --- Helper methods ---
 
-    /** Zwraca string SQL bez wykonywania zapytania. */
+    /** Returns the SQL string without executing the query. */
     fun toSql(): String
 }
 
@@ -71,8 +71,8 @@ inline fun <reified T : Any> TerminalReturningMethods.toListOf(vararg params: Pa
     toListOf(T::class, params.toMap())
 
 /**
- * Wygodna funkcja rozszerzająca `inline` dla toListOf.
- * Wykorzystuje `reified` do automatycznego wnioskowania `T::class`.
+ * Convenient `inline` extension function for toListOf.
+ * Uses `reified` to automatically infer `T::class`.
  */
 inline fun <reified T : Any> TerminalReturningMethods.toListOf(params: Map<String, Any?> = emptyMap()): DataResult<List<T>> =
     toListOf(T::class, params)
@@ -81,16 +81,16 @@ inline fun <reified T : Any> TerminalReturningMethods.toSingleOf(vararg params: 
     toSingleOf(T::class, params.toMap())
 
 /**
- * Wygodna funkcja rozszerzająca `inline` dla toSingleOf.
- * Wykorzystuje `reified` do automatycznego wnioskowania `T::class`.
+ * Convenient `inline` extension function for toSingleOf.
+ * Uses `reified` to automatically infer `T::class`.
  */
 inline fun <reified T : Any> TerminalReturningMethods.toSingleOf(params: Map<String, Any?> = emptyMap()): DataResult<T?> =
     toSingleOf(T::class, params)
 
 
-/** Interfejs zawierający metodę terminalną modyfikującą*/
+/** Interface containing terminal modification method */
 interface TerminalModificationMethods {
-    /** Wykonuje zapytanie i zwraca liczbę wierszy która została zaktualizowana */
+    /** Executes the query and returns the number of rows that were updated */
     fun execute(params: Map<String, Any?> = emptyMap()): DataResult<Int>
 }
 

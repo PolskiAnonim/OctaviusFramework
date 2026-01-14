@@ -2,7 +2,7 @@ package org.octavius.database.type.registry
 
 import kotlin.reflect.KClass
 
-// --- Modele danych ---
+// --- Data Models ---
 
 internal enum class TypeCategory {
     STANDARD, ENUM, COMPOSITE, ARRAY, DYNAMIC

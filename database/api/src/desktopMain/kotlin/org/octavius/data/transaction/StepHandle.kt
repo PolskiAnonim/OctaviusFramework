@@ -3,38 +3,38 @@ package org.octavius.data.transaction
 import java.util.*
 
 /**
- * Bezpieczny typowo, unikalny identyfikator dla kroku w transakcji.
+ * Type-safe, unique identifier for a step in a transaction.
  */
 class StepHandle<T> internal constructor() {
     private val id: UUID = UUID.randomUUID()
 
     /**
-     * Tworzy referencję do wartości skalarnej, gdy krok zwraca pojedynczą wartość
-     * (np. z `toField()` lub `execute()`).
+     * Creates a reference to a scalar value when the step returns a single value
+     * (e.g., from `toField()` or `execute()`).
      *
-     * @param rowIndex Indeks wiersza (zazwyczaj 0).
+     * @param rowIndex Row index (typically 0).
      */
     fun field(rowIndex: Int = 0): TransactionValue.FromStep.Field {
         return TransactionValue.FromStep.Field(this, rowIndex)
     }
 
     /**
-     * Tworzy referencję do wartości w konkretnej kolumnie, gdy krok zwraca wiersz(e)
-     * (np. z `toList()` lub `toSingle()`).
+     * Creates a reference to a value in a specific column when the step returns row(s)
+     * (e.g., from `toList()` or `toSingle()`).
      *
-     * @param columnName Nazwa kolumny do pobrania.
-     * @param rowIndex Indeks wiersza (zazwyczaj 0).
+     * @param columnName Name of the column to fetch.
+     * @param rowIndex Row index (typically 0).
      */
     fun field(columnName: String, rowIndex: Int = 0): TransactionValue.FromStep.Field {
         return TransactionValue.FromStep.Field(this, columnName, rowIndex)
     }
 
-    /** Pobiera całą kolumnę z wyniku, który jest listą skalarów (wynik `toColumn()`). */
+    /** Fetches an entire column from a result that is a list of scalars (result of `toColumn()`). */
     fun column(): TransactionValue.FromStep.Column {
         return TransactionValue.FromStep.Column(this)
     }
 
-    /** Pobiera wartości z podanej kolumny z wyniku, który jest listą wierszy (wynik `toList()`). */
+    /** Fetches values from a given column from a result that is a list of rows (result of `toList()`). */
     fun column(columnName: String): TransactionValue.FromStep.Column {
         return TransactionValue.FromStep.Column(this, columnName)
     }

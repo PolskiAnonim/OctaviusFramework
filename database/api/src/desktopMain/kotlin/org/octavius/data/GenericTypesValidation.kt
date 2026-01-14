@@ -6,8 +6,8 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 /**
- * Waliduje, czy wartość pasuje do docelowego typu KType.
- * Dla list i map, weryfikuje typ pierwszego elementu, który nie jest nullem.
+ * Validates whether a value matches the target KType.
+ * For lists and maps, verifies the type of the first non-null element.
  */
 fun validateValue(value: Any?, targetType: KType): Any? {
     if (value == null) {
@@ -16,7 +16,7 @@ fun validateValue(value: Any?, targetType: KType): Any? {
 
     val targetClass = targetType.classifier as KClass<*>
 
-    // --- Walidacja 1: Sprawdzenie głównego typu ---
+    // --- Validation 1: Check main type ---
     if (!targetClass.isInstance(value)) {
         throw ConversionException(
             messageEnum = ConversionExceptionMessage.INCOMPATIBLE_TYPE,
@@ -25,10 +25,10 @@ fun validateValue(value: Any?, targetType: KType): Any? {
         )
     }
 
-    // --- Walidacja 2: Sprawdzenie typu elementu w kolekcji ---
+    // --- Validation 2: Check element type in collection ---
     when (value) {
         is List<*> -> validateList(value, targetType)
-        // Jedyna mapa z bazy która może przyjść to JsonObject
+        // The only map from database that can come is JsonObject
         is Map<*, *> -> validateMap(value, targetType)
     }
 
@@ -40,16 +40,16 @@ private fun validateList(value: List<*>, targetType: KType) {
 
     if (firstNonNullElement != null) {
         val listElementType = targetType.arguments.firstOrNull()?.type
-            ?: return // Dla List<*> lub gdy typ jest nieznany, nie walidujemy dalej
+            ?: return // For List<*> or when type is unknown, we don't validate further
 
         val listElementClass = listElementType.classifier as? KClass<*>
-            ?: return // Nie udało się określić klasy elementu, odpuszczamy
+            ?: return // Couldn't determine element class, we give up
 
         if (!listElementClass.isInstance(firstNonNullElement)) {
             throw ConversionException(
                 messageEnum = ConversionExceptionMessage.INCOMPATIBLE_COLLECTION_ELEMENT_TYPE,
                 value = firstNonNullElement,
-                targetType = listElementType.toString() // Np. "kotlin.String"
+                targetType = listElementType.toString() // E.g., "kotlin.String"
             )
         }
     }
@@ -65,7 +65,7 @@ private fun validateMap(value: Map<*,*>, targetType: KType) {
         val keyClass = keyType.classifier as KClass<*>
         val valueClass = valueType.classifier as KClass<*>
 
-        // Sprawdź typ klucza i wartości dla pierwszej pary
+        // Check key and value type for the first pair
         if (!keyClass.isInstance(firstNonNullEntry.key) || !valueClass.isInstance(firstNonNullEntry.value)) {
             throw ConversionException(
                 messageEnum = ConversionExceptionMessage.INCOMPATIBLE_COLLECTION_ELEMENT_TYPE,

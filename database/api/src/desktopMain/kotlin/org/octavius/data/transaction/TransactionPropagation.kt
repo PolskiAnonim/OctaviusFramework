@@ -1,29 +1,29 @@
 package org.octavius.data.transaction
 
 /**
- * Definiuje zachowanie transakcji, gdy jest uruchamiana w kontekście już istniejącej transakcji.
- * Odzwierciedla kluczowe strategie propagacji ze Spring Framework.
+ * Defines transaction behavior when it is launched in the context of an already existing transaction.
+ * Reflects key propagation strategies from Spring Framework.
  */
 enum class TransactionPropagation {
     /**
-     * Domyślne zachowanie. Jeśli transakcja już istnieje, dołącz do niej.
-     * Jeśli nie, utwórz nową.
+     * Default behavior. If a transaction already exists, join it.
+     * If not, create a new one.
      */
     REQUIRED,
 
     /**
-     * Zawsze twórz nową, niezależną transakcję.
-     * Istniejąca transakcja zostanie wstrzymana na czas wykonania nowej.
-     * Użyteczne np. do zapisu logów audytowych, które muszą się powieść
-     * nawet jeśli główna operacja zostanie wycofana.
+     * Always create a new, independent transaction.
+     * The existing transaction will be suspended during the execution of the new one.
+     * Useful e.g., for saving audit logs that must succeed
+     * even if the main operation is rolled back.
      */
     REQUIRES_NEW,
 
     /**
-     * Wykonaj w zagnieżdżonej transakcji, jeśli transakcja już istnieje.
-     * Używa mechanizmu SAVEPOINT w bazie danych. Pozwala to na niezależne
-     * wycofanie zagnieżdżonej transakcji bez wpływu na transakcję zewnętrzną.
-     * Jeśli transakcja nadrzędna nie istnieje, działa jak [REQUIRED].
+     * Execute in a nested transaction if a transaction already exists.
+     * Uses the SAVEPOINT mechanism in the database. This allows independent
+     * rollback of the nested transaction without affecting the outer transaction.
+     * If a parent transaction does not exist, behaves like [REQUIRED].
      */
     NESTED
 }

@@ -6,37 +6,37 @@ import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 /**
- * Interfejs dla StepBuilder - zawiera te same metody terminalne co TerminalReturningMethods
- * i TerminalModificationMethods, ale zwraca TransactionStep zamiast wykonywać zapytania.
+ * Interface for StepBuilder - contains the same terminal methods as TerminalReturningMethods
+ * and TerminalModificationMethods, but returns TransactionStep instead of executing queries.
  */
 interface StepBuilderMethods {
-    // --- Zwracanie pełnych wierszy ---
+    // --- Returning full rows ---
 
-    /** Tworzy TransactionStep z metodą toList */
+    /** Creates a TransactionStep with toList method */
     fun toList(params: Map<String, Any?> = emptyMap()): TransactionStep<List<Map<String, Any?>>>
 
-    /** Tworzy TransactionStep z metodą toSingle */
+    /** Creates a TransactionStep with toSingle method */
     fun toSingle(params: Map<String, Any?> = emptyMap()): TransactionStep<Map<String, Any?>?>
 
-    // --- Zwracanie obiektów data class ---
+    // --- Returning data class objects ---
 
-    /** Tworzy TransactionStep z metodą toListOf */
+    /** Creates a TransactionStep with toListOf method */
     fun <T : Any> toListOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<List<T>>
 
-    /** Tworzy TransactionStep z metodą toSingleOf */
+    /** Creates a TransactionStep with toSingleOf method */
     fun <T : Any> toSingleOf(kClass: KClass<T>, params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
 
-    // --- Zwracanie wartości skalarnych ---
+    // --- Returning scalar values ---
 
-    /** Tworzy TransactionStep z metodą toField */
+    /** Creates a TransactionStep with toField method */
     fun <T : Any> toField(kType: KType, params: Map<String, Any?> = emptyMap()): TransactionStep<T?>
 
-    /** Tworzy TransactionStep z metodą toColumn */
+    /** Creates a TransactionStep with toColumn method */
     fun <T : Any> toColumn(kType: KType,  params: Map<String, Any?> = emptyMap()): TransactionStep<List<T?>>
 
-    // --- Metoda modyfikująca ---
+    // --- Modification method ---
 
-    /** Tworzy TransactionStep z metodą execute */
+    /** Creates a TransactionStep with execute method */
     fun execute(params: Map<String, Any?> = emptyMap()): TransactionStep<Int>
 }
 
@@ -69,7 +69,7 @@ inline fun <reified T : Any> StepBuilderMethods.toListOf(vararg params: Pair<Str
     toListOf(T::class, params.toMap())
 
 /**
- * Wygodne funkcje rozszerzające inline dla StepBuilderMethods
+ * Convenient inline extension functions for StepBuilderMethods
  */
 inline fun <reified T : Any> StepBuilderMethods.toListOf(params: Map<String, Any?> = emptyMap()): TransactionStep<List<T>> =
     toListOf(T::class, params)

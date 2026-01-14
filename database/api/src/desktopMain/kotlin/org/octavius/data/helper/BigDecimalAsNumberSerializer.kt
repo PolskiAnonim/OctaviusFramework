@@ -14,7 +14,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigDecimal
 
 /**
- * Serializator dla typu BigDecimal w celu użycia go w DynamicDto
+ * Serializer for BigDecimal type for use in DynamicDto
  */
 object BigDecimalAsNumberSerializer : KSerializer<BigDecimal> {
     override val descriptor: SerialDescriptor =

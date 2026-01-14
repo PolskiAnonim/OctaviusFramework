@@ -77,10 +77,10 @@ internal class TransactionPlanExecutor(
                 }
             }
             is TransactionValue.Transformed -> {
-                // Walidujemy to, co jest w środku.
+                // Validate what's inside.
                 validateTransactionValue(value.source, currentIndex, handleToIndexMap)
             }
-            // Inne typy (Value, zwykłe wartości) nie wymagają walidacji, więc nic nie robimy.
+            // Other types (Value, regular values) don't require validation, so we do nothing.
         }
     }
 
@@ -119,12 +119,12 @@ internal class TransactionPlanExecutor(
             try {
                 executeSingleStep(index, step, indexedResults, handleToIndexMap)
             } catch (e: Exception) {
-                // Opakuj KAŻDY błąd w kontekst kroku i rzuć go dalej, aby wycofać transakcję
+                // Wrap EVERY error in step context and throw it to rollback the transaction
                 throw TransactionStepExecutionException(stepIndex = index, cause = e)
             }
         }
 
-        // Po udanym wykonaniu wszystkich kroków, stwórz finalną mapę wyników
+        // After successfully executing all steps, create the final results map
         return stepsWithHandles.associate { (handle, _) ->
             handle to indexedResults.getValue(handleToIndexMap.getValue(handle))
         }
@@ -133,23 +133,23 @@ internal class TransactionPlanExecutor(
     private fun executeSingleStep(
         index: Int,
         step: TransactionStep<*>,
-        indexedResults: MutableMap<Int, Any?>, // Modyfikujemy tę mapę
+        indexedResults: MutableMap<Int, Any?>, // We modify this map
         handleToIndexMap: Map<StepHandle<*>, Int>
     ) {
         logger.debug { "Executing step $index..." }
 
-        // Rozwiąż referencje i zbuduj finalne parametry
+        // Resolve references and build final parameters
         val finalParams = buildFinalParameters(step, indexedResults, handleToIndexMap)
         logger.trace { "--> Final params for step $index: $finalParams" }
 
-        // Wykonaj logikę kroku
-        // Obsłuż wynik kroku
+        // Execute step logic
+        // Handle step result
         when (val stepResult = step.executionLogic(step.builder, finalParams)) {
             is DataResult.Success -> {
                 indexedResults[index] = stepResult.value
             }
             is DataResult.Failure -> {
-                // Rzucamy błąd, zostanie złapany piętro wyżej i opakowany
+                // Throw error, it will be caught one level up and wrapped
                 throw stepResult.error
             }
         }
@@ -193,17 +193,17 @@ internal class TransactionPlanExecutor(
         handleToIndexMap: Map<StepHandle<*>, Int>
     ): Any? {
         if (value !is TransactionValue) {
-            return value // Zwykła wartość
+            return value // Regular value
         }
 
         return when (value) {
-            is TransactionValue.Value -> value.value // Odpakowanie
+            is TransactionValue.Value -> value.value // Unwrap
             is TransactionValue.Transformed -> resolveTransformed(value, indexedResults, handleToIndexMap)
             is TransactionValue.FromStep -> resolveFromStep(value, indexedResults, handleToIndexMap)
         }
     }
 
-    // Pomocnicza funkcja, żeby znaleźć "winowajcę" (uchwyt) w głąb zagnieżdżeń
+    // Helper function to find the "culprit" (handle) deep in nested structures
     private fun extractRootHandle(value: TransactionValue): StepHandle<*>? {
         return when (value) {
             is TransactionValue.FromStep -> value.handle
@@ -216,16 +216,16 @@ internal class TransactionPlanExecutor(
         indexedResults: Map<Int, Any?>,
         handleToIndexMap: Map<StepHandle<*>, Int>
     ): Any? {
-        // Najpierw pobierz "surową" wartość z wnętrza (rekurencja!)
+        // First retrieve the "raw" value from inside (recursion!)
         val rawValue = resolveReference(value.source, indexedResults, handleToIndexMap)
 
-        // Zastosuj funkcję użytkownika
+        // Apply user-provided function
         return try {
             value.transform(rawValue)
         } catch (e: Exception) {
-            // Musimy ustalić, jakiego kroku dotyczyła ta transformacja.
-            // Ponieważ Transformed opakowuje inną wartość (np. FromStep),
-            // musimy "dokopać się" do uchwytu, żeby podać poprawny stepIndex w błędzie.
+            // We need to determine which step this transformation was related to.
+            // Since Transformed wraps another value (e.g., FromStep),
+            // we need to "dig down" to the handle to provide the correct stepIndex in the error.
             val rootHandle = extractRootHandle(value.source)
             val stepIndex = rootHandle?.let { handleToIndexMap[it] } ?: -1
 
@@ -243,10 +243,10 @@ internal class TransactionPlanExecutor(
         indexedResults: Map<Int, Any?>,
         handleToIndexMap: Map<StepHandle<*>, Int>
     ): Any? {
-        val stepIndex = handleToIndexMap[value.handle]!! // Walidowane wcześniej
-        // Logika pętli `execute` gwarantuje, że jeśli dotarliśmy do tego miejsca,
-        // to krok `stepIndex` został wykonany, a jego wynik znajduje się w mapie.
-        val sourceResult = indexedResults[stepIndex] ?: return null // Wynik kroku może być null
+        val stepIndex = handleToIndexMap[value.handle]!! // Validated earlier
+        // The `execute` loop logic guarantees that if we reached this point,
+        // step `stepIndex` has been executed and its result is in the map.
+        val sourceResult = indexedResults[stepIndex] ?: return null // Step result can be null
 
         return when (value) {
             is TransactionValue.FromStep.Field -> resolveField(value, sourceResult, stepIndex)
@@ -257,7 +257,7 @@ internal class TransactionPlanExecutor(
 
     private fun resolveField(
         value: TransactionValue.FromStep.Field,
-        sourceResult: Any, // Wiemy, że nie jest null z poprzedniego kroku
+        sourceResult: Any, // We know it's not null from the previous step
         stepIndex: Int
     ): Any? {
         val rowData = sourceResult.toRowMap(value.rowIndex, stepIndex)
@@ -276,7 +276,7 @@ internal class TransactionPlanExecutor(
 
     private fun resolveColumn(
         value: TransactionValue.FromStep.Column,
-        sourceResult: Any, // Wiemy, że nie jest null
+        sourceResult: Any, // We know it's not null
         stepIndex: Int
     ): List<Any?> {
         // toList, toColumn, toListOf
@@ -293,18 +293,18 @@ internal class TransactionPlanExecutor(
             val row = element as? Map<*, *>
                 ?: throw StepDependencyException(StepDependencyExceptionMessage.RESULT_NOT_MAP_LIST, stepIndex)
 
-            // Sprawdzamy, czy klucz istnieje.
+            // Check if key exists.
             if (!row.containsKey(columnName)) {
                 throw StepDependencyException(StepDependencyExceptionMessage.COLUMN_NOT_FOUND, stepIndex, columnName)
             }
 
-            // Bezpiecznie pobieramy wartość.
+            // Safely retrieve the value.
             row[columnName]
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    // Sygnatura `toRowMap` przyjmuje `Any`, bo `null` jest obsługiwany wcześniej w `resolveReference`.
+    // `toRowMap` signature accepts `Any`, because `null` is handled earlier in `resolveReference`.
     private fun Any.toRowMap(rowIndex: Int, stepIndex: Int): Map<String, Any?> {
         return when (this) {
             // toList, toColumn, toListOf
@@ -313,10 +313,10 @@ internal class TransactionPlanExecutor(
                     throw StepDependencyException(StepDependencyExceptionMessage.ROW_INDEX_OUT_OF_BOUNDS, stepIndex, rowIndex, this.size)
                 }
                 when (val element = this[rowIndex]) {
-                    // Wynik toList - ewentualnie może być zwrócona pusta mapa - brak nulli
+                    // toList result - an empty map may be returned - no nulls
                     is Map<*, *> -> element as Map<String, Any?>
-                    // toListOf przechodzi - w konwerterze błąd dla niekompozytów
-                    // albo toColumn - dany element może być nullem
+                    // toListOf passes - error in converter for non-composites
+                    // or toColumn - the element can be null
                     else -> mapOf(SCALAR_RESULT_KEY to element)
                 }
             }
@@ -332,8 +332,8 @@ internal class TransactionPlanExecutor(
                 if (rowIndex > 0) {
                     throw StepDependencyException(StepDependencyExceptionMessage.INVALID_ROW_ACCESS_ON_NON_LIST, stepIndex, rowIndex)
                 }
-                // Wynik toSingleOf (błąd w konwerterze i type registry gdy użyte na niekompozycie)
-                // toField może być nullem, natomiast execute nie
+                // toSingleOf result (error in converter and type registry when used on non-composite)
+                // toField can be null, but execute cannot
                 mapOf(SCALAR_RESULT_KEY to this)
             }
         }

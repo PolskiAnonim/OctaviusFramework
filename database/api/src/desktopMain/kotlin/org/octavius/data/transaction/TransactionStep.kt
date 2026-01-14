@@ -4,7 +4,7 @@ import org.octavius.data.DataResult
 import org.octavius.data.builder.QueryBuilder
 
 class TransactionStep<T>(
-    // Wszystkie pola muszą być publiczne, aby Executor miał do nich dostęp
+    // All fields must be public so that Executor has access to them
     val builder: QueryBuilder<*>,
     val executionLogic: (builder: QueryBuilder<*>, params: Map<String, Any?>) -> DataResult<T>,
     val params: Map<String, Any?>

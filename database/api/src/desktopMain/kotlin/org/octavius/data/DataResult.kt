@@ -3,29 +3,29 @@ package org.octavius.data
 import org.octavius.data.exception.DatabaseException
 
 /**
- * Kontener na wynik operacji bazodanowej, który może zakończyć się sukcesem lub porażką.
- * Zastępuje mechanizm wyjątków, zmuszając do jawnego obsłużenia obu przypadków.
+ * Container for a database operation result, which can end in success or failure.
+ * Replaces the exception mechanism, forcing explicit handling of both cases.
  *
- * @param T Typ danych w przypadku sukcesu.
+ * @param T Data type in case of success.
  */
 sealed class DataResult<out T> {
-    /** Reprezentuje pomyślne wykonanie operacji. */
+    /** Represents successful operation execution. */
     data class Success<out T>(val value: T) : DataResult<T>()
 
-    /** Reprezentuje błąd podczas operacji. */
+    /** Represents an error during operation. */
     data class Failure(val error: DatabaseException) : DataResult<Nothing>()
 }
 
 /**
- * Transformuje wartość wewnątrz [DataResult.Success], zachowując [DataResult.Failure] bez zmian.
+ * Transforms the value inside [DataResult.Success], leaving [DataResult.Failure] unchanged.
  *
- * Pozwala na czyste i bezpieczne operowanie na wyniku bez rzucania wyjątków.
- * Przykład: `result.map { it.toString() }` konwertuje Success<Int> na Success<String>.
+ * Allows for clean and safe operation on the result without throwing exceptions.
+ * Example: `result.map { it.toString() }` converts Success<Int> to Success<String>.
  *
- * @param T Typ oryginalnej wartości.
- * @param R Typ wartości po transformacji.
- * @param transform Funkcja transformująca wartość typu T na typ R.
- * @return Nowy DataResult z przekształconą wartością lub oryginalny Failure.
+ * @param T Original value type.
+ * @param R Value type after transformation.
+ * @param transform Function transforming value of type T to type R.
+ * @return New DataResult with transformed value or original Failure.
  */
 inline fun <T, R> DataResult<T>.map(transform: (T) -> R): DataResult<R> {
     return when (this) {
@@ -35,10 +35,10 @@ inline fun <T, R> DataResult<T>.map(transform: (T) -> R): DataResult<R> {
 }
 
 /**
- * Wykonuje akcję jeśli wynik jest Success, nie modyfikując oryginalnej wartości.
+ * Executes an action if the result is Success, without modifying the original value.
  *
- * @param action Akcja do wykonania na wartości Success.
- * @return Ten sam DataResult dla łańcuchowania.
+ * @param action Action to execute on the Success value.
+ * @return The same DataResult for chaining.
  */
 fun <T> DataResult<T>.onSuccess(action: (T) -> Unit): DataResult<T> {
     if (this is DataResult.Success) action(value)
@@ -46,10 +46,10 @@ fun <T> DataResult<T>.onSuccess(action: (T) -> Unit): DataResult<T> {
 }
 
 /**
- * Wykonuje akcję jeśli wynik jest Failure, nie modyfikując oryginalnego błędu.
+ * Executes an action if the result is Failure, without modifying the original error.
  *
- * @param action Akcja do wykonania na błędzie Failure.
- * @return Ten sam DataResult dla łańcuchowania.
+ * @param action Action to execute on the Failure error.
+ * @return The same DataResult for chaining.
  */
 fun <T> DataResult<T>.onFailure(action: (DatabaseException) -> Unit): DataResult<T> {
     if (this is DataResult.Failure) action(error)
@@ -57,13 +57,13 @@ fun <T> DataResult<T>.onFailure(action: (DatabaseException) -> Unit): DataResult
 }
 
 /**
- * Zwraca wartość jeśli wynik jest Success, lub rzuca wyjątek jeśli jest Failure.
+ * Returns the value if the result is Success, or throws an exception if it is Failure.
  *
- * Używaj ostrożnie - ta metoda przerywa bezpieczne przetwarzanie błędów.
- * Preferuj [map], [onSuccess], [onFailure] lub [getOrElse] gdy to możliwe.
+ * Use with caution - this method breaks safe error processing.
+ * Prefer [map], [onSuccess], [onFailure] or [getOrElse] when possible.
  *
- * @return Wartość typu T z Success.
- * @throws DatabaseException jeśli wynik jest Failure.
+ * @return Value of type T from Success.
+ * @throws DatabaseException if the result is Failure.
  */
 fun <T> DataResult<T>.getOrThrow(): T {
     return when (this) {
@@ -73,15 +73,15 @@ fun <T> DataResult<T>.getOrThrow(): T {
 }
 
 /**
- * Zwraca wartość jeśli wynik jest Success, lub oblicza wartość domyślną z błędu jeśli jest Failure.
+ * Returns the value if the result is Success, or computes a default value from the error if it is Failure.
  *
- * Pozwala na bezpieczne "wyjście" z DataResult z zawsze zdefiniowaną wartością.
- * Przykład: `result.getOrElse { emptyList() }` zwróci pustą listę w przypadku błędu.
+ * Allows for safe "exit" from DataResult with an always defined value.
+ * Example: `result.getOrElse { emptyList() }` will return an empty list in case of error.
  *
- * @param R Typ zwracanej wartości (nadtyp T).
- * @param T Typ wartości w Success.
- * @param onFailure Funkcja obliczająca wartość domyślną na podstawie błędu.
- * @return Wartość z Success lub wynik funkcji onFailure.
+ * @param R Return value type (supertype of T).
+ * @param T Value type in Success.
+ * @param onFailure Function computing the default value based on the error.
+ * @return Value from Success or result of onFailure function.
  */
 fun <R, T : R> DataResult<T>.getOrElse(onFailure: (Throwable) -> R): R {
     return when (this) {

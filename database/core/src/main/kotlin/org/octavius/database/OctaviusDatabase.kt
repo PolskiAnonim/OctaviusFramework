@@ -18,15 +18,15 @@ import javax.sql.DataSource
 import kotlin.time.measureTime
 
 /**
- * System zarządzania bazą danych - centralny punkt dostępu do usług bazodanowych.
+ * Database management system - central access point to database services.
  *
- * Inicjalizuje wszystkie niezbędne komponenty do pracy z bazą danych.
+ * Initializes all necessary components for database work.
  *
- * Odpowiada za:
- * - Konfigurację puli połączeń HikariCP z PostgreSQL (dla metody fromConfig)
- * - Inicjalizację menedżera transakcji Spring
- * - Automatyczne ładowanie rejestru typów z bazy danych i classpath
- * - Udostępnienie usług dostępu do danych przez interfejs [DataAccess]
+ * Responsible for:
+ * - HikariCP connection pool configuration with PostgreSQL (for fromConfig method)
+ * - Spring transaction manager initialization
+ * - Automatic type registry loading from database and classpath
+ * - Providing data access services through [DataAccess] interface
  *
  */
 object OctaviusDatabase {
@@ -34,7 +34,7 @@ object OctaviusDatabase {
 
     fun fromConfig(config: DatabaseConfig): DataAccess {
         logger.info { "Initializing DataSource..." }
-        // 1. Zależne od konfiguracji ustawienie `connectionInitSql`
+        // 1. Configuration-dependent setting of `connectionInitSql`
         val connectionInitSql = if (config.setSearchPath && config.dbSchemas.isNotEmpty()) {
             val schemas = config.dbSchemas.joinToString(", ")
             logger.debug { "Setting connectionInitSql to 'SET search_path TO $schemas'" }
@@ -110,11 +110,11 @@ object OctaviusDatabase {
     private fun runMigrations(dataSource: DataSource, schemas: List<String>, flywayBaselineVersion: String?) {
         logger.info { "Checking database migrations..." }
 
-        // Konfiguracja Flyway
+        // Flyway configuration
         val flywayConfig = Flyway.configure()
             .dataSource(dataSource)
             .schemas(*schemas.toTypedArray())
-            // Domyślna lokalizacja to classpath:db/migration
+            // Default location is classpath:db/migration
             .locations("classpath:db/migration")
             .createSchemas(true)
 

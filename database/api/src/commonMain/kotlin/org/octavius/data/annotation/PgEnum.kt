@@ -3,40 +3,40 @@ package org.octavius.data.annotation
 import org.octavius.data.util.CaseConvention
 
 /**
- * Oznacza klasę `enum` jako typ danych, który może być mapowany na typ `ENUM`
- * w bazie danych PostgreSQL.
+ * Marks an `enum` class as a data type that can be mapped to an `ENUM` type
+ * in PostgreSQL database.
  *
- * Ta adnotacja jest kluczowa dla `TypeRegistry`, które skanuje classpath w poszukiwaniu
- * oznaczonych klas, aby automatycznie zbudować mapowanie między typami Kotlina
- * a typami `ENUM` w PostgreSQL.
+ * This annotation is crucial for `TypeRegistry`, which scans the classpath for
+ * marked classes to automatically build mapping between Kotlin types
+ * and `ENUM` types in PostgreSQL.
  *
- * **Konwencja nazewnicza:**
- * Domyślnie, nazwa typu w PostgreSQL jest wyliczana na podstawie prostej nazwy klasy
- * poprzez konwersję z `CamelCase` na `snake_case` (np. klasa `OrderStatus` zostanie
- * zmapowana na typ `order_status`). Wartości enuma są domyślnie mapowane na
- * `SNAKE_CASE_UPPER` (np. `PENDING` -> `PENDING`).
+ * **Naming convention:**
+ * By default, the type name in PostgreSQL is derived from the simple class name
+ * by converting from `CamelCase` to `snake_case` (e.g., `OrderStatus` class will be
+ * mapped to `order_status` type). Enum values are by default mapped from PascalCase to
+ * `SNAKE_CASE_UPPER` (e.g., `Pending` -> `PENDING`).
  *
- * **Jawne określenie nazwy:**
- * Można nadpisać domyślną nazwę typu, podając ją w parametrze [name].
+ * **Explicit name specification:**
+ * You can override the default type name by providing it in the [name] parameter.
  *
- * @param name Opcjonalna, jawna nazwa odpowiadającego typu w bazie danych PostgreSQL.
- *             Jeśli pozostawiona pusta, nazwa zostanie wygenerowana automatycznie
- *             zgodnie z konwencją `CamelCase` -> `snake_case`.
- * @param pgConvention Konwencja nazewnicza dla wartości enuma w Postgresie
- * @param kotlinConvention Konwencja nazewnicza dla wartości enum w Kotlinie
+ * @param name Optional, explicit name of the corresponding type in PostgreSQL database.
+ *             If left empty, the name will be generated automatically
+ *             according to the `CamelCase` -> `snake_case` convention.
+ * @param pgConvention Naming convention for enum values in Postgres
+ * @param kotlinConvention Naming convention for enum values in Kotlin
  *
- * ### Przykłady
+ * ### Examples
  * ```kotlin
- * // Przykład 1: Użycie domyślnej konwencji nazewniczej
- * // Klasa `OrderStatus` zostanie zmapowana na typ `order_status` w PostgreSQL.
- * // Wartości (PENDING, COMPLETED) zostaną zmapowane jako 'PENDING', 'COMPLETED'.
+ * // Example 1: Using default naming convention
+ * // `OrderStatus` class will be mapped to `order_status` type in PostgreSQL.
+ * // Values (Pending, Completed) will be mapped as 'PENDING', 'COMPLETED'.
  * @PgEnum
- * enum class OrderStatus { PENDING, COMPLETED }
+ * enum class OrderStatus { Pending, Completed }
  *
- * // Przykład 2: Jawne określenie nazwy typu i inna konwencja wartości
- * // Klasa `PaymentMethod` zostanie zmapowana na typ `payment_method_enum`.
- * // Wartości (CreditCard) zostaną zmapowane jako 'credit_card'.
- * @PgEnum(name = "payment_method_enum", enumConvention = EnumCaseConvention.SNAKE_CASE_LOWER)
+ * // Example 2: Explicit type name specification and different value convention
+ * // `PaymentMethod` class will be mapped to `payment_method_enum` type.
+ * // Values (CreditCard) will be mapped as 'credit_card'.
+ * @PgEnum(name = "payment_method_enum", pgConvention = CaseConvention.SNAKE_CASE_LOWER)
  * enum class PaymentMethod { CreditCard, BankTransfer }
  * ```
  */
@@ -44,8 +44,8 @@ import org.octavius.data.util.CaseConvention
 @Retention(AnnotationRetention.RUNTIME)
 annotation class PgEnum(
     val name: String = "",
-    // Jak zapisane są wartości w bazie PostgreSQL (np. 'PENDING', 'in_progress')
+    // How values are stored in PostgreSQL database (e.g., 'PENDING', 'in_progress')
     val pgConvention: CaseConvention = CaseConvention.SNAKE_CASE_UPPER,
-    // Jak zapisane są wartości w klasie Enum w Kotlinie (np. Pending, InProgress)
+    // How values are stored in Kotlin Enum class (e.g., Pending, IN_PROGRESS)
     val kotlinConvention: CaseConvention = CaseConvention.PASCAL_CASE
 )

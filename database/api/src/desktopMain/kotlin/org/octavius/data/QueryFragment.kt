@@ -1,14 +1,14 @@
 package org.octavius.data
 
 /**
- * Prosty kontener na fragment zapytania SQL i jego parametry.
+ * Simple container for an SQL query fragment and its parameters.
  *
- * Służy jako nośnik danych, który łączy SQL z wartościami w bezpieczny sposób,
- * zapobiegając SQL Injection. Nie narzuca żadnego stylu budowania zapytań.
- * Jest to de facto para (String, Map).
+ * Serves as a data carrier that safely combines SQL with values,
+ * preventing SQL Injection. Does not impose any query building style.
+ * This is essentially a (String, Map) pair.
  *
- * @property sql Fragment kodu SQL, np. `status = :status OR user_id = ANY(:userIds)`.
- * @property params Mapa parametrów używanych w [sql].
+ * @property sql Fragment of SQL code, e.g., `status = :status OR user_id = ANY(:userIds)`.
+ * @property params Map of parameters used in [sql].
  */
 data class QueryFragment(
     val sql: String,
@@ -16,27 +16,27 @@ data class QueryFragment(
 )
 
 /**
- * Łączy listę fragmentów w jeden, działając analogicznie do standardowego [joinToString],
- * ale z uwzględnieniem scalania parametrów.
+ * Joins a list of fragments into one, working analogously to standard [joinToString],
+ * but with parameter merging support.
  *
- * Postfix i prefix mają zastosowanie głównie dla [org.octavius.data.builder.RawQueryBuilder]. Preferowanym sposobem dodawania samych klauzul
- * jest użycie odpowiednich builderów
+ * Postfix and prefix are mainly applicable for [org.octavius.data.builder.RawQueryBuilder]. The preferred way to add clauses themselves
+ * is to use the appropriate builders.
  *
- * 1.  **Bezpiecznie łączy mapy parametrów**, rzucając błąd w przypadku konfliktu kluczy.
- * 2.  Ignoruje puste fragmenty. Jeśli po filtrowaniu lista jest pusta, zwraca pusty QueryFragment
- *     (ignorując prefix i postfix, aby nie generować np. pustego "WHERE ()").
- * 3.  Otacza każdy *pojedynczy* fragment nawiasami dla zachowania priorytetów operatorów.
+ * 1.  **Safely merges parameter maps**, throwing an error in case of key conflicts.
+ * 2.  Ignores empty fragments. If after filtering the list is empty, returns an empty QueryFragment
+ *     (ignoring prefix and postfix to avoid generating e.g., an empty "WHERE ()").
+ * 3.  Wraps each *single* fragment in parentheses to preserve operator precedence.
  *
- * @param separator Ciąg znaków oddzielający fragmenty, np. " AND ".
- * @param prefix Ciąg wstawiany na początku całego wynikowego łańcucha (np. "WHERE ").
- * @param postfix Ciąg wstawiany na końcu całego wynikowego łańcucha (np. ";").
- * @param addParenthesis Czy dodawać nawiasy wokół fragmentów - domyślnie true
+ * @param separator Character sequence separating fragments, e.g., " AND ".
+ * @param prefix Character sequence inserted at the beginning of the entire resulting string (e.g., "WHERE ").
+ * @param postfix Character sequence inserted at the end of the entire resulting string (e.g., ";").
+ * @param addParenthesis Whether to add parentheses around fragments - default true
  *
- * @return Nowy, połączony [QueryFragment].
+ * @return New, joined [QueryFragment].
  */
 fun List<QueryFragment>.join(separator: String, prefix: String = "", postfix: String = "", addParenthesis: Boolean = true): QueryFragment {
     val significantFragments = this.filter { it.sql.isNotBlank() }
-    // Jeśli nie ma znaczących fragmentów, zwracamy pusty obiekt.
+    // If there are no significant fragments, we return an empty object.
     if (significantFragments.isEmpty()) {
         return QueryFragment("")
     }

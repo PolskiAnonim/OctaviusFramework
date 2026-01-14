@@ -11,15 +11,15 @@ import org.octavius.data.util.CaseConvention
 import org.octavius.data.util.CaseConverter
 
 /**
- * Serializator dla użycia w enumie dla DynamicDto
- * Należy stworzyć object który z niego dziedziczy i prekazać dla kotlinx.serialization
+ * Serializer for use in enum for DynamicDto
+ * An object must be created that inherits from it and passed to kotlinx.serialization
  */
 open class DynamicDtoEnumSerializer<E : Enum<E>>(
     serialName: String,
-    private val entries: List<E>, // Przekazujemy listę wartości
-    // Jak zapisane są wartości w bazie PostgreSQL (np. 'PENDING', 'in_progress')
+    private val entries: List<E>, // Pass the list of values
+    // How values are stored in PostgreSQL database (e.g., 'PENDING', 'in_progress')
     private val pgConvention: CaseConvention = CaseConvention.SNAKE_CASE_UPPER,
-    // Jak zapisane są wartości w klasie Enum w Kotlinie (np. Pending, InProgress)
+    // How values are stored in Kotlin Enum class (e.g., Pending, InProgress)
     private val kotlinConvention: CaseConvention = CaseConvention.PASCAL_CASE
 ) : KSerializer<E> {
 
@@ -38,9 +38,9 @@ open class DynamicDtoEnumSerializer<E : Enum<E>>(
     override fun deserialize(decoder: Decoder): E {
         val string = decoder.decodeString()
 
-        // Logika odwracania też jest tu RAZ
-        // Uwaga: Można to zoptymalizować mapą, jeśli wydajność jest krytyczna,
-        // ale przy enumach to zazwyczaj pomijalne.
+        // Reverse logic is also here ONCE
+        // Note: This can be optimized with a map if performance is critical,
+        // but for enums this is usually negligible.
         val kotlinName = CaseConverter.convert(
             string,
             pgConvention,

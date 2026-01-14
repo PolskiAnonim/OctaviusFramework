@@ -22,11 +22,11 @@ import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 
 /**
- * Definicja pojedynczego mapowania dla standardowego typu PostgreSQL.
+ * Definition of a single mapping for a standard PostgreSQL type.
  *
- * @param kotlinClass Odpowiednik KClass w Kotlinie.
- * @param fromResultSet Sposób wyciągnięcia wartości bezpośrednio z ResultSet (szybka ścieżka).
- * @param fromString Sposób parsowania wartości z jej tekstowej reprezentacji (wolna ścieżka).
+ * @param kotlinClass Kotlin KClass equivalent.
+ * @param fromResultSet Method to extract value directly from ResultSet (fast path).
+ * @param fromString Method to parse value from its textual representation (slow path).
  */
 internal data class StandardTypeHandler(
     val kotlinClass: KClass<*>,
@@ -35,10 +35,10 @@ internal data class StandardTypeHandler(
 )
 
 /**
- * Centralny rejestr i jedyne źródło prawdy dla mapowań standardowych typów PostgreSQL na typy Kotlina.
+ * Central registry and single source of truth for mappings of standard PostgreSQL types to Kotlin types.
  *
- * Zastępuje rozproszone bloki `when` w `PostgresToKotlinConverter` i `ResultSetValueExtractor`,
- * zapewniając spójność i łatwość w rozszerzaniu.
+ * Replaces scattered `when` blocks in `PostgresToKotlinConverter` and `ResultSetValueExtractor`,
+ * ensuring consistency and ease of extension.
  */
 @OptIn(ExperimentalTime::class)
 internal object StandardTypeMappingRegistry {
@@ -54,7 +54,7 @@ internal object StandardTypeMappingRegistry {
         .appendPattern("X")
         .toFormatter()
 
-    // GŁÓWNA MAPA - JEDYNE ŹRÓDŁO PRAWDY
+    // MAIN MAP - SINGLE SOURCE OF TRUTH
     private val mappings: Map<String, StandardTypeHandler> = buildMappings()
 
     private fun buildMappings(): Map<String, StandardTypeHandler> {
@@ -63,18 +63,18 @@ internal object StandardTypeMappingRegistry {
         PgStandardType.entries.forEach { pgType ->
             if (pgType.isArray) return@forEach
             val handler = when (pgType) {
-                // Typy numeryczne całkowite
+                // Integer numeric types
                 PgStandardType.INT2, PgStandardType.SMALLSERIAL -> primitive(Short::class, ResultSet::getShort, String::toShort)
                 PgStandardType.INT4, PgStandardType.SERIAL -> primitive(Int::class, ResultSet::getInt, String::toInt)
                 PgStandardType.INT8, PgStandardType.BIGSERIAL -> primitive(Long::class, ResultSet::getLong, String::toLong)
-                // Typy zmiennoprzecinkowe
+                // Floating-point types
                 PgStandardType.FLOAT4 -> primitive(Float::class, ResultSet::getFloat, String::toFloat)
                 PgStandardType.FLOAT8 -> primitive(Double::class, ResultSet::getDouble, String::toDouble)
 
                 PgStandardType.NUMERIC -> standard(BigDecimal::class, ResultSet::getBigDecimal, String::toBigDecimal)
-                // Typy tekstowe
+                // Text types
                 PgStandardType.TEXT, PgStandardType.VARCHAR, PgStandardType.CHAR -> fromStringOnly(String::class) { it }
-                // Data i czas
+                // Date and time
                 PgStandardType.DATE -> mapped(
                     LocalDate::class, ResultSet::getDate,
                     { it.toLocalDate().toKotlinLocalDate() },
@@ -121,13 +121,13 @@ internal object StandardTypeMappingRegistry {
                     { getObject(it) as? PGInterval },
                     ::pgIntervalToDuration,
                     { s ->
-                        // Konwersja z PGInterval na kotlin.time.Duration
+                        // Conversion from PGInterval to kotlin.time.Duration
                         pgIntervalToDuration(PGInterval(s))
                     }
                 )
                 // Json
                 PgStandardType.JSON, PgStandardType.JSONB -> fromStringOnly(JsonElement::class) { Json.parseToJsonElement(it) }
-                // Inne
+                // Other
                 PgStandardType.BOOL -> primitive(Boolean::class, ResultSet::getBoolean) { it == "t" }
 
                 PgStandardType.UUID -> standard(UUID::class, { getObject(it) as UUID? }, UUID::fromString)
@@ -172,9 +172,9 @@ internal object StandardTypeMappingRegistry {
 
     fun getAllTypeNames(): Set<String> = mappings.keys
 
-    // Śmietnik JDBC:
-    // 1. Dla typów prymitywnych (int, bool, double).
-    // Wywołuje getter, a potem sprawdza wasNull().
+    // JDBC quirks:
+    // 1. For primitive types (int, bool, double).
+    // Calls getter, then checks wasNull().
     private inline fun <reified T : Any> primitive(
         kClass: KClass<T>,
         crossinline getter: ResultSet.(Int) -> T,
@@ -187,7 +187,7 @@ internal object StandardTypeMappingRegistry {
         },
         fromString = parser
     )
-    // 3. Dla typów standardowych (bez konwersji zwracających nulle).
+    // 2. For standard types (without conversions returning nulls).
     private inline fun <reified T : Any> standard(
         kClass: KClass<T>,
         crossinline getter: ResultSet.(Int) -> T?,
@@ -198,19 +198,19 @@ internal object StandardTypeMappingRegistry {
         fromString = parser
     )
 
-    // 3. Dla typów wymagających konwersji (np. Timestamp -> Kotlin Instant).
-    // Zabezpiecza przed NullPointerException w mapperze.
+    // 3. For types requiring conversion (e.g., Timestamp -> Kotlin Instant).
+    // Protects against NullPointerException in mapper.
     private inline fun <SRC : Any, reified T : Any> mapped(
         kClass: KClass<T>,
-        crossinline getter: ResultSet.(Int) -> SRC?, // Getter JDBC
-        crossinline mapper: (SRC) -> T,              // Konwersja obiektu
-        noinline parser: (String) -> T               // Konwersja Stringa
+        crossinline getter: ResultSet.(Int) -> SRC?, // JDBC getter
+        crossinline mapper: (SRC) -> T,              // Object conversion
+        noinline parser: (String) -> T               // String conversion
     ) = StandardTypeHandler(
         kotlinClass = kClass,
-        fromResultSet = { rs, i -> rs.getter(i)?.let(mapper) }, // Safe call (?.) załatwia sprawę
+        fromResultSet = { rs, i -> rs.getter(i)?.let(mapper) }, // Safe call (?.) handles it
         fromString = parser
     )
-    // 4. Dla typów nie posiadającej szybszej ścieżki niż odczyt Stringa
+    // 4. For types without a faster path than String reading
     private inline fun <reified T : Any> fromStringOnly(
         kClass: KClass<T>,
         noinline parser: (String) -> T
