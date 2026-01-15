@@ -83,6 +83,21 @@ private fun <T : Any> getOrCreateDataObjectMetadata(kClass: KClass<T>): DataObje
 
 // --- Conversion FROM MAP to OBJECT ---
 
+/**
+ * Converts a map (typically a database row) to a data class instance.
+ *
+ * This is the preferred, type-safe way to convert query results to domain objects.
+ * Uses the `reified` type parameter to automatically infer the target class.
+ *
+ * **Naming convention:** Keys in snake_case are automatically matched to camelCase properties.
+ * Use [@MapKey] annotation to override the default mapping.
+ *
+ * @param T Target data class type.
+ * @return New instance of T with values from the map.
+ * @throws ConversionException if required properties are missing or types don't match.
+ *
+ * @see MapKey
+ */
 inline fun <reified T : Any> Map<String, Any?>.toDataObject(): T {
     return toDataObject(T::class)
 }

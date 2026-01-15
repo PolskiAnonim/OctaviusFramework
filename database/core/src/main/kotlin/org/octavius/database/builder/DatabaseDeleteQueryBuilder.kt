@@ -5,6 +5,7 @@ import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.JdbcTemplate
 
+/** Internal implementation of [DeleteQueryBuilder] for building SQL DELETE statements. */
 internal class DatabaseDeleteQueryBuilder(
     jdbcTemplate: JdbcTemplate,
     kotlinToPostgresConverter: KotlinToPostgresConverter,

@@ -6,6 +6,7 @@ import org.octavius.database.RowMappers
 import org.octavius.database.type.KotlinToPostgresConverter
 import org.springframework.jdbc.core.JdbcTemplate
 
+/** Internal implementation of [InsertQueryBuilder] for building SQL INSERT statements. */
 internal class DatabaseInsertQueryBuilder(
     jdbcTemplate: JdbcTemplate,
     kotlinToPostgresConverter: KotlinToPostgresConverter,

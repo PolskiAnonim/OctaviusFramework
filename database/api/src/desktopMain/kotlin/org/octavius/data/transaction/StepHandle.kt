@@ -39,6 +39,14 @@ class StepHandle<T> internal constructor() {
         return TransactionValue.FromStep.Column(this, columnName)
     }
 
+    /**
+     * Creates a reference to an entire row as `Map<String, Any?>` from a result that is a list of rows.
+     *
+     * Useful when you want to pass multiple fields from one result as parameters
+     * to the next step. The executor will "spread" the map into individual parameters.
+     *
+     * @param rowIndex Row index (default 0, i.e., first row).
+     */
     fun row(rowIndex: Int = 0): TransactionValue.FromStep.Row {
         return TransactionValue.FromStep.Row(this, rowIndex)
     }

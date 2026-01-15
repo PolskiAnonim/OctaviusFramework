@@ -14,7 +14,21 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigDecimal
 
 /**
- * Serializer for BigDecimal type for use in DynamicDto
+ * JSON serializer for [BigDecimal] that preserves numeric precision.
+ *
+ * Encodes BigDecimal as an unquoted JSON number literal (not a string),
+ * which is important for PostgreSQL's JSONB type to correctly interpret
+ * the value as a number.
+ *
+ * ### Usage Example
+ * ```kotlin
+ * @Serializable
+ * @DynamicallyMappable("price_data")
+ * data class PriceData(
+ *     @Serializable(with = BigDecimalAsNumberSerializer::class)
+ *     val price: BigDecimal
+ * )
+ * ```
  */
 object BigDecimalAsNumberSerializer : KSerializer<BigDecimal> {
     override val descriptor: SerialDescriptor =

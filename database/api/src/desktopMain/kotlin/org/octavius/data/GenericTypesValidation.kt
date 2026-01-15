@@ -6,8 +6,15 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 /**
- * Validates whether a value matches the target KType.
- * For lists and maps, verifies the type of the first non-null element.
+ * Validates whether a runtime value matches the expected Kotlin type.
+ *
+ * This is an internal framework function used during object mapping to ensure type safety.
+ * For collections (List, Map), validates the type of the first non-null element.
+ *
+ * @param value The value to validate (can be null).
+ * @param targetType The expected Kotlin type (KType) including generic parameters.
+ * @return The original value if validation passes.
+ * @throws ConversionException if the value's type doesn't match the target type.
  */
 fun validateValue(value: Any?, targetType: KType): Any? {
     if (value == null) {

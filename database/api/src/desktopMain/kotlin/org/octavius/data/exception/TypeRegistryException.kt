@@ -10,8 +10,8 @@ enum class TypeRegistryExceptionMessage {
 
     // --- Schema Consistency errors (Startup) ---
     TYPE_DEFINITION_MISSING_IN_DB,     // Code has @PgType, Database is missing CREATE TYPE
-    DUPLICATE_PG_TYPE_DEFINITION,      // [NOWY] Conflict between @PgEnum and/or @PgComposite names
-    DUPLICATE_DYNAMIC_TYPE_DEFINITION, // [NOWY] Conflict between @DynamicallyMappable names
+    DUPLICATE_PG_TYPE_DEFINITION,      // Conflict between @PgEnum and/or @PgComposite names
+    DUPLICATE_DYNAMIC_TYPE_DEFINITION, // Conflict between @DynamicallyMappable names
 
     // --- Runtime Lookup errors (Operations) ---
     WRONG_FIELD_NUMBER_IN_COMPOSITE, // Registry <-> database mismatch

@@ -1,9 +1,25 @@
 package org.octavius.data.util
 
+/**
+ * Utility for converting strings between different naming conventions.
+ *
+ * Supports conversions between:
+ * - `snake_case` (both upper and lower)
+ * - `camelCase`
+ * - `PascalCase`
+ *
+ * Used internally for automatic mapping between PostgreSQL column names (snake_case)
+ * and Kotlin property names (camelCase).
+ */
 object CaseConverter {
 
     /**
-     * Main function converting a value from one convention to another.
+     * Converts a string from one naming convention to another.
+     *
+     * @param value The string to convert.
+     * @param from The source naming convention.
+     * @param to The target naming convention.
+     * @return The converted string.
      */
     fun convert(value: String, from: CaseConvention, to: CaseConvention): String {
         if (from == to) {
@@ -48,7 +64,7 @@ object CaseConverter {
     }
 }
 
-// --- Extension Functions (Backward compatibility for the rest of the project) ---
+// --- Extension Functions ---
 
 /**
  * Converts any Camel/Pascal case text to snake_case.

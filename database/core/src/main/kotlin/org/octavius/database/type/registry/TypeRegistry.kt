@@ -5,6 +5,18 @@ import org.octavius.data.exception.TypeRegistryException
 import org.octavius.data.exception.TypeRegistryExceptionMessage
 import kotlin.reflect.KClass
 
+/**
+ * Central repository of PostgreSQL type metadata for bidirectional conversion.
+ *
+ * Provides lookup methods for:
+ * - **Reading (DB → Kotlin)**: Category routing, enum/composite/array definitions
+ * - **Writing (Kotlin → DB)**: Class to PostgreSQL type name mapping
+ * - **Dynamic DTOs**: Serializer lookup for `@DynamicallyMappable` types
+ *
+ * Populated at startup by [TypeRegistryLoader] from classpath annotations and database schema.
+ *
+ * @see TypeRegistryLoader
+ */
 internal class TypeRegistry(
     // Main router: PgTypeName -> Category
     private val categoryMap: Map<String, TypeCategory>,
