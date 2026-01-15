@@ -139,7 +139,7 @@ internal object PostgresNamedParameterParser {
      */
     private fun isValidTagCharacter(char: Char, isFirstChar: Boolean): Boolean {
         return when {
-            char in 'a'..'z' || char in 'A'..'Z' || char == '_' -> true
+            char.isLetter() || char == '_' -> true
             !isFirstChar && char in '0'..'9' -> true
             else -> false
         }
