@@ -42,56 +42,106 @@ internal object PostgresNamedParameterParser {
      * Analyzes the given SQL string and returns a list of found parameters in order of occurrence.
      */
     fun parse(sql: String): List<ParsedParameter> {
-
         val foundParameters = mutableListOf<ParsedParameter>()
         val statement = sql.toCharArray()
         var i = 0
+
         while (i < statement.size) {
-            when (statement[i]) {
-                '\'' -> {
-                    // Check if this is an E'...' escape string literal
-                    i = if (i > 0 && (statement[i - 1] == 'E' || statement[i - 1] == 'e')) {
-                        skipBackslashEscapedLiteral(statement, i)
-                    } else {
-                        // Regular literal ('...' or U&'...')
-                        skipUntil(statement, i, '\'')
-                    }
-                }
-                ':' -> {
-                    // Potential parameter or type casting operator `::`
-                    if (i + 1 < statement.size && statement[i + 1] == ':') {
-                        // This is the type casting operator '::', ignore it
-                        i++ // Skip the second ':'
-                    } else {
-                        var j = i + 1
-                        while (j < statement.size && !isParameterSeparator(statement[j])) {
-                            j++
-                        }
-                        if (j - i > 1) { // Found parameter name (longer than 0 characters)
-                            val paramName = sql.substring(i + 1, j)
-                            foundParameters.add(ParsedParameter(paramName, i, j))
-                            i = j - 1 // Set i to the last character of the parameter
-                        }
-                    }
-                }
-                '"' -> i = skipUntil(statement, i, '"')
-                '-' -> if (i + 1 < statement.size && statement[i + 1] == '-') {
-                    i = skipUntil(statement, i, '\n')
-                }
-                '/' -> if (i + 1 < statement.size && statement[i + 1] == '*') {
-                    i = skipComment(statement, i)
-                }
-                // Check for dollar-quote last, as it's less common
-                '$' -> {
-                    val endPos = findDollarQuoteEnd(statement, i)
-                    if (endPos != -1) {
-                        i = endPos
-                    }
-                }
+            val currentChar = statement[i]
+            val newIndex = when (currentChar) {
+                '\'' -> processSingleQuote(statement, i)
+                ':' -> processColon(statement, i, sql, foundParameters)
+                '"' -> skipUntil(statement, i, '"')
+                '-' -> processDash(statement, i)
+                '/' -> processSlash(statement, i)
+                '$' -> processDollar(statement, i)
+                else -> i
             }
+            // Update i. If logic didn't change the index, i just increments at the end of loop.
+            // If logic returned a new index (e.g., end of string), we continue from there.
+            i = newIndex
             i++
         }
         return foundParameters
+    }
+
+    // --- Helper Methods to reduce Cognitive Complexity ---
+
+    /**
+     * Handles string literals, including PostgreSQL Escape strings (E'...')
+     * Returns the index of the closing quote.
+     */
+    private fun processSingleQuote(statement: CharArray, index: Int): Int {
+        // Check if this is an E'...' escape string literal
+        // We look behind to see if the previous char was 'E' or 'e'
+        return if (index > 0 && (statement[index - 1] == 'E' || statement[index - 1] == 'e')) {
+            skipBackslashEscapedLiteral(statement, index)
+        } else {
+            // Regular literal ('...' or U&'...')
+            skipUntil(statement, index, '\'')
+        }
+    }
+
+    /**
+     * Handles potential named parameters (:param) or type casts (::int).
+     * If a parameter is found, it is added to the list.
+     * Returns the index of the last character of the processed token.
+     */
+    private fun processColon(
+        statement: CharArray,
+        index: Int,
+        sql: String,
+        foundParameters: MutableList<ParsedParameter>
+    ): Int {
+        // Check for type casting operator '::'
+        if (index + 1 < statement.size && statement[index + 1] == ':') {
+            return index + 1 // Skip the second ':'
+        }
+
+        // Parse named parameter
+        var j = index + 1
+        while (j < statement.size && !isParameterSeparator(statement[j])) {
+            j++
+        }
+
+        if (j - index > 1) { // Found parameter name (longer than 0 characters)
+            val paramName = sql.substring(index + 1, j)
+            foundParameters.add(ParsedParameter(paramName, index, j))
+            return j - 1 // Return index of the last character of the parameter
+        }
+
+        return index
+    }
+
+    /**
+     * Handles single-line comments (-- ...).
+     * Returns index of the newline or original index if not a comment.
+     */
+    private fun processDash(statement: CharArray, index: Int): Int {
+        if (index + 1 < statement.size && statement[index + 1] == '-') {
+            return skipUntil(statement, index, '\n')
+        }
+        return index
+    }
+
+    /**
+     * Handles multi-line comments.
+     * Returns index of the closing slash or original index if not a comment.
+     */
+    private fun processSlash(statement: CharArray, index: Int): Int {
+        if (index + 1 < statement.size && statement[index + 1] == '*') {
+            return skipComment(statement, index)
+        }
+        return index
+    }
+
+    /**
+     * Handles dollar-quoted strings ($tag$ ... $tag$).
+     * Returns index of the closing dollar sign or original index if valid tag not found.
+     */
+    private fun processDollar(statement: CharArray, index: Int): Int {
+        val endPos = findDollarQuoteEnd(statement, index)
+        return if (endPos != -1) endPos else index
     }
 
     /** Skips to the end of a dollar-quoted block. Returns the index of the last character. */
