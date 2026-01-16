@@ -14,7 +14,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.uiCore)
 
-            api(projects.database.api)
+            api(libs.octavius.database.api)
 
             implementation(libs.kotlinx.coroutines.core)
 

@@ -1,5 +1,8 @@
 name: Deploy KDoc Documentation to GitHub Pages
 
+env:
+  GITHUB_ACTOR: ${{ github.actor }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 on:
   # Uruchamiaj workflow przy pushu do gałęzi `main`
   push:

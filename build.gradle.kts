@@ -33,8 +33,6 @@ dependencies {
     dokka(project(":feature-settings"))
     dokka(project(":feature-games"))
     dokka(project(":feature-contract"))
-    dokka(project(":database:core"))
-    dokka(project(":database:api"))
     dokka(project(":browser-extension:popup"))
     dokka(project(":browser-extension:content-script"))
     dokka(project(":browser-extension:chrome-api"))

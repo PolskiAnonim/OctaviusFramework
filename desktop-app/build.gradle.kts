@@ -24,7 +24,7 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(projects.core)
-            implementation(projects.database.core)
+            implementation(libs.octavius.database.core)
             implementation(projects.featureContract)
             implementation(projects.formEngine)
             implementation(projects.reportEngine)

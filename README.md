@@ -7,7 +7,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![KDoc](https://img.shields.io/badge/KDoc-Documentation-blue)](https://polskianonim.github.io/OctaviusFramework/)
+[![Octavius Database](https://img.shields.io/badge/Octavius_Database-v1.0-orange)](https://github.com/PolskiAnonim/OctaviusDatabase)
 
 </div>
 
@@ -19,12 +19,12 @@ Octavius is a Kotlin Multiplatform desktop application for tracking manga, light
 
 ## Highlights
 
-| Component | Description |
-|-----------|-------------|
-| **[Database Layer](database/)** | An "Anti-ORM" — SQL-first data access with automatic type mapping for PostgreSQL composites, enums, and arrays |
-| **[Form Engine](form-engine/)** | Declarative form builder with dependencies, validation, and repeatable sections |
-| **[Report Engine](report-engine/)** | Dynamic data tables with filtering, sorting, column management, and persistent layouts |
-| **Browser Extension** | Kotlin/JS extension for importing data from external sources |
+| Component                                                                 | Description                                                                                                                        |
+|---------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| **[Octavius Database](https://github.com/PolskiAnonim/OctaviusDatabase)** | *External Library.* An "Anti-ORM" — SQL-first data access with automatic type mapping for PostgreSQL composites, enums, and arrays |
+| **[Form Engine](form-engine/)**                                           | Declarative form builder with dependencies, validation, and repeatable sections                                                    |
+| **[Report Engine](report-engine/)**                                       | Dynamic data tables with filtering, sorting, column management, and persistent layouts                                             |
+| **Browser Extension**                                                     | Kotlin/JS extension for importing data from external sources.                                                                      |
 
 ## Tech Stack
 
@@ -41,8 +41,8 @@ Octavius is a Kotlin Multiplatform desktop application for tracking manga, light
 </td>
 <td>
 
-**Backend**
-- Spring JDBC
+**Backend / Data**
+- Octavius Database (Custom JDBC wrapper)
 - HikariCP
 - Ktor (API server)
 - kotlinx-serialization
@@ -53,14 +53,12 @@ Octavius is a Kotlin Multiplatform desktop application for tracking manga, light
 
 ## Architecture
 
+The project follows a modular distributed architecture. The Core Database layer is developed as a separate library.
+
 ```
 Octavius/
 ├── desktop-app/             # Main application entry point
 ├── core/                    # Domain models, localization, utilities
-│
-├── database/                # Custom SQL-first data access layer
-│   ├── api/                 # Multiplatform API & annotations
-│   └── core/                # JVM implementation
 │
 ├── form-engine/             # Declarative form framework
 ├── report-engine/           # Dynamic table framework
@@ -73,6 +71,8 @@ Octavius/
 ├── api-server/              # REST API for browser extension
 └── browser-extension/       # Kotlin/JS Chrome extension
 ```
+
+*Note: The `database` module is externalized and imported via GitHub Packages.*
 
 ## Custom Frameworks
 
@@ -98,9 +98,9 @@ Configurable data tables with:
 
 [Learn more →](report-engine/)
 
-### Database Layer
+### Database Layer (Octavius Database)
 
-SQL-first approach with automatic mapping:
+SQL-first approach with automatic mapping (imported as a library):
 
 ```kotlin
 // Your query shapes the result — not the ORM
@@ -111,7 +111,7 @@ val books = dataAccess.select("id", "title", "author", "status")
     .toListOf<Book>("status" to BookStatus.Reading)
 ```
 
-[Learn more →](database/)
+[See Repository →](https://github.com/PolskiAnonim/OctaviusDatabase)
 
 ## Getting Started
 
@@ -119,7 +119,25 @@ val books = dataAccess.select("id", "title", "author", "status")
 
 - JDK 24+
 - PostgreSQL 17+
-- Database `octavius`
+- Database `octavius` created locally
+
+### Dependency Setup (Choose one)
+
+#### Option A: Local Development (Recommended)
+Since the database layer is a separate repository, you need to build it first:
+
+1. Clone **[OctaviusDatabase](https://github.com/PolskiAnonim/OctaviusDatabase)**
+2. Run `./gradlew publishToMavenLocal` in the database directory.
+3. Build this project (it will pick up the library from your local Maven cache).
+
+#### Option B: Remote Fetch (CI / Fresh Install)
+If you don't want to build the database library locally, you need a `GITHUB_TOKEN` with `read:packages` scope to download it from GitHub Packages.
+
+Add to `~/.gradle/gradle.properties`:
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
 
 ### Run
 

@@ -17,9 +17,6 @@ pluginManagement {
 
 dependencyResolutionManagement {
     versionCatalogs {
-        create("dbLibs") {
-            from(files("database/gradle/libs.versions.toml"))
-        }
         create("browserLibs") {
             from(files("browser-extension/gradle/libs.versions.toml"))
         }
@@ -28,6 +25,7 @@ dependencyResolutionManagement {
         }
     }
     repositories {
+        mavenLocal()
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")
@@ -36,6 +34,14 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/PolskiAnonim/OctaviusDatabase")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
@@ -53,9 +59,6 @@ include(
     ":feature-asian-media",
     ":feature-games",
     ":feature-books",
-    // Database
-    ":database:core",
-    ":database:api",
     // Browser extension
     ":browser-extension",
     ":browser-extension:content-script",

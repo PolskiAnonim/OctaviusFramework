@@ -27,7 +27,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core) // ui-core może zależeć od core
             implementation(libs.kotlinx.datetime)
-            implementation(projects.database.api)
+            implementation(libs.octavius.database.api)
         }
 
         val desktopMain by getting
