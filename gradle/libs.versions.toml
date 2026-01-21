@@ -1,5 +1,5 @@
 [versions]
-octavius-database = "1.0.3"
+octavius-database = "1.0.4"
 dokka = "2.1.0"
 compose-multiplatform = "1.11.0-alpha01"
 kotlin = "2.3.0"
