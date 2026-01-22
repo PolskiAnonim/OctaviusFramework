@@ -5,6 +5,7 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionValue
+import org.octavius.data.transaction.assertNotNull
 import org.octavius.data.transaction.toTransactionValue
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
@@ -83,7 +84,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         // =================================================================================
         // KROK 1: Główna encja 'titles'
         // =================================================================================
-        val titleIdRef: TransactionValue
+        val titleIdRef: TransactionValue<Int>
 
         val titleData = mapOf(
             "titles" to formResultData.getCurrent("titles"),
@@ -106,7 +107,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                     .values(titleData)
                     .returning("id")
                     .asStep()
-                    .toField<Int>(titleData)
+                    .toField<Int>(titleData).assertNotNull()
             ).field()
         }
 
@@ -168,7 +169,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                     .values(publicationData)
                     .returning("id")
                     .asStep()
-                    .toField<Int>(publicationData)
+                    .toField<Int>(publicationData).assertNotNull()
             ).field()
 
             addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
@@ -187,7 +188,7 @@ class AsianMediaFormDataManager : FormDataManager() {
     private fun addPublicationVolumesUpdateOperation(
         plan: TransactionPlan,
         rowData: FormResultData,
-        publicationIdRef: TransactionValue
+        publicationIdRef: TransactionValue<Int>
     ) {
         if (rowData.getCurrentAs<Boolean>("trackProgress")) {
             val volumesData = mapOf(

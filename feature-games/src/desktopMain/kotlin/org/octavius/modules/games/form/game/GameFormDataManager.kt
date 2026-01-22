@@ -5,6 +5,7 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionValue
+import org.octavius.data.transaction.assertNotNull
 import org.octavius.data.transaction.toTransactionValue
 import org.octavius.data.type.PgStandardType
 import org.octavius.data.type.withPgType
@@ -99,7 +100,7 @@ class GameFormDataManager : FormDataManager() {
         // =================================================================================
         // KROK 1: Główna encja 'games'
         // =================================================================================
-        val gameIdRef: TransactionValue
+        val gameIdRef: TransactionValue<Int>
 
         val gameData = mapOf(
             "name" to formResultData.getCurrent("name"),
@@ -128,7 +129,7 @@ class GameFormDataManager : FormDataManager() {
                     .values(gameData)
                     .returning("id")
                     .asStep()
-                    .toField<Int>(gameData) // Używamy toField, bo chcemy pojedynczą wartość
+                    .toField<Int>(gameData).assertNotNull() // Używamy toField, bo chcemy pojedynczą wartość
             ).field()
         }
 
@@ -205,7 +206,7 @@ class GameFormDataManager : FormDataManager() {
         }
 
         plan.add(
-            dataAccess.insertInto("games.categories_to_games", listOf("game_id", "category_id"))
+            dataAccess.insertInto("games.categories_to_games")
                 .fromSelect(dataAccess.select(":game_id","category_id").from("UNNEST(:ids_to_insert) AS category_id").toSql())
                 .asStep().execute("ids_to_insert" to insertedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
         )
@@ -231,7 +232,7 @@ class GameFormDataManager : FormDataManager() {
         conditionMet: Boolean,
         tableName: String,
         data: Map<String, Any?>,
-        gameIdRef: TransactionValue
+        gameIdRef: TransactionValue<Int>
     ) {
         if (exists) {
             if (conditionMet) { // UPDATE
