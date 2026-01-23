@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.form.control.base.*
 import org.octavius.form.control.validator.collection.StringListValidator
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.theme.FormSpacing
 
 /**
@@ -100,7 +100,7 @@ class StringListControl(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = T.get("action.add"),
+                            contentDescription = Tr.Action.add(),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -143,7 +143,7 @@ class StringListControl(
                             singleLine = true,
                             placeholder = { 
                                 Text(
-                                    text = T.get("form.stringList.itemPlaceholder"),
+                                    text = Tr.Form.StringList.itemPlaceholder(),
                                     style = MaterialTheme.typography.bodyMedium
                                 ) 
                             }
@@ -167,7 +167,7 @@ class StringListControl(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = T.get("action.remove"),
+                                        contentDescription = Tr.Action.remove(),
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(16.dp)
                                     )

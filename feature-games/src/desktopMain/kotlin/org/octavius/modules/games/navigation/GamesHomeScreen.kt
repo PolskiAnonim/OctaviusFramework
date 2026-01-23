@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.modules.games.report.ui.GameCategoriesReportScreen
 import org.octavius.modules.games.report.ui.GameReportScreen
 import org.octavius.modules.games.report.ui.GameSeriesReportScreen
@@ -24,8 +24,8 @@ import org.octavius.navigation.Screen
  * Ekran domyślny dla modułu Games - wyświetla podsumowanie i linki do głównych funkcji.
  */
 class GamesHomeScreen : Screen {
-    
-    override val title = T.get("games.home.title")
+
+    override val title = Tr.Games.Home.title()
 
     @Composable
     override fun Content() {
@@ -46,12 +46,12 @@ class GamesHomeScreen : Screen {
                         .padding(24.dp)
                 ) {
                     Text(
-                        text = T.get("games.home.mainText"),
+                        text = Tr.Games.Home.mainText(),
                         style = MaterialTheme.typography.headlineMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = T.get("games.home.description"),
+                        text = Tr.Games.Home.description(),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -65,8 +65,8 @@ class GamesHomeScreen : Screen {
             ) {
                 // All Games
                 QuickActionCard(
-                    title = T.get("games.home.allGames"),
-                    description = T.get("games.home.allGamesDescription"),
+                    title = Tr.Games.Home.allGames(),
+                    description = Tr.Games.Home.allGamesDescription(),
                     icon = Icons.Default.SportsEsports,
                     onClick = {
                         AppRouter.navigateTo(GameReportScreen.create())
@@ -76,8 +76,8 @@ class GamesHomeScreen : Screen {
 
                 // Game Series
                 QuickActionCard(
-                    title = T.get("games.home.gameSeries"),
-                    description = T.get("games.home.gameSeriesDescription"),
+                    title = Tr.Games.Home.gameSeries(),
+                    description = Tr.Games.Home.gameSeriesDescription(),
                     icon = Icons.Default.CollectionsBookmark,
                     onClick = {
                         AppRouter.navigateTo(GameSeriesReportScreen.create())
@@ -92,8 +92,8 @@ class GamesHomeScreen : Screen {
             ) {
                 // Game Categories
                 QuickActionCard(
-                    title = T.get("games.home.gameCategories"),
-                    description = T.get("games.home.gameCategoriesDescription"),
+                    title = Tr.Games.Home.gameCategories(),
+                    description = Tr.Games.Home.gameCategoriesDescription(),
                     icon = Icons.Default.Category,
                     onClick = {
                         AppRouter.navigateTo(GameCategoriesReportScreen.create())
@@ -103,8 +103,8 @@ class GamesHomeScreen : Screen {
 
                 // Statistics (placeholder for future)
                 QuickActionCard(
-                    title = T.get("games.home.statistics"),
-                    description = T.get("games.home.statisticsDescription"),
+                    title = Tr.Games.Home.statistics(),
+                    description = Tr.Games.Home.statisticsDescription(),
                     icon = Icons.Default.Analytics,
                     onClick = {
                         AppRouter.navigateTo(GameStatisticsScreen.create())

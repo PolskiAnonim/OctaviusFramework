@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import org.octavius.data.QueryFragment
 import org.octavius.domain.game.GameStatus
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
@@ -27,16 +27,16 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
     }
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
-        "game_name" to StringColumn(T.get("games.general.gameName")),
-        "series_name" to StringColumn(T.get("games.general.series")),
+        "game_name" to StringColumn(Tr.Games.General.gameName()),
+        "series_name" to StringColumn(Tr.Games.General.series()),
         "status" to EnumColumn(
-            T.get("games.general.status"),
+            Tr.Games.General.status(),
             enumClass = GameStatus::class
         ),
     )
 
     override fun buildRowActions(): List<ReportRowAction> = listOf(
-        ReportRowAction(T.get("report.actions.edit")) {
+        ReportRowAction(Tr.Report.Actions.edit()) {
             val id = rowData["id"] as? Int
             if (id != null) {
                 AppRouter.navigateTo(
@@ -47,13 +47,13 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
         })
 
     override fun buildMainActions(): List<ReportMainAction> = listOf(
-        ReportMainAction(T.get("games.report.newGame"), Icons.Default.Add) {
+        ReportMainAction(Tr.Games.Report.newGame(), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameFormScreen.create(
                 )
             )
         },
-        ReportMainAction(T.get("games.report.newSeries"), Icons.Default.Add) {
+        ReportMainAction(Tr.Games.Report.newSeries(), Icons.Default.Add) {
             AppRouter.navigateTo(
                 GameSeriesFormScreen.create(
                 ))

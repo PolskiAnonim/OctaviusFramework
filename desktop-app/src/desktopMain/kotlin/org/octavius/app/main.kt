@@ -21,7 +21,7 @@ import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
 import org.octavius.data.DataAccess
 import org.octavius.feature.books.BooksFeature
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.modules.games.GamesFeature
 import org.octavius.modules.settings.SettingsFeature
@@ -108,7 +108,7 @@ private fun ApplicationScope.MainAppScreen(onCloseRequest: () -> Unit) {
 
     Window(
         onCloseRequest = ::exitApplication,
-        title = T.get("app.name"),
+        title = Tr.App.name(),
         state = rememberWindowState(size = DpSize(1280.dp, 720.dp))
     ) {
         NavigationHandler(screenFactories)

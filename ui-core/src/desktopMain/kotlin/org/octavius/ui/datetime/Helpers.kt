@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -41,7 +41,7 @@ fun PickerTextField(
 ) {
     Box(modifier = modifier) {
         OutlinedTextField(
-            value = value.ifEmpty { if (isRequired) T.get("datetime.select") else T.get("datetime.notSet") },
+            value = value.ifEmpty { if (isRequired) Tr.Datetime.select() else Tr.Datetime.notSet() },
             onValueChange = {},
             readOnly = true,
             modifier = Modifier.fillMaxWidth(), // Pole zawsze wypełnia dostępną przestrzeń od rodzica (Box)
@@ -57,7 +57,7 @@ fun PickerTextField(
                     IconButton(onClick = onClear) {
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = T.get("action.clear")
+                            contentDescription = Tr.Action.clear()
                         )
                     }
                 }
@@ -98,25 +98,25 @@ fun IntervalPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(T.get("interval.title")) },
+        title = { Text(Tr.Interval.title()) },
         text = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IntervalInputField(
                     value = hours,
                     onValueChange = { hours = it },
-                    label = T.get("interval.hours")
+                    label = Tr.Interval.hours()
                 )
                 Text(":", modifier = Modifier.padding(horizontal = 4.dp))
                 IntervalInputField(
                     value = minutes,
                     onValueChange = { minutes = it },
-                    label = T.get("interval.minutes")
+                    label = Tr.Interval.minutes()
                 )
                 Text(":", modifier = Modifier.padding(horizontal = 4.dp))
                 IntervalInputField(
                     value = seconds,
                     onValueChange = { seconds = it },
-                    label = T.get("interval.seconds")
+                    label = Tr.Interval.seconds()
                 )
             }
         },
@@ -129,12 +129,12 @@ fun IntervalPickerDialog(
                     onConfirm(duration)
                 }
             ) {
-                Text(T.get("action.ok"))
+                Text(Tr.Action.ok())
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(T.get("action.cancel"))
+                Text(Tr.Action.cancel())
             }
         }
     )

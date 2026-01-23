@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.statistics.model.DashboardGame
 import org.octavius.modules.games.statistics.model.GameStatisticsData
@@ -35,7 +35,7 @@ class GameStatisticsScreen(override val title: String) : Screen {
             }
         } else if (state.data == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(T.get("statistics.noData"))
+                Text(Tr.Statistics.noData())
             }
         } else {
             val data = state.data!!
@@ -50,7 +50,7 @@ class GameStatisticsScreen(override val title: String) : Screen {
 
                 item {
                     QuickAccessGameList(
-                        title = T.get("games.stats.mostPlayed"),
+                        title = Tr.Games.Stats.mostPlayed(),
                         items = data.mostPlayedGames.orEmpty(),
                         onItemClick = { AppRouter.navigateTo(GameFormScreen.create(it)) }
                     )
@@ -58,7 +58,7 @@ class GameStatisticsScreen(override val title: String) : Screen {
 
                 item {
                     QuickAccessGameList(
-                        title = T.get("games.stats.highestRated"),
+                        title = Tr.Games.Stats.highestRated(),
                         items = data.highestRatedGames.orEmpty(),
                         onItemClick = { AppRouter.navigateTo(GameFormScreen.create(it)) }
                     )
@@ -69,7 +69,7 @@ class GameStatisticsScreen(override val title: String) : Screen {
 
     companion object {
         fun create(): Screen {
-            return GameStatisticsScreen(T.get("games.stats.title"))
+            return GameStatisticsScreen(Tr.Games.Stats.title())
         }
     }
 }
@@ -78,25 +78,25 @@ class GameStatisticsScreen(override val title: String) : Screen {
 @Composable
 private fun KpiStats(data: GameStatisticsData) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(T.get("games.stats.kpiHeader"), style = MaterialTheme.typography.headlineSmall)
+        Text(Tr.Games.Stats.kpiHeader(), style = MaterialTheme.typography.headlineSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            StatCard(T.get("games.stats.totalGames"), data.totalGames.toString(), Modifier.weight(1f))
-            StatCard(T.get("games.stats.playedGames"), data.playedGamesCount.toString(), Modifier.weight(1f))
+            StatCard(Tr.Games.Stats.totalGames(), data.totalGames.toString(), Modifier.weight(1f))
+            StatCard(Tr.Games.Stats.playedGames(), data.playedGamesCount.toString(), Modifier.weight(1f))
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             StatCard(
-                T.get("games.stats.totalPlaytime"),
+                Tr.Games.Stats.totalPlaytime(),
                 "${data.totalPlaytimeHours}h",
                 Modifier.weight(1f)
             )
             StatCard(
-                T.get("games.stats.avgPlaytime"),
+                Tr.Games.Stats.avgPlaytime(),
                 "${data.avgPlaytimeForPlayed}h",
                 Modifier.weight(1f)
             )
@@ -107,14 +107,14 @@ private fun KpiStats(data: GameStatisticsData) {
 @Composable
 private fun RatingStats(data: GameStatisticsData) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(T.get("games.stats.ratingHeader"), style = MaterialTheme.typography.headlineSmall)
+        Text(Tr.Games.Stats.ratingHeader(), style = MaterialTheme.typography.headlineSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            StatCard(T.get("games.stats.avgStory"), data.avgStoryRating?.toString() ?: "-", Modifier.weight(1f))
-            StatCard(T.get("games.stats.avgGameplay"), data.avgGameplayRating?.toString() ?: "-", Modifier.weight(1f))
-            StatCard(T.get("games.stats.avgAtmosphere"), data.avgAtmosphereRating?.toString() ?: "-", Modifier.weight(1f))
+            StatCard(Tr.Games.Stats.avgStory(), data.avgStoryRating?.toString() ?: "-", Modifier.weight(1f))
+            StatCard(Tr.Games.Stats.avgGameplay(), data.avgGameplayRating?.toString() ?: "-", Modifier.weight(1f))
+            StatCard(Tr.Games.Stats.avgAtmosphere(), data.avgAtmosphereRating?.toString() ?: "-", Modifier.weight(1f))
         }
     }
 }
@@ -122,13 +122,13 @@ private fun RatingStats(data: GameStatisticsData) {
 @Composable
 private fun FavoriteStats(data: GameStatisticsData) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(T.get("games.stats.favoritesHeader"), style = MaterialTheme.typography.headlineSmall)
+        Text(Tr.Games.Stats.favoritesHeader(), style = MaterialTheme.typography.headlineSmall)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            StatCard(T.get("games.stats.favoriteCategory"), data.favoriteCategoryName ?: "-", Modifier.weight(1f))
-            StatCard(T.get("games.stats.favoriteSeries"), data.favoriteSeriesName ?: "-", Modifier.weight(1f))
+            StatCard(Tr.Games.Stats.favoriteCategory(), data.favoriteCategoryName ?: "-", Modifier.weight(1f))
+            StatCard(Tr.Games.Stats.favoriteSeries(), data.favoriteSeriesName ?: "-", Modifier.weight(1f))
         }
     }
 }
@@ -158,7 +158,7 @@ private fun QuickAccessGameList(
         Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
         if (items.isEmpty()) {
-            Text(T.get("statistics.noItemsInList"), style = MaterialTheme.typography.bodyMedium)
+            Text(Tr.Statistics.noItemsInList(), style = MaterialTheme.typography.bodyMedium)
         } else {
             Card {
                 Column {

@@ -4,7 +4,7 @@ import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlState
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.navigation.AppRouter
 import org.octavius.ui.snackbar.SnackbarManager
 
@@ -92,7 +92,7 @@ class FormHandler(
         errorManager.clearAll()
 
         if (validates && !formValidator.validateFields()) {
-            SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
+            SnackbarManager.showMessage(Tr.Form.Actions.containsErrors())
             return handleActionResult(FormActionResult.ValidationFailed)
         }
 
@@ -100,14 +100,14 @@ class FormHandler(
 
         // Walidacja
         if (validates && !formValidator.validateBusinessRules(rawFormData)) {
-            SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
+            SnackbarManager.showMessage(Tr.Form.Actions.containsErrors())
             return handleActionResult(FormActionResult.ValidationFailed)
         }
 
         // Walidacja specyficzna dla akcji (zawsze uruchamiana, niezależnie od flagi 'validates')
         val actionValidator = formValidator.defineActionValidations()[actionKey]
         if (actionValidator != null && !actionValidator.invoke(rawFormData)) {
-            SnackbarManager.showMessage(T.get("form.actions.containsErrors"))
+            SnackbarManager.showMessage(Tr.Form.Actions.containsErrors())
             return handleActionResult(FormActionResult.ValidationFailed)
         }
 

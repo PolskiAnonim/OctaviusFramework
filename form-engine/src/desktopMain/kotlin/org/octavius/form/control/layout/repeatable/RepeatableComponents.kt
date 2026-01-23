@@ -17,7 +17,7 @@ import org.octavius.form.component.FormState
 import org.octavius.form.control.base.Control
 import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.type.repeatable.RepeatableRow
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.theme.FormSpacing
 
 @Composable
@@ -48,10 +48,10 @@ internal fun RepeatableHeader(
                 FilledTonalButton(onClick = onAddClick) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = T.get("action.add")
+                        contentDescription = Tr.Action.add()
                     )
                     Spacer(modifier = Modifier.width(FormSpacing.fieldPaddingHorizontal))
-                    Text(T.get("action.add"))
+                    Text(Tr.Action.add())
                 }
             }
         }
@@ -118,7 +118,7 @@ private fun RepeatableRowHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = T.get("form.actions.itemLabel", index + 1),
+                text = Tr.Form.Actions.itemLabel(index + 1),
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -132,7 +132,7 @@ private fun RepeatableRowHeader(
                         Icons.Default.KeyboardArrowUp
                     else
                         Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) T.get("expandable.collapse") else T.get("expandable.expand"),
+                    contentDescription = if (isExpanded) Tr.Expandable.collapse() else Tr.Expandable.expand(),
                     modifier = Modifier.padding(end = FormSpacing.itemSpacing)
                 )
 
@@ -144,7 +144,7 @@ private fun RepeatableRowHeader(
                         IconButton(onClick = onDelete) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = T.get("action.remove"),
+                                contentDescription = Tr.Action.remove(),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }

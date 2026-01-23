@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextOverflow
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 /**
  * Główny pasek górny aplikacji z tytułem i przyciskami nawigacyjnymi.
@@ -45,7 +45,7 @@ fun MainTopAppBar(
                 IconButton(onClick = onBackClicked) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = T.get("navigation.back")
+                        contentDescription = Tr.Navigation.back()
                     )
                 }
             }
@@ -54,7 +54,7 @@ fun MainTopAppBar(
             IconButton(onClick = onSettingsClicked) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = T.get("settings.title")
+                    contentDescription = Tr.Settings.title()
                 )
             }
         },

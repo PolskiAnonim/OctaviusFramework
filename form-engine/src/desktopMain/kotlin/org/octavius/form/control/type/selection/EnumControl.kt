@@ -13,7 +13,7 @@ import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlDependency
 import org.octavius.form.control.type.selection.dropdown.DropdownControlBase
 import org.octavius.form.control.type.selection.dropdown.DropdownOption
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import kotlin.reflect.KClass
 
 /**
@@ -51,7 +51,7 @@ class EnumControl<T>(
         // Opcja "null"
         if (required != true) {
             DropdownMenuItem(
-                text = { Text(T.get("form.dropdown.noSelection")) },
+                text = { Text(Tr.Form.Dropdown.noSelection()) },
                 onClick = {
                     controlState.value = null
                     executeActions(controlContext, null, scope)

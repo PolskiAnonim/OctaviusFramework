@@ -4,7 +4,7 @@ import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringValidation
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 /**
  * Walidator dla kontrolek tekstowych z obsługą opcji walidacji.
@@ -26,21 +26,21 @@ class StringValidator(
             // Sprawdź minimalną długość
             options.minLength?.let { minLength ->
                 if (value.length < minLength) {
-                    errors.add(T.get("validation.minLength", minLength))
+                    errors.add(Tr.Validation.minLength(minLength))
                 }
             }
 
             // Sprawdź maksymalną długość
             options.maxLength?.let { maxLength ->
                 if (value.length > maxLength) {
-                    errors.add(T.get("validation.maxLength", maxLength))
+                    errors.add(Tr.Validation.maxLength(maxLength))
                 }
             }
 
             // Sprawdź wzorzec
             options.pattern?.let { pattern ->
                 if (!pattern.matches(value)) {
-                    errors.add(options.patternErrorMessage ?: T.get("validation.invalidFormat"))
+                    errors.add(options.patternErrorMessage ?: Tr.Validation.invalidFormat())
                 }
             }
         }

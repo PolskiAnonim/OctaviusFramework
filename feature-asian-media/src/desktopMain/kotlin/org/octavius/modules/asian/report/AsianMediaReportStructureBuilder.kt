@@ -6,7 +6,7 @@ import org.octavius.data.QueryFragment
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.ReportMainAction
@@ -35,27 +35,27 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
         "titles" to StringColumn(
-            header = T.get("games.general.titles"),
+            header = Tr.Games.General.titles(),
             width = 2f
         ).asList(5),
         "language" to EnumColumn(
-            header = T.get("games.general.language"),
+            header = Tr.Games.General.language(),
             enumClass = PublicationLanguage::class,
             width = 1f
         ),
         "publication_type" to EnumColumn(
-            header = T.get("games.general.publicationType"),
+            header = Tr.Games.General.publicationType(),
             enumClass = PublicationType::class,
             width = 1.5f
         ).asList(9),
         "status" to EnumColumn(
-            header = T.get("games.general.status"),
+            header = Tr.Games.General.status(),
             enumClass = PublicationStatus::class,
             width = 1.5f
         ).asList(9)
     )
 
-    override fun buildDefaultRowAction(): ReportRowAction = ReportRowAction(T.get("report.actions.edit")) {
+    override fun buildDefaultRowAction(): ReportRowAction = ReportRowAction(Tr.Report.Actions.edit()) {
         val id = rowData["title_id"] as? Int
         if (id != null) {
             AppRouter.navigateTo(
@@ -67,13 +67,13 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
     }
 
     override fun buildMainActions(): List<ReportMainAction> = listOf(
-        ReportMainAction(T.get("asianMedia.report.newTitle"), Icons.Default.Add) {
+        ReportMainAction(Tr.AsianMedia.Report.newTitle(), Icons.Default.Add) {
             AppRouter.navigateTo(
                 AsianMediaFormScreen.create(
                 )
             )
         },
-        ReportMainAction(T.get("asianMedia.report.newKoreanWebNovel"), Icons.Default.Add) {
+        ReportMainAction(Tr.AsianMedia.Report.newKoreanWebNovel(), Icons.Default.Add) {
             val payload = mapOf(
                 "publications" to listOf(
                     mapOf(

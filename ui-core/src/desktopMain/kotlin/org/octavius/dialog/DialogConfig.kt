@@ -2,7 +2,7 @@ package org.octavius.dialog
 
 import androidx.compose.ui.graphics.Color
 import org.octavius.data.exception.DatabaseException
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 /**
  * Uniwersalna konfiguracja dialogu.
@@ -19,9 +19,9 @@ import org.octavius.localization.T
 data class DialogConfig(
     val title: String,
     val text: String,
-    val confirmButtonText: String? = T.get("action.confirm"),
+    val confirmButtonText: String? = Tr.Action.confirm(),
     val onConfirm: (() -> Unit)? = null,
-    val dismissButtonText: String? = T.get("action.cancel"),
+    val dismissButtonText: String? = Tr.Action.cancel(),
     val onDismiss: () -> Unit,
     val titleColor: Color? = null,
     val textColor: Color? = null
@@ -34,7 +34,7 @@ fun ErrorDialogConfig(title: String, message: String): DialogConfig {
     return DialogConfig(title,
         message,
         null,
-        dismissButtonText = T.get("error.dialog.dismiss"),
+        dismissButtonText = Tr.Error.Dialog.dismiss(),
         onDismiss = { GlobalDialogManager.dismiss() }
     )
 }
@@ -43,11 +43,11 @@ fun ErrorDialogConfig(title: String, message: String): DialogConfig {
  * Wyświetla dialog błędu na podstawie wyjątku z bazy danych.
  */
 fun ErrorDialogConfig(error: DatabaseException): DialogConfig {
-    val title = T.get("error.database.title")
+    val title = Tr.Error.Database.title()
     return DialogConfig(title,
         error.toString(),
         null,
-        dismissButtonText = T.get("error.dialog.dismiss"),
+        dismissButtonText = Tr.Error.Dialog.dismiss(),
         onDismiss = { GlobalDialogManager.dismiss() }
     )
 }

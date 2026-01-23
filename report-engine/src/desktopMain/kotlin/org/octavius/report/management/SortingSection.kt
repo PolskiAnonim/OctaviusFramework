@@ -16,7 +16,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.report.component.LocalReportHandler
 import org.octavius.report.component.ReportState
 import org.octavius.report.configuration.SortDirection
@@ -33,7 +33,7 @@ fun SortingSection(
 
     Column {
         Text(
-            text = T.get("report.columns.sorting"),
+            text = Tr.Report.Columns.sorting(),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium
         )
@@ -44,7 +44,7 @@ fun SortingSection(
         val currentSort = reportState.sortOrder
         if (currentSort.isNotEmpty()) {
             Text(
-                text = T.get("report.columns.activeSorting"),
+                text = Tr.Report.Columns.activeSorting(),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -77,8 +77,8 @@ fun SortingSection(
                                     SortDirection.Descending -> Icons.Default.ArrowDownward
                                 },
                                 contentDescription = when (direction) {
-                                    SortDirection.Ascending -> T.get("report.columns.ascending")
-                                    SortDirection.Descending -> T.get("report.columns.descending")
+                                    SortDirection.Ascending -> Tr.Report.Columns.ascending()
+                                    SortDirection.Descending -> Tr.Report.Columns.descending()
                                 },
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.clickable {
@@ -119,9 +119,9 @@ fun SortingSection(
             }
         ) { isHovered ->
             val text = if (reportState.sortOrder.isEmpty()) {
-                T.get("report.columns.dragColumnsHere")
+                Tr.Report.Columns.dragColumnsHere()
             } else {
-                T.get("report.columns.dragMoreColumns")
+                Tr.Report.Columns.dragMoreColumns()
             }
 
             Text(

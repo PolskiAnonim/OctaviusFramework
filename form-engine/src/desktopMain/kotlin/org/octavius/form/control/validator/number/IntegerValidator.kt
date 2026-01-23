@@ -4,7 +4,7 @@ import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntegerValidation
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 /**
  * Walidator dla kontrolek liczb całkowitych z obsługą opcji walidacji.
@@ -21,21 +21,21 @@ class IntegerValidator(
             // Sprawdź wartość minimalną
             options.min?.let { min ->
                 if (value < min) {
-                    errors.add(T.get("validation.minValue", min))
+                    errors.add(Tr.Validation.minValue(min))
                 }
             }
 
             // Sprawdź wartość maksymalną
             options.max?.let { max ->
                 if (value > max) {
-                    errors.add(T.get("validation.maxValue", max))
+                    errors.add(Tr.Validation.maxValue(max))
                 }
             }
 
             // Sprawdź krok
             options.step?.let { step ->
                 if (value % step != 0) {
-                    errors.add(T.get("validation.multipleOf", step))
+                    errors.add(Tr.Validation.multipleOf(step))
                 }
             }
         }

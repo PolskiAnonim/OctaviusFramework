@@ -15,7 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.theme.FormSpacing
 
 @Composable
@@ -46,7 +46,7 @@ internal fun SectionHeader(
 
             if (collapsible) {
                 val icon = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown
-                val description = if (isExpanded) T.get("expandable.collapse") else T.get("expandable.expand")
+                val description = if (isExpanded) Tr.Expandable.collapse() else Tr.Expandable.expand()
                 Icon(
                     imageVector = icon,
                     contentDescription = description,

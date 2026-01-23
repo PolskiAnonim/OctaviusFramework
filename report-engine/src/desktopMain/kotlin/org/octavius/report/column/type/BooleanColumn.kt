@@ -9,7 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.report.CellRendererUtils
 import org.octavius.report.ColumnWidth
 import org.octavius.report.column.ReportColumn
@@ -34,8 +34,8 @@ class BooleanColumn(
     width: Float = 1f,
     filterable: Boolean = true,
     sortable: Boolean = true,
-    private val trueText: String = T.get("report.column.boolean.true"),
-    private val falseText: String = T.get("report.column.boolean.false"),
+    private val trueText: String = Tr.Report.Column.Boolean.`true`(),
+    private val falseText: String = Tr.Report.Column.Boolean.`false`(),
     private val showIcon: Boolean = true
 ) : ReportColumn(header, ColumnWidth.Flexible(width), filterable, sortable) {
 

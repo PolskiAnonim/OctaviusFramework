@@ -9,7 +9,7 @@ import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrentAs
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
 
@@ -38,7 +38,7 @@ class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
             is DataResult.Success -> {
                 if ((result.value ?: 0L) > 0) {
                     // Tytuł już istnieje. Ustawiamy błąd dla konkretnego pola 'name'.
-                    errorManager.setFieldErrors("name", listOf(T.get("games.validation.duplicatedSeries")))
+                    errorManager.setFieldErrors("name", listOf(Tr.Games.Validation.duplicatedSeries()))
                     false // Walidacja się nie powiodła.
                 } else {
                     true // Tytuł jest unikalny. Walidacja powiodła się.
