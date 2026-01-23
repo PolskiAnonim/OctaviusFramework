@@ -66,7 +66,7 @@ abstract class ValidateTranslationsTask : DefaultTask() {
                 if (sourceDir.exists() && sourceDir.isDirectory) {
                     sourceDir.walkTopDown()
                         .filter { it.isFile && it.extension == "kt" }
-                        .filter { it.name != "T.kt" } // Ignorujemy plik generujący
+                        .filter { it.name != "T.kt" && it.name != "Tr.kt" } // Ignorujemy pliki generowane
                         .toCollection(allSourceFiles)
                     logger.lifecycle("  -> Found source directory: ${sourceDir.relativeTo(project.rootDir)}")
                 }
@@ -104,14 +104,14 @@ abstract class ValidateTranslationsTask : DefaultTask() {
     }
 
     /**
-     * Analizuje pliki źródłowe w poszukiwaniu użycia T.get() i T.getPlural().
+     * Analizuje pliki źródłowe w poszukiwaniu użycia T.get()/Tr.get() i T.getPlural()/Tr.getPlural().
      */
     private fun analyzeSourceCode(sourceFiles: List<File>, translationKeys: Set<String>): Pair<Set<String>, Set<String>> {
         val usedKeys = mutableSetOf<String>()
         val missingKeys = mutableSetOf<String>() // Format: "ścieżka/do/pliku.kt: 'klucz'"
 
-        val getPattern = Regex("""T\.get\s*\(\s*"([^"]+)"""")
-        val getPluralPattern = Regex("""T\.getPlural\s*\(\s*"([^"]+)"""")
+        val getPattern = Regex("""(?:T|Tr)\.get\s*\(\s*"([^"]+)"""")
+        val getPluralPattern = Regex("""(?:T|Tr)\.getPlural\s*\(\s*"([^"]+)"""")
 
         sourceFiles.forEach { file ->
             val content = file.readText()

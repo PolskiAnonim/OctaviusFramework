@@ -1,5 +1,6 @@
 import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
+import org.octavius.gradle.registerGenerateTranslationAccessorsTask
 
 plugins {
     id("translation-validation")
@@ -64,3 +65,8 @@ subprojects {
         }
     }
 }
+
+// Rejestracja taska generującego type-safe accessory do tłumaczeń
+val generateTranslationAccessors = registerGenerateTranslationAccessorsTask(
+    coreProject = project(":core")
+)

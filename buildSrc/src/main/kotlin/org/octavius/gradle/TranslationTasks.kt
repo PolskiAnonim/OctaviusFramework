@@ -8,7 +8,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.tasks.TaskProvider
 import java.nio.charset.StandardCharsets
 
-private fun mergeJsonMaps(target: MutableMap<String, Any?>, source: Map<String, Any?>) {
+internal fun mergeJsonMaps(target: MutableMap<String, Any?>, source: Map<String, Any?>) {
     for ((key, sourceValue) in source) {
         val targetValue = target[key]
         if (sourceValue is Map<*, *> && targetValue is Map<*, *>) {

@@ -17,8 +17,15 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.octavius.database.api)
             }
+            // Dodajemy wygenerowany katalog z Tr.kt
+            kotlin.srcDir(layout.buildDirectory.dir("generated/kotlin/commonMain"))
         }
         val desktopMain by getting
         val jsMain by getting
     }
+}
+
+// Upewniamy się, że Tr.kt jest wygenerowane przed kompilacją
+tasks.matching { it.name.startsWith("compileKotlin") }.configureEach {
+    dependsOn(rootProject.tasks.named("generateTranslationAccessors"))
 }
