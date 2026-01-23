@@ -1,5 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.octavius.gradle.registerMergeTranslationsTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -65,15 +65,7 @@ compose.desktop {
     }
 }
 
-val mergeTranslations = registerMergeTranslationsTask(
-    configuration = configurations.getByName("desktopRuntimeClasspath")
-)
-// Upewniamy się, że zasoby są procesowane dopiero po zmergowaniu tłumaczeń
-tasks.named("desktopProcessResources") {
-    dependsOn(mergeTranslations)
-}
-
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+tasks.named<ShadowJar>("shadowJar") {
     mergeServiceFiles {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }

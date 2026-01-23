@@ -1,4 +1,3 @@
-import org.octavius.gradle.registerMergeTranslationsTask
 
 evaluationDependsOn(":browser-extension:popup")
 
@@ -9,10 +8,6 @@ plugins {
 // Pobieramy konfigurację `jsRuntimeClasspath` Z PROJEKTU `:extension-popup`
 val popupConfiguration = project(":browser-extension:popup").configurations.getByName("jsRuntimeClasspath")
 
-// Rejestrujemy task, przekazując obiekt konfiguracji oraz projekt, który ma być skanowany
-val mergeExtensionTranslations = registerMergeTranslationsTask(
-    configuration = popupConfiguration
-)
 
 // 2. Główny task do składania wtyczki
 tasks.register("assembleBrowserExtension") {
@@ -23,7 +18,6 @@ tasks.register("assembleBrowserExtension") {
     dependsOn(
         project(":browser-extension:popup").tasks.named("jsBrowserProductionWebpack"),
         project(":browser-extension:content-script").tasks.named("jsBrowserProductionWebpack"),
-        mergeExtensionTranslations // <--- zależność od taska zdefiniowana poprawnie
     )
 
     val extensionDir = project.layout.buildDirectory.dir("extension")
@@ -52,7 +46,6 @@ tasks.register("assembleBrowserExtension") {
         }
         copy {
             // Używamy `outputs` z naszego taska, żeby mieć pewność, że ścieżka jest poprawna
-            from(mergeExtensionTranslations.get().outputs.files.singleFile)
             into(extensionDir)
             println("  -> Copied merged translations")
         }
