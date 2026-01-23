@@ -3,7 +3,6 @@ import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import org.octavius.gradle.registerGenerateTranslationAccessorsTask
 
 plugins {
-    id("translation-validation")
     // this is necessary to avoid the plugins to be loaded multiple times
     // in each subproject's classloader
     alias(libs.plugins.composeMultiplatform) apply false
