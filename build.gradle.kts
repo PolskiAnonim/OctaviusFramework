@@ -1,5 +1,6 @@
 import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
+import org.octavius.gradle.registerGenerateTranslationAccessorsTask
 
 plugins {
     id("translation-validation")
@@ -22,20 +23,20 @@ dokka {
 
 // Zależności Dokka - agregacja dokumentacji ze wszystkich modułów
 dependencies {
-    dokka(project(":core"))
-    dokka(project(":api-server"))
-    dokka(project(":api-contract"))
-    dokka(project(":ui-core"))
-    dokka(project(":desktop-app"))
-    dokka(project(":form-engine"))
-    dokka(project(":report-engine"))
-    dokka(project(":feature-asian-media"))
-    dokka(project(":feature-settings"))
-    dokka(project(":feature-games"))
-    dokka(project(":feature-contract"))
-    dokka(project(":browser-extension:popup"))
-    dokka(project(":browser-extension:content-script"))
-    dokka(project(":browser-extension:chrome-api"))
+    dokka(projects.core)
+    dokka(projects.apiServer)
+    dokka(projects.apiContract)
+    dokka(projects.uiCore)
+    dokka(projects.desktopApp)
+    dokka(projects.formEngine)
+    dokka(projects.reportEngine)
+    dokka(projects.featureAsianMedia)
+    dokka(projects.featureSettings)
+    dokka(projects.featureGames)
+    dokka(projects.featureContract)
+    dokka(projects.browserExtension.popup)
+    dokka(projects.browserExtension.contentScript)
+    dokka(projects.browserExtension.chromeApi)
 }
 
 // Aplikujemy plugin Dokka do wszystkich subprojektów z kodem Kotlin
@@ -64,3 +65,8 @@ subprojects {
         }
     }
 }
+
+// Rejestracja taska generującego type-safe accessory do tłumaczeń
+val generateTranslationAccessors = registerGenerateTranslationAccessorsTask(
+    coreProject = project(":core")
+)
