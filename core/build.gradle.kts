@@ -25,7 +25,11 @@ kotlin {
     }
 }
 
-// Upewniamy się, że Tr.kt jest wygenerowane przed kompilacją
+// Upewniamy się, że Tr.kt jest wygenerowane przed kompilacją i dokumentacją
 tasks.matching { it.name.startsWith("compileKotlin") }.configureEach {
+    dependsOn(rootProject.tasks.named("generateTranslationAccessors"))
+}
+
+tasks.matching { it.name.startsWith("dokka") }.configureEach {
     dependsOn(rootProject.tasks.named("generateTranslationAccessors"))
 }
