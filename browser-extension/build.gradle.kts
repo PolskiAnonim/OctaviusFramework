@@ -45,11 +45,6 @@ tasks.register("assembleBrowserExtension") {
             println("  -> Copied files from content-script JS build")
         }
         copy {
-            // Używamy `outputs` z naszego taska, żeby mieć pewność, że ścieżka jest poprawna
-            into(extensionDir)
-            println("  -> Copied merged translations")
-        }
-        copy {
             from(project(":browser-extension:popup").file("src/jsMain/resources"))
             into(extensionDir)
             println("  -> Copied static resources")
