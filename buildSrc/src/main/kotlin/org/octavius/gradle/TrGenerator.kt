@@ -111,25 +111,12 @@ internal class TrGenerator(private val packageName: String) {
         appendLine("}")
         appendLine()
 
-        // Backward compatibility - pozwala używać Tr.get() zamiast T.get()
-        appendLine("// ========== Backward Compatibility ==========")
-        appendLine()
-        appendLine("/** Backward compatible access to translations by key */")
-        appendLine("public fun get(key: kotlin.String, vararg args: kotlin.Any): kotlin.String = lookup(key, *args)")
-        appendLine()
-        appendLine("/** Backward compatible access to plural translations by key */")
-        appendLine("public fun getPlural(key: kotlin.String, count: kotlin.Int, vararg args: kotlin.Any): kotlin.String = lookupPlural(key, count, *args)")
-        appendLine()
-
         // Type-safe accessors
         generateEntries(entries, "")
 
         indentLevel--
         appendLine("}")
         appendLine()
-        appendLine("/** @deprecated Use Tr directly */")
-        appendLine("@Deprecated(\"Use Tr directly\", ReplaceWith(\"Tr\"))")
-        appendLine("public typealias T = Tr")
 
         return builder.toString()
     }
