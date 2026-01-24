@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.QueryFragment
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.report.FilterMode
 import org.octavius.report.NumberFilterDataType
 import org.octavius.report.ReportEvent
@@ -59,7 +59,7 @@ class NumberFilter<T : Number>(
                             onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = null)))
                         }
                     },
-                    label = { Text(T.get("filter.number.from")) },
+                    label = { Text(Tr.Filter.Number.from()) },
                     singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
@@ -75,7 +75,7 @@ class NumberFilter<T : Number>(
                             onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(maxValue = null)))
                         }
                     },
-                    label = { Text(T.get("filter.number.to")) },
+                    label = { Text(Tr.Filter.Number.to()) },
                     singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
@@ -92,7 +92,7 @@ class NumberFilter<T : Number>(
                         onEvent.invoke(ReportEvent.FilterChanged(columnKey, data.copy(minValue = null)))
                     }
                 },
-                label = { Text(T.get("filter.number.value")) },
+                label = { Text(Tr.Filter.Number.value()) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
@@ -105,7 +105,7 @@ class NumberFilter<T : Number>(
                                 )
                             )
                         }) {
-                            Icon(Icons.Default.Clear, T.get("filter.general.clear"))
+                            Icon(Icons.Default.Clear, Tr.Filter.General.clear())
                         }
                     }
                 }

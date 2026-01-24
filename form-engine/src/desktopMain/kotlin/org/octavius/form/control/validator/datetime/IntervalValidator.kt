@@ -4,7 +4,7 @@ import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.IntervalValidation
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import kotlin.time.Duration
 
 class IntervalValidator(
@@ -24,12 +24,12 @@ class IntervalValidator(
         validationOptions?.let { options ->
             options.min?.let { min ->
                 if (value < min) {
-                    errors.add(T.get("validation.minInterval", formatDuration(min)))
+                    errors.add(Tr.Validation.minInterval(formatDuration(min)))
                 }
             }
             options.max?.let { max ->
                 if (value > max) {
-                    errors.add(T.get("validation.maxInterval", formatDuration(max)))
+                    errors.add(Tr.Validation.maxInterval(formatDuration(max)))
                 }
             }
         }

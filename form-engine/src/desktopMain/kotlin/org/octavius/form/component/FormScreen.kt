@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.octavius.form.control.base.ControlContext
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.navigation.Screen
 
 /**
@@ -90,7 +90,7 @@ class FormScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = T.get("form.actions.errorsLabel"),
+                    text = Tr.Form.Actions.errorsLabel(),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )

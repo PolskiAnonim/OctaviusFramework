@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.*
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.util.DateTimeAdapter
 import org.octavius.util.DateTimeComponent
 import kotlin.time.Clock
@@ -83,10 +83,10 @@ fun <T : Any> DateTimePickerDialog(
                         }
                         val nextStep = findNextStep(PickerStep.DATE)
                         if (nextStep == null) finish() else currentStep = nextStep
-                    }) { Text(T.get("action.ok")) }
+                    }) { Text(Tr.Action.ok()) }
                 },
                 confirmButton = {
-                    TextButton(onClick = onDismiss) { Text(T.get("action.cancel")) }
+                    TextButton(onClick = onDismiss) { Text(Tr.Action.cancel()) }
                 }
             ) {
                 DatePicker(state = datePickerState)
@@ -147,7 +147,7 @@ private fun TimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(T.get("datetime.selectTime")) },
+        title = { Text(Tr.Datetime.selectTime()) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 TimePicker(state = timePickerState)
@@ -155,7 +155,7 @@ private fun TimePickerDialog(
                     OutlinedTextField(
                         value = tempSeconds,
                         onValueChange = { if (it.length <= 2) tempSeconds = it.filter { c -> c.isDigit() } },
-                        label = { Text(T.get("datetime.seconds")) },
+                        label = { Text(Tr.Datetime.seconds()) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.padding(top = 8.dp)
@@ -166,10 +166,10 @@ private fun TimePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 onConfirm(LocalTime(timePickerState.hour, timePickerState.minute), tempSeconds)
-            }) { Text(T.get("action.ok")) }
+            }) { Text(Tr.Action.ok()) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(T.get("action.cancel")) }
+            TextButton(onClick = onDismiss) { Text(Tr.Action.cancel()) }
         }
     )
 }
@@ -191,14 +191,14 @@ private fun OffsetPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(T.get("datetime.offset")) },
+        title = { Text(Tr.Datetime.offset()) },
         text = {
             val commonOffsets by remember { mutableStateOf((-12..14).map { UtcOffset(hours = it) }) }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 OutlinedTextField(
                     value = textOffset,
                     onValueChange = { textOffset = it },
-                    label = { Text(T.get("datetime.offset")) },
+                    label = { Text(Tr.Datetime.offset()) },
                     placeholder = { Text("+02:00") },
                     singleLine = true,
                     isError = isError,
@@ -206,7 +206,7 @@ private fun OffsetPickerDialog(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    T.get("datetime.commonOffset"),
+                    Tr.Datetime.commonOffset(),
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.align(Alignment.Start)
                 )
@@ -225,11 +225,11 @@ private fun OffsetPickerDialog(
         },
         confirmButton = {
             TextButton(onClick = onConfirmClick, enabled = !isError) {
-                Text(T.get("action.ok"))
+                Text(Tr.Action.ok())
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(T.get("action.cancel")) }
+            TextButton(onClick = onDismiss) { Text(Tr.Action.cancel()) }
         }
     )
 }

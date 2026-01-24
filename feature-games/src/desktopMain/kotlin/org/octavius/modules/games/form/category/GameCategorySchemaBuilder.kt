@@ -7,7 +7,7 @@ import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.number.IntegerControl
 import org.octavius.form.control.type.primitive.StringControl
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 class GameCategorySchemaBuilder : FormSchemaBuilder() {
 
@@ -20,19 +20,19 @@ class GameCategorySchemaBuilder : FormSchemaBuilder() {
                 null
             ),
             "name" to StringControl(
-                T.get("games.categories.name"),
+                Tr.Games.Categories.name(),
                 required = true
             ),
             // Przyciski
             "saveButton" to ButtonControl(
-                text = T.get("action.save"), actions = listOf(
+                text = Tr.Action.save(), actions = listOf(
                     ControlAction {
                         trigger.triggerAction("save", true)
                     }
                 ), buttonType = ButtonType.Filled
             ),
             "cancelButton" to ButtonControl(
-                text = T.get("action.cancel"), buttonType = ButtonType.Outlined, actions = listOf(
+                text = Tr.Action.cancel(), buttonType = ButtonType.Outlined, actions = listOf(
                     ControlAction {
                         trigger.triggerAction("cancel", false)
                     }

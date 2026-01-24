@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CoroutineScope
 import org.octavius.form.control.base.*
 import org.octavius.form.control.layout.RenderNormalLabel
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 /**
  * Super-bazowa klasa dla kontrolek dropdown.
@@ -59,7 +59,7 @@ abstract class DropdownControlBase<T : Any>(
             ) {
                 OutlinedTextField(
                     value = getDisplayText(controlState.value.value)
-                        ?: (if (!isRequired) T.get("form.dropdown.noSelection") else T.get("form.dropdown.selectOption")),
+                        ?: (if (!isRequired) Tr.Form.Dropdown.noSelection() else Tr.Form.Dropdown.selectOption()),
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },

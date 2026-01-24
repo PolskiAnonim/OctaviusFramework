@@ -15,7 +15,7 @@ import org.octavius.form.control.type.number.IntegerControl
 import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.EnumControl
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
 
@@ -31,15 +31,15 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             collapsible = false,
             initiallyExpanded = true,
             columns = 2,
-            label = T.get("asianMedia.form.titleInfo")
+            label = Tr.AsianMedia.Form.titleInfo()
         ),
         "titles" to StringListControl(
-            T.get("asianMedia.form.titles"),
+            Tr.AsianMedia.Form.titles(),
             required = true,
             validationOptions = StringListValidation(minItems = 1)
         ),
         "language" to EnumControl(
-            T.get("asianMedia.form.originalLanguage"),
+            Tr.AsianMedia.Form.originalLanguage(),
             PublicationLanguage::class,
             required = true
         ),
@@ -62,11 +62,11 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 minItems = 1,
                 maxItems = 7
             ),
-            label = T.get("asianMedia.form.publications")
+            label = Tr.AsianMedia.Form.publications()
         ),
         // Przyciski
         "saveButton" to ButtonControl(
-            text = T.get("action.save"),
+            text = Tr.Action.save(),
             buttonType = ButtonType.Filled,
             actions = listOf(
                 ControlAction {
@@ -75,7 +75,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             )
         ),
         "deleteButton" to ButtonControl(
-            text = T.get("action.remove"),
+            text = Tr.Action.remove(),
             buttonType = ButtonType.Filled,
             dependencies = mapOf(
                 "visible" to ControlDependency(
@@ -89,7 +89,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 ControlAction {
                     GlobalDialogManager.show(
                         DialogConfig(
-                            title = T.get("action.confirm"),
+                            title = Tr.Action.confirm(),
                             text = "Czy potwierdzasz usunięcie", //TODO tłumaczenie
                             onDismiss = { GlobalDialogManager.dismiss() },
                             confirmButtonText = "Tak", //TODO tłumaczenie
@@ -103,7 +103,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             )
         ),
         "cancelButton" to ButtonControl(
-            text = T.get("action.cancel"),
+            text = Tr.Action.cancel(),
             buttonType = ButtonType.Outlined,
             actions = listOf(
                 ControlAction {
@@ -118,12 +118,12 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
         return mapOf(
             "id" to IntegerControl(null),
             "publicationType" to EnumControl(
-                T.get("asianMedia.form.publicationType"),
+                Tr.AsianMedia.Form.publicationType(),
                 PublicationType::class,
                 required = true
             ),
             "status" to EnumControl(
-                T.get("asianMedia.form.readingStatus"),
+                Tr.AsianMedia.Form.readingStatus(),
                 PublicationStatus::class,
                 required = true,
                 actions = listOf(
@@ -137,27 +137,27 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 )
             ),
             "trackProgress" to BooleanControl(
-                T.get("asianMedia.form.trackProgress"),
+                Tr.AsianMedia.Form.trackProgress(),
                 required = true
             ),
             "volumes" to IntegerControl(
-                T.get("asianMedia.form.volumeCount"),
+                Tr.AsianMedia.Form.volumeCount(),
                 dependencies = visibleWhenTrackProgress()
             ),
             "translatedVolumes" to IntegerControl(
-                T.get("asianMedia.form.translatedVolumes"),
+                Tr.AsianMedia.Form.translatedVolumes(),
                 dependencies = visibleWhenTrackProgress()
             ),
             "chapters" to IntegerControl(
-                T.get("asianMedia.form.chapterCount"),
+                Tr.AsianMedia.Form.chapterCount(),
                 dependencies = visibleWhenTrackProgress()
             ),
             "translatedChapters" to IntegerControl(
-                T.get("asianMedia.form.translatedChapters"),
+                Tr.AsianMedia.Form.translatedChapters(),
                 dependencies = visibleWhenTrackProgress()
             ),
             "originalCompleted" to BooleanControl(
-                T.get("asianMedia.form.originalCompleted"),
+                Tr.AsianMedia.Form.originalCompleted(),
                 required = true,
                 dependencies = visibleWhenTrackProgress()
             )

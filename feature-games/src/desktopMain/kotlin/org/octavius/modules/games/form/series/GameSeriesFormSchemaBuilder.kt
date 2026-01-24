@@ -7,7 +7,7 @@ import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.primitive.StringControl
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 
 class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
     override fun defineContentOrder(): List<String> = listOf("basicInfo")
@@ -16,7 +16,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> =
         mapOf(
             "name" to StringControl(
-                T.get("games.series.name"),
+                Tr.Games.Series.name(),
                 required = true
             ),
             "basicInfo" to SectionControl(
@@ -24,18 +24,18 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
                 collapsible = false,
                 initiallyExpanded = true,
                 columns = 1,
-                label = T.get("games.series.basicInfo")
+                label = Tr.Games.Series.basicInfo()
             ),
             // Przyciski
             "saveButton" to ButtonControl(
-                text = T.get("action.save"), actions = listOf(
+                text = Tr.Action.save(), actions = listOf(
                     ControlAction {
                         trigger.triggerAction("save", true)
                     }
                 ), buttonType = ButtonType.Filled
             ),
             "cancelButton" to ButtonControl(
-                text = T.get("action.cancel"), buttonType = ButtonType.Outlined, actions = listOf(
+                text = Tr.Action.cancel(), buttonType = ButtonType.Outlined, actions = listOf(
                     ControlAction {
                         trigger.triggerAction("cancel", false)
                     }

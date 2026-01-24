@@ -6,6 +6,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.octavius.api.contract.ParseResult
+import org.octavius.api.contract.ParsedData
 import org.octavius.api.contract.Parser
 import org.octavius.extension.util.chrome
 import org.octavius.modules.asian.parser.MangaUpdatesParser
@@ -28,7 +29,7 @@ fun main() {
                     val parsedData = parser.parse()
                     if (parsedData != null) {
                         @Suppress("UNCHECKED_CAST")
-                        val dataJsonString = (parser as Parser<Any>).serialize(parsedData)
+                        val dataJsonString = (parser as Parser<ParsedData>).serialize(parsedData)
 
                         val resultContainer = ParseResult(
                             moduleId = parser.moduleId,

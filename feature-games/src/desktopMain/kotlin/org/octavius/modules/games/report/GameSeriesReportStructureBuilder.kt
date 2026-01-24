@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import org.octavius.data.QueryFragment
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
 import org.octavius.navigation.AppRouter
@@ -21,13 +21,13 @@ class GameSeriesReportStructureBuilder : ReportStructureBuilder() {
 
     override fun buildQuery(): QueryFragment = QueryFragment(
         sql = """
-        SELECT 
+        SELECT
             s.id,
             s.name,
             COALESCE(g.game_count, 0) as game_count
         FROM games.series s
             LEFT JOIN (
-                SELECT 
+                SELECT
                     series,
                     COUNT(*) as game_count
                 FROM games.games
@@ -39,15 +39,15 @@ class GameSeriesReportStructureBuilder : ReportStructureBuilder() {
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
         "name" to StringColumn(
-            header = T.get("games.series.name")
+            header = Tr.Games.Series.name()
         ),
         "game_count" to LongColumn(
-            header = T.get("games.series.gameCount")
+            header = Tr.Games.Series.gameCount()
         )
     )
 
     override fun buildDefaultRowAction(): ReportRowAction = ReportRowAction(
-        label = T.get("games.form.editSeries"),
+        label = Tr.Games.Form.editSeries(),
         icon = Icons.Default.Edit
     ) {
         val seriesId = rowData["id"] as? Int
@@ -58,7 +58,7 @@ class GameSeriesReportStructureBuilder : ReportStructureBuilder() {
 
     override fun buildMainActions(): List<ReportMainAction> = listOf(
         ReportMainAction(
-            label = T.get("games.form.newSeries"),
+            label = Tr.Games.Form.newSeries(),
             icon = Icons.Default.Add
         ) {
             AppRouter.navigateTo(GameSeriesFormScreen.create())
@@ -66,7 +66,7 @@ class GameSeriesReportStructureBuilder : ReportStructureBuilder() {
     )
 
     override fun buildRowActions(): List<ReportRowAction> = listOf(
-        ReportRowAction(T.get("games.report.addGameInSeries"), Icons.Default.Add) {
+        ReportRowAction(Tr.Games.Report.addGameInSeries(), Icons.Default.Add) {
             val seriesId = rowData["id"] as? Int
             if (seriesId != null) {
                 val payload = mapOf("series" to seriesId)

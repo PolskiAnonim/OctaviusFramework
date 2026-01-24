@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.report.ColumnWidth
 import org.octavius.report.ReportEvent
 import org.octavius.report.component.ReportState
@@ -112,7 +112,7 @@ abstract class ReportColumn(
                 if (filterData?.isActive() ?: false) {
                     Icon(
                         imageVector = Icons.Default.FilterAlt,
-                        contentDescription = T.get("filter.general.active"),
+                        contentDescription = Tr.Filter.General.active(),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
                     )
@@ -129,7 +129,7 @@ abstract class ReportColumn(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = T.get("filter.general.label") + " $header",
+                            text = Tr.Filter.General.label() + " $header",
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -148,13 +148,13 @@ abstract class ReportColumn(
                                         showColumnMenu = false
                                     }
                                 ) {
-                                    Text(T.get("filter.general.clear"))
+                                    Text(Tr.Filter.General.clear())
                                 }
 
                                 Button(
                                     onClick = { showColumnMenu = false }
                                 ) {
-                                    Text(T.get("action.close"))
+                                    Text(Tr.Action.close())
                                 }
                             }
                         }

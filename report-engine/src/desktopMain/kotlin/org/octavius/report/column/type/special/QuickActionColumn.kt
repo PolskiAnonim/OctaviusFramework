@@ -12,7 +12,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.report.ReportActionContext
 import org.octavius.report.ReportEvent
 import org.octavius.report.ReportRowAction
@@ -57,7 +57,7 @@ class QuickActionColumn(
             }) {
                 Icon(
                     imageVector = Icons.Default.Start,
-                    contentDescription = T.get("report.actions.menuDescription"),
+                    contentDescription = Tr.Report.Actions.menuDescription(),
                     modifier = Modifier.size(18.dp)
                 )
             }

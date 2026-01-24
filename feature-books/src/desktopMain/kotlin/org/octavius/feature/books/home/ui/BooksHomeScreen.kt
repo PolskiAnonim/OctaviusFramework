@@ -18,7 +18,7 @@ import org.octavius.feature.books.home.model.BookDashboardItem
 import org.octavius.feature.books.home.model.BooksDashboardData
 import org.octavius.feature.books.home.model.BooksHomeHandler
 import org.octavius.feature.books.home.model.BooksHomeState
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.navigation.Screen
 
 class BooksHomeScreen(override val title: String) : Screen {
@@ -36,7 +36,7 @@ class BooksHomeScreen(override val title: String) : Screen {
         Scaffold(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
-                    text = { Text(T.get("books.home.addBook")) },
+                    text = { Text(Tr.Books.Home.addBook()) },
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
                     onClick = {
                         // AppRouter.navigateTo(BookFormScreen.create())
@@ -72,7 +72,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                                 ) {
                                     Icon(Icons.AutoMirrored.Filled.Article, null)
                                     Spacer(Modifier.size(8.dp))
-                                    Text(T.get("books.home.allBooks"))
+                                    Text(Tr.Books.Home.allBooks())
                                 }
 
                                 // Przycisk: Lista Autorów
@@ -84,7 +84,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                                 ) {
                                     Icon(Icons.Default.Person, null)
                                     Spacer(Modifier.size(8.dp))
-                                    Text(T.get("books.home.allAuthors"))
+                                    Text(Tr.Books.Home.allAuthors())
                                 }
                             }
                         }
@@ -92,7 +92,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                         // Szybki dostęp: Czytane teraz
                         item {
                             QuickAccessList(
-                                title = T.get("books.home.currentlyReading"),
+                                title = Tr.Books.Home.currentlyReading(),
                                 items = data.currentlyReading,
                                 onItemClick = { item ->
                                     // AppRouter.navigateTo(BookFormScreen.create(entityId = item.id))
@@ -103,7 +103,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                         // Szybki dostęp: Ostatnio dodane
                         item {
                             QuickAccessList(
-                                title = T.get("books.home.recentlyAdded"),
+                                title = Tr.Books.Home.recentlyAdded(),
                                 items = data.recentlyAdded,
                                 onItemClick = { item ->
                                     // AppRouter.navigateTo(BookFormScreen.create(entityId = item.id))
@@ -115,7 +115,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                 is BooksHomeState.Error -> {
                     // Dodatkowo Globalny dialog
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(T.get("error.dataLoading"))
+                        Text(Tr.Error.dataLoading())
                     }
                 }
             }
@@ -124,7 +124,7 @@ class BooksHomeScreen(override val title: String) : Screen {
 
     companion object {
         fun create(): Screen {
-            return BooksHomeScreen(T.get("books.home.title"))
+            return BooksHomeScreen(Tr.Books.Home.title())
         }
     }
 }
@@ -135,10 +135,10 @@ private fun StatsHeader(data: BooksDashboardData) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        StatCard(T.get("books.stats.total"), data.totalBooks.toString(), Modifier.weight(1f))
-        StatCard(T.get("books.stats.authors"), data.totalAuthors.toString(), Modifier.weight(1f))
-        StatCard(T.get("books.stats.reading"), data.readingCount.toString(), Modifier.weight(1f))
-        StatCard(T.get("books.stats.completed"), data.completedCount.toString(), Modifier.weight(1f))
+        StatCard(Tr.Books.Stats.total(), data.totalBooks.toString(), Modifier.weight(1f))
+        StatCard(Tr.Books.Stats.authors(), data.totalAuthors.toString(), Modifier.weight(1f))
+        StatCard(Tr.Books.Stats.reading(), data.readingCount.toString(), Modifier.weight(1f))
+        StatCard(Tr.Books.Stats.completed(), data.completedCount.toString(), Modifier.weight(1f))
     }
 }
 
@@ -167,7 +167,7 @@ private fun QuickAccessList(
 
         if (items.isEmpty()) {
             Text(
-                text = T.get("books.home.noItems"),
+                text = Tr.Books.Home.noItems(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)

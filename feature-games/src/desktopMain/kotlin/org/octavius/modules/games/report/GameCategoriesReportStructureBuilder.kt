@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import org.octavius.data.QueryFragment
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.modules.games.form.category.ui.GameCategoryFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.ReportMainAction
@@ -20,13 +20,13 @@ class GameCategoriesReportStructureBuilder : ReportStructureBuilder() {
 
     override fun buildQuery(): QueryFragment = QueryFragment(
         sql = """
-            SELECT 
+            SELECT
                 c.id,
                 c.name,
                 COALESCE(g.game_count, 0) as game_count
             FROM games.categories c
             LEFT JOIN (
-                SELECT 
+                SELECT
                     category_id,
                     COUNT(*) as game_count
                 FROM games.categories_to_games
@@ -37,15 +37,15 @@ class GameCategoriesReportStructureBuilder : ReportStructureBuilder() {
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
         "name" to StringColumn(
-            header = T.get("games.categories.name")
+            header = Tr.Games.Categories.name()
         ),
         "game_count" to LongColumn(
-            header = T.get("games.categories.gameCount")
+            header = Tr.Games.Categories.gameCount()
         )
     )
 
     override fun buildDefaultRowAction(): ReportRowAction = ReportRowAction(
-        label = T.get("games.form.editCategory"),
+        label = Tr.Games.Form.editCategory(),
         icon = Icons.Default.Edit
     ) {
         val categoryId = rowData["id"] as? Int
@@ -56,7 +56,7 @@ class GameCategoriesReportStructureBuilder : ReportStructureBuilder() {
 
     override fun buildMainActions(): List<ReportMainAction> = listOf(
         ReportMainAction(
-            label = T.get("games.form.newCategory"),
+            label = Tr.Games.Form.newCategory(),
             icon = Icons.Default.Add
         ) {
             AppRouter.navigateTo(GameCategoryFormScreen.create())

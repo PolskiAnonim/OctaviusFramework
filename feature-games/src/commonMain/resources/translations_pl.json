@@ -23,7 +23,7 @@
       "basicInfo": "Podstawowe informacje",
       "category": {
         "one": "Kategoria",
-        "few": "Kategorie"
+        "many": "Kategorie"
       },
       "characters": "Postacie",
       "distinctiveAntagonist": "Charakterystyczny antagonista",

@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.QueryFragment
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
 import org.octavius.report.ReportEvent
@@ -126,7 +126,7 @@ abstract class Filter<T : FilterData> {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = T.get("filter.null.values"),
+                text = Tr.Filter.Null.values(),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 8.dp)
             )
@@ -142,7 +142,7 @@ abstract class Filter<T : FilterData> {
                     )
                 }
             )
-            Text(T.get("filter.null.ignore"), modifier = Modifier.padding(end = 12.dp))
+            Text(Tr.Filter.Null.ignore(), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
                 selected = filterData.nullHandling == NullHandling.Include,
@@ -155,7 +155,7 @@ abstract class Filter<T : FilterData> {
                     )
                 }
             )
-            Text(T.get("filter.null.include"), modifier = Modifier.padding(end = 12.dp))
+            Text(Tr.Filter.Null.include(), modifier = Modifier.padding(end = 12.dp))
 
             RadioButton(
                 selected = filterData.nullHandling == NullHandling.Exclude,
@@ -169,7 +169,7 @@ abstract class Filter<T : FilterData> {
 
                 }
             )
-            Text(T.get("filter.null.exclude"))
+            Text(Tr.Filter.Null.exclude())
         }
     }
 
@@ -181,7 +181,7 @@ abstract class Filter<T : FilterData> {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = T.get("filter.mode"),
+                text = Tr.Filter.mode(),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = 8.dp)
             )

@@ -15,7 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlDependency
-import org.octavius.localization.T
+import org.octavius.localization.Tr
 import org.octavius.theme.FormSpacing
 
 /**
@@ -98,7 +98,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onQueryChange,
-            placeholder = { Text(T.get("search.placeholder")) },
+            placeholder = { Text(Tr.Search.placeholder()) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -109,7 +109,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = T.get("search.search")
+                    contentDescription = Tr.Search.search()
                 )
             },
             trailingIcon = {
@@ -117,7 +117,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
                     IconButton(onClick = { onQueryChange("") }) {
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = T.get("search.clear")
+                            contentDescription = Tr.Search.clear()
                         )
                     }
                 }
@@ -169,7 +169,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
         // Opcja "null" (brak wyboru), tylko jeśli kontrolka nie jest wymagana
         if (!isRequired) {
             DropdownMenuItem(
-                text = { Text(T.get("form.dropdown.noSelection")) },
+                text = { Text(Tr.Form.Dropdown.noSelection()) },
                 onClick = { onOptionSelected(null) }
             )
             HorizontalDivider()
@@ -180,7 +180,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
                 enabled = false,
                 text = {
                     Text(
-                        T.get("form.dropdown.noResults"),
+                        Tr.Form.Dropdown.noResults(),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 },
@@ -222,11 +222,11 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = T.get("pagination.previousPage")
+                    contentDescription = Tr.Pagination.previousPage()
                 )
             }
 
-            Text(T.get("pagination.page") + " ${currentPage + 1} " + T.get("pagination.of") + " $totalPages")
+            Text(Tr.Pagination.page() + " ${currentPage + 1} " + Tr.Pagination.of() + " $totalPages")
 
             IconButton(
                 onClick = { onPageChange(currentPage + 1) },
@@ -234,7 +234,7 @@ abstract class AsyncPaginatedDropdownControl<T : Any>(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = T.get("pagination.nextPage")
+                    contentDescription = Tr.Pagination.nextPage()
                 )
             }
         }
