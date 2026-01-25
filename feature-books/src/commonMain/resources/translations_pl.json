@@ -24,7 +24,13 @@
     "authors": {
       "form": {
         "newAuthor": "Nowy autor",
-        "editAuthor": "Edycja autora"
+        "editAuthor": "Edycja autora",
+        "name": "Imię i nazwisko",
+        "sortName": "Nazwa do sortowania",
+        "confirmDelete": "Czy na pewno chcesz usunąć tego autora?"
+      },
+      "validation": {
+        "nameExists": "Taki autor już istnieje"
       },
       "report": {
         "title": "Autorzy",
