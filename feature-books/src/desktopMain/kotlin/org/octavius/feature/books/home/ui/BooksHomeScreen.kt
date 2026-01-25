@@ -18,7 +18,10 @@ import org.octavius.feature.books.home.model.BookDashboardItem
 import org.octavius.feature.books.home.model.BooksDashboardData
 import org.octavius.feature.books.home.model.BooksHomeHandler
 import org.octavius.feature.books.home.model.BooksHomeState
+import org.octavius.feature.books.report.ui.AuthorsReportScreen
+import org.octavius.feature.books.report.ui.BooksReportScreen
 import org.octavius.localization.Tr
+import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
 
 class BooksHomeScreen(override val title: String) : Screen {
@@ -66,7 +69,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                                 // Przycisk: Lista Książek
                                 OutlinedButton(
                                     onClick = {
-                                        // AppRouter.navigateTo(BooksReportScreen.create())
+                                        AppRouter.navigateTo(BooksReportScreen.create())
                                     },
                                     modifier = Modifier.weight(1f)
                                 ) {
@@ -78,7 +81,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                                 // Przycisk: Lista Autorów
                                 OutlinedButton(
                                     onClick = {
-                                        // AppRouter.navigateTo(AuthorsReportScreen.create())
+                                        AppRouter.navigateTo(AuthorsReportScreen.create())
                                     },
                                     modifier = Modifier.weight(1f)
                                 ) {

@@ -14,6 +14,38 @@
       "completed": "Ukończone",
       "reading": "Czytane",
       "total": "Razem"
+    },
+    "status": {
+      "notReading": "Nie czytam",
+      "reading": "Czytam",
+      "completed": "Przeczytane",
+      "planToRead": "Planuję przeczytać"
+    },
+    "authors": {
+      "form": {
+        "newAuthor": "Nowy autor",
+        "editAuthor": "Edycja autora"
+      },
+      "report": {
+        "title": "Autorzy",
+        "name": "Imię i nazwisko",
+        "sortName": "Nazwa do sortowania",
+        "bookCount": "Liczba książek",
+        "createdAt": "Data dodania",
+        "newAuthor": "Nowy autor",
+        "editAuthor": "Edytuj autora"
+      }
+    },
+    "report": {
+      "title": "Książki",
+      "titlePl": "Tytuł (PL)",
+      "titleEng": "Tytuł (ENG)",
+      "authors": "Autorzy",
+      "status": "Status",
+      "createdAt": "Data dodania",
+      "updatedAt": "Data aktualizacji",
+      "newBook": "Nowa książka",
+      "editBook": "Edytuj książkę"
     }
   }
 }
