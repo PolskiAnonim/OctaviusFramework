@@ -16,7 +16,9 @@
       "gameCategories": "Kategorie gier",
       "gameCategoriesDescription": "Zarządzaj kategoriami i tagami swoich gier",
       "statistics": "Statystyki",
-      "statisticsDescription": "Zobacz statystyki swojej kolekcji gier"
+      "statisticsDescription": "Zobacz statystyki swojej kolekcji gier",
+      "gameDetails": "Szczegóły gier",
+      "gameDetailsDescription": "Przeglądaj gry z ocenami, czasem gry i postaciami"
     },
     "form": {
       "atmosphereRating": "Ocena atmosfery (1-10)",
@@ -64,6 +66,17 @@
       "name": "Nazwa serii",
       "gameCount": "Liczba gier",
       "title": "Serie gier"
+    },
+    "details": {
+      "title": "Szczegóły gier",
+      "playTimeHours": "Czas gry (h)",
+      "completionCount": "Przejścia",
+      "storyRating": "Fabuła",
+      "gameplayRating": "Rozgrywka",
+      "atmosphereRating": "Atmosfera",
+      "distinctiveCharacter": "Char. postacie",
+      "distinctiveProtagonist": "Char. protagonista",
+      "distinctiveAntagonist": "Char. antagonista"
     },
     "stats": {
       "title": "Statystyki gier",

@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Tr
 import org.octavius.modules.games.report.ui.GameCategoriesReportScreen
+import org.octavius.modules.games.report.ui.GameRatingsReportScreen
 import org.octavius.modules.games.report.ui.GameReportScreen
 import org.octavius.modules.games.report.ui.GameSeriesReportScreen
 import org.octavius.modules.games.statistics.ui.GameStatisticsScreen
@@ -101,7 +103,23 @@ class GamesHomeScreen : Screen {
                     modifier = Modifier.weight(1f)
                 )
 
-                // Statistics (placeholder for future)
+                // Game Details
+                QuickActionCard(
+                    title = Tr.Games.Home.gameDetails(),
+                    description = Tr.Games.Home.gameDetailsDescription(),
+                    icon = Icons.Default.Star,
+                    onClick = {
+                        AppRouter.navigateTo(GameRatingsReportScreen.create())
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Statistics
                 QuickActionCard(
                     title = Tr.Games.Home.statistics(),
                     description = Tr.Games.Home.statisticsDescription(),
@@ -111,6 +129,9 @@ class GamesHomeScreen : Screen {
                     },
                     modifier = Modifier.weight(1f)
                 )
+
+                // Placeholder dla wyrównania
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
