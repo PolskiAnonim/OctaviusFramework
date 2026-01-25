@@ -21,6 +21,20 @@
       "completed": "Przeczytane",
       "planToRead": "Planuję przeczytać"
     },
+    "form": {
+      "newBook": "Nowa książka",
+      "editBook": "Edycja książki",
+      "titlePl": "Tytuł (PL)",
+      "titleEng": "Tytuł (ENG)",
+      "status": "Status",
+      "basicInfo": "Podstawowe informacje",
+      "author": "Autor",
+      "authors": "Autorzy",
+      "confirmDelete": "Czy na pewno chcesz usunąć tę książkę?"
+    },
+    "validation": {
+      "titleExists": "Książka o tym tytule już istnieje"
+    },
     "authors": {
       "form": {
         "newAuthor": "Nowy autor",

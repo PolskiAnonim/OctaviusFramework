@@ -18,6 +18,7 @@ import org.octavius.feature.books.home.model.BookDashboardItem
 import org.octavius.feature.books.home.model.BooksDashboardData
 import org.octavius.feature.books.home.model.BooksHomeHandler
 import org.octavius.feature.books.home.model.BooksHomeState
+import org.octavius.feature.books.form.book.ui.BookFormScreen
 import org.octavius.feature.books.report.ui.AuthorsReportScreen
 import org.octavius.feature.books.report.ui.BooksReportScreen
 import org.octavius.localization.Tr
@@ -42,7 +43,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                     text = { Text(Tr.Books.Home.addBook()) },
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
                     onClick = {
-                        // AppRouter.navigateTo(BookFormScreen.create())
+                        AppRouter.navigateTo(BookFormScreen.create())
                     }
                 )
             },
@@ -98,7 +99,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                                 title = Tr.Books.Home.currentlyReading(),
                                 items = data.currentlyReading,
                                 onItemClick = { item ->
-                                    // AppRouter.navigateTo(BookFormScreen.create(entityId = item.id))
+                                    AppRouter.navigateTo(BookFormScreen.create(entityId = item.id))
                                 }
                             )
                         }
@@ -109,7 +110,7 @@ class BooksHomeScreen(override val title: String) : Screen {
                                 title = Tr.Books.Home.recentlyAdded(),
                                 items = data.recentlyAdded,
                                 onItemClick = { item ->
-                                    // AppRouter.navigateTo(BookFormScreen.create(entityId = item.id))
+                                    AppRouter.navigateTo(BookFormScreen.create(entityId = item.id))
                                 }
                             )
                         }

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import org.octavius.data.QueryFragment
 import org.octavius.feature.books.domain.ReadingStatus
+import org.octavius.feature.books.form.book.ui.BookFormScreen
 import org.octavius.localization.Tr
 import org.octavius.navigation.AppRouter
 import org.octavius.report.ReportMainAction
@@ -68,7 +69,7 @@ class BooksReportStructureBuilder : ReportStructureBuilder() {
     ) {
         val bookId = rowData["id"] as? Int
         if (bookId != null) {
-            // TODO: AppRouter.navigateTo(BookFormScreen.create(bookId))
+            AppRouter.navigateTo(BookFormScreen.create(bookId))
         }
     }
 
@@ -77,7 +78,7 @@ class BooksReportStructureBuilder : ReportStructureBuilder() {
             label = Tr.Books.Report.newBook(),
             icon = Icons.Default.Add
         ) {
-            // TODO: AppRouter.navigateTo(BookFormScreen.create())
+            AppRouter.navigateTo(BookFormScreen.create())
         }
     )
 }
