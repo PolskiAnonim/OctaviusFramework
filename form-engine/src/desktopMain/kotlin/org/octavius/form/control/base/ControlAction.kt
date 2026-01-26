@@ -13,7 +13,7 @@ import org.octavius.form.component.FormState
  * @param action Lambda, która zostanie wykonana. Otrzymuje ActionContext jako receiver (`this`).
  */
 class ControlAction<T>(
-    val action: ActionContext<T>.() -> Unit
+    val action: suspend ActionContext<T>.() -> Unit
 )
 
 /**

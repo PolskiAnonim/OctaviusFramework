@@ -94,7 +94,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                             onDismiss = { GlobalDialogManager.dismiss() },
                             confirmButtonText = "Tak", //TODO tłumaczenie
                             onConfirm = {
-                                trigger.triggerAction("delete", false)
+                                //trigger.triggerAction("delete", false)
                                 GlobalDialogManager.dismiss()
                             }
                         )

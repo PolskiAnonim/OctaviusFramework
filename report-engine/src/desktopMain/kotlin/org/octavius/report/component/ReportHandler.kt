@@ -34,7 +34,7 @@ val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHan
  */
 class ReportHandler(
     reportStructureBuilder: ReportStructureBuilder,
-    private val handlerScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val handlerScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
     val reportStructure: ReportStructure = reportStructureBuilder.build()
 

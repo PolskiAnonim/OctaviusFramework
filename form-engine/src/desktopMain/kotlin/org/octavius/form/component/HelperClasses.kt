@@ -14,5 +14,5 @@ sealed class FormActionResult {
 }
 
 interface FormActionTrigger {
-    fun triggerAction(actionKey: String, validates: Boolean): FormActionResult
+    suspend fun triggerAction(actionKey: String, validates: Boolean): FormActionResult
 }

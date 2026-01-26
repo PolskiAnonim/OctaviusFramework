@@ -99,7 +99,7 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
                             onDismiss = { GlobalDialogManager.dismiss() },
                             confirmButtonText = Tr.Action.confirm(),
                             onConfirm = {
-                                trigger.triggerAction("delete", false)
+                                //trigger.triggerAction("delete", false)
                                 GlobalDialogManager.dismiss()
                             }
                         )

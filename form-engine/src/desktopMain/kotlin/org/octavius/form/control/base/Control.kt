@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.ErrorManager
@@ -153,17 +154,19 @@ abstract class Control<T : Any> internal constructor(
         payload: Any? = null
     ) {
         actions?.forEach { action ->
-            val context = ActionContext(
-                sourceValue = newValue,
-                sourceControlContext = controlContext,
-                formState = formState,
-                formSchema = formSchema,
-                errorManager = errorManager,
-                trigger = formActionTrigger,
-                coroutineScope = scope,
-                payload = payload
-            )
-            action.action.invoke(context)
+            scope.launch {
+                val context = ActionContext(
+                    sourceValue = newValue,
+                    sourceControlContext = controlContext,
+                    formState = formState,
+                    formSchema = formSchema,
+                    errorManager = errorManager,
+                    trigger = formActionTrigger,
+                    coroutineScope = scope,
+                    payload = payload
+                )
+                action.action.invoke(context)
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 package org.octavius.form.component
 
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import org.octavius.form.control.base.*
 
 /**
@@ -19,6 +20,19 @@ import org.octavius.form.control.base.*
  * co umożliwia obsługę złożonych, zagnieżdżonych struktur.
  */
 class FormState {
+
+    /**
+     * Flaga ładowania danych formularza (initData).
+     * True podczas początkowego pobierania danych z bazy.
+     */
+    val isLoading = mutableStateOf(true)
+
+    /**
+     * Flaga wysyłania formularza (triggerAction).
+     * True podczas wykonywania akcji (np. zapis, usunięcie).
+     */
+    val actionTriggered = mutableStateOf(false)
+
     /**
      * Stan kontrolek formularza - reactive map która automatycznie triggeruje recomposition
      */
