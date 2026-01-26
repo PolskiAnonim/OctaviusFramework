@@ -16,13 +16,11 @@ import org.octavius.localization.Tr
 import org.octavius.util.DateTimeAdapter
 import org.octavius.util.DateTimeComponent
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 // Prywatny enum do zarządzania krokami w procesie wyboru
 private enum class PickerStep { DATE, TIME, OFFSET }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : Any> DateTimePickerDialog(
     adapter: DateTimeAdapter<T>,
@@ -36,7 +34,6 @@ fun <T : Any> DateTimePickerDialog(
     // Stany tymczasowe, które będą aktualizowane w kolejnych krokach
     var tempDate by remember { mutableStateOf(initialComponents.date) }
     var tempTime by remember { mutableStateOf(initialComponents.time) }
-    var tempSeconds by remember { mutableStateOf(initialComponents.seconds?.toString() ?: "0") }
     var tempOffset by remember { mutableStateOf(initialComponents.offset ?: systemDefaultOffset) }
 
     // Funkcje pomocnicze do nawigacji między krokami
@@ -62,11 +59,7 @@ fun <T : Any> DateTimePickerDialog(
     var currentStep by remember { mutableStateOf(getFirstStep()) }
 
     fun finish() {
-        val finalValue = adapter.buildFromComponents(
-            tempDate,
-            tempTime?.let { LocalTime(it.hour, it.minute, tempSeconds.toIntOrNull()?.coerceIn(0, 59) ?: 0) },
-            tempOffset
-        )
+        val finalValue = adapter.buildFromComponents(tempDate, tempTime, tempOffset)
         onConfirm(finalValue)
     }
 
@@ -96,12 +89,9 @@ fun <T : Any> DateTimePickerDialog(
         PickerStep.TIME -> {
             TimePickerDialog(
                 initialTime = tempTime,
-                initialSeconds = tempSeconds,
-                showSeconds = adapter.requiredComponents.contains(DateTimeComponent.SECONDS),
                 onDismiss = onDismiss,
-                onConfirm = { time, seconds ->
+                onConfirm = { time ->
                     tempTime = time
-                    tempSeconds = seconds
                     val nextStep = findNextStep(PickerStep.TIME)
                     if (nextStep == null) finish() else currentStep = nextStep
                 }
@@ -134,16 +124,14 @@ fun <T : Any> DateTimePickerDialog(
 @Composable
 private fun TimePickerDialog(
     initialTime: LocalTime?,
-    initialSeconds: String,
-    showSeconds: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (time: LocalTime, seconds: String) -> Unit
+    onConfirm: (time: LocalTime) -> Unit
 ) {
     val timePickerState = rememberTimePickerState(
         initialHour = initialTime?.hour ?: 12,
         initialMinute = initialTime?.minute ?: 0
     )
-    var tempSeconds by remember { mutableStateOf(initialSeconds) }
+    var tempSeconds by remember { mutableStateOf(initialTime?.second?.toString() ?: "0") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -151,21 +139,20 @@ private fun TimePickerDialog(
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 TimePicker(state = timePickerState)
-                if (showSeconds) {
-                    OutlinedTextField(
-                        value = tempSeconds,
-                        onValueChange = { if (it.length <= 2) tempSeconds = it.filter { c -> c.isDigit() } },
-                        label = { Text(Tr.Datetime.seconds()) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
+                OutlinedTextField(
+                    value = tempSeconds,
+                    onValueChange = { if (it.length <= 2) tempSeconds = it.filter { c -> c.isDigit() } },
+                    label = { Text(Tr.Datetime.seconds()) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                onConfirm(LocalTime(timePickerState.hour, timePickerState.minute), tempSeconds)
+                val seconds = tempSeconds.toIntOrNull()?.coerceIn(0, 59) ?: 0
+                onConfirm(LocalTime(timePickerState.hour, timePickerState.minute, seconds))
             }) { Text(Tr.Action.ok()) }
         },
         dismissButton = {

@@ -154,6 +154,14 @@ gpr.key=YOUR_GITHUB_TOKEN
 
 ## Localization
 
+- **Type-safe translation system** with auto-generated accessors (`Tr`)
 - JSON-based translations per module (`translations_pl.json`)
 - Plural forms support (one/few/many)
-- Compile-time validation: `./gradlew validateTranslations`
+- Build-time code generation: `./gradlew generateTranslationAccessors`
+
+```kotlin
+// Type-safe accessors instead of string keys
+Tr.Action.save()                     // → "Zapisz"
+Tr.Games.Form.category(5)            // → Plural form based on count
+Tr.currentLanguage = "en"            // Runtime language switching
+```
