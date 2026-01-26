@@ -20,8 +20,8 @@ import org.octavius.navigation.Screen
  *
  * @param data Sprawdzone i zdeserializowane dane publikacji.
  */
-class MangaUpdatesAddScreen(private val data: AsianPublicationData) : Screen {
-    override val title = "mangaUpdatesAddScreen"
+class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
+    override val title = "asianMediaAddScreen"
 
     @OptIn(ExperimentalMaterial3Api::class)
         @Composable
@@ -36,20 +36,20 @@ class MangaUpdatesAddScreen(private val data: AsianPublicationData) : Screen {
 
             // Układ UI - praktycznie skopiowany z Twojego App()
         Column(
-            modifier = Modifier.Companion.fillMaxSize().padding(16.dp),
-            horizontalAlignment = Alignment.Companion.CenterHorizontally
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Sekcja nagłówka (stała)
             Text("Octavius Helper", style = MaterialTheme.typography.headlineSmall)
             Text(
                 "Znalezione tytuły (${data.source}):", // Dodajemy informację o źródle
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.Companion.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp)
             )
 
             // Sekcja listy tytułów (przewijalna)
             Column(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .weight(1f) // Zajmuje dostępną przestrzeń
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
@@ -68,20 +68,20 @@ class MangaUpdatesAddScreen(private val data: AsianPublicationData) : Screen {
 
             // Typ publikacji jest już wykryty i przekazany w `data`
             OutlinedTextField(
-                value = data.type.toString(), // Używamy danych z obiektu
+                value = data.type.toDisplayString(),
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Wykryty typ publikacji") },
-                modifier = Modifier.Companion.fillMaxWidth().padding(vertical = 8.dp)
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
             )
 
             // Język publikacji również jest już wykryty
             OutlinedTextField(
-                value = data.language.toString(), // Używamy danych z obiektu
+                value = data.language.toDisplayString(),
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Wykryty język") },
-                modifier = Modifier.Companion.fillMaxWidth().padding(bottom = 8.dp)
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
 
             Button(
@@ -101,10 +101,10 @@ class MangaUpdatesAddScreen(private val data: AsianPublicationData) : Screen {
                     }
                 },
                 enabled = data.titles.isNotEmpty() && !isLoading,
-                modifier = Modifier.Companion.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.Companion.size(24.dp))
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
                     Text("Dodaj do bazy")
                 }
@@ -113,7 +113,7 @@ class MangaUpdatesAddScreen(private val data: AsianPublicationData) : Screen {
             // Wyświetlanie statusu operacji
             statusMessage?.let { (message, isSuccess) ->
                 val color = if (isSuccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                Text(message, color = color, modifier = Modifier.Companion.padding(top = 8.dp))
+                Text(message, color = color, modifier = Modifier.padding(top = 8.dp))
             }
         }
         }

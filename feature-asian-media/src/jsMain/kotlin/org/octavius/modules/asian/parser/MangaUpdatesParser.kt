@@ -41,7 +41,6 @@ object MangaUpdatesParser: Parser<AsianPublicationData> {
 
         // Łączymy i filtrujemy tytuły
         val allTitles = (listOf(mainTitle) + associatedTitles)
-            .map { it.replace("\"", "") } // Usuń cudzysłowy
             .filter { it.isNotBlank() && it.isPrimarilyLatinScript() }
             .distinct()
 

@@ -10,13 +10,15 @@ import org.octavius.api.contract.ParsedData
 import org.octavius.api.contract.Parser
 import org.octavius.extension.util.chrome
 import org.octavius.modules.asian.parser.MangaUpdatesParser
+import org.octavius.modules.asian.parser.NovelUpdatesParser
 
 @OptIn(DelicateCoroutinesApi::class)
 fun main() {
     println("Octavius Content Script (z logiką) załadowany!")
 
     val availableParsers: List<Parser<*>> = listOf(
-        MangaUpdatesParser
+        MangaUpdatesParser,
+        NovelUpdatesParser
     )
 
     chrome.runtime.onMessage.addListener { message, _, sendResponse ->

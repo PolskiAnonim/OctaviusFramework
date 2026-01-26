@@ -3,7 +3,7 @@ package org.octavius.modules.asian
 import kotlinx.serialization.json.Json
 import org.octavius.api.contract.ExtensionModule
 import org.octavius.modules.asian.model.AsianPublicationData
-import org.octavius.modules.asian.screen.MangaUpdatesAddScreen
+import org.octavius.modules.asian.screen.AsianMediaAddScreen
 import org.octavius.navigation.Screen
 
 object AsianMediaExtensionModule : ExtensionModule {
@@ -20,10 +20,7 @@ object AsianMediaExtensionModule : ExtensionModule {
     }
 
     fun chooseScreen(publicationData: AsianPublicationData): Screen {
-        return when (publicationData.source) {
-            "MangaUpdates" -> MangaUpdatesAddScreen(publicationData)
-            else -> TODO("Not implemented yet")
-        }
+        return AsianMediaAddScreen(publicationData)
     }
 
 }

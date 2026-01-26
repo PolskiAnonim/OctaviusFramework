@@ -8,7 +8,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.mangaupdates.com/*"
+        "https://www.mangaupdates.com/*",
+        "https://www.novelupdates.com/*"
       ],
       "js": [
         "content-script.js"
