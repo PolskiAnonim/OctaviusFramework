@@ -1,11 +1,18 @@
 package org.octavius.form.control.type.datetime
 
 import androidx.compose.runtime.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import org.octavius.form.control.base.*
 import org.octavius.form.control.validator.datetime.DateTimeValidator
 import org.octavius.ui.datetime.DateTimePickerDialog
 import org.octavius.ui.datetime.PickerTextField
-import org.octavius.util.DateTimeAdapter
+import org.octavius.util.*
+import java.time.OffsetTime
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 class DateTimeControl<T : Any>(
     private val adapter: DateTimeAdapter<T>,
@@ -47,3 +54,102 @@ class DateTimeControl<T : Any>(
         }
     }
 }
+
+// --- Funkcje fabryczne dla konkretnych typów daty/czasu ---
+
+/**
+ * Funkcja fabryczna tworząca kontrolkę do wyboru dat (LocalDate).
+ */
+@Suppress("FunctionName")
+fun DateControl(
+    label: String?,
+    required: Boolean? = false,
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: DateTimeValidation<LocalDate>? = null,
+    actions: List<ControlAction<LocalDate>>? = null
+) = DateTimeControl(
+    adapter = DateAdapter,
+    label = label,
+    required = required,
+    dependencies = dependencies,
+    validationOptions = validationOptions,
+    actions = actions
+)
+
+/**
+ * Funkcja fabryczna tworząca kontrolkę do wyboru daty i czasu (LocalDateTime).
+ */
+@Suppress("FunctionName")
+fun LocalDateTimeControl(
+    label: String?,
+    required: Boolean? = false,
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: DateTimeValidation<LocalDateTime>? = null,
+    actions: List<ControlAction<LocalDateTime>>? = null
+) = DateTimeControl(
+    adapter = LocalDateTimeAdapter,
+    label = label,
+    required = required,
+    dependencies = dependencies,
+    validationOptions = validationOptions,
+    actions = actions
+)
+
+/**
+ * Funkcja fabryczna tworząca kontrolkę do wyboru chwil czasowych (Instant).
+ */
+@OptIn(ExperimentalTime::class)
+@Suppress("FunctionName")
+fun InstantControl(
+    label: String?,
+    required: Boolean? = false,
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: DateTimeValidation<Instant>? = null,
+    actions: List<ControlAction<Instant>>? = null,
+    timeZone: TimeZone = TimeZone.currentSystemDefault()
+) = DateTimeControl(
+    adapter = InstantAdapter(timeZone),
+    label = label,
+    required = required,
+    dependencies = dependencies,
+    validationOptions = validationOptions,
+    actions = actions
+)
+
+/**
+ * Funkcja fabryczna tworząca kontrolkę do wyboru czasu (LocalTime).
+ */
+@Suppress("FunctionName")
+fun LocalTimeControl(
+    label: String?,
+    required: Boolean? = false,
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: DateTimeValidation<LocalTime>? = null,
+    actions: List<ControlAction<LocalTime>>? = null
+) = DateTimeControl(
+    adapter = LocalTimeAdapter,
+    label = label,
+    required = required,
+    dependencies = dependencies,
+    validationOptions = validationOptions,
+    actions = actions
+)
+
+/**
+ * Funkcja fabryczna tworząca kontrolkę do wyboru czasu z offsetem (OffsetTime).
+ */
+@Suppress("FunctionName")
+fun OffsetTimeControl(
+    label: String?,
+    required: Boolean? = false,
+    dependencies: Map<String, ControlDependency<*>>? = null,
+    validationOptions: DateTimeValidation<OffsetTime>? = null,
+    actions: List<ControlAction<OffsetTime>>? = null
+) = DateTimeControl(
+    adapter = OffsetTimeAdapter,
+    label = label,
+    required = required,
+    dependencies = dependencies,
+    validationOptions = validationOptions,
+    actions = actions
+)
