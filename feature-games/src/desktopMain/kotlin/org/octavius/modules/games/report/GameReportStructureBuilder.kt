@@ -13,6 +13,7 @@ import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringColumn
+import org.octavius.report.column.type.asList
 import org.octavius.report.component.ReportStructureBuilder
 
 class GameReportStructureBuilder() : ReportStructureBuilder() {
@@ -20,9 +21,19 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
     override fun getReportName(): String = "games"
 
     override fun buildQuery(): QueryFragment {
-        val query =
-            dataAccess.select("games.id", "games.name AS game_name", "series.name AS series_name", "games.status")
-                .from("games LEFT JOIN series ON series.id = games.series").toSql()
+        val query = dataAccess.select(
+            "games.id",
+            "games.name AS game_name",
+            "series.name AS series_name",
+            "games.status",
+            """COALESCE(
+                (SELECT array_agg(c.name ORDER BY c.name)
+                 FROM games.categories_to_games ctg
+                 JOIN games.categories c ON c.id = ctg.category_id
+                 WHERE ctg.game_id = games.id),
+                ARRAY[]::text[]
+            ) AS categories"""
+        ).from("games LEFT JOIN series ON series.id = games.series").toSql()
         return QueryFragment(query)
     }
 
@@ -33,6 +44,7 @@ class GameReportStructureBuilder() : ReportStructureBuilder() {
             Tr.Games.General.status(),
             enumClass = GameStatus::class
         ),
+        "categories" to StringColumn(Tr.Games.Form.category(2)).asList(),
     )
 
     override fun buildRowActions(): List<ReportRowAction> = listOf(
