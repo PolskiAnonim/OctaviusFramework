@@ -1,5 +1,6 @@
 package org.octavius.modules.asian.form
 
+import kotlinx.coroutines.launch
 import org.octavius.dialog.DialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.asian.PublicationLanguage
@@ -94,8 +95,10 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                             onDismiss = { GlobalDialogManager.dismiss() },
                             confirmButtonText = "Tak", //TODO tłumaczenie
                             onConfirm = {
-                                //trigger.triggerAction("delete", false)
-                                GlobalDialogManager.dismiss()
+                                coroutineScope.launch {
+                                    trigger.triggerAction("delete", false)
+                                    GlobalDialogManager.dismiss()
+                                }
                             }
                         )
                     )

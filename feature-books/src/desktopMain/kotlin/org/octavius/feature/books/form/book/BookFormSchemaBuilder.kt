@@ -1,5 +1,6 @@
 package org.octavius.feature.books.form.book
 
+import kotlinx.coroutines.launch
 import org.octavius.dialog.DialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.feature.books.domain.ReadingStatus
@@ -99,8 +100,10 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
                             onDismiss = { GlobalDialogManager.dismiss() },
                             confirmButtonText = Tr.Action.confirm(),
                             onConfirm = {
-                                //trigger.triggerAction("delete", false)
-                                GlobalDialogManager.dismiss()
+                                coroutineScope.launch {
+                                    trigger.triggerAction("delete", false)
+                                    GlobalDialogManager.dismiss()
+                                }
                             }
                         )
                     )
