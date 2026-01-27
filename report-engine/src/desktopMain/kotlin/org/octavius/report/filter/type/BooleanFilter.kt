@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
+import org.octavius.localization.Tr
 import org.octavius.data.QueryFragment
 import org.octavius.report.FilterMode
 import org.octavius.report.ReportEvent
@@ -27,7 +28,7 @@ class BooleanFilter(
     @Composable
     override fun RenderFilterUI(onEvent: (ReportEvent) -> Unit, columnKey: String, data: BooleanFilterData) {
         Text(
-            text = "Filtruj według wartości",
+            text = Tr.Filter.Boolean.filterByValue(),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )

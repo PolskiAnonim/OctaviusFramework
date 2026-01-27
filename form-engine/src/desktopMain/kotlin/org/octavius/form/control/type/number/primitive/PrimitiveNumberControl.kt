@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import org.octavius.localization.Tr
 import org.octavius.form.control.base.*
 import org.octavius.theme.FormSpacing
 
@@ -70,7 +71,7 @@ abstract class PrimitiveNumberControl<T : Number>(
                         }
                         errorManager.setFormatError(controlContext.fullStatePath, null)
                     } else {
-                        errorManager.setFormatError(controlContext.fullStatePath, "Nieprawidłowy format liczby")
+                        errorManager.setFormatError(controlContext.fullStatePath, Tr.Validation.invalidNumberFormat())
                     }
                 }
             },

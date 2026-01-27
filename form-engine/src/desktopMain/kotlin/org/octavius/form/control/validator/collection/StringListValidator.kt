@@ -1,10 +1,10 @@
 package org.octavius.form.control.validator.collection
 
+import org.octavius.localization.Tr
 import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringListValidation
-import org.octavius.localization.Tr
 
 /**
  * Walidator dla kontrolek list tekstowych z obsługą opcji walidacji.
@@ -22,14 +22,14 @@ class StringListValidator(
             // Sprawdź minimalną liczbę elementów
             options.minItems?.let { minItems ->
                 if (value.size < minItems) {
-                    errors.add("Wymagane minimum $minItems elementów")
+                    errors.add(Tr.Validation.minimumItems(minItems))
                 }
             }
 
             // Sprawdź maksymalną liczbę elementów
             options.maxItems?.let { maxItems ->
                 if (value.size > maxItems) {
-                    errors.add("Maksymalnie $maxItems elementów")
+                    errors.add(Tr.Validation.maximumItems(maxItems))
                 }
             }
 

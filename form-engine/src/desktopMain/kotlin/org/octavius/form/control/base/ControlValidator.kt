@@ -1,5 +1,6 @@
 package org.octavius.form.control.base
 
+import org.octavius.localization.Tr
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
@@ -168,7 +169,7 @@ abstract class ControlValidator<T : Any> {
 
         // Jeśli pole jest wymagane i wartość jest pusta, ustawiamy błąd
         if (isRequired && isValueEmpty(state.value.value)) {
-            errorManager.setFieldErrors(controlContext.fullStatePath, listOf("To pole jest wymagane"))
+            errorManager.setFieldErrors(controlContext.fullStatePath, listOf(Tr.Validation.fieldRequired()))
             return
         }
 

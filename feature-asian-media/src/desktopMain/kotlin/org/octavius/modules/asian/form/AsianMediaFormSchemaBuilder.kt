@@ -91,9 +91,9 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     GlobalDialogManager.show(
                         DialogConfig(
                             title = Tr.Action.confirm(),
-                            text = "Czy potwierdzasz usunięcie", //TODO tłumaczenie
+                            text = Tr.Dialog.confirmDelete(),
                             onDismiss = { GlobalDialogManager.dismiss() },
-                            confirmButtonText = "Tak", //TODO tłumaczenie
+                            confirmButtonText = Tr.Dialog.yes(),
                             onConfirm = {
                                 coroutineScope.launch {
                                     trigger.triggerAction("delete", false)

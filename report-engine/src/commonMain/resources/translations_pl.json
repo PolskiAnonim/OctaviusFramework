@@ -32,6 +32,9 @@
       "clear": "Wyczyść filtr",
       "label": "Filtr:"
     },
+    "boolean": {
+      "filterByValue": "Filtruj według wartości"
+    },
     "list": {
       "all": "Wszystkie elementy",
       "any": "Dowolny element"

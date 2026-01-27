@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.octavius.localization.Tr
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.ErrorManager
@@ -85,7 +86,7 @@ abstract class Control<T : Any> internal constructor(
         } catch (e: ClassCastException) {
             GlobalDialogManager.show(
                 ErrorDialogConfig(
-                    "Błąd", //TODO tłumaczenie
+                    Tr.Dialog.error(),
                     "Nie można skonwertować wartości '$value' na typ kontrolki ${this::class.simpleName}"
                 )
             )
