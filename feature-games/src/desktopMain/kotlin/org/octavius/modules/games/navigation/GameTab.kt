@@ -1,9 +1,9 @@
 package org.octavius.modules.games.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.runtime.Composable
-import octavius.feature_games.generated.resources.Res
-import octavius.feature_games.generated.resources.game_icon
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import org.octavius.localization.Tr
 import org.octavius.navigation.Screen
 import org.octavius.navigation.Tab
@@ -16,7 +16,7 @@ class GameTab : Tab {
         @Composable
         get() = TabOptions(
             title = Tr.Tabs.games(),
-            icon = painterResource(Res.drawable.game_icon)
+            icon = rememberVectorPainter(Icons.Filled.SportsEsports)
         )
 
     override fun getInitialScreen(): Screen = GamesHomeScreen.create()
