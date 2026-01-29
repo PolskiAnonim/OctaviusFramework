@@ -77,7 +77,8 @@ class BookFormDataManager : FormDataManager() {
             bookIdRef = loadedId.toTransactionValue()
             plan.add(
                 dataAccess.update("books.books")
-                    .setValues(bookData + mapOf("updated_at" to "NOW()"))
+                    .setValues(bookData)
+                    .setExpression("updated_at", "NOW()")
                     .where("id = :id")
                     .asStep()
                     .execute(bookData + mapOf("id" to bookIdRef))
