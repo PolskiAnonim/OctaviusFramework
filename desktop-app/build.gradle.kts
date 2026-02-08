@@ -32,6 +32,7 @@ kotlin {
             implementation(projects.featureSettings)
             implementation(projects.featureAsianMedia)
             implementation(projects.featureBooks)
+            implementation(projects.featureSandbox)
             implementation(projects.apiServer)
             implementation(projects.apiContract)
             implementation(compose.desktop.currentOs)

@@ -47,7 +47,8 @@
   "tabs": {
     "asianMedia": "Azjatyckie",
     "games": "Gry",
-    "books": "Książki"
+    "books": "Książki",
+    "sandbox": "Sandbox"
   },
   "error": {
     "dataLoading": "Bład ładowania danych",
