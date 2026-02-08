@@ -21,92 +21,46 @@ import kotlin.math.max
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TimelineComponent(
+    state: TimelineState = rememberTimelineState(),
     modifier: Modifier = Modifier
 ) {
-    val totalMinutes = 1440 // 24h * 60min
-
-    var pxPerMinute by remember { mutableStateOf(1f) }
-    var scrollX by remember { mutableStateOf(0f) }
     val textMeasurer = rememberTextMeasurer()
 
     BoxWithConstraints(
         modifier = modifier
-            .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            // Przekazujemy zdarzenia myszy do stanu
+            .onPointerEvent(PointerEventType.Scroll) {
+                val change = it.changes.first()
+                state.onPointerEvent(change.scrollDelta.x, change.scrollDelta.y)
+                change.consume()
+            }
     ) {
-        val viewportWidth = constraints.maxWidth.toFloat()
-
-        // KLUCZOWA POPRAWKA:
-        // Obliczamy minimalny zoom, przy którym 24h zajmuje dokładnie całą szerokość ekranu.
-        // Nie pozwalamy, aby pxPerMinute był mniejszy niż ta wartość.
-        val minPxPerMinute = if (viewportWidth > 0) viewportWidth / totalMinutes else 0.1f
-
-        // Jeśli okno zostało powiększone, a zoom był stary, podbijamy go natychmiast
-        if (pxPerMinute < minPxPerMinute) {
-            pxPerMinute = minPxPerMinute
+        // Aktualizujemy wiedzę stanu o szerokości okna
+        val width = constraints.maxWidth.toFloat()
+        SideEffect {
+            state.updateViewportWidth(width)
         }
 
-        val contentWidth = totalMinutes * pxPerMinute
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val pxPerMinute = state.pixelsPerMinute
+            val scrollX = state.scrollOffset
 
-        // Max scroll to nadmiar szerokości contentu ponad szerokość okna
-        val maxScroll = max(0f, contentWidth - viewportWidth)
-
-        // Hard clamp: scroll nigdy nie może wyjść poza wyliczony zakres
-        if (scrollX > maxScroll) scrollX = maxScroll
-        if (scrollX < 0f) scrollX = 0f
-
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .onPointerEvent(PointerEventType.Scroll) { event ->
-                    val change = event.changes.first()
-                    val dx = change.scrollDelta.x
-                    val dy = change.scrollDelta.y
-
-                    // 1. ZOOM (Kółko góra/dół, czyli dy)
-                    // W Compose Desktop często zwykły scroll ma dx=0, dy!=0
-                    if (dy != 0f && dx == 0f) {
-                        val zoomFactor = if (dy > 0) 0.9f else 1.1f
-                        val newPx = pxPerMinute * zoomFactor
-
-                        // Obliczamy punkt pod kursorem, żeby zoomować "do myszki" (opcjonalne, ale wygodne)
-                        // Tutaj prościej: zachowujemy relatywną pozycję środka
-                        val centerRatio = (scrollX + viewportWidth / 2) / contentWidth
-
-                        // Aplikujemy nowy zoom, ale NIE MNIEJSZY niż minimalny (żeby nie było pustego po prawej)
-                        pxPerMinute = newPx.coerceAtLeast(minPxPerMinute)
-
-                        // Przeliczamy scroll po zoomie
-                        val newContentWidth = totalMinutes * pxPerMinute
-                        val newMaxScroll = max(0f, newContentWidth - viewportWidth)
-                        scrollX = (centerRatio * newContentWidth - viewportWidth / 2).coerceIn(0f, newMaxScroll)
-                    }
-                    // 2. PRZEWIJANIE (Shift+Scroll lub Touchpad w bok, czyli dx)
-                    else {
-                        val scrollSpeed = 25f
-                        // Bierzemy dx, a jak go nie ma (niektóre myszki), to awaryjnie dy
-                        val delta = if (dx != 0f) dx else dy
-
-                        val newScroll = scrollX + (delta * scrollSpeed)
-                        scrollX = newScroll.coerceIn(0f, maxScroll)
-                    }
-
-                    change.consume()
-                }
-        ) {
+            // Przesunięcie całego rysowania
             translate(left = -scrollX) {
 
-                // Rysujemy tylko widoczny fragment + margines
+                // Optymalizacja: wyliczamy widoczny zakres minut
                 val startMinute = (scrollX / pxPerMinute).toInt().coerceAtLeast(0)
-                val endMinute = ((scrollX + viewportWidth) / pxPerMinute).toInt().coerceAtMost(totalMinutes)
+                val endMinute = ((scrollX + width) / pxPerMinute).toInt().coerceAtMost(1440)
 
-                // Główna pętla rysowania
+                // Rysowanie godzin
                 for (h in 0..24) {
                     val min = h * 60
+                    // Rysujemy tylko to co widać + margines 60min
                     if (min in (startMinute - 60)..(endMinute + 60)) {
                         val x = min * pxPerMinute
 
-                        // Linia
+                        // Linia godziny
                         drawLine(
                             color = Color.Gray,
                             start = Offset(x, 0f),
@@ -114,7 +68,7 @@ fun TimelineComponent(
                             strokeWidth = 1f
                         )
 
-                        // Tekst
+                        // Tekst godziny
                         drawText(
                             textMeasurer = textMeasurer,
                             text = "%02d:00".format(h),
@@ -124,8 +78,8 @@ fun TimelineComponent(
                     }
                 }
 
-                // Wyraźna czerwona krecha na 24:00 (koniec doby)
-                val endX = totalMinutes * pxPerMinute
+                // Czerwona linia końca doby (24:00)
+                val endX = 1440 * pxPerMinute
                 drawLine(
                     color = Color.Red,
                     start = Offset(endX, 0f),
