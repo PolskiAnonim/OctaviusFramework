@@ -90,6 +90,9 @@
       "many": "Maksymalnie {0} elementów"
     }
   },
+  "colorPicker": {
+    "title": "Wybierz kolor"
+  },
   "dialog": {
     "error": "Błąd",
     "confirmDelete": "Czy potwierdzasz usunięcie",
