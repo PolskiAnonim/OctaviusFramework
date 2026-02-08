@@ -15,8 +15,8 @@ import org.octavius.modules.activity.report.ui.CategoriesReportScreen
 import org.octavius.modules.activity.report.ui.DocumentsReportScreen
 import org.octavius.modules.activity.report.ui.RulesReportScreen
 import org.octavius.modules.activity.statistics.ui.StatisticsScreen
-import org.octavius.modules.activity.timeline.ui.ApplicationTimelineScreen
-import org.octavius.modules.activity.timeline.ui.DocumentTimelineScreen
+import org.octavius.modules.activity.timeline.UnifiedTimelineState
+import org.octavius.modules.activity.timeline.ui.UnifiedTimelineScreen
 import org.octavius.modules.activity.weekly.ui.WeeklyTrendScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
@@ -109,15 +109,7 @@ class ActivityTrackerHomeScreen : Screen {
                     title = Tr.ActivityTracker.Home.appTimeline(),
                     description = Tr.ActivityTracker.Home.appTimelineDescription(),
                     icon = Icons.Default.Timeline,
-                    onClick = { AppRouter.navigateTo(ApplicationTimelineScreen.create()) },
-                    modifier = Modifier.weight(1f)
-                )
-
-                QuickActionCard(
-                    title = Tr.ActivityTracker.Home.docTimeline(),
-                    description = Tr.ActivityTracker.Home.docTimelineDescription(),
-                    icon = Icons.Default.InsertDriveFile,
-                    onClick = { AppRouter.navigateTo(DocumentTimelineScreen.create()) },
+                    onClick = { AppRouter.navigateTo(UnifiedTimelineScreen()) },
                     modifier = Modifier.weight(1f)
                 )
             }

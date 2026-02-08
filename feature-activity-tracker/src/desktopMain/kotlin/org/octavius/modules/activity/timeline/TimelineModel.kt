@@ -3,36 +3,31 @@ package org.octavius.modules.activity.timeline
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
-data class TimelineEntry(
+// Wspólny interfejs dla wpisów, które mają czas trwania
+data class TimeBlock(
     val id: Long,
     val startTime: LocalDateTime,
-    val endTime: LocalDateTime?,
+    val endTime: LocalDateTime,
     val title: String,
-    val processName: String,
-    val categoryColor: String?
-)
-
-data class DocumentTimelineEntry(
-    val id: Long,
-    val timestamp: LocalDateTime,
-    val path: String,
-    val title: String?,
-    val type: String,
+    val subTitle: String?,
     val color: String
 )
 
-data class TimelineState(
-    val entries: List<TimelineEntry> = emptyList(),
-    val selectedDate: LocalDate,
-    val zoomLevel: Float = 60f,  // pixels per hour
-    val selectionRange: Pair<Float, Float>? = null,
-    val hoveredEntry: TimelineEntry? = null,
-    val isLoading: Boolean = false
+// Wpis punktowy (dokumenty)
+data class TimePoint(
+    val id: Long,
+    val timestamp: LocalDateTime,
+    val title: String,
+    val path: String,
+    val color: String
 )
 
-data class DocumentTimelineState(
-    val entries: List<DocumentTimelineEntry> = emptyList(),
+data class UnifiedTimelineState(
     val selectedDate: LocalDate,
-    val zoomLevel: Float = 60f,
-    val isLoading: Boolean = false
+    val categoryBlocks: List<TimeBlock> = emptyList(), // 1. Wiersz: Kategorie
+    val appBlocks: List<TimeBlock> = emptyList(),      // 2. Wiersz: Aplikacje
+    val documentPoints: List<TimePoint> = emptyList(), // 3. Wiersz: Dokumenty
+    val zoomLevel: Float = 100f, // pixels per hour
+    val isLoading: Boolean = false,
+    val hoveredInfo: String? = null
 )
