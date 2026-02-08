@@ -10,20 +10,14 @@ import kotlin.math.max
 class TimelineState {
     private val totalMinutes = 1440 // 24h * 60min
 
-    // Te zmienne są obserwowalne przez Compose
     var pixelsPerMinute by mutableStateOf(1f)
         private set
 
     var scrollOffset by mutableStateOf(0f)
         private set
 
-    // Szerokość widoku jest potrzebna do obliczania limitów
     private var viewportWidth = 1f
 
-    /**
-     * Aktualizuje szerokość widoku. Wywoływane przez komponent przy zmianie rozmiaru okna.
-     * Automatycznie poprawia scroll i zoom, żeby nie "wylecieć" poza zakres.
-     */
     fun updateViewportWidth(width: Float) {
         if (width == viewportWidth) return
         viewportWidth = width
@@ -31,64 +25,64 @@ class TimelineState {
     }
 
     /**
-     * Główna metoda obsługi zdarzeń myszy (scroll i zoom)
+     * Obsługa zdarzenia z uwzględnieniem pozycji myszki dla zooma
      */
-    fun onPointerEvent(dx: Float, dy: Float) {
-        // Logika rozróżniania scrolla od zooma
-        if (dy != 0f && dx == 0f) {
-            // ZOOM (kółko góra/dół)
-            val zoomChange = if (dy > 0) 0.9f else 1.1f
-            applyZoom(zoomChange)
-        } else {
-            // SCROLL (shift+scroll lub touchpad bok)
-            val moveDelta = if (dx != 0f) dx else dy
+    fun onPointerEvent(deltaX: Float, deltaY: Float, mouseX: Float) {
+        // Zoom (kółko góra/dół)
+        if (deltaY != 0f && deltaX == 0f) {
+            // Odwrócona logika (standardowo scroll w dół to zoom out)
+            val zoomFactor = if (deltaY > 0) 0.9f else 1.1f
+            applyZoom(zoomFactor, mouseX)
+        }
+        // Scroll (Shift + kółko lub touchpad bok)
+        else {
+            val moveDelta = if (deltaX != 0f) deltaX else deltaY
             applyScroll(moveDelta)
         }
     }
 
-    private fun applyZoom(factor: Float) {
+    private fun applyZoom(factor: Float, pivotX: Float) {
         val oldPx = pixelsPerMinute
-        val newPx = oldPx * factor
 
-        // Punkt odniesienia zooma (środek ekranu), żeby zoomować "w miejscu"
-        val centerTime = (scrollOffset + viewportWidth / 2) / oldPx
+        // 1. Obliczamy, która minuta jest aktualnie pod kursorem myszki
+        //    (offset + pozycja_myszy) / zoom = czas_pod_myszką
+        val timeAtMouse = (scrollOffset + pivotX) / oldPx
 
+        // 2. Obliczamy nowy zoom (z ograniczeniami)
+        var newPx = oldPx * factor
+
+        // --- Sprawdzenie constraintów zooma "na brudno" przed przypisaniem ---
+        if (viewportWidth > 0) {
+            val minPx = viewportWidth / totalMinutes
+            val maxPx = 50f // Max zoom
+            newPx = newPx.coerceIn(minPx, maxPx)
+        }
         pixelsPerMinute = newPx
-        enforceConstraints() // Najpierw sprawdzamy min/max zoom
 
-        // Po zmianie zooma, staramy się utrzymać ten sam czas na środku ekranu
-        val newScrollRaw = (centerTime * pixelsPerMinute) - (viewportWidth / 2)
-        scrollOffset = newScrollRaw
+        // 3. Przeliczamy scroll tak, aby 'timeAtMouse' nadal był pod 'pivotX'
+        //    nowy_offset = (czas * nowy_zoom) - pozycja_myszy
+        scrollOffset = (timeAtMouse * newPx) - pivotX
 
-        enforceConstraints() // Ponownie sprawdzamy, czy scroll nie wyjechał
+        // 4. Na koniec upewniamy się, że scroll nie wyjechał poza granice 0..24h
+        enforceScrollLimits()
     }
 
     private fun applyScroll(delta: Float) {
         val scrollSpeed = 25f
         scrollOffset += (delta * scrollSpeed)
-        enforceConstraints()
+        enforceScrollLimits()
     }
 
-    /**
-     * Serce logiki: pilnuje granic 0..24h i minimalnego zooma
-     */
     private fun enforceConstraints() {
         if (viewportWidth <= 0) return
+        // Minimalny zoom żeby wypełnić ekran
+        val minPx = viewportWidth / totalMinutes
+        if (pixelsPerMinute < minPx) pixelsPerMinute = minPx
+        enforceScrollLimits()
+    }
 
-        // 1. Ograniczenie Zooma (minZoom)
-        // Cała doba (1440 min) musi zająć co najmniej szerokość ekranu
-        val minPxPerMinute = viewportWidth / totalMinutes
-        if (pixelsPerMinute < minPxPerMinute) {
-            pixelsPerMinute = minPxPerMinute
-        }
-
-        // Ograniczenie maksymalnego zooma (opcjonalne, żeby nie przesadzić)
-        val maxPxPerMinute = 50f
-        if (pixelsPerMinute > maxPxPerMinute) {
-            pixelsPerMinute = maxPxPerMinute
-        }
-
-        // 2. Ograniczenie Scrolla (min/max scroll)
+    private fun enforceScrollLimits() {
+        if (viewportWidth <= 0) return
         val contentWidth = totalMinutes * pixelsPerMinute
         val maxScroll = max(0f, contentWidth - viewportWidth)
 

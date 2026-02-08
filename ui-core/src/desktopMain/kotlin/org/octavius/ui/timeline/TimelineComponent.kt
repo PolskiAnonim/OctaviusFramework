@@ -29,15 +29,19 @@ fun TimelineComponent(
     BoxWithConstraints(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
-            // Przekazujemy zdarzenia myszy do stanu
             .onPointerEvent(PointerEventType.Scroll) {
                 val change = it.changes.first()
-                state.onPointerEvent(change.scrollDelta.x, change.scrollDelta.y)
+                val delta = change.scrollDelta
+                // Pobieramy pozycję X kursora względem tego komponentu
+                val mouseX = change.position.x
+
+                state.onPointerEvent(delta.x, delta.y, mouseX)
                 change.consume()
             }
     ) {
-        // Aktualizujemy wiedzę stanu o szerokości okna
         val width = constraints.maxWidth.toFloat()
+
+        // Aktualizacja szerokości w stanie (potrzebne do limitów)
         SideEffect {
             state.updateViewportWidth(width)
         }
@@ -48,19 +52,14 @@ fun TimelineComponent(
 
             // Przesunięcie całego rysowania
             translate(left = -scrollX) {
-
-                // Optymalizacja: wyliczamy widoczny zakres minut
                 val startMinute = (scrollX / pxPerMinute).toInt().coerceAtLeast(0)
                 val endMinute = ((scrollX + width) / pxPerMinute).toInt().coerceAtMost(1440)
 
-                // Rysowanie godzin
                 for (h in 0..24) {
                     val min = h * 60
-                    // Rysujemy tylko to co widać + margines 60min
                     if (min in (startMinute - 60)..(endMinute + 60)) {
                         val x = min * pxPerMinute
 
-                        // Linia godziny
                         drawLine(
                             color = Color.Gray,
                             start = Offset(x, 0f),
@@ -68,7 +67,6 @@ fun TimelineComponent(
                             strokeWidth = 1f
                         )
 
-                        // Tekst godziny
                         drawText(
                             textMeasurer = textMeasurer,
                             text = "%02d:00".format(h),
@@ -78,7 +76,7 @@ fun TimelineComponent(
                     }
                 }
 
-                // Czerwona linia końca doby (24:00)
+                // Linia 24:00
                 val endX = 1440 * pxPerMinute
                 drawLine(
                     color = Color.Red,
