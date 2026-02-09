@@ -24,10 +24,7 @@ class ComponentTestScreen : Screen {
         val state = rememberTimelineState()
         Column(Modifier.padding(16.dp).fillMaxSize()) {
             TimelineAxis(state, Modifier.height(30.dp))
-            TimelineComponent(state, Modifier.weight(1f))
-            Spacer(Modifier.padding(16.dp).weight(0.5f))
-            TimelineComponent(state, Modifier.weight(1f))
-
+            TimelineComponent(state)
         }
 
     }

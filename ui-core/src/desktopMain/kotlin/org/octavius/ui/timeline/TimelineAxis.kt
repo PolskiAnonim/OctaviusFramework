@@ -10,7 +10,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
@@ -26,7 +25,9 @@ fun TimelineAxis(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(color = Color.LightGray, fontSize = 12.sp)
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val tickColor = MaterialTheme.colorScheme.outline
+    val labelStyle = TextStyle(color = labelColor, fontSize = 12.sp)
 
     val sampleLayout = textMeasurer.measure("00:00", labelStyle)
     val labelWidth = sampleLayout.size.width
@@ -68,7 +69,7 @@ fun TimelineAxis(
                         val x = sec * pxPerSecond
 
                         drawLine(
-                            color = Color.Gray,
+                            color = tickColor,
                             start = Offset(x, bottomY),
                             end = Offset(x, bottomY - tickHeight),
                             strokeWidth = 1f
@@ -91,7 +92,7 @@ fun TimelineAxis(
 
             // Linia bazowa na dole
             drawLine(
-                color = Color.Gray,
+                color = tickColor,
                 start = Offset(0f, bottomY),
                 end = Offset(size.width, bottomY),
                 strokeWidth = 1f

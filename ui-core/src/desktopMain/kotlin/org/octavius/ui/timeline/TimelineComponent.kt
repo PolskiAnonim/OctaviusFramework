@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
@@ -38,6 +37,8 @@ fun TimelineComponent(
             state.updateViewportWidth(width)
         }
 
+        val lineColor = MaterialTheme.colorScheme.outlineVariant
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             val pxPerSecond = state.pixelsPerSecond
             val scrollX = state.scrollOffset
@@ -54,7 +55,7 @@ fun TimelineComponent(
                         val x = sec * pxPerSecond
 
                         drawLine(
-                            color = Color.Gray,
+                            color = lineColor,
                             start = Offset(x, 0f),
                             end = Offset(x, size.height),
                             strokeWidth = 1f
