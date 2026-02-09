@@ -19,12 +19,25 @@ class TimelineState {
     var scrollOffset by mutableStateOf(0f)
         private set
 
+    /** Czas w sekundach pod kursorem, null gdy kursor poza komponentem */
+    var hoverSeconds by mutableStateOf<Float?>(null)
+
     private var viewportWidth = 1f
 
     fun updateViewportWidth(width: Float) {
         if (width == viewportWidth) return
         viewportWidth = width
         enforceConstraints()
+    }
+
+    fun onHoverMove(mouseX: Float) {
+        if (pixelsPerSecond <= 0f) return
+        val sec = (scrollOffset + mouseX) / pixelsPerSecond
+        hoverSeconds = sec.coerceIn(0f, totalSeconds.toFloat())
+    }
+
+    fun onHoverExit() {
+        hoverSeconds = null
     }
 
     fun onPointerEvent(deltaX: Float, deltaY: Float, mouseX: Float) {

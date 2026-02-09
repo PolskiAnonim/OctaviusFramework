@@ -8,13 +8,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
-import kotlinx.coroutines.delay
-import java.time.LocalTime
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -24,6 +28,12 @@ fun TimelineComponent(
     modifier: Modifier = Modifier
 ) {
     val currentTimeSeconds = rememberCurrentTimeSeconds(showCurrentTime)
+    var localMousePos by remember { mutableStateOf<Offset?>(null) }
+
+    val textMeasurer = rememberTextMeasurer()
+    val hoverBgColor = MaterialTheme.colorScheme.inverseSurface
+    val hoverTextColor = MaterialTheme.colorScheme.inverseOnSurface
+    val hoverLabelStyle = TextStyle(color = hoverTextColor, fontSize = 12.sp)
 
     BoxWithConstraints(
         modifier = modifier
@@ -36,6 +46,15 @@ fun TimelineComponent(
                 state.onPointerEvent(delta.x, delta.y, mouseX)
                 change.consume()
             }
+            .onPointerEvent(PointerEventType.Move) {
+                val pos = it.changes.first().position
+                localMousePos = pos
+                state.onHoverMove(pos.x)
+            }
+            .onPointerEvent(PointerEventType.Exit) {
+                localMousePos = null
+                state.onHoverExit()
+            }
     ) {
         val width = constraints.maxWidth.toFloat()
 
@@ -44,6 +63,7 @@ fun TimelineComponent(
         }
 
         val lineColor = MaterialTheme.colorScheme.outlineVariant
+        val hoverLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
 
         Canvas(modifier = Modifier.fillMaxSize()) {
             val pxPerSecond = state.pixelsPerSecond
@@ -79,6 +99,49 @@ fun TimelineComponent(
                         strokeWidth = 2f
                     )
                 }
+
+                state.hoverSeconds?.let { hoverSec ->
+                    val hoverX = hoverSec * pxPerSecond
+                    drawLine(
+                        color = hoverLineColor,
+                        start = Offset(hoverX, 0f),
+                        end = Offset(hoverX, size.height),
+                        strokeWidth = 1f
+                    )
+                }
+            }
+
+            // Labelka przy linii hover (viewport coordinates)
+            state.hoverSeconds?.let { hoverSec ->
+                val snappedToMinute = (hoverSec.toInt() / 60) * 60
+                val hoverLayout = textMeasurer.measure(
+                    text = formatTickLabel(snappedToMinute),
+                    style = hoverLabelStyle,
+                    maxLines = 1,
+                )
+
+                val padH = 4f
+                val padV = 2f
+                val bgWidth = hoverLayout.size.width + padH * 2
+                val bgHeight = hoverLayout.size.height + padV * 2
+                // Pozycja X: wycentrowana na linii hover
+                val hoverViewportX = hoverSec * pxPerSecond - scrollX
+                val labelLeft = (hoverViewportX - bgWidth / 2f).coerceIn(0f, size.width - bgWidth)
+                // Pozycja Y: pod kursorem gdy nad tym komponentem, inaczej u góry
+                val labelTop = localMousePos?.let { mouse ->
+                    (mouse.y + 32f).coerceAtMost(size.height - bgHeight)
+                } ?: padV
+
+                drawRoundRect(
+                    color = hoverBgColor,
+                    topLeft = Offset(labelLeft, labelTop),
+                    size = Size(bgWidth, bgHeight),
+                    cornerRadius = CornerRadius(4f, 4f)
+                )
+                drawText(
+                    textLayoutResult = hoverLayout,
+                    topLeft = Offset(labelLeft + padH, labelTop + padV)
+                )
             }
         }
     }

@@ -27,6 +27,7 @@ fun TimelineAxis(
     modifier: Modifier = Modifier
 ) {
     val currentTimeSeconds = rememberCurrentTimeSeconds(showCurrentTime)
+
     val textMeasurer = rememberTextMeasurer()
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val tickColor = MaterialTheme.colorScheme.outline
@@ -35,6 +36,8 @@ fun TimelineAxis(
     val sampleLayout = textMeasurer.measure("00:00", labelStyle)
     val labelWidth = sampleLayout.size.width
     val labelHeight = sampleLayout.size.height
+
+    val hoverLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
 
     BoxWithConstraints(
         modifier = modifier
@@ -46,6 +49,12 @@ fun TimelineAxis(
 
                 state.onPointerEvent(delta.x, delta.y, mouseX)
                 change.consume()
+            }
+            .onPointerEvent(PointerEventType.Move) {
+                state.onHoverMove(it.changes.first().position.x)
+            }
+            .onPointerEvent(PointerEventType.Exit) {
+                state.onHoverExit()
             }
     ) {
         val width = constraints.maxWidth.toFloat()
@@ -99,6 +108,16 @@ fun TimelineAxis(
                         start = Offset(nowX, 0f),
                         end = Offset(nowX, bottomY),
                         strokeWidth = 2f
+                    )
+                }
+
+                state.hoverSeconds?.let { hoverSec ->
+                    val hoverX = hoverSec * pxPerSecond
+                    drawLine(
+                        color = hoverLineColor,
+                        start = Offset(hoverX, 0f),
+                        end = Offset(hoverX, bottomY),
+                        strokeWidth = 1f
                     )
                 }
             }
