@@ -9,16 +9,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
+import kotlinx.coroutines.delay
+import java.time.LocalTime
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TimelineComponent(
     state: TimelineState = rememberTimelineState(),
+    showCurrentTime: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val currentTimeSeconds = rememberCurrentTimeSeconds(showCurrentTime)
+
     BoxWithConstraints(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
@@ -62,6 +68,16 @@ fun TimelineComponent(
                         )
                     }
                     sec += interval
+                }
+
+                if (showCurrentTime) {
+                    val nowX = currentTimeSeconds * pxPerSecond
+                    drawLine(
+                        color = Color.Red,
+                        start = Offset(nowX, 0f),
+                        end = Offset(nowX, size.height),
+                        strokeWidth = 2f
+                    )
                 }
             }
         }

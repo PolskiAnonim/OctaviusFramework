@@ -1,10 +1,13 @@
 package org.octavius.ui.timeline
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import java.time.LocalTime
 import kotlin.math.max
 
 class TimelineState {
@@ -93,4 +96,24 @@ fun formatTickLabel(seconds: Int): String {
 @Composable
 fun rememberTimelineState(): TimelineState {
     return remember { TimelineState() }
+}
+
+@Composable
+fun rememberCurrentTimeSeconds(enabled: Boolean): Float {
+    var seconds by remember { mutableStateOf(currentTimeAsSeconds()) }
+
+    LaunchedEffect(enabled) {
+        if (!enabled) return@LaunchedEffect
+        while (true) {
+            seconds = currentTimeAsSeconds()
+            delay(3_000)
+        }
+    }
+
+    return seconds
+}
+
+private fun currentTimeAsSeconds(): Float {
+    val now = LocalTime.now()
+    return now.hour * 3600f + now.minute * 60f + now.second
 }

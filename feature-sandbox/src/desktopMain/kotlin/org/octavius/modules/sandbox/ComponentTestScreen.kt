@@ -23,8 +23,8 @@ class ComponentTestScreen : Screen {
     override fun Content() {
         val state = rememberTimelineState()
         Column(Modifier.padding(16.dp).fillMaxSize()) {
-            TimelineAxis(state, Modifier.height(30.dp))
-            TimelineComponent(state)
+            TimelineAxis(state, true, Modifier.height(30.dp))
+            TimelineComponent(state, true)
         }
 
     }
