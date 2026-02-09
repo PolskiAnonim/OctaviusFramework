@@ -39,17 +39,19 @@ fun TimelineComponent(
         }
 
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val pxPerMinute = state.pixelsPerMinute
+            val pxPerSecond = state.pixelsPerSecond
             val scrollX = state.scrollOffset
+            val interval = pickTickInterval(pxPerSecond)
 
             translate(left = -scrollX) {
-                val startMinute = (scrollX / pxPerMinute).toInt().coerceAtLeast(0)
-                val endMinute = ((scrollX + width) / pxPerMinute).toInt().coerceAtMost(1440)
+                val startSec = (scrollX / pxPerSecond).toInt().coerceAtLeast(0)
+                val endSec = ((scrollX + width) / pxPerSecond).toInt().coerceAtMost(86400)
 
-                for (h in 0..24) {
-                    val min = h * 60
-                    if (min in (startMinute - 60)..(endMinute + 60)) {
-                        val x = min * pxPerMinute
+                val firstTick = (startSec / interval) * interval
+                var sec = firstTick
+                while (sec <= endSec + interval) {
+                    if (sec in 0..86400) {
+                        val x = sec * pxPerSecond
 
                         drawLine(
                             color = Color.Gray,
@@ -58,6 +60,7 @@ fun TimelineComponent(
                             strokeWidth = 1f
                         )
                     }
+                    sec += interval
                 }
             }
         }

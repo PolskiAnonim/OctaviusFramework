@@ -8,9 +8,9 @@ import androidx.compose.runtime.setValue
 import kotlin.math.max
 
 class TimelineState {
-    private val totalMinutes = 1440 // 24h * 60min
+    val totalSeconds = 86400 // 24h * 60min * 60s
 
-    var pixelsPerMinute by mutableStateOf(1f)
+    var pixelsPerSecond by mutableStateOf(0f)
         private set
 
     var scrollOffset by mutableStateOf(0f)
@@ -24,46 +24,30 @@ class TimelineState {
         enforceConstraints()
     }
 
-    /**
-     * Obsługa zdarzenia z uwzględnieniem pozycji myszki dla zooma
-     */
     fun onPointerEvent(deltaX: Float, deltaY: Float, mouseX: Float) {
-        // Zoom (kółko góra/dół)
         if (deltaY != 0f && deltaX == 0f) {
-            // Odwrócona logika (standardowo scroll w dół to zoom out)
             val zoomFactor = if (deltaY > 0) 0.9f else 1.1f
             applyZoom(zoomFactor, mouseX)
-        }
-        // Scroll (Shift + kółko lub touchpad bok)
-        else {
+        } else {
             val moveDelta = if (deltaX != 0f) deltaX else deltaY
             applyScroll(moveDelta)
         }
     }
 
     private fun applyZoom(factor: Float, pivotX: Float) {
-        val oldPx = pixelsPerMinute
-
-        // 1. Obliczamy, która minuta jest aktualnie pod kursorem myszki
-        //    (offset + pozycja_myszy) / zoom = czas_pod_myszką
+        val oldPx = pixelsPerSecond
         val timeAtMouse = (scrollOffset + pivotX) / oldPx
 
-        // 2. Obliczamy nowy zoom (z ograniczeniami)
         var newPx = oldPx * factor
 
-        // --- Sprawdzenie constraintów zooma "na brudno" przed przypisaniem ---
         if (viewportWidth > 0) {
-            val minPx = viewportWidth / totalMinutes
-            val maxPx = 50f // Max zoom
+            val minPx = viewportWidth / totalSeconds
+            val maxPx = 2f // max ~120px na minutę
             newPx = newPx.coerceIn(minPx, maxPx)
         }
-        pixelsPerMinute = newPx
+        pixelsPerSecond = newPx
 
-        // 3. Przeliczamy scroll tak, aby 'timeAtMouse' nadal był pod 'pivotX'
-        //    nowy_offset = (czas * nowy_zoom) - pozycja_myszy
         scrollOffset = (timeAtMouse * newPx) - pivotX
-
-        // 4. Na koniec upewniamy się, że scroll nie wyjechał poza granice 0..24h
         enforceScrollLimits()
     }
 
@@ -75,20 +59,35 @@ class TimelineState {
 
     private fun enforceConstraints() {
         if (viewportWidth <= 0) return
-        // Minimalny zoom żeby wypełnić ekran
-        val minPx = viewportWidth / totalMinutes
-        if (pixelsPerMinute < minPx) pixelsPerMinute = minPx
+        val minPx = viewportWidth / totalSeconds
+        if (pixelsPerSecond < minPx) pixelsPerSecond = minPx
         enforceScrollLimits()
     }
 
     private fun enforceScrollLimits() {
         if (viewportWidth <= 0) return
-        val contentWidth = totalMinutes * pixelsPerMinute
+        val contentWidth = totalSeconds * pixelsPerSecond
         val maxScroll = max(0f, contentWidth - viewportWidth)
 
         if (scrollOffset < 0f) scrollOffset = 0f
         if (scrollOffset > maxScroll) scrollOffset = maxScroll
     }
+}
+
+/**
+ * Dobiera interwał ticków (w sekundach) na podstawie aktualnego zoomu,
+ * tak żeby odstęp między liniami wynosił co najmniej [minPixelSpacing] px.
+ * Minimalny interwał = 60s (co minutę).
+ */
+fun pickTickInterval(pixelsPerSecond: Float, minPixelSpacing: Float = 40f): Int {
+    val intervals = listOf(3600, 1800, 900, 600, 300, 60)
+    return intervals.lastOrNull { it * pixelsPerSecond >= minPixelSpacing } ?: 3600
+}
+
+fun formatTickLabel(seconds: Int): String {
+    val h = seconds / 3600
+    val m = (seconds % 3600) / 60
+    return "%02d:%02d".format(h, m)
 }
 
 @Composable

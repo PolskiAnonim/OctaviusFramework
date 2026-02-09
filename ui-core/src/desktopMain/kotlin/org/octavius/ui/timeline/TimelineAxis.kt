@@ -10,7 +10,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -29,7 +28,6 @@ fun TimelineAxis(
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = TextStyle(color = Color.LightGray, fontSize = 12.sp)
 
-    // Pre-measure a sample label to know the fixed width
     val sampleLayout = textMeasurer.measure("00:00", labelStyle)
     val labelWidth = sampleLayout.size.width
     val labelHeight = sampleLayout.size.height
@@ -53,22 +51,22 @@ fun TimelineAxis(
         }
 
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val pxPerMinute = state.pixelsPerMinute
+            val pxPerSecond = state.pixelsPerSecond
             val scrollX = state.scrollOffset
             val tickHeight = 8f
-
             val bottomY = size.height
+            val interval = pickTickInterval(pxPerSecond)
 
             translate(left = -scrollX) {
-                val startMinute = (scrollX / pxPerMinute).toInt().coerceAtLeast(0)
-                val endMinute = ((scrollX + width) / pxPerMinute).toInt().coerceAtMost(1440)
+                val startSec = (scrollX / pxPerSecond).toInt().coerceAtLeast(0)
+                val endSec = ((scrollX + width) / pxPerSecond).toInt().coerceAtMost(86400)
 
-                for (h in 0..24) {
-                    val min = h * 60
-                    if (min in (startMinute - 60)..(endMinute + 60)) {
-                        val x = min * pxPerMinute
+                val firstTick = (startSec / interval) * interval
+                var sec = firstTick
+                while (sec <= endSec + interval) {
+                    if (sec in 0..86400) {
+                        val x = sec * pxPerSecond
 
-                        // Tick od dołu w górę
                         drawLine(
                             color = Color.Gray,
                             start = Offset(x, bottomY),
@@ -77,7 +75,7 @@ fun TimelineAxis(
                         )
 
                         val textLayout = textMeasurer.measure(
-                            text = "%02d:00".format(h),
+                            text = formatTickLabel(sec),
                             style = labelStyle,
                             maxLines = 1,
                             constraints = androidx.compose.ui.unit.Constraints.fixed(labelWidth, labelHeight)
@@ -87,6 +85,7 @@ fun TimelineAxis(
                             topLeft = Offset(x - labelWidth / 2f, bottomY - tickHeight - labelHeight - 2f)
                         )
                     }
+                    sec += interval
                 }
             }
 
