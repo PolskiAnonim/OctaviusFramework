@@ -6,9 +6,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import java.time.LocalTime
 import kotlin.math.max
+
+data class TimelineBlock(
+    val startSeconds: Float,
+    val endSeconds: Float,
+    val color: Color,
+)
 
 class TimelineState {
     val totalSeconds = 86400 // 24h * 60min * 60s

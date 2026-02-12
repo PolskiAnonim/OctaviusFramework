@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 fun TimelineComponent(
     state: TimelineState = rememberTimelineState(),
     showCurrentTime: Boolean = false,
+    blocks: List<TimelineBlock> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     val currentTimeSeconds = rememberCurrentTimeSeconds(showCurrentTime)
@@ -73,6 +74,17 @@ fun TimelineComponent(
             translate(left = -scrollX) {
                 val startSec = (scrollX / pxPerSecond).toInt().coerceAtLeast(0)
                 val endSec = ((scrollX + width) / pxPerSecond).toInt().coerceAtMost(86400)
+
+                for (block in blocks) {
+                    if (block.endSeconds < startSec || block.startSeconds > endSec) continue
+                    val blockX = block.startSeconds * pxPerSecond
+                    val blockW = (block.endSeconds - block.startSeconds) * pxPerSecond
+                    drawRect(
+                        color = block.color.copy(alpha = 0.4f),
+                        topLeft = Offset(blockX, 0f),
+                        size = Size(blockW, size.height),
+                    )
+                }
 
                 val firstTick = (startSec / interval) * interval
                 var sec = firstTick
