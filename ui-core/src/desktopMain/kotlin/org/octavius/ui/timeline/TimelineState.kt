@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import java.time.LocalTime
@@ -37,7 +38,7 @@ class TimelineState {
     /** Aktualnie zaznaczony bloczek, null gdy nic nie zaznaczone */
     var selectedBlock by mutableStateOf<TimelineBlock?>(null)
 
-    private var viewportWidth = 1f
+    private var viewportWidth = 0f
 
     fun updateViewportWidth(width: Float) {
         if (width == viewportWidth) return
@@ -93,6 +94,22 @@ class TimelineState {
         val minPx = viewportWidth / totalSeconds
         if (pixelsPerSecond < minPx) pixelsPerSecond = minPx
         enforceScrollLimits()
+    }
+
+    fun handleBlockClick(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float) {
+        if (lanes.isEmpty() || componentHeight <= axisHeight || pixelsPerSecond <= 0f) return
+        if (pos.y < axisHeight) return
+
+        val lanesHeight = componentHeight - axisHeight
+        val laneHeight = lanesHeight / lanes.size
+        val laneIndex = ((pos.y - axisHeight) / laneHeight).toInt().coerceIn(0, lanes.lastIndex)
+        val seconds = (scrollOffset + pos.x) / pixelsPerSecond
+
+        val hitBlock = lanes[laneIndex].blocks.firstOrNull { block ->
+            seconds in block.startSeconds..block.endSeconds
+        }
+
+        selectedBlock = if (hitBlock == selectedBlock) null else hitBlock
     }
 
     private fun enforceScrollLimits() {

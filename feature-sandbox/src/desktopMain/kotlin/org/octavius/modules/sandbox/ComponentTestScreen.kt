@@ -1,8 +1,6 @@
 package org.octavius.modules.sandbox
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -11,7 +9,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Tr
 import org.octavius.navigation.Screen
-import org.octavius.ui.timeline.TimelineAxis
 import org.octavius.ui.timeline.TimelineBlock
 import org.octavius.ui.timeline.TimelineComponent
 import org.octavius.ui.timeline.TimelineLane
@@ -43,9 +40,6 @@ class ComponentTestScreen : Screen {
                 )),
             )
         }
-        Column(Modifier.padding(16.dp).fillMaxSize()) {
-            TimelineAxis(state, true, Modifier.height(30.dp))
-            TimelineComponent(state, true, lanes, Modifier.weight(1f))
-        }
+        TimelineComponent(state, true, lanes, Modifier.padding(16.dp).fillMaxSize())
     }
 }
