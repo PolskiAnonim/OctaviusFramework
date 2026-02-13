@@ -17,6 +17,11 @@ data class TimelineBlock(
     val color: Color,
 )
 
+data class TimelineLane(
+    val label: String,
+    val blocks: List<TimelineBlock>,
+)
+
 class TimelineState {
     val totalSeconds = 86400 // 24h * 60min * 60s
 
@@ -28,6 +33,9 @@ class TimelineState {
 
     /** Czas w sekundach pod kursorem, null gdy kursor poza komponentem */
     var hoverSeconds by mutableStateOf<Float?>(null)
+
+    /** Aktualnie zaznaczony bloczek, null gdy nic nie zaznaczone */
+    var selectedBlock by mutableStateOf<TimelineBlock?>(null)
 
     private var viewportWidth = 1f
 
