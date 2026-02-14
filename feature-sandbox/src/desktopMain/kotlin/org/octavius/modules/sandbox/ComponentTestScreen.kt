@@ -40,6 +40,6 @@ class ComponentTestScreen : Screen {
                 )),
             )
         }
-        TimelineComponent(state, true, lanes, Modifier.padding(16.dp).fillMaxSize())
+        TimelineComponent(state, true, lanes, modifier = Modifier.padding(16.dp).fillMaxSize())
     }
 }

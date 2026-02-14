@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -19,11 +18,9 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -31,6 +28,7 @@ fun TimelineComponent(
     state: TimelineState = rememberTimelineState(),
     showCurrentTime: Boolean = false,
     lanes: List<TimelineLane> = emptyList(),
+    theme: TimelineTheme = rememberTimelineTheme(),
     modifier: Modifier = Modifier
 ) {
     val currentTimeSeconds = rememberCurrentTimeSeconds(showCurrentTime)
@@ -39,33 +37,15 @@ fun TimelineComponent(
 
     val textMeasurer = rememberTextMeasurer()
 
-    // Axis
-    val axisLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val axisTickColor = MaterialTheme.colorScheme.outline
-    val axisLabelStyle = TextStyle(color = axisLabelColor, fontSize = 12.sp)
-    val sampleLayout = textMeasurer.measure("00:00", axisLabelStyle)
+    // Axis measurements (derived from theme text style)
+    val sampleLayout = textMeasurer.measure("00:00", theme.axis.textStyle)
     val labelWidth = sampleLayout.size.width
     val labelHeight = sampleLayout.size.height
-    val tickHeight = 8f
-    val axisHeight = labelHeight + tickHeight + 6f
-
-    // Hover label
-    val hoverBgColor = MaterialTheme.colorScheme.inverseSurface
-    val hoverTextColor = MaterialTheme.colorScheme.inverseOnSurface
-    val hoverLabelStyle = TextStyle(color = hoverTextColor, fontSize = 12.sp)
-
-    // Lane labels
-    val laneLabelColor = MaterialTheme.colorScheme.onSurface
-    val laneLabelStyle = TextStyle(color = laneLabelColor, fontSize = 12.sp)
-
-    // Colors
-    val lineColor = MaterialTheme.colorScheme.outlineVariant
-    val hoverLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-    val separatorColor = MaterialTheme.colorScheme.outline
+    val axisHeight = labelHeight + theme.axis.tickHeight + 6f
 
     BoxWithConstraints(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
+            .background(theme.backgroundColor)
             .onSizeChanged { componentSize = Pair(it.width.toFloat(), it.height.toFloat()) }
             .onPointerEvent(PointerEventType.Scroll) {
                 val change = it.changes.first()
@@ -107,30 +87,24 @@ fun TimelineComponent(
                 val endSec = ((scrollX + viewportWidth) / pxPerSecond).toInt().coerceAtMost(86400)
 
                 drawBlocks(lanes, state, lanesTop, laneHeight, pxPerSecond, startSec, endSec)
-
-                drawGrid(interval, startSec, endSec, pxPerSecond, lineColor)
-
+                drawGrid(interval, startSec, endSec, pxPerSecond, theme.grid)
                 drawAxisTicks(
                     interval, startSec, endSec, pxPerSecond,
-                    axisHeight, tickHeight, axisTickColor,
-                    textMeasurer, axisLabelStyle, labelWidth, labelHeight
+                    axisHeight, labelWidth, labelHeight,
+                    textMeasurer, theme.axis
                 )
-
                 drawTimeIndicators(
                     showCurrentTime, currentTimeSeconds, pxPerSecond,
-                    state.hoverSeconds, hoverLineColor
+                    state.hoverSeconds, theme.hover.lineColor
                 )
             }
 
-            drawAxisBaseline(axisHeight, axisTickColor)
-            drawLaneSeparators(laneCount, lanesTop, laneHeight, separatorColor)
-            drawLaneLabels(
-                lanes, lanesTop, laneHeight, localMousePos,
-                textMeasurer, laneLabelStyle
-            )
+            drawAxisBaseline(axisHeight, theme.axis.tickColor)
+            drawLaneSeparators(laneCount, lanesTop, laneHeight, theme.laneSeparatorColor)
+            drawLaneLabels(lanes, lanesTop, laneHeight, localMousePos, textMeasurer, theme.laneLabel)
             drawHoverLabel(
                 state.hoverSeconds, pxPerSecond, scrollX,
-                localMousePos, textMeasurer, hoverLabelStyle, hoverBgColor
+                localMousePos, textMeasurer, theme.hover
             )
         }
     }
@@ -177,7 +151,7 @@ private fun DrawScope.drawGrid(
     startSec: Int,
     endSec: Int,
     pxPerSecond: Float,
-    lineColor: Color,
+    style: TimelineTheme.GridStyle,
 ) {
     val firstTick = (startSec / interval) * interval
     var sec = firstTick
@@ -185,7 +159,7 @@ private fun DrawScope.drawGrid(
         if (sec in 0..86400) {
             val x = sec * pxPerSecond
             drawLine(
-                color = lineColor,
+                color = style.lineColor,
                 start = Offset(x, 0f),
                 end = Offset(x, size.height),
                 strokeWidth = 1f
@@ -201,12 +175,10 @@ private fun DrawScope.drawAxisTicks(
     endSec: Int,
     pxPerSecond: Float,
     axisHeight: Float,
-    tickHeight: Float,
-    tickColor: Color,
-    textMeasurer: TextMeasurer,
-    labelStyle: TextStyle,
     labelWidth: Int,
     labelHeight: Int,
+    textMeasurer: TextMeasurer,
+    style: TimelineTheme.AxisStyle,
 ) {
     val firstTick = (startSec / interval) * interval
     var sec = firstTick
@@ -215,21 +187,21 @@ private fun DrawScope.drawAxisTicks(
             val x = sec * pxPerSecond
 
             drawLine(
-                color = tickColor,
+                color = style.tickColor,
                 start = Offset(x, axisHeight),
-                end = Offset(x, axisHeight - tickHeight),
+                end = Offset(x, axisHeight - style.tickHeight),
                 strokeWidth = 1f
             )
 
             val textLayout = textMeasurer.measure(
                 text = formatTickLabel(sec),
-                style = labelStyle,
+                style = style.textStyle,
                 maxLines = 1,
                 constraints = Constraints.fixed(labelWidth, labelHeight)
             )
             drawText(
                 textLayoutResult = textLayout,
-                topLeft = Offset(x - labelWidth / 2f, axisHeight - tickHeight - labelHeight - 2f)
+                topLeft = Offset(x - labelWidth / 2f, axisHeight - style.tickHeight - labelHeight - 2f)
             )
         }
         sec += interval
@@ -296,7 +268,7 @@ private fun DrawScope.drawLaneLabels(
     laneHeight: Float,
     localMousePos: Offset?,
     textMeasurer: TextMeasurer,
-    labelStyle: TextStyle,
+    style: TimelineTheme.LaneLabelStyle,
 ) {
     val padH = 8f
     val padV = 4f
@@ -304,7 +276,7 @@ private fun DrawScope.drawLaneLabels(
     lanes.forEachIndexed { index, lane ->
         if (lane.label.isBlank()) return@forEachIndexed
 
-        val layout = textMeasurer.measure(lane.label, labelStyle, maxLines = 1)
+        val layout = textMeasurer.measure(lane.label, style.textStyle, maxLines = 1)
         val bgWidth = layout.size.width + padH * 2
         val bgHeight = layout.size.height + padV * 2
         val laneY = lanesTop + index * laneHeight
@@ -317,14 +289,14 @@ private fun DrawScope.drawLaneLabels(
 
         if (!mouseOver) {
             drawRoundRect(
-                color = Color.Black.copy(alpha = 0.4f),
+                color = style.bgColor,
                 topLeft = Offset(labelX, labelY),
                 size = Size(bgWidth, bgHeight),
                 cornerRadius = CornerRadius(4f, 4f)
             )
             drawText(
                 textLayoutResult = layout,
-                color = Color.White.copy(alpha = 0.7f),
+                color = style.textColor,
                 topLeft = Offset(labelX + padH, labelY + padV)
             )
         }
@@ -337,14 +309,13 @@ private fun DrawScope.drawHoverLabel(
     scrollX: Float,
     localMousePos: Offset?,
     textMeasurer: TextMeasurer,
-    labelStyle: TextStyle,
-    bgColor: Color,
+    style: TimelineTheme.HoverStyle,
 ) {
     hoverSeconds?.let { hoverSec ->
         val snappedToMinute = (hoverSec.toInt() / 60) * 60
         val hoverLayout = textMeasurer.measure(
             text = formatTickLabel(snappedToMinute),
-            style = labelStyle,
+            style = style.labelTextStyle,
             maxLines = 1,
         )
 
@@ -359,7 +330,7 @@ private fun DrawScope.drawHoverLabel(
         } ?: padV
 
         drawRoundRect(
-            color = bgColor,
+            color = style.labelBgColor,
             topLeft = Offset(labelLeft, labelTop),
             size = Size(bgWidth, bgHeight),
             cornerRadius = CornerRadius(4f, 4f)

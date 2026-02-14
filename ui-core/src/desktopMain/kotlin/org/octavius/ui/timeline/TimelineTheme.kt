@@ -1,0 +1,66 @@
+package org.octavius.ui.timeline
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+
+data class TimelineTheme(
+    val axis: AxisStyle,
+    val grid: GridStyle,
+    val hover: HoverStyle,
+    val laneLabel: LaneLabelStyle,
+    val laneSeparatorColor: Color,
+    val backgroundColor: Color,
+) {
+    data class AxisStyle(
+        val labelColor: Color,
+        val tickColor: Color,
+        val textStyle: TextStyle,
+        val tickHeight: Float = 8f,
+    )
+
+    data class GridStyle(
+        val lineColor: Color,
+    )
+
+    data class HoverStyle(
+        val lineColor: Color,
+        val labelBgColor: Color,
+        val labelTextStyle: TextStyle,
+    )
+
+    data class LaneLabelStyle(
+        val bgColor: Color,
+        val textColor: Color,
+        val textStyle: TextStyle,
+    )
+}
+
+@Composable
+fun rememberTimelineTheme(): TimelineTheme {
+    val colors = MaterialTheme.colorScheme
+    return TimelineTheme(
+        axis = TimelineTheme.AxisStyle(
+            labelColor = colors.onSurfaceVariant,
+            tickColor = colors.outline,
+            textStyle = TextStyle(color = colors.onSurfaceVariant, fontSize = 12.sp),
+        ),
+        grid = TimelineTheme.GridStyle(
+            lineColor = colors.outlineVariant,
+        ),
+        hover = TimelineTheme.HoverStyle(
+            lineColor = colors.onSurface.copy(alpha = 0.5f),
+            labelBgColor = colors.inverseSurface,
+            labelTextStyle = TextStyle(color = colors.inverseOnSurface, fontSize = 12.sp),
+        ),
+        laneLabel = TimelineTheme.LaneLabelStyle(
+            bgColor = Color.Black.copy(alpha = 0.4f),
+            textColor = Color.White.copy(alpha = 0.7f),
+            textStyle = TextStyle(color = colors.onSurface, fontSize = 12.sp),
+        ),
+        laneSeparatorColor = colors.outline,
+        backgroundColor = colors.background,
+    )
+}
