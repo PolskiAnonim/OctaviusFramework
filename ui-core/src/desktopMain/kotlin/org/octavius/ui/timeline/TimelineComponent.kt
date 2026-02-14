@@ -56,7 +56,7 @@ fun TimelineComponent(
             .onPointerEvent(PointerEventType.Move) {
                 val pos = it.changes.first().position
                 localMousePos = pos
-                state.onHoverMove(pos.x)
+                state.onHoverMove(pos, lanes, axisHeight, componentSize.second)
             }
             .onPointerEvent(PointerEventType.Exit) {
                 localMousePos = null
@@ -127,9 +127,16 @@ private fun DrawScope.drawBlocks(
             val blockX = block.startSeconds * pxPerSecond
             val blockW = (block.endSeconds - block.startSeconds) * pxPerSecond
             val isSelected = block == state.selectedBlock
+            val isHovered = block == state.hoveredBlock
+
+            val alpha = when {
+                isSelected -> 0.6f
+                isHovered -> 0.5f
+                else -> 0.35f
+            }
 
             drawRect(
-                color = block.color.copy(alpha = if (isSelected) 0.6f else 0.35f),
+                color = block.color.copy(alpha = alpha),
                 topLeft = Offset(blockX, laneY),
                 size = Size(blockW, laneHeight),
             )
