@@ -54,6 +54,10 @@ fun TimelineComponent(
     val hoverTextColor = MaterialTheme.colorScheme.inverseOnSurface
     val hoverLabelStyle = TextStyle(color = hoverTextColor, fontSize = 12.sp)
 
+    // Lane labels
+    val laneLabelColor = MaterialTheme.colorScheme.onSurface
+    val laneLabelStyle = TextStyle(color = laneLabelColor, fontSize = 12.sp)
+
     // Colors
     val lineColor = MaterialTheme.colorScheme.outlineVariant
     val hoverLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -120,6 +124,10 @@ fun TimelineComponent(
 
             drawAxisBaseline(axisHeight, axisTickColor)
             drawLaneSeparators(laneCount, lanesTop, laneHeight, separatorColor)
+            drawLaneLabels(
+                lanes, lanesTop, laneHeight, localMousePos,
+                textMeasurer, laneLabelStyle
+            )
             drawHoverLabel(
                 state.hoverSeconds, pxPerSecond, scrollX,
                 localMousePos, textMeasurer, hoverLabelStyle, hoverBgColor
@@ -279,6 +287,47 @@ private fun DrawScope.drawLaneSeparators(
             end = Offset(size.width, y),
             strokeWidth = 1f
         )
+    }
+}
+
+private fun DrawScope.drawLaneLabels(
+    lanes: List<TimelineLane>,
+    lanesTop: Float,
+    laneHeight: Float,
+    localMousePos: Offset?,
+    textMeasurer: TextMeasurer,
+    labelStyle: TextStyle,
+) {
+    val padH = 8f
+    val padV = 4f
+
+    lanes.forEachIndexed { index, lane ->
+        if (lane.label.isBlank()) return@forEachIndexed
+
+        val layout = textMeasurer.measure(lane.label, labelStyle, maxLines = 1)
+        val bgWidth = layout.size.width + padH * 2
+        val bgHeight = layout.size.height + padV * 2
+        val laneY = lanesTop + index * laneHeight
+        val labelX = padH
+        val labelY = laneY + (laneHeight - bgHeight) / 2f
+
+        val mouseOver = localMousePos?.let { mouse ->
+            mouse.x in labelX..(labelX + bgWidth) && mouse.y in labelY..(labelY + bgHeight)
+        } == true
+
+        if (!mouseOver) {
+            drawRoundRect(
+                color = Color.Black.copy(alpha = 0.4f),
+                topLeft = Offset(labelX, labelY),
+                size = Size(bgWidth, bgHeight),
+                cornerRadius = CornerRadius(4f, 4f)
+            )
+            drawText(
+                textLayoutResult = layout,
+                color = Color.White.copy(alpha = 0.7f),
+                topLeft = Offset(labelX + padH, labelY + padV)
+            )
+        }
     }
 }
 
