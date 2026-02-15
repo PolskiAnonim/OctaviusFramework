@@ -24,8 +24,8 @@ class ComponentTestScreen : Screen {
         val lanes = remember {
             listOf(
                 TimelineLane("Kategorie", listOf(
-                    TimelineBlock(2 * 3600f + 15 * 60f, 2 * 3600f + 45 * 60f, Color.Blue),
-                    TimelineBlock(5 * 3600f, 5 * 3600f + 30 * 60f, Color.Cyan),
+                    TimelineBlock(2 * 3600f + 15 * 60f, 2 * 3600f + 45 * 60f, Color.Blue, "ABC", "abc"),
+                    TimelineBlock(5 * 3600f, 5 * 3600f + 30 * 60f, Color.Cyan, "DBE"),
                     TimelineBlock(14 * 3600f, 14 * 3600f + 50 * 60f, Color.Blue),
                 )),
                 TimelineLane("Aplikacje", listOf(

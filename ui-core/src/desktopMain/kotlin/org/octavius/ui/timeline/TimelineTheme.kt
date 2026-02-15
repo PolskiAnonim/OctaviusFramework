@@ -29,6 +29,8 @@ data class TimelineTheme(
         val lineColor: Color,
         val labelBgColor: Color,
         val labelTextStyle: TextStyle,
+        val tooltipTitleStyle: TextStyle = labelTextStyle,
+        val tooltipDescriptionStyle: TextStyle = labelTextStyle,
     )
 
     data class LaneLabelStyle(
@@ -54,6 +56,8 @@ fun rememberTimelineTheme(): TimelineTheme {
             lineColor = colors.onSurface.copy(alpha = 0.5f),
             labelBgColor = colors.inverseSurface,
             labelTextStyle = TextStyle(color = colors.inverseOnSurface, fontSize = 12.sp),
+            tooltipTitleStyle = TextStyle(color = colors.inverseOnSurface, fontSize = 13.sp),
+            tooltipDescriptionStyle = TextStyle(color = colors.inverseOnSurface.copy(alpha = 0.7f), fontSize = 11.sp),
         ),
         laneLabel = TimelineTheme.LaneLabelStyle(
             bgColor = Color.Black.copy(alpha = 0.4f),

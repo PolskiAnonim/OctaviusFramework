@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -103,7 +104,7 @@ fun TimelineComponent(
             drawLaneSeparators(laneCount, lanesTop, laneHeight, theme.laneSeparatorColor)
             drawLaneLabels(lanes, lanesTop, laneHeight, localMousePos, textMeasurer, theme.laneLabel)
             drawHoverLabel(
-                state.hoverSeconds, pxPerSecond, scrollX,
+                state.hoverSeconds, state.hoveredBlock, pxPerSecond, scrollX,
                 localMousePos, textMeasurer, theme.hover
             )
         }
@@ -312,39 +313,68 @@ private fun DrawScope.drawLaneLabels(
 
 private fun DrawScope.drawHoverLabel(
     hoverSeconds: Float?,
+    hoveredBlock: TimelineBlock?,
     pxPerSecond: Float,
     scrollX: Float,
     localMousePos: Offset?,
     textMeasurer: TextMeasurer,
     style: TimelineTheme.HoverStyle,
 ) {
-    hoverSeconds?.let { hoverSec ->
-        val snappedToMinute = (hoverSec.toInt() / 60) * 60
-        val hoverLayout = textMeasurer.measure(
-            text = formatTickLabel(snappedToMinute),
-            style = style.labelTextStyle,
-            maxLines = 1,
-        )
+    hoverSeconds ?: return
 
-        val padH = 4f
-        val padV = 2f
-        val bgWidth = hoverLayout.size.width + padH * 2
-        val bgHeight = hoverLayout.size.height + padV * 2
-        val hoverViewportX = hoverSec * pxPerSecond - scrollX
-        val labelLeft = (hoverViewportX - bgWidth / 2f).coerceIn(0f, size.width - bgWidth)
-        val labelTop = localMousePos?.let { mouse ->
-            (mouse.y + 32f).coerceAtMost(size.height - bgHeight)
-        } ?: padV
+    val padH = 6f
+    val padV = 4f
+    val lineSpacing = 2f
 
-        drawRoundRect(
-            color = style.labelBgColor,
-            topLeft = Offset(labelLeft, labelTop),
-            size = Size(bgWidth, bgHeight),
-            cornerRadius = CornerRadius(4f, 4f)
-        )
-        drawText(
-            textLayoutResult = hoverLayout,
-            topLeft = Offset(labelLeft + padH, labelTop + padV)
-        )
+    val snappedToMinute = (hoverSeconds.toInt() / 60) * 60
+    val timeLayout = textMeasurer.measure(
+        text = formatTickLabel(snappedToMinute),
+        style = style.labelTextStyle,
+        maxLines = 1,
+    )
+
+    val extraLines = mutableListOf<TextLayoutResult>()
+
+    if (hoveredBlock != null) {
+        val startMin = (hoveredBlock.startSeconds / 60).toInt()
+        val endMin = (hoveredBlock.endSeconds / 60).toInt()
+        val durationMin = endMin - startMin
+        val durationH = durationMin / 60
+        val durationM = durationMin % 60
+        val durationStr = if (durationH > 0) "${durationH}h ${durationM}min" else "${durationM}min"
+        val rangeText = "${formatTickLabel(startMin * 60)} – ${formatTickLabel(endMin * 60)} ($durationStr)"
+        extraLines += textMeasurer.measure(rangeText, style.tooltipDescriptionStyle, maxLines = 1)
+
+        if (hoveredBlock.label.isNotBlank()) {
+            extraLines += textMeasurer.measure(hoveredBlock.label, style.tooltipTitleStyle, maxLines = 1)
+        }
+        if (hoveredBlock.description.isNotBlank()) {
+            extraLines += textMeasurer.measure(hoveredBlock.description, style.tooltipDescriptionStyle, maxLines = 2)
+        }
+    }
+
+    val allLayouts = listOf(timeLayout) + extraLines
+    val contentWidth = allLayouts.maxOf { it.size.width }
+    val contentHeight = allLayouts.sumOf { it.size.height } + (lineSpacing * (allLayouts.size - 1)).toInt()
+
+    val bgWidth = contentWidth + padH * 2
+    val bgHeight = contentHeight + padV * 2
+    val hoverViewportX = hoverSeconds * pxPerSecond - scrollX
+    val labelLeft = (hoverViewportX - bgWidth / 2f).coerceIn(0f, size.width - bgWidth)
+    val labelTop = localMousePos?.let { mouse ->
+        (mouse.y + 32f).coerceAtMost(size.height - bgHeight)
+    } ?: padV
+
+    drawRoundRect(
+        color = style.labelBgColor,
+        topLeft = Offset(labelLeft, labelTop),
+        size = Size(bgWidth, bgHeight),
+        cornerRadius = CornerRadius(4f, 4f)
+    )
+
+    var yOffset = labelTop + padV
+    for (layout in allLayouts) {
+        drawText(textLayoutResult = layout, topLeft = Offset(labelLeft + padH, yOffset))
+        yOffset += layout.size.height + lineSpacing
     }
 }

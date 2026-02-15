@@ -16,6 +16,8 @@ data class TimelineBlock(
     val startSeconds: Float,
     val endSeconds: Float,
     val color: Color,
+    val label: String = "",
+    val description: String = "",
 )
 
 data class TimelineLane(
@@ -38,6 +40,9 @@ class TimelineState {
     /** Aktualnie zaznaczony bloczek, null gdy nic nie zaznaczone */
     var selectedBlock by mutableStateOf<TimelineBlock?>(null)
 
+    /** Bloczek pod kursorem, null gdy kursor nie jest na żadnym bloku */
+    var hoveredBlock by mutableStateOf<TimelineBlock?>(null)
+
     private var viewportWidth = 0f
 
     fun updateViewportWidth(width: Float) {
@@ -46,14 +51,16 @@ class TimelineState {
         enforceConstraints()
     }
 
-    fun onHoverMove(mouseX: Float) {
+    fun onHoverMove(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float) {
         if (pixelsPerSecond <= 0f) return
-        val sec = (scrollOffset + mouseX) / pixelsPerSecond
+        val sec = (scrollOffset + pos.x) / pixelsPerSecond
         hoverSeconds = sec.coerceIn(0f, totalSeconds.toFloat())
+        hoveredBlock = hitTestBlock(pos, lanes, axisHeight, componentHeight)
     }
 
     fun onHoverExit() {
         hoverSeconds = null
+        hoveredBlock = null
     }
 
     fun onPointerEvent(deltaX: Float, deltaY: Float, mouseX: Float) {
@@ -97,19 +104,22 @@ class TimelineState {
     }
 
     fun handleBlockClick(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float) {
-        if (lanes.isEmpty() || componentHeight <= axisHeight || pixelsPerSecond <= 0f) return
-        if (pos.y < axisHeight) return
+        val hitBlock = hitTestBlock(pos, lanes, axisHeight, componentHeight)
+        selectedBlock = if (hitBlock == selectedBlock) null else hitBlock
+    }
+
+    private fun hitTestBlock(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float): TimelineBlock? {
+        if (lanes.isEmpty() || componentHeight <= axisHeight || pixelsPerSecond <= 0f) return null
+        if (pos.y < axisHeight) return null
 
         val lanesHeight = componentHeight - axisHeight
         val laneHeight = lanesHeight / lanes.size
         val laneIndex = ((pos.y - axisHeight) / laneHeight).toInt().coerceIn(0, lanes.lastIndex)
         val seconds = (scrollOffset + pos.x) / pixelsPerSecond
 
-        val hitBlock = lanes[laneIndex].blocks.firstOrNull { block ->
+        return lanes[laneIndex].blocks.firstOrNull { block ->
             seconds in block.startSeconds..block.endSeconds
         }
-
-        selectedBlock = if (hitBlock == selectedBlock) null else hitBlock
     }
 
     private fun enforceScrollLimits() {
