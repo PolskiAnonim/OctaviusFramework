@@ -15,7 +15,6 @@ import org.octavius.modules.activity.report.ui.CategoriesReportScreen
 import org.octavius.modules.activity.report.ui.DocumentsReportScreen
 import org.octavius.modules.activity.report.ui.RulesReportScreen
 import org.octavius.modules.activity.statistics.ui.StatisticsScreen
-import org.octavius.modules.activity.timeline.UnifiedTimelineState
 import org.octavius.modules.activity.timeline.ui.UnifiedTimelineScreen
 import org.octavius.modules.activity.weekly.ui.WeeklyTrendScreen
 import org.octavius.navigation.AppRouter
