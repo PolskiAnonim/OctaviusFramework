@@ -11,6 +11,7 @@ data class TimelineTheme(
     val grid: GridStyle,
     val hover: HoverStyle,
     val laneLabel: LaneLabelStyle,
+    val selection: SelectionStyle,
     val laneSeparatorColor: Color,
     val backgroundColor: Color,
 ) {
@@ -38,6 +39,14 @@ data class TimelineTheme(
         val textColor: Color,
         val textStyle: TextStyle,
     )
+
+    data class SelectionStyle(
+        val overlayColor: Color,
+        val borderColor: Color,
+        val badgeBgColor: Color,
+        val badgeTextStyle: TextStyle,
+        val badgeIconColor: Color,
+    )
 }
 
 @Composable
@@ -63,6 +72,13 @@ fun rememberTimelineTheme(): TimelineTheme {
             bgColor = Color.Black.copy(alpha = 0.4f),
             textColor = Color.White.copy(alpha = 0.7f),
             textStyle = TextStyle(color = colors.onSurface, fontSize = 12.sp),
+        ),
+        selection = TimelineTheme.SelectionStyle(
+            overlayColor = Color.Black.copy(alpha = 0.28f),
+            borderColor = colors.primary.copy(alpha = 0.9f),
+            badgeBgColor = colors.primaryContainer,
+            badgeTextStyle = TextStyle(color = colors.onPrimaryContainer, fontSize = 12.sp),
+            badgeIconColor = colors.onPrimaryContainer,
         ),
         laneSeparatorColor = colors.outline,
         backgroundColor = colors.background,

@@ -25,6 +25,15 @@ data class TimelineLane(
     val blocks: List<TimelineBlock>,
 )
 
+data class TimeSelection(
+    val startSeconds: Float,
+    val endSeconds: Float,
+) {
+    val minSeconds: Float get() = minOf(startSeconds, endSeconds)
+    val maxSeconds: Float get() = maxOf(startSeconds, endSeconds)
+    val durationSeconds: Float get() = maxSeconds - minSeconds
+}
+
 class TimelineState {
     val totalSeconds = 86400 // 24h * 60min * 60s
 
@@ -43,7 +52,14 @@ class TimelineState {
     /** Bloczek pod kursorem, null gdy kursor nie jest na żadnym bloku */
     var hoveredBlock by mutableStateOf<TimelineBlock?>(null)
 
+    /** Zaznaczony przedział czasowy, null gdy nic nie zaznaczone */
+    var selection by mutableStateOf<TimeSelection?>(null)
+
+    /** Czy trwa przeciąganie zaznaczenia */
+    var isDragging by mutableStateOf(false)
+
     private var viewportWidth = 0f
+    private var dragStartSeconds: Float? = null
 
     fun updateViewportWidth(width: Float) {
         if (width == viewportWidth) return
@@ -104,8 +120,39 @@ class TimelineState {
     }
 
     fun handleBlockClick(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float) {
+        selection = null
         val hitBlock = hitTestBlock(pos, lanes, axisHeight, componentHeight)
         selectedBlock = if (hitBlock == selectedBlock) null else hitBlock
+    }
+
+    fun onSelectionDragStart(posX: Float, posY: Float, axisHeight: Float) {
+        if (pixelsPerSecond <= 0f || posY < axisHeight) {
+            dragStartSeconds = null
+            return
+        }
+        dragStartSeconds = ((scrollOffset + posX) / pixelsPerSecond).coerceIn(0f, totalSeconds.toFloat())
+        isDragging = true
+        selection = null
+        selectedBlock = null
+    }
+
+    fun onSelectionDragUpdate(posX: Float) {
+        val start = dragStartSeconds ?: return
+        if (pixelsPerSecond <= 0f) return
+        val end = ((scrollOffset + posX) / pixelsPerSecond).coerceIn(0f, totalSeconds.toFloat())
+        selection = TimeSelection(start, end)
+    }
+
+    fun onSelectionDragEnd() {
+        isDragging = false
+        dragStartSeconds = null
+        if ((selection?.durationSeconds ?: 0f) < 1f) selection = null
+    }
+
+    fun clearSelection() {
+        selection = null
+        isDragging = false
+        dragStartSeconds = null
     }
 
     private fun hitTestBlock(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float): TimelineBlock? {
@@ -146,6 +193,26 @@ fun formatTickLabel(seconds: Int): String {
     val h = seconds / 3600
     val m = (seconds % 3600) / 60
     return "%02d:%02d".format(h, m)
+}
+
+fun formatTimeSeconds(seconds: Float): String {
+    val totalSec = seconds.toInt()
+    val h = totalSec / 3600
+    val m = (totalSec % 3600) / 60
+    val s = totalSec % 60
+    return "%02d:%02d:%02d".format(h, m, s)
+}
+
+fun formatDuration(seconds: Float): String {
+    val totalSec = seconds.toInt()
+    val h = totalSec / 3600
+    val m = (totalSec % 3600) / 60
+    val s = totalSec % 60
+    return when {
+        h > 0 -> "${h}h ${m}min ${s}s"
+        m > 0 -> "${m}min ${s}s"
+        else -> "${s}s"
+    }
 }
 
 @Composable

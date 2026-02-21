@@ -2,11 +2,25 @@ package org.octavius.ui.timeline
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -14,14 +28,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -35,6 +56,15 @@ fun TimelineComponent(
     val currentTimeSeconds = rememberCurrentTimeSeconds(showCurrentTime)
     var localMousePos by remember { mutableStateOf<Offset?>(null) }
     var componentSize by remember { mutableStateOf(Pair(0f, 0f)) }
+
+    // Drag-selection state
+    var pressStartPos by remember { mutableStateOf<Offset?>(null) }
+    var isRangeDragging by remember { mutableStateOf(false) }
+
+    // Context menu state
+    var showContextMenu by remember { mutableStateOf(false) }
+    var contextMenuAnchorPx by remember { mutableStateOf(Offset.Zero) }
+    var badgeSize by remember { mutableStateOf(IntSize.Zero) }
 
     val textMeasurer = rememberTextMeasurer()
 
@@ -58,6 +88,17 @@ fun TimelineComponent(
                 val pos = it.changes.first().position
                 localMousePos = pos
                 state.onHoverMove(pos, lanes, axisHeight, componentSize.second)
+
+                val start = pressStartPos
+                if (start != null) {
+                    if (!isRangeDragging && abs(pos.x - start.x) > 4f) {
+                        isRangeDragging = true
+                        state.onSelectionDragStart(start.x, start.y, axisHeight)
+                    }
+                    if (isRangeDragging) {
+                        state.onSelectionDragUpdate(pos.x)
+                    }
+                }
             }
             .onPointerEvent(PointerEventType.Exit) {
                 localMousePos = null
@@ -65,7 +106,53 @@ fun TimelineComponent(
             }
             .onPointerEvent(PointerEventType.Press) {
                 val pos = it.changes.first().position
-                state.handleBlockClick(pos, lanes, axisHeight, componentSize.second)
+                when (it.button) {
+                    PointerButton.Primary -> {
+                        // Ignore presses on the selection badge so the arrow button
+                        // can handle its own click without the Release handler stomping on it.
+                        val onBadge = run {
+                            val sel = state.selection
+                            if (sel == null || badgeSize == IntSize.Zero) return@run false
+                            val pxs = state.pixelsPerSecond
+                            val sc = state.scrollOffset
+                            val vw = componentSize.first
+                            val selMinVx = (sel.minSeconds * pxs - sc).coerceIn(0f, vw)
+                            val selMaxVx = (sel.maxSeconds * pxs - sc).coerceIn(0f, vw)
+                            val cx = (selMinVx + selMaxVx) / 2f
+                            val bLeft = (cx - badgeSize.width / 2f).coerceIn(0f, vw - badgeSize.width)
+                            val bTop = axisHeight + 4f
+                            pos.x in bLeft..(bLeft + badgeSize.width) && pos.y in bTop..(bTop + badgeSize.height)
+                        }
+                        if (!onBadge) {
+                            pressStartPos = pos
+                            isRangeDragging = false
+                        }
+                    }
+                    PointerButton.Secondary -> {
+                        val sel = state.selection
+                        if (sel != null && pos.y >= axisHeight) {
+                            val pxs = state.pixelsPerSecond
+                            val sc = state.scrollOffset
+                            val selMinVx = sel.minSeconds * pxs - sc
+                            val selMaxVx = sel.maxSeconds * pxs - sc
+                            if (pos.x in selMinVx..selMaxVx) {
+                                contextMenuAnchorPx = pos
+                                showContextMenu = true
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
+            .onPointerEvent(PointerEventType.Release) {
+                val pos = it.changes.first().position
+                if (isRangeDragging) {
+                    state.onSelectionDragEnd()
+                    isRangeDragging = false
+                } else if (pressStartPos != null && it.button == PointerButton.Primary) {
+                    state.handleBlockClick(pos, lanes, axisHeight, componentSize.second)
+                }
+                pressStartPos = null
             }
     ) {
         SideEffect {
@@ -98,6 +185,7 @@ fun TimelineComponent(
                     showCurrentTime, currentTimeSeconds, pxPerSecond,
                     state.hoverSeconds, theme.hover.lineColor
                 )
+                drawSelectionOverlay(state.selection, lanesTop, lanesHeight, pxPerSecond, theme.selection)
             }
 
             drawAxisBaseline(axisHeight, theme.axis.tickColor)
@@ -108,7 +196,145 @@ fun TimelineComponent(
                 localMousePos, textMeasurer, theme.hover
             )
         }
+
+        // Compose overlay: selection badge and context menu
+        Box(modifier = Modifier.fillMaxSize()) {
+            val sel = state.selection
+            if (sel != null) {
+                val pxs = state.pixelsPerSecond
+                val sc = state.scrollOffset
+                val vw = componentSize.first
+
+                val selMinVx = (sel.minSeconds * pxs - sc).coerceIn(0f, vw)
+                val selMaxVx = (sel.maxSeconds * pxs - sc).coerceIn(0f, vw)
+                val visibleCenterX = (selMinVx + selMaxVx) / 2f
+                val badgeTopPx = axisHeight + 4f
+
+                Box(
+                    modifier = Modifier
+                        .absoluteOffset {
+                            val offsetX = (visibleCenterX - badgeSize.width / 2f)
+                                .coerceIn(0f, (vw - badgeSize.width).coerceAtLeast(0f))
+                            IntOffset(offsetX.roundToInt(), badgeTopPx.roundToInt())
+                        }
+                        .onSizeChanged { badgeSize = it }
+                ) {
+                    SelectionBadge(
+                        selection = sel,
+                        theme = theme.selection,
+                        onArrowClick = {
+                            contextMenuAnchorPx = Offset(
+                                (visibleCenterX - badgeSize.width / 2f)
+                                    .coerceIn(0f, vw - badgeSize.width),
+                                badgeTopPx + badgeSize.height
+                            )
+                            showContextMenu = true
+                        }
+                    )
+                }
+            }
+
+            // Context menu anchor — positioned at right-click or badge arrow
+            Box(
+                modifier = Modifier.absoluteOffset {
+                    IntOffset(
+                        contextMenuAnchorPx.x.roundToInt(),
+                        contextMenuAnchorPx.y.roundToInt()
+                    )
+                }
+            ) {
+                DropdownMenu(
+                    expanded = showContextMenu,
+                    onDismissRequest = { showContextMenu = false },
+                ) {
+                    val sel = state.selection
+                    if (sel != null) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = "${formatTimeSeconds(sel.minSeconds)} – ${formatTimeSeconds(sel.maxSeconds)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = formatDuration(sel.durationSeconds),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        HorizontalDivider()
+                    }
+                }
+            }
+        }
     }
+}
+
+@Composable
+private fun SelectionBadge(
+    selection: TimeSelection,
+    theme: TimelineTheme.SelectionStyle,
+    onArrowClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(theme.badgeBgColor)
+            .padding(start = 8.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = formatDuration(selection.durationSeconds),
+            style = theme.badgeTextStyle,
+        )
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(2.dp))
+                .clickable(onClick = onArrowClick)
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "▾",
+                style = theme.badgeTextStyle.copy(color = theme.badgeIconColor),
+            )
+        }
+    }
+}
+
+private fun DrawScope.drawSelectionOverlay(
+    selection: TimeSelection?,
+    lanesTop: Float,
+    lanesHeight: Float,
+    pxPerSecond: Float,
+    style: TimelineTheme.SelectionStyle,
+) {
+    selection ?: return
+
+    val startX = selection.minSeconds * pxPerSecond
+    val endX = selection.maxSeconds * pxPerSecond
+    val width = endX - startX
+
+    drawRect(
+        color = style.overlayColor,
+        topLeft = Offset(startX, lanesTop),
+        size = Size(width, lanesHeight),
+    )
+
+    drawLine(
+        color = style.borderColor,
+        start = Offset(startX, lanesTop),
+        end = Offset(startX, lanesTop + lanesHeight),
+        strokeWidth = 1.5f,
+    )
+    drawLine(
+        color = style.borderColor,
+        start = Offset(endX, lanesTop),
+        end = Offset(endX, lanesTop + lanesHeight),
+        strokeWidth = 1.5f,
+    )
 }
 
 private fun DrawScope.drawBlocks(
