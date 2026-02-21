@@ -49,6 +49,10 @@ class TimelineState {
     /** Aktualnie zaznaczony bloczek, null gdy nic nie zaznaczone */
     var selectedBlock by mutableStateOf<TimelineBlock?>(null)
 
+    /** Indeks lane'a zaznaczonego bloczku, null gdy nic nie zaznaczone */
+    var selectedBlockLaneIndex by mutableStateOf<Int?>(null)
+        private set
+
     /** Bloczek pod kursorem, null gdy kursor nie jest na żadnym bloku */
     var hoveredBlock by mutableStateOf<TimelineBlock?>(null)
 
@@ -123,6 +127,30 @@ class TimelineState {
         selection = null
         val hitBlock = hitTestBlock(pos, lanes, axisHeight, componentHeight)
         selectedBlock = if (hitBlock == selectedBlock) null else hitBlock
+        selectedBlockLaneIndex = if (selectedBlock != null) {
+            val lanesHeight = componentHeight - axisHeight
+            val laneHeight = lanesHeight / lanes.size.coerceAtLeast(1)
+            ((pos.y - axisHeight) / laneHeight).toInt().coerceIn(0, lanes.lastIndex)
+        } else null
+    }
+
+    fun selectBlock(block: TimelineBlock, laneIndex: Int) {
+        selection = null
+        selectedBlock = block
+        selectedBlockLaneIndex = laneIndex
+    }
+
+    internal fun hitTestBlockWithLane(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float): Pair<TimelineBlock, Int>? {
+        if (lanes.isEmpty() || componentHeight <= axisHeight || pixelsPerSecond <= 0f) return null
+        if (pos.y < axisHeight) return null
+        val lanesHeight = componentHeight - axisHeight
+        val laneHeight = lanesHeight / lanes.size
+        val laneIndex = ((pos.y - axisHeight) / laneHeight).toInt().coerceIn(0, lanes.lastIndex)
+        val seconds = (scrollOffset + pos.x) / pixelsPerSecond
+        val block = lanes[laneIndex].blocks.firstOrNull { block ->
+            seconds in block.startSeconds..block.endSeconds
+        }
+        return block?.let { it to laneIndex }
     }
 
     fun onSelectionDragStart(posX: Float, posY: Float, axisHeight: Float) {
@@ -134,6 +162,7 @@ class TimelineState {
         isDragging = true
         selection = null
         selectedBlock = null
+        selectedBlockLaneIndex = null
     }
 
     fun onSelectionDragUpdate(posX: Float) {

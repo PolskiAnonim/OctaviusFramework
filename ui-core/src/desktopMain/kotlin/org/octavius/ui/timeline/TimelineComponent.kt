@@ -40,6 +40,10 @@ fun TimelineComponent(
     var contextMenuAnchorPx by remember { mutableStateOf(Offset.Zero) }
     var badgeSize by remember { mutableStateOf(IntSize.Zero) }
 
+    var showBlockContextMenu by remember { mutableStateOf(false) }
+    var blockContextMenuAnchorPx by remember { mutableStateOf(Offset.Zero) }
+    var blockBadgeSize by remember { mutableStateOf(IntSize.Zero) }
+
     val textMeasurer = rememberTextMeasurer()
     val sampleLayout = textMeasurer.measure("00:00", theme.axis.textStyle)
     val labelWidth = sampleLayout.size.width
@@ -78,19 +82,28 @@ fun TimelineComponent(
                 val pos = it.changes.first().position
                 when (it.button) {
                     PointerButton.Primary -> {
-                        if (!isBadgeHit(pos, state, componentSize.first, badgeSize, axisHeight)) {
+                        if (!isBadgeHit(pos, state, componentSize.first, badgeSize, axisHeight) &&
+                            !isBlockBadgeHit(pos, state, componentSize.first, componentSize.second, blockBadgeSize, axisHeight, lanes.size)) {
                             pressStartPos = pos
                             isRangeDragging = false
                         }
                     }
                     PointerButton.Secondary -> {
-                        val sel = state.selection
-                        if (sel != null && pos.y >= axisHeight) {
-                            val selMinVx = sel.minSeconds * state.pixelsPerSecond - state.scrollOffset
-                            val selMaxVx = sel.maxSeconds * state.pixelsPerSecond - state.scrollOffset
-                            if (pos.x in selMinVx..selMaxVx) {
-                                contextMenuAnchorPx = pos
-                                showContextMenu = true
+                        val hitResult = state.hitTestBlockWithLane(pos, lanes, axisHeight, componentSize.second)
+                        if (hitResult != null) {
+                            val (block, laneIdx) = hitResult
+                            state.selectBlock(block, laneIdx)
+                            blockContextMenuAnchorPx = pos
+                            showBlockContextMenu = true
+                        } else {
+                            val sel = state.selection
+                            if (sel != null && pos.y >= axisHeight) {
+                                val selMinVx = sel.minSeconds * state.pixelsPerSecond - state.scrollOffset
+                                val selMaxVx = sel.maxSeconds * state.pixelsPerSecond - state.scrollOffset
+                                if (pos.x in selMinVx..selMaxVx) {
+                                    contextMenuAnchorPx = pos
+                                    showContextMenu = true
+                                }
                             }
                         }
                     }
@@ -139,10 +152,14 @@ fun TimelineComponent(
         Box(modifier = Modifier.fillMaxSize()) {
             TimelineSelectionOverlay(
                 state = state,
+                lanes = lanes,
                 axisHeight = axisHeight,
                 componentWidth = componentSize.first,
+                componentHeight = componentSize.second,
                 badgeSize = badgeSize,
                 onBadgeSizeChanged = { badgeSize = it },
+                blockBadgeSize = blockBadgeSize,
+                onBlockBadgeSizeChanged = { blockBadgeSize = it },
                 selectionStyle = theme.selection,
                 showContextMenu = showContextMenu,
                 contextMenuAnchorPx = contextMenuAnchorPx,
@@ -151,6 +168,13 @@ fun TimelineComponent(
                     showContextMenu = true
                 },
                 onDismissContextMenu = { showContextMenu = false },
+                showBlockContextMenu = showBlockContextMenu,
+                blockContextMenuAnchorPx = blockContextMenuAnchorPx,
+                onShowBlockContextMenu = { anchor ->
+                    blockContextMenuAnchorPx = anchor
+                    showBlockContextMenu = true
+                },
+                onDismissBlockContextMenu = { showBlockContextMenu = false },
                 contextMenuContent = contextMenuContent,
             )
         }
@@ -173,4 +197,21 @@ private fun isBadgeHit(
     val left = (cx - badgeSize.width / 2f).coerceIn(0f, (componentWidth - badgeSize.width).coerceAtLeast(0f))
     val top = axisHeight + 4f
     return pos.x in left..(left + badgeSize.width) && pos.y in top..(top + badgeSize.height)
+}
+
+/** Returns true when [pos] lands within the block badge bounds. */
+private fun isBlockBadgeHit(
+    pos: Offset,
+    state: TimelineState,
+    componentWidth: Float,
+    componentHeight: Float,
+    blockBadgeSize: IntSize,
+    axisHeight: Float,
+    laneCount: Int,
+): Boolean {
+    val block = state.selectedBlock ?: return false
+    val laneIndex = state.selectedBlockLaneIndex ?: return false
+    if (blockBadgeSize == IntSize.Zero) return false
+    val (left, top) = blockBadgeBounds(block, laneIndex, state, componentWidth, blockBadgeSize, axisHeight, componentHeight, laneCount)
+    return pos.x in left..(left + blockBadgeSize.width) && pos.y in top..(top + blockBadgeSize.height)
 }
