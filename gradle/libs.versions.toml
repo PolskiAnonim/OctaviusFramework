@@ -1,8 +1,8 @@
 [versions]
-octavius-database = "1.3.2"
+octavius-database = "1.3.3"
 dokka = "2.1.0"
 compose-multiplatform = "1.11.0-alpha02"
-kotlin = "2.3.0"
+kotlin = "2.3.10"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 kotlinx-datetime = "0.7.1"
