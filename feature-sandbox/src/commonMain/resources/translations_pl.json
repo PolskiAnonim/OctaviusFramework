@@ -58,6 +58,7 @@
       "medium": "Średni",
       "high": "Wysoki",
       "critical": "Krytyczny"
-    }
+    },
+    "componentTestScreen": "Ekran testów komponentów"
   }
 }

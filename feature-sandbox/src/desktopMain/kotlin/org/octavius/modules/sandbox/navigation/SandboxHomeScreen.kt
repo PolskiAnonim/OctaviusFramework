@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Tr
+import org.octavius.modules.sandbox.ComponentTestScreen
 import org.octavius.modules.sandbox.form.ui.SandboxFormScreen
 import org.octavius.modules.sandbox.popup.PopupShowcaseScreen
 import org.octavius.modules.sandbox.report.ui.SandboxReportScreen
@@ -87,8 +88,13 @@ class SandboxHomeScreen : Screen {
                     modifier = Modifier.weight(1f)
                 )
 
-                // Placeholder for alignment
-                Spacer(modifier = Modifier.weight(1f))
+                QuickActionCard(
+                    title = Tr.Sandbox.componentTestScreen(),
+                    description = "",
+                    icon = Icons.Default.TableChart,
+                    onClick = { AppRouter.navigateTo(ComponentTestScreen()) },
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
