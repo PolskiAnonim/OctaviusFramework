@@ -48,6 +48,7 @@ internal fun TimelineSelectionOverlay(
     onShowBlockContextMenu: (anchor: Offset) -> Unit,
     onDismissBlockContextMenu: () -> Unit,
     contextMenuContent: @Composable ColumnScope.() -> Unit,
+    blockContextMenuContent: @Composable ColumnScope.(onDismiss: () -> Unit) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         // --- Badge selekcji obszaru ---
@@ -161,7 +162,7 @@ internal fun TimelineSelectionOverlay(
                     }
                     HorizontalDivider()
                 }
-                contextMenuContent()
+                blockContextMenuContent(onDismissBlockContextMenu)
             }
         }
     }

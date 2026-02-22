@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.*
 import org.octavius.localization.Tr
@@ -29,12 +30,15 @@ class UnifiedTimelineScreen : Screen {
         val handler = remember { TimelineHandler() }
         val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
         val timelineState = rememberTimelineState()
+        val scope = rememberCoroutineScope()
 
         var selectedDate by remember { mutableStateOf(today) }
         var lanes by remember { mutableStateOf<List<TimelineLane>>(emptyList()) }
         var isLoading by remember { mutableStateOf(false) }
+        var isAutoFilling by remember { mutableStateOf(false) }
+        var refreshKey by remember { mutableStateOf(0) }
 
-        LaunchedEffect(selectedDate) {
+        LaunchedEffect(selectedDate, refreshKey) {
             isLoading = true
             lanes = withContext(Dispatchers.IO) { handler.loadLanes(selectedDate) }
             isLoading = false
@@ -45,13 +49,23 @@ class UnifiedTimelineScreen : Screen {
                 selectedDate = selectedDate,
                 onPrevious = { selectedDate = selectedDate.minus(DatePeriod(days = 1)) },
                 onNext = { selectedDate = selectedDate.plus(DatePeriod(days = 1)) },
+                isAutoFilling = isAutoFilling,
+                onAutoFillAll = {
+                    // scope jest już na Main - tylko IO potrzebuje withContext
+                    scope.launch {
+                        isAutoFilling = true
+                        withContext(Dispatchers.IO) { handler.autoFillAllCategories(selectedDate) }
+                        isAutoFilling = false
+                        refreshKey++
+                    }
+                },
             )
 
-            if (isLoading) {
+            if (isLoading || isAutoFilling) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
-            if (!isLoading && lanes.all { it.blocks.isEmpty() }) {
+            if (!isLoading && !isAutoFilling && lanes.all { it.blocks.isEmpty() }) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text(
                         text = Tr.ActivityTracker.Timeline.noData(),
@@ -65,6 +79,24 @@ class UnifiedTimelineScreen : Screen {
                     showCurrentTime = selectedDate == today,
                     lanes = lanes,
                     modifier = Modifier.weight(1f).fillMaxWidth().padding(16.dp),
+                    blockContextMenuContent = { dismiss ->
+                        val block = timelineState.selectedBlock
+                        if (block != null && block.description.isNotBlank()) {
+                            val processName = block.description
+                            DropdownMenuItem(
+                                text = { Text("Auto-fill kategorii dla: $processName") },
+                                onClick = {
+                                    dismiss()
+                                    scope.launch {
+                                        withContext(Dispatchers.IO) {
+                                            handler.autoFillCategoryForProcess(processName, selectedDate)
+                                        }
+                                        refreshKey++
+                                    }
+                                },
+                            )
+                        }
+                    },
                 )
             }
         }
@@ -76,6 +108,8 @@ private fun DateNavigationBar(
     selectedDate: LocalDate,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    isAutoFilling: Boolean,
+    onAutoFillAll: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -91,6 +125,13 @@ private fun DateNavigationBar(
         )
         IconButton(onClick = onNext) {
             Icon(Icons.Default.ChevronRight, contentDescription = null)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        OutlinedButton(
+            onClick = onAutoFillAll,
+            enabled = !isAutoFilling,
+        ) {
+            Text("Auto-fill kategorii")
         }
     }
 }

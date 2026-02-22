@@ -27,6 +27,7 @@ fun TimelineComponent(
     lanes: List<TimelineLane> = emptyList(),
     theme: TimelineTheme = rememberTimelineTheme(),
     contextMenuContent: @Composable ColumnScope.() -> Unit = {},
+    blockContextMenuContent: @Composable ColumnScope.(onDismiss: () -> Unit) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val currentTimeSeconds = rememberCurrentTimeSeconds(showCurrentTime)
@@ -176,6 +177,7 @@ fun TimelineComponent(
                 },
                 onDismissBlockContextMenu = { showBlockContextMenu = false },
                 contextMenuContent = contextMenuContent,
+                blockContextMenuContent = blockContextMenuContent,
             )
         }
     }

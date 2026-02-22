@@ -222,8 +222,8 @@ internal fun DrawScope.drawHoverLabel(
     val bgWidth = contentWidth + padH * 2
     val bgHeight = contentHeight + padV * 2
     val hoverViewportX = hoverSeconds * pxPerSecond - scrollX
-    val labelLeft = (hoverViewportX - bgWidth / 2f).coerceIn(0f, size.width - bgWidth)
-    val labelTop = localMousePos?.let { mouse -> (mouse.y + 32f).coerceAtMost(size.height - bgHeight) } ?: padV
+    val labelLeft = (hoverViewportX - bgWidth / 2f).coerceIn(0f, (size.width - bgWidth).coerceAtLeast(0f))
+    val labelTop = localMousePos?.let { mouse -> (mouse.y + 32f).coerceAtMost((size.height - bgHeight).coerceAtLeast(0f)) } ?: padV
 
     drawRoundRect(color = style.labelBgColor, topLeft = Offset(labelLeft, labelTop), size = Size(bgWidth, bgHeight), cornerRadius = CornerRadius(4f, 4f))
     var yOffset = labelTop + padV

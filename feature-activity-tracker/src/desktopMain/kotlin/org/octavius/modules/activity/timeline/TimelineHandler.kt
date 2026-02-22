@@ -21,26 +21,31 @@ class TimelineHandler : KoinComponent {
         val endInstant = date.atTime(23, 59, 59).toInstant(tz)
         val params = mapOf("start" to startInstant, "end" to endInstant)
 
+        // Kategorie z niezależnej tabeli category_slots
         val catResult = dataAccess.select(
-            "COALESCE(c.name, '') as label",
-            "al.started_at", "al.ended_at",
-            "COALESCE(c.color, '#333333') as color"
+            "c.name as label",
+            "cs.started_at", "cs.ended_at",
+            "c.color",
         )
-            .from("activity_tracker.activity_log al LEFT JOIN activity_tracker.categories c ON al.category_id = c.id")
-            .where("al.started_at >= :start AND al.started_at <= :end")
+            .from("activity_tracker.category_slots cs JOIN activity_tracker.categories c ON cs.category_id = c.id")
+            .where("cs.started_at >= :start AND cs.started_at <= :end")
+            .orderBy("cs.started_at")
             .toListOf<ActivityLogBlockDto>(params)
 
+        // Aplikacje: główna etykieta = tytuł okna, opis = nazwa procesu
         val appResult = dataAccess.select(
-            "COALESCE(al.process_name, '') as label",
+            "al.window_title as label",
+            "al.process_name as description",
             "al.started_at", "al.ended_at",
-            "COALESCE(pc.color, '#6366F1') as color"
+            "COALESCE(pc.color, '#6366F1') as color",
         )
             .from("""
                 activity_tracker.activity_log al
                 LEFT JOIN activity_tracker.process_colors pc ON al.process_name = pc.process_name
             """.trimIndent())
             .where("al.started_at >= :start AND al.started_at <= :end")
-            .toListOf<ActivityLogBlockDto>(params)
+            .orderBy("al.started_at")
+            .toListOf<AppBlockDto>(params)
 
         val docResult = dataAccess.select("d.path", "d.type", "d.timestamp")
             .from("activity_tracker.documents d")
@@ -58,12 +63,120 @@ class TimelineHandler : KoinComponent {
         )
     }
 
+    /**
+     * Stosuje wszystkie reguły PROCESS_NAME do wpisów activity_log z danego dnia,
+     * zastępując wszystkie wcześniej auto-wypełnione sloty.
+     */
+    suspend fun autoFillAllCategories(date: LocalDate) {
+        val tz = TimeZone.currentSystemDefault()
+        val startInstant = date.atTime(0, 0, 0).toInstant(tz)
+        val endInstant = date.atTime(23, 59, 59).toInstant(tz)
+        val params = mapOf("start" to startInstant, "end" to endInstant)
+
+        dataAccess.deleteFrom("activity_tracker.category_slots")
+            .where("source_process_name IS NOT NULL AND started_at >= :start AND started_at <= :end")
+            .execute(params)
+
+        // LATERAL JOIN: dla każdego wpisu activity_log bierze regułę PROCESS_NAME o najwyższym priorytecie
+        val slotsResult = dataAccess.select(
+            "al.started_at", "al.ended_at",
+            "cr.category_id",
+            "al.process_name as source_process_name",
+        )
+            .from("""
+                activity_tracker.activity_log al
+                JOIN LATERAL (
+                    SELECT category_id
+                    FROM activity_tracker.categorization_rules
+                    WHERE pattern = al.process_name
+                        AND match_type = 'PROCESS_NAME'::activity_tracker.match_type
+                        AND is_active = true
+                    ORDER BY priority DESC
+                    LIMIT 1
+                ) cr ON true
+            """.trimIndent())
+            .where("al.started_at >= :start AND al.started_at <= :end AND al.ended_at IS NOT NULL")
+            .toListOf<AutoFillSlotDto>(params)
+
+        val slots = (slotsResult as? DataResult.Success)?.value ?: return
+
+        for (slot in slots) {
+            val ended = slot.endedAt ?: continue
+            val slotValues = mapOf(
+                "category_id" to slot.categoryId,
+                "started_at" to slot.startedAt,
+                "ended_at" to ended,
+                "source_process_name" to slot.sourceProcessName,
+            )
+            dataAccess.insertInto("activity_tracker.category_slots")
+                .values(slotValues)
+                .execute(slotValues)
+        }
+    }
+
+    /**
+     * Szuka reguły PROCESS_NAME dla podanej aplikacji i tworzy sloty kategorii
+     * dla wszystkich jej wpisów w activity_log z danego dnia.
+     * Zwraca true jeśli reguła została znaleziona i sloty utworzone.
+     */
+    suspend fun autoFillCategoryForProcess(processName: String, date: LocalDate): Boolean {
+        val tz = TimeZone.currentSystemDefault()
+        val startInstant = date.atTime(0, 0, 0).toInstant(tz)
+        val endInstant = date.atTime(23, 59, 59).toInstant(tz)
+
+        val ruleResult = dataAccess.select("category_id")
+            .from("activity_tracker.categorization_rules")
+            .where("""
+                match_type = 'PROCESS_NAME'::activity_tracker.match_type
+                AND pattern = :pattern
+                AND is_active = true
+            """.trimIndent())
+            .orderBy("priority DESC")
+            .toListOf<CategoryRuleDto>(mapOf("pattern" to processName))
+
+        val categoryId = (ruleResult as? DataResult.Success)?.value?.firstOrNull()?.categoryId ?: return false
+
+        val logResult = dataAccess.select("started_at", "ended_at")
+            .from("activity_tracker.activity_log")
+            .where("process_name = :process AND started_at >= :start AND started_at <= :end AND ended_at IS NOT NULL")
+            .toListOf<ActivityTimeDto>(mapOf("process" to processName, "start" to startInstant, "end" to endInstant))
+
+        val logs = (logResult as? DataResult.Success)?.value ?: return false
+
+        dataAccess.deleteFrom("activity_tracker.category_slots")
+            .where("source_process_name = :process AND started_at >= :start AND started_at <= :end")
+            .execute(mapOf("process" to processName, "start" to startInstant, "end" to endInstant))
+
+        for (log in logs) {
+            val ended = log.endedAt ?: continue
+            val slotValues = mapOf(
+                "category_id" to categoryId,
+                "started_at" to log.startedAt,
+                "ended_at" to ended,
+                "source_process_name" to processName,
+            )
+            dataAccess.insertInto("activity_tracker.category_slots")
+                .values(slotValues)
+                .execute(slotValues)
+        }
+
+        return true
+    }
+
     private fun ActivityLogBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
         val s = startedAt.toLocalDateTime(tz)
         val e = endedAt?.toLocalDateTime(tz) ?: s
         val startSec = s.hour * 3600f + s.minute * 60f + s.second
         val endSec = (e.hour * 3600f + e.minute * 60f + e.second).coerceAtLeast(startSec + 1f)
         return TimelineBlock(startSec, endSec, parseColor(color), label)
+    }
+
+    private fun AppBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
+        val s = startedAt.toLocalDateTime(tz)
+        val e = endedAt?.toLocalDateTime(tz) ?: s
+        val startSec = s.hour * 3600f + s.minute * 60f + s.second
+        val endSec = (e.hour * 3600f + e.minute * 60f + e.second).coerceAtLeast(startSec + 1f)
+        return TimelineBlock(startSec, endSec, parseColor(color), label, description)
     }
 
     private fun DocBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
@@ -106,8 +219,27 @@ data class ActivityLogBlockDto(
     val color: String,
 )
 
+data class AppBlockDto(
+    val label: String,
+    val description: String,
+    val startedAt: Instant,
+    val endedAt: Instant?,
+    val color: String,
+)
+
 data class DocBlockDto(
     val path: String,
     val type: DocumentType,
     val timestamp: Instant,
+)
+
+data class CategoryRuleDto(val categoryId: Int)
+
+data class ActivityTimeDto(val startedAt: Instant, val endedAt: Instant?)
+
+data class AutoFillSlotDto(
+    val startedAt: Instant,
+    val endedAt: Instant?,
+    val categoryId: Int,
+    val sourceProcessName: String,
 )
