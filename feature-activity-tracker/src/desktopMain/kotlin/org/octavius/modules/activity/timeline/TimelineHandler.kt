@@ -23,6 +23,7 @@ class TimelineHandler : KoinComponent {
 
         // Kategorie z niezależnej tabeli category_slots
         val catResult = dataAccess.select(
+            "cs.id",
             "c.name as label",
             "cs.started_at", "cs.ended_at",
             "c.color",
@@ -30,7 +31,7 @@ class TimelineHandler : KoinComponent {
             .from("activity_tracker.category_slots cs JOIN activity_tracker.categories c ON cs.category_id = c.id")
             .where("cs.started_at >= :start AND cs.started_at <= :end")
             .orderBy("cs.started_at")
-            .toListOf<ActivityLogBlockDto>(params)
+            .toListOf<CategorySlotDto>(params)
 
         // Aplikacje: główna etykieta = tytuł okna, opis = nazwa procesu
         val appResult = dataAccess.select(
@@ -163,6 +164,20 @@ class TimelineHandler : KoinComponent {
         return true
     }
 
+    suspend fun deleteCategorySlot(id: Long) {
+        dataAccess.deleteFrom("activity_tracker.category_slots")
+            .where("id = :id")
+            .execute(mapOf("id" to id))
+    }
+
+    private fun CategorySlotDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
+        val s = startedAt.toLocalDateTime(tz)
+        val e = endedAt?.toLocalDateTime(tz) ?: s
+        val startSec = s.hour * 3600f + s.minute * 60f + s.second
+        val endSec = (e.hour * 3600f + e.minute * 60f + e.second).coerceAtLeast(startSec + 1f)
+        return TimelineBlock(startSec, endSec, parseColor(color), label, id = id)
+    }
+
     private fun ActivityLogBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
         val s = startedAt.toLocalDateTime(tz)
         val e = endedAt?.toLocalDateTime(tz) ?: s
@@ -211,6 +226,14 @@ private fun parseColor(hex: String): Color {
         Color.Gray
     }
 }
+
+data class CategorySlotDto(
+    val id: Long,
+    val label: String,
+    val startedAt: Instant,
+    val endedAt: Instant?,
+    val color: String,
+)
 
 data class ActivityLogBlockDto(
     val label: String,

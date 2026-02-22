@@ -18,6 +18,7 @@ data class TimelineBlock(
     val color: Color,
     val label: String = "",
     val description: String = "",
+    val id: Long? = null,
 )
 
 data class TimelineLane(
@@ -182,6 +183,11 @@ class TimelineState {
         selection = null
         isDragging = false
         dragStartSeconds = null
+    }
+
+    fun clearBlockSelection() {
+        selectedBlock = null
+        selectedBlockLaneIndex = null
     }
 
     private fun hitTestBlock(pos: Offset, lanes: List<TimelineLane>, axisHeight: Float, componentHeight: Float): TimelineBlock? {
