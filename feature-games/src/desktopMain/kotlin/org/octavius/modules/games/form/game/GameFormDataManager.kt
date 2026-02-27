@@ -5,7 +5,6 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionValue
-import org.octavius.data.transaction.assertNotNull
 import org.octavius.data.transaction.toTransactionValue
 import org.octavius.data.type.PgStandardType
 import org.octavius.data.type.withPgType
@@ -129,7 +128,7 @@ class GameFormDataManager : FormDataManager() {
                     .values(gameData)
                     .returning("id")
                     .asStep()
-                    .toField<Int>(gameData).assertNotNull() // Używamy toField, bo chcemy pojedynczą wartość
+                    .toField<Int>(gameData) // Używamy toField, bo chcemy pojedynczą wartość
             ).field()
         }
 

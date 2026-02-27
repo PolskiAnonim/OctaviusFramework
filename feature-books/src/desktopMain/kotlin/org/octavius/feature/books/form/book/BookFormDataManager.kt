@@ -5,7 +5,6 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionValue
-import org.octavius.data.transaction.assertNotNull
 import org.octavius.data.transaction.toTransactionValue
 import org.octavius.data.type.PgStandardType
 import org.octavius.data.type.withPgType
@@ -89,7 +88,7 @@ class BookFormDataManager : FormDataManager() {
                     .values(bookData)
                     .returning("id")
                     .asStep()
-                    .toField<Int>(bookData).assertNotNull()
+                    .toField<Int>(bookData)
             ).field()
         }
 

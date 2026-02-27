@@ -5,7 +5,6 @@ import org.octavius.data.builder.execute
 import org.octavius.data.builder.toField
 import org.octavius.data.transaction.TransactionPlan
 import org.octavius.data.transaction.TransactionValue
-import org.octavius.data.transaction.assertNotNull
 import org.octavius.data.transaction.toTransactionValue
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
@@ -107,7 +106,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                     .values(titleData)
                     .returning("id")
                     .asStep()
-                    .toField<Int>(titleData).assertNotNull()
+                    .toField<Int>(titleData)
             ).field()
         }
 
@@ -169,7 +168,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                     .values(publicationData)
                     .returning("id")
                     .asStep()
-                    .toField<Int>(publicationData).assertNotNull()
+                    .toField<Int>(publicationData)
             ).field()
 
             addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
