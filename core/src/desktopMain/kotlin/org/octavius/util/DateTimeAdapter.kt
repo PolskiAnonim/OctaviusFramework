@@ -1,8 +1,31 @@
 package org.octavius.util
 
 import kotlinx.datetime.*
+import kotlinx.datetime.format.*
 import java.time.OffsetTime
 import kotlin.time.Instant
+
+private val DATE_FORMAT = LocalDate.Format {
+    day()
+    char('.')
+    monthNumber()
+    char('.')
+    year()
+}
+
+private val TIME_FORMAT = LocalTime.Format {
+    hour()
+    char(':')
+    minute()
+    char(':')
+    second()
+}
+
+private val DATE_TIME_FORMAT = LocalDateTime.Format {
+    date(DATE_FORMAT)
+    char(' ')
+    time(TIME_FORMAT)
+}
 
 enum class DateTimeComponent { DATE, TIME, OFFSET }
 
@@ -25,7 +48,7 @@ interface DateTimeAdapter<T : Any> {
 // --- Konkretne Implementacje ---
 object DateAdapter : DateTimeAdapter<LocalDate> {
     override val requiredComponents = setOf(DateTimeComponent.DATE)
-    override fun format(value: LocalDate?) = value?.toString() ?: ""
+    override fun format(value: LocalDate?) = value?.format(DATE_FORMAT) ?: ""
     override fun getComponents(value: LocalDate?) = DateTimePickerState(date = value)
     override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: UtcOffset?) = date
 
@@ -35,7 +58,7 @@ object DateAdapter : DateTimeAdapter<LocalDate> {
 
 object LocalTimeAdapter : DateTimeAdapter<LocalTime> {
     override val requiredComponents = setOf(DateTimeComponent.TIME)
-    override fun format(value: LocalTime?) = value?.toString() ?: ""
+    override fun format(value: LocalTime?) = value?.format(TIME_FORMAT) ?: ""
     override fun getComponents(value: LocalTime?) = DateTimePickerState(time = value)
     override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: UtcOffset?) = time
 
@@ -45,7 +68,7 @@ object LocalTimeAdapter : DateTimeAdapter<LocalTime> {
 
 object LocalDateTimeAdapter : DateTimeAdapter<LocalDateTime> {
     override val requiredComponents = setOf(DateTimeComponent.DATE, DateTimeComponent.TIME)
-    override fun format(value: LocalDateTime?) = value?.toString()?.replace("T", " ") ?: ""
+    override fun format(value: LocalDateTime?) = value?.format(DATE_TIME_FORMAT) ?: ""
     override fun getComponents(value: LocalDateTime?) = DateTimePickerState(
         date = value?.date,
         time = value?.time
@@ -66,9 +89,9 @@ class InstantAdapter(private val timeZone: TimeZone = TimeZone.currentSystemDefa
     override val requiredComponents = setOf(DateTimeComponent.DATE, DateTimeComponent.TIME)
     override fun format(value: Instant?): String {
         return value?.let {
-            val offset = timeZone.offsetAt(it)
             val local = it.toLocalDateTime(timeZone)
-            "${local.toString().replace('T', ' ')}$offset"
+            val offset = timeZone.offsetAt(it)
+            "${local.format(DATE_TIME_FORMAT)} ($offset)"
         } ?: ""
     }
     override fun getComponents(value: Instant?): DateTimePickerState {
