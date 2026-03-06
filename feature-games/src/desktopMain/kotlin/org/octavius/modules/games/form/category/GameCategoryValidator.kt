@@ -29,7 +29,7 @@ class GameCategoryValidator(): FormValidator() {
         }
         return when (val result = builder.toField<Long>(params)) {
             is DataResult.Success -> {
-                if ((result.value ?: 0L) > 0) {
+                if ((result.value) > 0) {
                     // Kategoria już istnieje. Ustawiamy błąd dla konkretnego pola 'name'.
                     errorManager.setFieldErrors("name", listOf(Tr.Games.Validation.nameExists()))
                     false // Walidacja się nie powiodła.

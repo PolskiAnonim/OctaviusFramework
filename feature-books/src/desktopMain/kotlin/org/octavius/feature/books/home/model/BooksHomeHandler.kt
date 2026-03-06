@@ -98,7 +98,7 @@ class BooksHomeHandler(
             .toSingleOf<BooksDashboardData> { result ->
                 when (result) {
                     is DataResult.Success -> {
-                        val data = result.value!! // Biorąc pod uwagę konstrukcję zapytania to nigdy nie będzie null
+                        val data = result.value
                         _state.update {
                             BooksHomeState.Success(data)
                         }

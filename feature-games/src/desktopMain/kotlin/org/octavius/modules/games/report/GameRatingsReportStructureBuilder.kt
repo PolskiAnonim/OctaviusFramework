@@ -1,7 +1,6 @@
 package org.octavius.modules.games.report
 
 import org.octavius.data.QueryFragment
-import org.octavius.domain.game.GameStatus
 import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.navigation.AppRouter
@@ -9,8 +8,6 @@ import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.BigDecimalColumn
 import org.octavius.report.column.type.BooleanColumn
-import org.octavius.report.column.type.DoubleColumn
-import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.IntegerColumn
 import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportStructureBuilder

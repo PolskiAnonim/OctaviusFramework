@@ -1,10 +1,10 @@
 package org.octavius.form.control.validator.collection
 
-import org.octavius.localization.Tr
 import org.octavius.form.control.base.ControlContext
 import org.octavius.form.control.base.ControlState
 import org.octavius.form.control.base.ControlValidator
 import org.octavius.form.control.base.StringListValidation
+import org.octavius.localization.Tr
 
 /**
  * Walidator dla kontrolek list tekstowych z obsługą opcji walidacji.

@@ -24,8 +24,8 @@ import org.octavius.feature.books.BooksFeature
 import org.octavius.localization.Tr
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.modules.games.GamesFeature
-import org.octavius.modules.settings.SettingsFeature
 import org.octavius.modules.sandbox.SandboxFeature
+import org.octavius.modules.settings.SettingsFeature
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus

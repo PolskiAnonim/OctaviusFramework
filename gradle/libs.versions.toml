@@ -1,13 +1,13 @@
 [versions]
-octavius-database = "2.0.0"
+octavius-database = "3.0.3"
 dokka = "2.1.0"
-compose-multiplatform = "1.11.0-alpha02"
+compose-multiplatform = "1.11.0-alpha03"
 kotlin = "2.3.10"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 kotlinx-datetime = "0.7.1"
 # api-server
-ktor = "3.4.0"
+ktor = "3.4.1"
 # koin
 koin = "4.1.1"
 #test/log
@@ -28,8 +28,8 @@ kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime",
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 #api server
-ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
-ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-core = {  group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor"}
 ktor-server-cors = { group = "io.ktor", name = "ktor-server-cors", version.ref = "ktor" }
@@ -38,10 +38,10 @@ ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref =
 ktor-client-js = { group = "io.ktor", name = "ktor-client-js", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 # Koin
-koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
-koin-core = { module = "io.insert-koin:koin-core" }
-koin-compose = { module = "io.insert-koin:koin-compose" }
-koin-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
+koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref = "koin" }
+koin-core = { group = "io.insert-koin", name = "koin-core" }
+koin-compose = { group = "io.insert-koin", name = "koin-compose" }
+koin-slf4j = { group = "io.insert-koin", name = "koin-logger-slf4j" }
 # test / log
 # JUnit 5 - tylko co potrzebne
 junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }

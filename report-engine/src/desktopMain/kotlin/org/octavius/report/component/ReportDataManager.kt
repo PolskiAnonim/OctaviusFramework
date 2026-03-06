@@ -80,7 +80,7 @@ class ReportDataManager(
 
         return when (countResult) {
             is DataResult.Success -> {
-                val totalItems = countResult.value ?: 0L
+                val totalItems = countResult.value
                 val pageSize = reportState.pagination.pageSize
                 val totalPages = if (totalItems == 0L) 0 else (totalItems + pageSize - 1) / pageSize
                 val newPaginationState = reportState.pagination.copy(totalItems = totalItems, totalPages = totalPages)

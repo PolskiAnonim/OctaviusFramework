@@ -2,8 +2,8 @@ package org.octavius.modules.sandbox.navigation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -70,7 +70,7 @@ class SandboxHomeScreen : Screen {
                 QuickActionCard(
                     title = Tr.Sandbox.Home.form(),
                     description = Tr.Sandbox.Home.formDescription(),
-                    icon = Icons.Default.ListAlt,
+                    icon = Icons.AutoMirrored.Filled.ListAlt,
                     onClick = { AppRouter.navigateTo(SandboxFormScreen.create()) },
                     modifier = Modifier.weight(1f)
                 )

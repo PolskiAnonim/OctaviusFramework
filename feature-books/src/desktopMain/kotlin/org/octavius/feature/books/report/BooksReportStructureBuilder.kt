@@ -11,7 +11,6 @@ import org.octavius.navigation.AppRouter
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
-import org.octavius.report.column.type.DateTimeColumn
 import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.InstantColumn
 import org.octavius.report.column.type.StringColumn

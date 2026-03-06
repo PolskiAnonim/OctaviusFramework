@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.octavius.localization.Tr
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.ErrorManager
@@ -15,6 +14,7 @@ import org.octavius.form.component.FormState
 import org.octavius.form.control.layout.RenderFieldError
 import org.octavius.form.control.layout.RenderNormalLabel
 import org.octavius.form.control.validator.DefaultValidator
+import org.octavius.localization.Tr
 
 /**
  * Abstrakcyjna klasa bazowa dla wszystkich kontrolek formularza.

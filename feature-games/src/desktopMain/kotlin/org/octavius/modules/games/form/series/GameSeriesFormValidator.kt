@@ -36,7 +36,7 @@ class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
 
         return when (result) {
             is DataResult.Success -> {
-                if ((result.value ?: 0L) > 0) {
+                if ((result.value) > 0) {
                     // Tytuł już istnieje. Ustawiamy błąd dla konkretnego pola 'name'.
                     errorManager.setFieldErrors("name", listOf(Tr.Games.Validation.duplicatedSeries()))
                     false // Walidacja się nie powiodła.

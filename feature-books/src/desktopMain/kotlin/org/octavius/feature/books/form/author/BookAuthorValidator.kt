@@ -32,7 +32,7 @@ class BookAuthorValidator(private val entityId: Int?) : FormValidator() {
 
         return when (result) {
             is DataResult.Success -> {
-                if ((result.value ?: 0L) > 0) {
+                if (result.value > 0) {
                     errorManager.setFieldErrors("name", listOf(Tr.Books.Authors.Validation.nameExists()))
                     false
                 } else {

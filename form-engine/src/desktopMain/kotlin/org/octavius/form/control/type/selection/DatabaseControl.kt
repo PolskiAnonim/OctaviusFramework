@@ -72,7 +72,7 @@ class DatabaseControl(
             val countResult = dataAccess.select("COUNT(*)").from(relatedTable).where(filter).toField<Long>(params)
 
             val totalCount = when (countResult) {
-                is DataResult.Success -> countResult.value ?: 0L
+                is DataResult.Success -> countResult.value
                 is DataResult.Failure -> {
                     GlobalDialogManager.show(ErrorDialogConfig(countResult.error))
                     return@withContext Pair(emptyList(), 0L)

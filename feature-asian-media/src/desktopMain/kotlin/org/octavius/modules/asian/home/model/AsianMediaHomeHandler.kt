@@ -89,19 +89,15 @@ class AsianMediaHomeHandler(
                 when (result) {
                     is DataResult.Success -> {
                         val data = result.value
-                        if (data != null) {
-                            _state.update {
-                                it.copy(
-                                    totalTitles = data.totalTitles,
-                                    readingCount = data.readingCount,
-                                    completedCount = data.completedCount,
-                                    currentlyReading = data.currentlyReading.orEmpty(),
-                                    recentlyAdded = data.recentlyAdded.orEmpty(),
-                                    isLoading = false
-                                )
-                            }
-                        } else {
-                            _state.update { it.copy(isLoading = false) } // No data
+                        _state.update {
+                            it.copy(
+                                totalTitles = data.totalTitles,
+                                readingCount = data.readingCount,
+                                completedCount = data.completedCount,
+                                currentlyReading = data.currentlyReading.orEmpty(),
+                                recentlyAdded = data.recentlyAdded.orEmpty(),
+                                isLoading = false
+                            )
                         }
                     }
                     is DataResult.Failure -> {

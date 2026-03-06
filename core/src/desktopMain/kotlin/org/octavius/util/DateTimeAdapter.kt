@@ -1,7 +1,7 @@
 package org.octavius.util
 
 import kotlinx.datetime.*
-import kotlinx.datetime.format.*
+import kotlinx.datetime.format.char
 import java.time.OffsetTime
 import kotlin.time.Instant
 

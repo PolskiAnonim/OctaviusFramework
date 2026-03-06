@@ -125,9 +125,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
             )
 
             // Wykonanie planu
-            val result = dataAccess.executeTransactionPlan(plan)
-
-            when (result) {
+            when (val result = dataAccess.executeTransactionPlan(plan)) {
                 is DataResult.Failure -> {
                     call.respond(
                         PublicationAddResponse(
@@ -140,33 +138,24 @@ class AsianMediaApi : ApiModule, KoinComponent {
                     // Pobierz wynik z pierwszego kroku, używając bezpiecznego uchwytu
                     val newId = result.value.get(titleIdHandle)
 
-                    if (newId != null) {
-                        println("API: Pomyślnie dodano tytuł z ID: $newId. Wysyłanie zdarzenia nawigacyjnego...")
+                    println("API: Pomyślnie dodano tytuł z ID: $newId. Wysyłanie zdarzenia nawigacyjnego...")
 
-                        val payload = mapOf("entityId" to newId)
-                        NavigationEventBus.post(
-                            NavigationEvent.Navigate(
-                                screenId = AsianMediaFeature.ASIAN_MEDIA_FORM_SCREEN_ID,
-                                payload = payload,
-                                tabId = "asian_media"
-                            )
+                    val payload = mapOf("entityId" to newId)
+                    NavigationEventBus.post(
+                        NavigationEvent.Navigate(
+                            screenId = AsianMediaFeature.ASIAN_MEDIA_FORM_SCREEN_ID,
+                            payload = payload,
+                            tabId = "asian_media"
                         )
+                    )
 
-                        call.respond(
-                            PublicationAddResponse(
-                                success = true,
-                                newTitleId = newId,
-                                message = "Pomyślnie dodano nowy tytuł do bazy."
-                            )
+                    call.respond(
+                        PublicationAddResponse(
+                            success = true,
+                            newTitleId = newId,
+                            message = "Pomyślnie dodano nowy tytuł do bazy."
                         )
-                    } else {
-                        call.respond(
-                            PublicationAddResponse(
-                                success = false,
-                                message = "Wystąpił błąd: Nie udało się uzyskać ID nowo wstawionego tytułu."
-                            )
-                        )
-                    }
+                    )
                 }
             }
         }

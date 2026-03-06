@@ -4,11 +4,7 @@ import kotlinx.coroutines.launch
 import org.octavius.dialog.DialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormSchemaBuilder
-import org.octavius.form.control.base.ComparisonType
-import org.octavius.form.control.base.Control
-import org.octavius.form.control.base.ControlAction
-import org.octavius.form.control.base.ControlDependency
-import org.octavius.form.control.base.DependencyType
+import org.octavius.form.control.base.*
 import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.number.IntegerControl
