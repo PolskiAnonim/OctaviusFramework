@@ -1,9 +1,9 @@
 package org.octavius.modules.games.form.game
 
 import org.octavius.data.DataResult
-import org.octavius.data.QueryFragment
 import org.octavius.data.builder.toField
 import org.octavius.data.join
+import org.octavius.data.withParam
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator
@@ -30,8 +30,8 @@ class GameFormValidator(private val entityId: Int?) : FormValidator() {
         val title = formResultData.getCurrentAs<String>("name")
 
         val whereClause = listOfNotNull(
-            QueryFragment("name = :title", mapOf("title" to title)),
-            entityId?.let { QueryFragment("id != :id", mapOf("id" to entityId)) }
+            "name = :title" withParam ("title" to title),
+            entityId?.let { "id != :id" withParam ("id" to entityId) }
         ).join(" AND ")
 
         val result = dataAccess.select("COUNT(*)").from("games").where(whereClause.sql).toField<Long>(whereClause.params)

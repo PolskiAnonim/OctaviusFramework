@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.QueryFragment
+import org.octavius.data.withParams
 import org.octavius.localization.Tr
 import org.octavius.report.FilterMode
 import org.octavius.report.NullHandling
@@ -90,11 +91,11 @@ abstract class Filter<T : FilterData> {
         return when (data.nullHandling) {
             NullHandling.Ignore -> baseQueryFragment
             NullHandling.Include -> baseQueryFragment?.let {
-                QueryFragment("(${it.sql} OR $columnName IS NULL)", it.params)
+                "(${it.sql} OR $columnName IS NULL)" withParams it.params
             } ?: QueryFragment("$columnName IS NULL")
 
             NullHandling.Exclude -> baseQueryFragment?.let {
-                QueryFragment("(${it.sql} AND $columnName IS NOT NULL)", it.params)
+                "(${it.sql} AND $columnName IS NOT NULL)" withParams it.params
             } ?: QueryFragment("$columnName IS NOT NULL")
         }
     }

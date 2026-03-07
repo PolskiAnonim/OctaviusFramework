@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.QueryFragment
+import org.octavius.data.withParam
+import org.octavius.data.withParams
 import org.octavius.report.FilterMode
 import org.octavius.report.IntervalFilterDataType
 import org.octavius.report.ReportEvent
@@ -145,12 +147,13 @@ class IntervalFilter : Filter<IntervalFilterData>() {
     ): QueryFragment? {
         if (filterType == IntervalFilterDataType.Range) {
             return when {
-                min != null && max != null -> QueryFragment(
-                    "$columnName BETWEEN :${columnName}_min AND :${columnName}_max",
-                    mapOf("${columnName}_min" to min, "${columnName}_max" to max)
-                )
-                min != null -> QueryFragment("$columnName >= :$columnName", mapOf(columnName to min))
-                max != null -> QueryFragment("$columnName <= :$columnName", mapOf(columnName to max))
+                min != null && max != null ->
+                    "$columnName BETWEEN :${columnName}_min AND :${columnName}_max" withParams mapOf(
+                        "${columnName}_min" to min,
+                        "${columnName}_max" to max
+                    )
+                min != null -> "$columnName >= :$columnName" withParam (columnName to min)
+                max != null -> "$columnName <= :$columnName" withParam (columnName to max)
                 else -> null
             }
         }
@@ -162,22 +165,27 @@ class IntervalFilter : Filter<IntervalFilterData>() {
         // Parametry typu interval w PostgreSQL są obsługiwane bezpośrednio
         return when (filterType) {
             IntervalFilterDataType.Equals -> {
-                QueryFragment("$columnName = :$columnName", mapOf(columnName to singleValue))
+                "$columnName = :$columnName" withParam (columnName to singleValue)
             }
+
             IntervalFilterDataType.NotEquals -> {
-                QueryFragment("$columnName != :$columnName", mapOf(columnName to singleValue))
+                "$columnName != :$columnName" withParam (columnName to singleValue)
             }
+
             IntervalFilterDataType.LessThan -> {
-                QueryFragment("$columnName < :$columnName", mapOf(columnName to singleValue))
+                "$columnName < :$columnName" withParam (columnName to singleValue)
             }
+
             IntervalFilterDataType.LessEquals -> {
-                QueryFragment("$columnName <= :$columnName", mapOf(columnName to singleValue))
+                "$columnName <= :$columnName" withParam (columnName to singleValue)
             }
+
             IntervalFilterDataType.GreaterThan -> {
-                QueryFragment("$columnName > :$columnName", mapOf(columnName to singleValue))
+                "$columnName > :$columnName" withParam (columnName to singleValue)
             }
+
             IntervalFilterDataType.GreaterEquals -> {
-                QueryFragment("$columnName >= :$columnName", mapOf(columnName to singleValue))
+                "$columnName >= :$columnName" withParam (columnName to singleValue)
             }
         }
     }
@@ -236,19 +244,17 @@ class IntervalFilter : Filter<IntervalFilterData>() {
 
         if (filterType == IntervalFilterDataType.Range) {
             return when {
-                min != null && max != null -> QueryFragment(
-                    buildExistsForBetween(columnName, "${columnName}_min", "${columnName}_max", isAllMode),
-                    mapOf("${columnName}_min" to min, "${columnName}_max" to max)
-                )
+                min != null && max != null -> buildExistsForBetween(
+                    columnName, "${columnName}_min", "${columnName}_max", isAllMode
+                ) withParams mapOf("${columnName}_min" to min, "${columnName}_max" to max)
+
                 // Zakresy z jednym końcem sprowadzają się do prostych porównań
-                min != null -> {
-                    val sql = buildExistsForOperator(columnName, ">=", columnName, isAllMode)
-                    QueryFragment(sql, mapOf(columnName to min))
-                }
-                max != null -> {
-                    val sql = buildExistsForOperator(columnName, "<=", columnName, isAllMode)
-                    QueryFragment(sql, mapOf(columnName to max))
-                }
+                min != null ->
+                    buildExistsForOperator(columnName, ">=", columnName, isAllMode) withParam (columnName to min)
+
+                max != null ->
+                    buildExistsForOperator(columnName, "<=", columnName, isAllMode) withParam (columnName to max)
+
                 else -> null
             }
         }

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.QueryFragment
+import org.octavius.data.withParam
 import org.octavius.localization.Tr
 import org.octavius.report.FilterMode
 import org.octavius.report.ReportEvent
@@ -110,7 +111,7 @@ class StringFilter: Filter<StringFilterData>() {
                 // Niezależne od wielkości liter: WHERE LOWER(columnName) = 'wartość'
                 val querySql = "LOWER($columnName) $operator :$columnName"
                 // Przekazujemy już zmienioną na małe litery wartość
-                QueryFragment(querySql, mapOf(columnName to searchValue.lowercase()))
+                querySql withParam (columnName to searchValue.lowercase())
             }
         }
 
@@ -128,7 +129,7 @@ class StringFilter: Filter<StringFilterData>() {
 
         val finalOperator = if (filterType == StringFilterDataType.NotContains) notOperator else operator
 
-        return QueryFragment("$columnName $finalOperator :$columnName", mapOf(columnName to pattern))
+        return "$columnName $finalOperator :$columnName" withParam (columnName to pattern)
     }
 
     private fun buildListStringQuery(
@@ -161,7 +162,7 @@ class StringFilter: Filter<StringFilterData>() {
                 // ANY: Sprawdź, czy ISTNIEJE element, który spełnia warunek.
                 "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $innerCondition)"
             }
-            return QueryFragment(querySql, mapOf(columnName to valueParam))
+            return querySql withParam (columnName to valueParam)
         }
 
         // 4. Obsługa przypadków z wzorcami (Contains, StartsWith, EndsWith, etc.)
@@ -186,7 +187,7 @@ class StringFilter: Filter<StringFilterData>() {
             "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE $innerCondition)"
         }
 
-        return QueryFragment(querySql, mapOf(columnName to pattern))
+        return querySql withParam (columnName to pattern)
     }
 
 

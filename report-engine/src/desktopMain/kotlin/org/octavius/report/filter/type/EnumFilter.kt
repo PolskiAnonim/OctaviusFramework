@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.QueryFragment
+import org.octavius.data.withParam
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Tr
 import org.octavius.report.FilterMode
@@ -99,29 +100,23 @@ class EnumFilter<E>(private val enumClass: KClass<E>): Filter<EnumFilterData<E>>
         return when (data.mode) {
             FilterMode.Single -> {
                 if (include) {
-                    QueryFragment("$columnName = ANY(:$columnName)", mapOf(columnName to values))
+                    "$columnName = ANY(:$columnName)" withParam (columnName to values)
                 } else {
-                    QueryFragment("$columnName != ALL(:$columnName)", mapOf(columnName to values))
+                    "$columnName != ALL(:$columnName)" withParam (columnName to values)
                 }
             }
             FilterMode.ListAny -> {
                 if (include) {
-                    QueryFragment("$columnName && :$columnName", mapOf(columnName to values))
+                    "$columnName && :$columnName" withParam (columnName to values)
                 } else {
-                    QueryFragment("NOT ($columnName && :$columnName)", mapOf(columnName to values))
+                    "NOT ($columnName && :$columnName)" withParam (columnName to values)
                 }
             }
             FilterMode.ListAll -> {
                 if (include) {
-                    QueryFragment(
-                        "($columnName @> :$columnName AND $columnName <@ :$columnName)",
-                        mapOf(columnName to values)
-                    )
+                    "($columnName @> :$columnName AND $columnName <@ :$columnName)" withParam (columnName to values)
                 } else {
-                    QueryFragment(
-                        "NOT ($columnName @> :$columnName AND $columnName <@ :$columnName)",
-                        mapOf(columnName to values)
-                    )
+                    "NOT ($columnName @> :$columnName AND $columnName <@ :$columnName)" withParam (columnName to values)
                 }
             }
         }

@@ -1,9 +1,9 @@
 package org.octavius.feature.books.form.author
 
 import org.octavius.data.DataResult
-import org.octavius.data.QueryFragment
 import org.octavius.data.builder.toField
 import org.octavius.data.join
+import org.octavius.data.withParam
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator
@@ -21,8 +21,8 @@ class BookAuthorValidator(private val entityId: Int?) : FormValidator() {
         val name = formResultData.getCurrentAs<String>("name")
 
         val whereClause = listOfNotNull(
-            QueryFragment("name = :name", mapOf("name" to name)),
-            entityId?.let { QueryFragment("id != :id", mapOf("id" to entityId)) }
+            "name = :name" withParam ("name" to name),
+            entityId?.let { "id != :id" withParam ("id" to entityId) }
         ).join(" AND ")
 
         val result = dataAccess.select("COUNT(*)")

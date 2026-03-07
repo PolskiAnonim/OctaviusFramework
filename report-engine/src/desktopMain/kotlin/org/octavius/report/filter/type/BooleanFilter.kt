@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.JsonObject
 import org.octavius.data.QueryFragment
+import org.octavius.data.withParam
 import org.octavius.localization.Tr
 import org.octavius.report.FilterMode
 import org.octavius.report.ReportEvent
@@ -83,15 +84,15 @@ class BooleanFilter(
 
         return when (data.mode) {
             FilterMode.Single -> {
-                QueryFragment("$columnName = :$columnName", mapOf(columnName to booleanValue))
+                "$columnName = :$columnName" withParam (columnName to booleanValue)
             }
 
             FilterMode.ListAny -> {
-                QueryFragment("$columnName && :$columnName", mapOf(columnName to listOf(booleanValue)))
+                "$columnName && :$columnName" withParam (columnName to listOf(booleanValue))
             }
 
             FilterMode.ListAll -> {
-                QueryFragment("$columnName @> :$columnName", mapOf(columnName to listOf(booleanValue)))
+                "$columnName @> :$columnName" withParam (columnName to listOf(booleanValue))
             }
         }
     }
