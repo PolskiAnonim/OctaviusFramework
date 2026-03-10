@@ -1,5 +1,5 @@
 [versions]
-octavius-database = "3.1.0"
+octavius-database = "4.1.0"
 dokka = "2.1.0"
 compose-multiplatform = "1.11.0-alpha03"
 kotlin = "2.3.10"
@@ -19,8 +19,8 @@ kotlin-logging = "7.0.14"
 shadow = "9.3.1"
 [libraries]
 # octavius-database
-octavius-database-api = { group = "org.octavius", name = "database-api", version.ref = "octavius-database" }
-octavius-database-core = { group = "org.octavius", name = "database-core", version.ref = "octavius-database" }
+octavius-database-api = { group = "io.github.octavius-framework", name = "database-api", version.ref = "octavius-database" }
+octavius-database-core = { group = "io.github.octavius-framework", name = "database-core", version.ref = "octavius-database" }
 # kotlinx
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }

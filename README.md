@@ -7,8 +7,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Octavius Database](https://img.shields.io/badge/Octavius_Database-v1.0-orange)](https://github.com/PolskiAnonim/OctaviusDatabase)
-
+[![Octavius Database](https://img.shields.io/maven-central/v/io.github.octavius-framework/database-core.svg?label=Octavius%20Database&color=orange)](https://github.com/Octavius-Framework/octavius-database)
 </div>
 
 ---
@@ -72,7 +71,7 @@ Octavius/
 └── browser-extension/       # Kotlin/JS Chrome extension
 ```
 
-*Note: The `database` module is externalized and imported via GitHub Packages.*
+*Note: The `database` module is externalized.*
 
 ## Custom Frameworks
 
@@ -111,7 +110,7 @@ val books = dataAccess.select("id", "title", "author", "status")
     .toListOf<Book>("status" to BookStatus.Reading)
 ```
 
-[See Repository →](https://github.com/PolskiAnonim/OctaviusDatabase)
+[See Repository →](https://github.com/Octavius-Framework/octavius-database)
 
 ## Getting Started
 
@@ -120,24 +119,6 @@ val books = dataAccess.select("id", "title", "author", "status")
 - JDK 24+
 - PostgreSQL 17+
 - Database `octavius` created locally
-
-### Dependency Setup (Choose one)
-
-#### Option A: Local Development (Recommended)
-Since the database layer is a separate repository, you need to build it first:
-
-1. Clone **[OctaviusDatabase](https://github.com/PolskiAnonim/OctaviusDatabase)**
-2. Run `./gradlew publishToMavenLocal` in the database directory.
-3. Build this project (it will pick up the library from your local Maven cache).
-
-#### Option B: Remote Fetch (CI / Fresh Install)
-If you don't want to build the database library locally, you need a `GITHUB_TOKEN` with `read:packages` scope to download it from GitHub Packages.
-
-Add to `~/.gradle/gradle.properties`:
-```properties
-gpr.user=YOUR_GITHUB_USERNAME
-gpr.key=YOUR_GITHUB_TOKEN
-```
 
 ### Run
 

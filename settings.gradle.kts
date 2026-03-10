@@ -34,14 +34,6 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/PolskiAnonim/OctaviusDatabase")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
     }
 }
 

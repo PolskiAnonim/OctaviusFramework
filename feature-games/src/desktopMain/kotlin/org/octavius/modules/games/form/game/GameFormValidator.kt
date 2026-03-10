@@ -24,7 +24,7 @@ class GameFormValidator(private val entityId: Int?) : FormValidator() {
      * Jeśli edytujemy istniejącą grę, jej własny tytuł jest ignorowany w sprawdzaniu.
      *
      * @param formResultData Dane z formularza.
-     * @return `true` jeśli tytuł jest unikalny lub wystąpił błąd, `false` jeśli tytuł już istnieje.
+     * @return `true` jeśli tytuł jest unikalny, `false` jeśli tytuł już istnieje lub wystąpił błąd.
      */
     private fun checkTitleUniqueness(formResultData: FormResultData): Boolean {
         val title = formResultData.getCurrentAs<String>("name")
