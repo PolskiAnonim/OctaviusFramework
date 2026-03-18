@@ -127,6 +127,8 @@ class RepeatableControl(
                 canAdd = rowManager.canAddRow(controlState)
             )
 
+            DisplayFieldErrors(controlContext)
+
             Spacer(modifier = Modifier.height(FormSpacing.itemSpacing))
 
             controlState.value.value?.forEachIndexed { index, row ->
