@@ -14,6 +14,7 @@ import androidx.compose.ui.window.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.Koin
+import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.core.context.startKoin
 import org.octavius.api.contract.ApiModule
 import org.octavius.api.server.EmbeddedServer
@@ -45,7 +46,7 @@ fun main() {
         modules(databaseModule)
     }.koin
 
-    application {
+    application(exitProcessOnExit = false) {
         var appState by remember { mutableStateOf(AppState.Loading) }
 
         when (appState) {
@@ -60,6 +61,8 @@ fun main() {
             }
         }
     }
+    // Closing database connections
+    stopKoin()
 }
 
 @Composable

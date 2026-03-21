@@ -1,6 +1,7 @@
 package org.octavius.app
 
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 import org.octavius.database.OctaviusDatabase
 import org.octavius.database.config.DatabaseConfig
 
@@ -20,5 +21,5 @@ val databaseModule = module {
                 flywayBaselineVersion = "2025.12.21.15.13"
             )
         )
-    }
+    } onClose { it?.close() }
 }
