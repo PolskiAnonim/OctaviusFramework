@@ -206,7 +206,7 @@ class GameFormDataManager : FormDataManager() {
 
         plan.add(
             dataAccess.insertInto("games.categories_to_games")
-                .fromSelect(dataAccess.select(":game_id","category_id").from("UNNEST(:ids_to_insert) AS category_id").toSql())
+                .fromSelect(dataAccess.select("category_id", ":game_id").from("UNNEST(:ids_to_insert) AS category_id").toSql())
                 .asStep().execute("ids_to_insert" to insertedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
         )
 
