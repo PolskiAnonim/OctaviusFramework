@@ -34,7 +34,7 @@ class GameCategoryDataManager : FormDataManager() {
 
     private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
         val result = if (loadedId != null) {
-            dataAccess.update("games.categories").setValue("name").where("id = :id")
+            dataAccess.update("games.categories").setValue("name").where("id = @id")
                 .execute(mapOf("name" to formResultData.getCurrent("name"), "id" to loadedId))
         } else {
             dataAccess.insertInto("games.categories").value("name")

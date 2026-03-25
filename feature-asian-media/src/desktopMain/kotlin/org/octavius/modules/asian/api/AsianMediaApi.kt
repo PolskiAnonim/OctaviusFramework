@@ -54,7 +54,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             val result = dataAccess.select("id", "titles")
                 .from("asian_media.titles")
-                .where("titles && :titles")
+                .where("titles && @titles")
                 .toSingle("titles" to request.titles.withPgType(PgStandardType.TEXT_ARRAY))
 
             when (result) {

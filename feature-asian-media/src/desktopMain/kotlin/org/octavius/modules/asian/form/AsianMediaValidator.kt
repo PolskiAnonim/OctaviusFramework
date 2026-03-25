@@ -33,8 +33,8 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
         if (titles.isEmpty()) return true
 
         val whereClause = listOfNotNull(
-            "title = ANY(:titles)" withParam ("titles" to titles),
-            entityId?.let { "id != :id" withParam ("id" to entityId) }
+            "title = ANY(@titles)" withParam ("titles" to titles),
+            entityId?.let { "id != @id" withParam ("id" to entityId) }
         ).join(separator = " AND ")
 
         val result = dataAccess.select("COUNT(*)").fromSubquery("SELECT id, UNNEST(titles) AS title FROM titles")

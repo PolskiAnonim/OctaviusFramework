@@ -41,7 +41,7 @@ class BookAuthorDataManager : FormDataManager() {
         val result = if (loadedId != null) {
             dataAccess.update("books.authors")
                 .setValues(params)
-                .where("id = :id")
+                .where("id = @id")
                 .execute(params + ("id" to loadedId))
         } else {
             dataAccess.insertInto("books.authors")
@@ -62,7 +62,7 @@ class BookAuthorDataManager : FormDataManager() {
         if (loadedId == null) return FormActionResult.CloseScreen
 
         val result = dataAccess.deleteFrom("books.authors")
-            .where("id = :id")
+            .where("id = @id")
             .execute(mapOf("id" to loadedId))
 
         return when (result) {

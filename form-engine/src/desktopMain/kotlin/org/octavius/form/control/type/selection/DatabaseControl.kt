@@ -42,7 +42,7 @@ class DatabaseControl(
         // Próbuj użyć cache
         if (cachedValue?.value == value) return cachedValue!!.displayText
 
-        val result = dataAccess.select(displayColumn).from(relatedTable).where("id = :id")
+        val result = dataAccess.select(displayColumn).from(relatedTable).where("id = @id")
             .toField<String>("id" to value)
 
         return when (result) {
@@ -65,7 +65,7 @@ class DatabaseControl(
     override suspend fun loadPage(searchQuery: String, page: Long): Pair<List<DropdownOption<Int>>, Long> {
         return withContext(Dispatchers.IO) {
             // Krok 1: Przygotuj filtr i parametry
-            val filter = if (searchQuery.isNotBlank()) "$displayColumn ILIKE :search" else null
+            val filter = if (searchQuery.isNotBlank()) "$displayColumn ILIKE @search" else null
             val params = if (searchQuery.isNotBlank()) mapOf("search" to "%$searchQuery%") else emptyMap()
 
             // Krok 2: Pobierz całkowitą liczbę pasujących rekordów

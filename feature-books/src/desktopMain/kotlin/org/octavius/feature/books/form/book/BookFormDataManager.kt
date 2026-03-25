@@ -78,7 +78,7 @@ class BookFormDataManager : FormDataManager() {
                 dataAccess.update("books.books")
                     .setValues(bookData)
                     .setExpression("updated_at", "NOW()")
-                    .where("id = :id")
+                    .where("id = @id")
                     .asStep()
                     .execute(bookData + mapOf("id" to bookIdRef))
             )
@@ -107,8 +107,8 @@ class BookFormDataManager : FormDataManager() {
         if (deletedAuthors.isNotEmpty()) {
             plan.add(
                 dataAccess.deleteFrom("books.book_to_authors bta")
-                    .using("UNNEST(:ids_to_delete) AS t(id)")
-                    .where("bta.author_id = t.id AND bta.book_id = :book_id")
+                    .using("UNNEST(@ids_to_delete) AS t(id)")
+                    .where("bta.author_id = t.id AND bta.book_id = @book_id")
                     .asStep()
                     .execute(
                         "ids_to_delete" to deletedAuthors.withPgType(PgStandardType.INT4_ARRAY),
@@ -128,8 +128,8 @@ class BookFormDataManager : FormDataManager() {
             plan.add(
                 dataAccess.insertInto("books.book_to_authors")
                     .fromSelect(
-                        dataAccess.select(":book_id", "author_id")
-                            .from("UNNEST(:ids_to_insert) AS author_id")
+                        dataAccess.select("@book_id", "author_id")
+                            .from("UNNEST(@ids_to_insert) AS author_id")
                             .toSql()
                     )
                     .asStep()
@@ -154,7 +154,7 @@ class BookFormDataManager : FormDataManager() {
 
         // CASCADE usunie powiązania w book_to_authors
         val result = dataAccess.deleteFrom("books.books")
-            .where("id = :id")
+            .where("id = @id")
             .execute(mapOf("id" to loadedId))
 
         return when (result) {

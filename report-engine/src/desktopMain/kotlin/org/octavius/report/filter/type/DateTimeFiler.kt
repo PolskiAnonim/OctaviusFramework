@@ -133,19 +133,19 @@ class DateTimeFilter<T : Any>(
         val maxParamName = "${columnName}_max"
 
         return when (filterType) {
-            DateTimeFilterDataType.Equals -> value?.let { QueryFragment("$columnName = :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.NotEquals -> value?.let { QueryFragment("$columnName != :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.Before -> value?.let { QueryFragment("$columnName < :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.BeforeEquals -> value?.let { QueryFragment("$columnName <= :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.After -> value?.let { QueryFragment("$columnName > :$paramName", mapOf(paramName to it)) }
-            DateTimeFilterDataType.AfterEquals -> value?.let { QueryFragment("$columnName >= :$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.Equals -> value?.let { QueryFragment("$columnName = @$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.NotEquals -> value?.let { QueryFragment("$columnName != @$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.Before -> value?.let { QueryFragment("$columnName < @$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.BeforeEquals -> value?.let { QueryFragment("$columnName <= @$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.After -> value?.let { QueryFragment("$columnName > @$paramName", mapOf(paramName to it)) }
+            DateTimeFilterDataType.AfterEquals -> value?.let { QueryFragment("$columnName >= @$paramName", mapOf(paramName to it)) }
             DateTimeFilterDataType.Range -> when {
                 min != null && max != null -> QueryFragment(
-                    "$columnName BETWEEN :$minParamName AND :$maxParamName",
+                    "$columnName BETWEEN @$minParamName AND @$maxParamName",
                     mapOf(minParamName to min, maxParamName to max)
                 )
-                min != null -> QueryFragment("$columnName >= :$minParamName", mapOf(minParamName to min))
-                max != null -> QueryFragment("$columnName <= :$maxParamName", mapOf(maxParamName to max))
+                min != null -> QueryFragment("$columnName >= @$minParamName", mapOf(minParamName to min))
+                max != null -> QueryFragment("$columnName <= @$maxParamName", mapOf(maxParamName to max))
                 else -> null
             }
         }
@@ -174,31 +174,31 @@ class DateTimeFilter<T : Any>(
         return when (filterType) {
             DateTimeFilterDataType.Equals -> value?.let {
                 val operator = if (isAllMode) "@>" else "&&"
-                QueryFragment("$columnName $operator :$paramName", mapOf(paramName to listOf(it)))
+                QueryFragment("$columnName $operator @$paramName", mapOf(paramName to listOf(it)))
             }
             DateTimeFilterDataType.NotEquals -> value?.let {
                 val operator = if (isAllMode) "@>" else "&&"
-                QueryFragment("NOT ($columnName $operator :$paramName)", mapOf(paramName to listOf(it)))
+                QueryFragment("NOT ($columnName $operator @$paramName)", mapOf(paramName to listOf(it)))
             }
             DateTimeFilterDataType.Before -> value?.let {
-                buildExistsQuery("elem < :$paramName", mapOf(paramName to it))
+                buildExistsQuery("elem < @$paramName", mapOf(paramName to it))
             }
             DateTimeFilterDataType.BeforeEquals -> value?.let {
-                buildExistsQuery("elem <= :$paramName", mapOf(paramName to it))
+                buildExistsQuery("elem <= @$paramName", mapOf(paramName to it))
             }
             DateTimeFilterDataType.After -> value?.let {
-                buildExistsQuery("elem > :$paramName", mapOf(paramName to it))
+                buildExistsQuery("elem > @$paramName", mapOf(paramName to it))
             }
             DateTimeFilterDataType.AfterEquals -> value?.let {
-                buildExistsQuery("elem >= :$paramName", mapOf(paramName to it))
+                buildExistsQuery("elem >= @$paramName", mapOf(paramName to it))
             }
             DateTimeFilterDataType.Range -> when {
                 min != null && max != null -> buildExistsQuery(
-                    "elem BETWEEN :$minParamName AND :$maxParamName",
+                    "elem BETWEEN @$minParamName AND @$maxParamName",
                     mapOf(minParamName to min, maxParamName to max)
                 )
-                min != null -> buildExistsQuery("elem >= :$minParamName", mapOf(minParamName to min))
-                max != null -> buildExistsQuery("elem <= :$maxParamName", mapOf(maxParamName to max))
+                min != null -> buildExistsQuery("elem >= @$minParamName", mapOf(minParamName to min))
+                max != null -> buildExistsQuery("elem <= @$maxParamName", mapOf(maxParamName to max))
                 else -> null
             }
         }

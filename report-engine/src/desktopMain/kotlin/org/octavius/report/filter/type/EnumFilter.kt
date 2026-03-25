@@ -100,23 +100,23 @@ class EnumFilter<E>(private val enumClass: KClass<E>): Filter<EnumFilterData<E>>
         return when (data.mode) {
             FilterMode.Single -> {
                 if (include) {
-                    "$columnName = ANY(:$columnName)" withParam (columnName to values)
+                    "$columnName = ANY(@$columnName)" withParam (columnName to values)
                 } else {
-                    "$columnName != ALL(:$columnName)" withParam (columnName to values)
+                    "$columnName != ALL(@$columnName)" withParam (columnName to values)
                 }
             }
             FilterMode.ListAny -> {
                 if (include) {
-                    "$columnName && :$columnName" withParam (columnName to values)
+                    "$columnName && @$columnName" withParam (columnName to values)
                 } else {
-                    "NOT ($columnName && :$columnName)" withParam (columnName to values)
+                    "NOT ($columnName && @$columnName)" withParam (columnName to values)
                 }
             }
             FilterMode.ListAll -> {
                 if (include) {
-                    "($columnName @> :$columnName AND $columnName <@ :$columnName)" withParam (columnName to values)
+                    "($columnName @> @$columnName AND $columnName <@ @$columnName)" withParam (columnName to values)
                 } else {
-                    "NOT ($columnName @> :$columnName AND $columnName <@ :$columnName)" withParam (columnName to values)
+                    "NOT ($columnName @> @$columnName AND $columnName <@ @$columnName)" withParam (columnName to values)
                 }
             }
         }

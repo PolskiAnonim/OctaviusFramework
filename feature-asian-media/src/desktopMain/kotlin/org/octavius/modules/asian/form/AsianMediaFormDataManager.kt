@@ -63,7 +63,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         val plan = TransactionPlan()
         plan.add(
             dataAccess.deleteFrom("asian_media.titles")
-                .where("id = :id")
+                .where("id = @id")
                 .asStep()
                 .execute("id" to loadedId)
         )
@@ -96,7 +96,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             plan.add(
                 dataAccess.update("asian_media.titles")
                     .setValues(titleData)
-                    .where("id = :id")
+                    .where("id = @id")
                     .asStep()
                     .execute(titleData + mapOf("id" to titleIdRef))
             )
@@ -122,7 +122,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                 val pubId = rowData.getInitialAs<Int>("id")
                 plan.add(
                     dataAccess.deleteFrom("asian_media.publications")
-                        .where("id = :id")
+                        .where("id = @id")
                         .asStep()
                         .execute("id" to pubId)
                 )
@@ -141,7 +141,7 @@ class AsianMediaFormDataManager : FormDataManager() {
                 plan.add(
                     dataAccess.update("asian_media.publications")
                         .setValues(publicationData)
-                        .where("id = :id")
+                        .where("id = @id")
                         .asStep()
                         .execute(publicationData + mapOf("id" to publicationIdRef))
                 )
@@ -201,7 +201,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             plan.add(
                 dataAccess.update("asian_media.publication_volumes")
                     .setValues(volumesData)
-                    .where("publication_id = :publication_id")
+                    .where("publication_id = @publication_id")
                     .asStep()
                     .execute(volumesData + mapOf("publication_id" to publicationIdRef))
             )

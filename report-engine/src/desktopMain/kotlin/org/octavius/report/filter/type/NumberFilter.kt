@@ -140,53 +140,53 @@ class NumberFilter<T : Number>(
         return when (filterType) {
             NumberFilterDataType.Equals -> {
                 if (min != null) {
-                    "$columnName = :$columnName" withParam (columnName to min)
+                    "$columnName = @$columnName" withParam (columnName to min)
                 } else null
             }
 
             NumberFilterDataType.NotEquals -> {
                 if (min != null) {
-                    "$columnName != :$columnName" withParam (columnName to min)
+                    "$columnName != @$columnName" withParam (columnName to min)
                 } else null
             }
 
             NumberFilterDataType.LessThan -> {
                 if (min != null) {
-                    "$columnName < :$columnName" withParam (columnName to min)
+                    "$columnName < @$columnName" withParam (columnName to min)
                 } else null
             }
 
             NumberFilterDataType.LessEquals -> {
                 if (min != null) {
-                    "$columnName <= :$columnName" withParam (columnName to min)
+                    "$columnName <= @$columnName" withParam (columnName to min)
                 } else null
             }
 
             NumberFilterDataType.GreaterThan -> {
                 if (min != null) {
-                    "$columnName > :$columnName" withParam (columnName to min)
+                    "$columnName > @$columnName" withParam (columnName to min)
                 } else null
             }
 
             NumberFilterDataType.GreaterEquals -> {
                 if (min != null) {
-                    "$columnName >= :$columnName" withParam (columnName to min)
+                    "$columnName >= @$columnName" withParam (columnName to min)
                 } else null
             }
 
             NumberFilterDataType.Range -> {
                 when {
                     min != null && max != null ->
-                        "$columnName BETWEEN :${columnName}_min AND :${columnName}_max" withParams mapOf(
+                        "$columnName BETWEEN @${columnName}_min AND @${columnName}_max" withParams mapOf(
                             "${columnName}_min" to min,
                             "${columnName}_max" to max
                         )
 
                     min != null ->
-                        "$columnName >= :$columnName" withParam (columnName to min)
+                        "$columnName >= @$columnName" withParam (columnName to min)
 
                     max != null ->
-                        "$columnName <= :$columnName" withParam (columnName to max)
+                        "$columnName <= @$columnName" withParam (columnName to max)
 
                     else -> null
                 }
@@ -205,21 +205,21 @@ class NumberFilter<T : Number>(
             NumberFilterDataType.Equals -> {
                 if (min != null) {
                     val operator = if (isAllMode) "@>" else "&&"
-                    "$columnName $operator :$columnName" withParam (columnName to listOf(min))
+                    "$columnName $operator @$columnName" withParam (columnName to listOf(min))
                 } else null
             }
 
             NumberFilterDataType.NotEquals -> {
                 if (min != null) {
                     val operator = if (isAllMode) "@>" else "&&"
-                    "NOT ($columnName $operator :$columnName)" withParam (columnName to listOf(min))
+                    "NOT ($columnName $operator @$columnName)" withParam (columnName to listOf(min))
                 } else null
             }
 
             NumberFilterDataType.LessThan -> {
                 if (min != null) {
                     val existsType =
-                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)"
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= @$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < @$columnName)"
                     existsType withParam (columnName to min)
                 } else null
             }
@@ -227,7 +227,7 @@ class NumberFilter<T : Number>(
             NumberFilterDataType.LessEquals -> {
                 if (min != null) {
                     val existsType =
-                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > @$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= @$columnName)"
                     existsType withParam (columnName to min)
                 } else null
             }
@@ -235,7 +235,7 @@ class NumberFilter<T : Number>(
             NumberFilterDataType.GreaterThan -> {
                 if (min != null) {
                     val existsType =
-                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)"
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= @$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > @$columnName)"
                     existsType withParam (columnName to min)
                 } else null
             }
@@ -243,7 +243,7 @@ class NumberFilter<T : Number>(
             NumberFilterDataType.GreaterEquals -> {
                 if (min != null) {
                     val existsType =
-                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
+                        if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < @$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= @$columnName)"
                     existsType withParam (columnName to min)
                 } else null
             }
@@ -252,19 +252,19 @@ class NumberFilter<T : Number>(
                 when {
                     min != null && max != null -> {
                         val existsType =
-                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN :${columnName}_min AND :${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN :${columnName}_min AND :${columnName}_max)"
+                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem NOT BETWEEN @${columnName}_min AND @${columnName}_max)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem BETWEEN @${columnName}_min AND @${columnName}_max)"
                         existsType withParams mapOf("${columnName}_min" to min, "${columnName}_max" to max)
                     }
 
                     min != null -> {
                         val existsType =
-                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= :$columnName)"
+                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem < @$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem >= @$columnName)"
                         existsType withParam (columnName to min)
                     }
 
                     max != null -> {
                         val existsType =
-                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > :$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= :$columnName)"
+                            if (isAllMode) "NOT EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem > @$columnName)" else "EXISTS (SELECT 1 FROM unnest($columnName) AS elem WHERE elem <= @$columnName)"
                         existsType withParam (columnName to max)
                     }
 

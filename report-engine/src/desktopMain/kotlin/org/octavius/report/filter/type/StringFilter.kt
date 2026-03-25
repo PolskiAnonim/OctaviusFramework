@@ -105,11 +105,11 @@ class StringFilter: Filter<StringFilterData>() {
 
             return if (caseSensitive) {
                 // Czułe na wielkość liter: WHERE columnName = 'Wartość'
-                val querySql = "$columnName $operator :$columnName"
+                val querySql = "$columnName $operator @$columnName"
                 QueryFragment(querySql, mapOf(columnName to searchValue))
             } else {
                 // Niezależne od wielkości liter: WHERE LOWER(columnName) = 'wartość'
-                val querySql = "LOWER($columnName) $operator :$columnName"
+                val querySql = "LOWER($columnName) $operator @$columnName"
                 // Przekazujemy już zmienioną na małe litery wartość
                 querySql withParam (columnName to searchValue.lowercase())
             }
@@ -129,7 +129,7 @@ class StringFilter: Filter<StringFilterData>() {
 
         val finalOperator = if (filterType == StringFilterDataType.NotContains) notOperator else operator
 
-        return "$columnName $finalOperator :$columnName" withParam (columnName to pattern)
+        return "$columnName $finalOperator @$columnName" withParam (columnName to pattern)
     }
 
     private fun buildListStringQuery(
@@ -150,7 +150,7 @@ class StringFilter: Filter<StringFilterData>() {
             val operator = if (filterType == StringFilterDataType.Exact) "=" else "<>"
 
             // Zawsze używamy UNNEST dla spójności logiki `isAllMode`
-            val innerCondition = if (caseSensitive) "elem $operator :$columnName" else "LOWER(elem) $operator :$columnName"
+            val innerCondition = if (caseSensitive) "elem $operator @$columnName" else "LOWER(elem) $operator @$columnName"
             val valueParam = if (caseSensitive) searchValue else searchValue.lowercase()
 
             val querySql = if (isAllMode) {
@@ -173,7 +173,7 @@ class StringFilter: Filter<StringFilterData>() {
             StringFilterDataType.NotContains -> Pair("%$escapedSearchValue%", notLikeOperator)
         }
 
-        val innerCondition = "elem $currentLikeOperator :$columnName"
+        val innerCondition = "elem $currentLikeOperator @$columnName"
 
         val querySql = if (isAllMode) {
             // ALL: Czy NIE ISTNIEJE element, który NIE spełnia warunku?

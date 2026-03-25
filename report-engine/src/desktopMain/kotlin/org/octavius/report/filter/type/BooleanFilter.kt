@@ -84,15 +84,15 @@ class BooleanFilter(
 
         return when (data.mode) {
             FilterMode.Single -> {
-                "$columnName = :$columnName" withParam (columnName to booleanValue)
+                "$columnName = @$columnName" withParam (columnName to booleanValue)
             }
 
             FilterMode.ListAny -> {
-                "$columnName && :$columnName" withParam (columnName to listOf(booleanValue))
+                "$columnName && @$columnName" withParam (columnName to listOf(booleanValue))
             }
 
             FilterMode.ListAll -> {
-                "$columnName @> :$columnName" withParam (columnName to listOf(booleanValue))
+                "$columnName @> @$columnName" withParam (columnName to listOf(booleanValue))
             }
         }
     }

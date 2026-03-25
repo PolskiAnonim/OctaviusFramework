@@ -28,8 +28,8 @@ class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
         val title = formResultData.getCurrentAs<String>("name")
 
         val whereClause = listOfNotNull(
-            "name = :title" withParam ("title" to title),
-            entityId?.let { "id != :id" withParam ("id" to entityId) }
+            "name = @title" withParam ("title" to title),
+            entityId?.let { "id != @id" withParam ("id" to entityId) }
         ).join(" AND ")
 
         val result = dataAccess.select("COUNT(*)").from("series").where(whereClause.sql).toField<Long>(whereClause.params)

@@ -7,7 +7,7 @@ import org.octavius.data.DataResult
 import org.octavius.data.builder.execute
 import org.octavius.data.builder.toListOf
 import org.octavius.data.builder.toSingleOf
-import org.octavius.data.toMap
+import org.octavius.data.toDataMap
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
@@ -15,7 +15,7 @@ class ReportConfigurationManager : KoinComponent {
 
     val dataAccess: DataAccess by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
-        val flatValueMap = configuration.toMap("id")
+        val flatValueMap = configuration.toDataMap("id")
         val result = dataAccess.insertInto("report_configurations")
             .values(flatValueMap).onConflict {
                 onColumns("name", "report_name")
@@ -35,6 +35,7 @@ class ReportConfigurationManager : KoinComponent {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
+
             is DataResult.Success<Int> -> true
         }
     }
@@ -42,14 +43,16 @@ class ReportConfigurationManager : KoinComponent {
     fun loadDefaultConfiguration(reportName: String): ReportConfiguration? {
         val result: DataResult<ReportConfiguration?> = dataAccess.select(
             "*"
-        ).from("public.report_configurations"
-        ).where("report_name = :report_name AND is_default = true").toSingleOf("report_name" to reportName)
+        ).from(
+            "public.report_configurations"
+        ).where("report_name = @report_name AND is_default = true").toSingleOf("report_name" to reportName)
 
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 null
             }
+
             is DataResult.Success<ReportConfiguration?> -> result.value
         }
     }
@@ -57,14 +60,16 @@ class ReportConfigurationManager : KoinComponent {
     fun listConfigurations(reportName: String): List<ReportConfiguration> {
         val result: DataResult<List<ReportConfiguration>> = dataAccess.select(
             "*"
-        ).from("public.report_configurations"
-        ).where("report_name = :report_name").orderBy("is_default DESC, name ASC").toListOf("report_name" to reportName)
+        ).from(
+            "public.report_configurations"
+        ).where("report_name = @report_name").orderBy("is_default DESC, name ASC").toListOf("report_name" to reportName)
 
         return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 emptyList()
             }
+
             is DataResult.Success<List<ReportConfiguration>> -> result.value
         }
     }
@@ -72,9 +77,9 @@ class ReportConfigurationManager : KoinComponent {
     fun deleteConfiguration(name: String, reportName: String): Boolean {
 
         val result = dataAccess.deleteFrom("report_configurations")
-            .where("name = :name AND report_name = :report_name").execute("name" to name, "report_name" to reportName)
+            .where("name = @name AND report_name = @report_name").execute("name" to name, "report_name" to reportName)
 
-        return when(result) {
+        return when (result) {
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false

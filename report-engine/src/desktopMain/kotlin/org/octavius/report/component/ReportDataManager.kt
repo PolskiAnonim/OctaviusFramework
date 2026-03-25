@@ -51,13 +51,13 @@ class ReportDataManager(
             val column = reportStructure.getColumn(columnKey)
             getQueryFragment(columnKey, column.filter!!, filterData)
         }.join(" AND ")
-
+        
         val searchFilter: QueryFragment = if (!reportState.searchQuery.isBlank()) {
             reportStructure.getAllColumns()
                 .filter { (_, column) -> column.filterable }
                 .map { (columnKey, _) ->
                     QueryFragment(
-                        "$columnKey::text ILIKE :searchQuery",
+                        "$columnKey::text ILIKE @searchQuery",
                         mapOf("searchQuery" to "%${reportState.searchQuery}%")
                     )
                 }.join(" OR ")

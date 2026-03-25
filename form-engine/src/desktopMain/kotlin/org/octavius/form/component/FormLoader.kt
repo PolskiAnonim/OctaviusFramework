@@ -74,7 +74,7 @@ class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
     }
 
     fun buildWhereClause(): String {
-        return "$linkColumn = :id"
+        return "$linkColumn = @id"
     }
 }
 
@@ -158,7 +158,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
 
         val query = dataAccess.select(*simpleFields.toTypedArray())
             .from("$mainTable ${joins.joinToString(" ")}")
-            .where("$mainTableAlias.id = :id")
+            .where("$mainTableAlias.id = @id")
             .toSingle("id" to id)
 
         return when (query) {

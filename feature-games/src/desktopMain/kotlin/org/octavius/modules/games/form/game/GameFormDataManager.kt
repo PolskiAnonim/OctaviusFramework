@@ -117,7 +117,7 @@ class GameFormDataManager : FormDataManager() {
             plan.add(
                 dataAccess.update("games.games")
                     .setValues(gameData)
-                    .where("id = :id")
+                    .where("id = @id")
                     .asStep()
                     .execute(gameData + mapOf("id" to gameIdRef))
             )
@@ -193,8 +193,8 @@ class GameFormDataManager : FormDataManager() {
 
         plan.add(
             dataAccess.deleteFrom("games.categories_to_games ctg")
-                .using("UNNEST(:ids_to_delete) AS t(id)")
-                .where("ctg.category_id = t.id AND ctg.game_id = :game_id")
+                .using("UNNEST(@ids_to_delete) AS t(id)")
+                .where("ctg.category_id = t.id AND ctg.game_id = @game_id")
                 .asStep().execute("ids_to_delete" to deletedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
         )
 
@@ -206,7 +206,7 @@ class GameFormDataManager : FormDataManager() {
 
         plan.add(
             dataAccess.insertInto("games.categories_to_games")
-                .fromSelect(dataAccess.select("category_id", ":game_id").from("UNNEST(:ids_to_insert) AS category_id").toSql())
+                .fromSelect(dataAccess.select("category_id", "@game_id").from("UNNEST(@ids_to_insert) AS category_id").toSql())
                 .asStep().execute("ids_to_insert" to insertedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
         )
 
@@ -239,14 +239,14 @@ class GameFormDataManager : FormDataManager() {
                 plan.add(
                     dataAccess.update(tableName)
                         .setValues(data)
-                        .where("game_id = :game_id")
+                        .where("game_id = @game_id")
                         .asStep()
                         .execute(allParams)
                 )
             } else { // DELETE
                 plan.add(
                     dataAccess.deleteFrom(tableName)
-                        .where("game_id = :game_id")
+                        .where("game_id = @game_id")
                         .asStep()
                         .execute("game_id" to gameIdRef)
                 )

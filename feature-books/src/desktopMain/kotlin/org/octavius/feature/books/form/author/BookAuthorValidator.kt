@@ -21,8 +21,8 @@ class BookAuthorValidator(private val entityId: Int?) : FormValidator() {
         val name = formResultData.getCurrentAs<String>("name")
 
         val whereClause = listOfNotNull(
-            "name = :name" withParam ("name" to name),
-            entityId?.let { "id != :id" withParam ("id" to entityId) }
+            "name = @name" withParam ("name" to name),
+            entityId?.let { "id != @id" withParam ("id" to entityId) }
         ).join(" AND ")
 
         val result = dataAccess.select("COUNT(*)")

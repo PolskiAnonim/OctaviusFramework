@@ -148,12 +148,12 @@ class IntervalFilter : Filter<IntervalFilterData>() {
         if (filterType == IntervalFilterDataType.Range) {
             return when {
                 min != null && max != null ->
-                    "$columnName BETWEEN :${columnName}_min AND :${columnName}_max" withParams mapOf(
+                    "$columnName BETWEEN @${columnName}_min AND @${columnName}_max" withParams mapOf(
                         "${columnName}_min" to min,
                         "${columnName}_max" to max
                     )
-                min != null -> "$columnName >= :$columnName" withParam (columnName to min)
-                max != null -> "$columnName <= :$columnName" withParam (columnName to max)
+                min != null -> "$columnName >= @$columnName" withParam (columnName to min)
+                max != null -> "$columnName <= @$columnName" withParam (columnName to max)
                 else -> null
             }
         }
@@ -165,27 +165,27 @@ class IntervalFilter : Filter<IntervalFilterData>() {
         // Parametry typu interval w PostgreSQL są obsługiwane bezpośrednio
         return when (filterType) {
             IntervalFilterDataType.Equals -> {
-                "$columnName = :$columnName" withParam (columnName to singleValue)
+                "$columnName = @$columnName" withParam (columnName to singleValue)
             }
 
             IntervalFilterDataType.NotEquals -> {
-                "$columnName != :$columnName" withParam (columnName to singleValue)
+                "$columnName != @$columnName" withParam (columnName to singleValue)
             }
 
             IntervalFilterDataType.LessThan -> {
-                "$columnName < :$columnName" withParam (columnName to singleValue)
+                "$columnName < @$columnName" withParam (columnName to singleValue)
             }
 
             IntervalFilterDataType.LessEquals -> {
-                "$columnName <= :$columnName" withParam (columnName to singleValue)
+                "$columnName <= @$columnName" withParam (columnName to singleValue)
             }
 
             IntervalFilterDataType.GreaterThan -> {
-                "$columnName > :$columnName" withParam (columnName to singleValue)
+                "$columnName > @$columnName" withParam (columnName to singleValue)
             }
 
             IntervalFilterDataType.GreaterEquals -> {
-                "$columnName >= :$columnName" withParam (columnName to singleValue)
+                "$columnName >= @$columnName" withParam (columnName to singleValue)
             }
         }
     }
@@ -196,19 +196,19 @@ class IntervalFilter : Filter<IntervalFilterData>() {
             // "Dla wszystkich": NIE ISTNIEJE żaden element, który NIE spełnia warunku.
             // Np. "Wszystkie są < 5" == "Nie istnieje żaden, który jest >= 5"
             val negatedOperator = negateOperator(operator)
-            "NOT EXISTS (SELECT 1 $unnest WHERE elem $negatedOperator :$paramName)"
+            "NOT EXISTS (SELECT 1 $unnest WHERE elem $negatedOperator @$paramName)"
         } else {
             // "Jakikolwiek": ISTNIEJE element, który spełnia warunek.
-            "EXISTS (SELECT 1 $unnest WHERE elem $operator :$paramName)"
+            "EXISTS (SELECT 1 $unnest WHERE elem $operator @$paramName)"
         }
     }
 
     private fun buildExistsForBetween(columnName: String, minParam: String, maxParam: String, isAllMode: Boolean): String {
         val unnest = "FROM unnest($columnName) AS elem"
         return if (isAllMode) {
-            "NOT EXISTS (SELECT 1 $unnest WHERE elem NOT BETWEEN :$minParam AND :$maxParam)"
+            "NOT EXISTS (SELECT 1 $unnest WHERE elem NOT BETWEEN @$minParam AND @$maxParam)"
         } else {
-            "EXISTS (SELECT 1 $unnest WHERE elem BETWEEN :$minParam AND :$maxParam)"
+            "EXISTS (SELECT 1 $unnest WHERE elem BETWEEN @$minParam AND @$maxParam)"
         }
     }
 
@@ -236,7 +236,7 @@ class IntervalFilter : Filter<IntervalFilterData>() {
             if (singleValue == null) return null
 
             val arrayOperator = if (isAllMode) "@>" else "&&"
-            val sql = "$columnName $arrayOperator :$columnName"
+            val sql = "$columnName $arrayOperator @$columnName"
             val finalSql = if (filterType == IntervalFilterDataType.NotEquals) "NOT ($sql)" else sql
 
             return QueryFragment(finalSql, mapOf(columnName to listOf(singleValue)))

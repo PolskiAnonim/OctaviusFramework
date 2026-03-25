@@ -37,7 +37,7 @@ class GameSeriesFormDataManager : FormDataManager() {
         val plan = TransactionPlan()
         if (loadedId != null) {
             plan.add(
-                dataAccess.update("games.series").setValues(listOf("name")).where("id = :id").asStep()
+                dataAccess.update("games.series").setValues(listOf("name")).where("id = @id").asStep()
                     .execute("name" to formResultData.getCurrent("name"), "id" to loadedId)
             )
         } else {
