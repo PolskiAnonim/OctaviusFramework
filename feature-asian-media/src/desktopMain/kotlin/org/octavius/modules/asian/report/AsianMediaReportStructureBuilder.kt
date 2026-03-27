@@ -3,6 +3,7 @@ package org.octavius.modules.asian.report
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import org.octavius.data.QueryFragment
+import org.octavius.data.withParam
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType
@@ -88,4 +89,8 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
             )
         }
     )
+
+    override fun buildQuickSearch(searchQuery: String): QueryFragment {
+        return "EXISTS (SELECT 1 FROM unnest(titles) AS t WHERE t % @searchQuery)" withParam ("searchQuery" to searchQuery)
+    }
 }
