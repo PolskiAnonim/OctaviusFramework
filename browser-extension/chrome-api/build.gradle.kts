@@ -6,12 +6,10 @@ plugins {
 kotlin {
     js(IR) {
         browser()
-        binaries.executable()
     }
     sourceSets {
         val jsMain by getting {
             dependencies {
-                implementation(kotlin("stdlib-js"))
                 // Nie potrzebuje api-contract, bo tylko wysyła dane, nie używa DTO
                 // Ale potrzebuje wrapperów do komunikacji
                 implementation(browserLibs.kotlin.browser)

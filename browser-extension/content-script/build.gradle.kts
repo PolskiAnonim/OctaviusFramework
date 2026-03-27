@@ -12,7 +12,6 @@ kotlin {
         val jsMain by getting {
             dependencies {
                 implementation(projects.browserExtension.chromeApi)
-                implementation(kotlin("stdlib-js"))
                 implementation(projects.apiContract)
                 implementation(projects.featureAsianMedia)
                 // Ale potrzebuje wrapperów do komunikacji

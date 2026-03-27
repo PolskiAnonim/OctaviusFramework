@@ -1,5 +1,5 @@
 [versions]
-compose = "1.11.0-alpha03"
+compose = "1.11.0-alpha04"
 icons-extended = "1.7.3"
 
 [libraries]
