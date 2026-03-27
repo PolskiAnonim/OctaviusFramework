@@ -23,7 +23,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
         desktopMain.dependencies {
-            implementation(projects.core)
             implementation(libs.octavius.database.core)
             implementation(projects.featureContract)
             implementation(projects.formEngine)

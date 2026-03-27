@@ -15,7 +15,6 @@ kotlin {
             dependencies {
                 implementation(projects.browserExtension.chromeApi)
                 implementation(kotlin("stdlib-js"))
-                implementation(projects.core)
                 implementation(projects.apiContract)
                 implementation(projects.uiCore)
                 implementation(composeLibs.runtime)

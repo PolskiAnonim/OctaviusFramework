@@ -21,7 +21,6 @@ kotlin {
         }
 
         desktopMain.dependencies {
-            implementation(projects.core)
 
             implementation(projects.formEngine)
             implementation(projects.reportEngine)

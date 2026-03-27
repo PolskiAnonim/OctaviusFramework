@@ -22,7 +22,6 @@ dokka {
 
 // Zależności Dokka - agregacja dokumentacji ze wszystkich modułów
 dependencies {
-    dokka(projects.core)
     dokka(projects.apiServer)
     dokka(projects.apiContract)
     dokka(projects.uiCore)
@@ -67,5 +66,5 @@ subprojects {
 
 // Rejestracja taska generującego type-safe accessory do tłumaczeń
 val generateTranslationAccessors = registerGenerateTranslationAccessorsTask(
-    coreProject = project(":core")
+    coreProject = project(":ui-core")
 )

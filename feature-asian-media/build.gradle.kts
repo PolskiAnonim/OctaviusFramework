@@ -24,7 +24,6 @@ kotlin {
 
             implementation(projects.apiContract)
             implementation(libs.octavius.database.api)
-            implementation(projects.core)
         }
 
         desktopMain.dependencies {

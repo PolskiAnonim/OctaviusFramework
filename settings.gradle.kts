@@ -43,7 +43,6 @@ include(
     ":report-engine",
     ":api-server",
     ":ui-core",
-    ":core",
     ":api-contract",
     ":feature-contract",
     // Features

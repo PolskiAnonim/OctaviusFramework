@@ -13,7 +13,6 @@ kotlin {
             dependencies {
                 implementation(projects.browserExtension.chromeApi)
                 implementation(kotlin("stdlib-js"))
-                implementation(projects.core)
                 implementation(projects.apiContract)
                 implementation(projects.featureAsianMedia)
                 // Ale potrzebuje wrapperów do komunikacji

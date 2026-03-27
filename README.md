@@ -57,11 +57,10 @@ The project follows a modular distributed architecture. The Core Database layer 
 ```
 Octavius/
 ├── desktop-app/             # Main application entry point
-├── core/                    # Domain models, localization, utilities
 │
 ├── form-engine/             # Declarative form framework
 ├── report-engine/           # Dynamic table framework
-├── ui-core/                 # Shared UI components & navigation
+├── ui-core/                 # Shared UI components & navigation, localization, utilities
 │
 ├── feature-asian-media/     # Manga, novels, manhwa tracking
 ├── feature-games/           # Game collection management
