@@ -4,6 +4,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.data.DataAccess
 import org.octavius.data.QueryFragment
+import org.octavius.data.join
+import org.octavius.data.withParam
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
@@ -29,6 +31,7 @@ import org.octavius.report.column.type.special.QuickActionColumn
  * @param rowActions Lista akcji dostępnych dla każdego wiersza.
  * @param defaultRowAction Domyślna akcja wykonywana po podwójnym kliknięciu wiersza.
  * @param mainActions Lista akcji głównych (np. "Dodaj nowy").
+ * @param quickSearchMapper Opcjonalna funkcja mapująca tekst wyszukiwania na fragment zapytania.
  */
 class ReportStructure(
     val queryFragment: QueryFragment,
@@ -36,7 +39,8 @@ class ReportStructure(
     val reportName: String,
     val rowActions: List<ReportRowAction> = emptyList(),
     val defaultRowAction: ReportRowAction? = null,
-    val mainActions: List<ReportMainAction> = emptyList()
+    val mainActions: List<ReportMainAction> = emptyList(),
+    private val quickSearchMapper: ((String) -> QueryFragment?)? = null
 ) {
     lateinit var columns: Map<String, ReportColumn>
 
@@ -69,6 +73,25 @@ class ReportStructure(
      * Zwraca wszystkie kolumny zdefiniowane w tej strukturze
      */
     fun getAllColumns(): Map<String, ReportColumn> = columns
+
+    /**
+     * Zwraca fragment zapytania dla szybkiego wyszukiwania.
+     * Jeśli zdefiniowano [quickSearchMapper], używa go.
+     * W przeciwnym razie buduje domyślny filtr po wszystkich filtrowalnych kolumnach.
+     */
+    fun getQuickSearchFilter(searchQuery: String): QueryFragment {
+        if (searchQuery.isBlank()) return QueryFragment("")
+
+        return quickSearchMapper?.invoke(searchQuery) ?: buildDefaultQuickSearchFilter(searchQuery)
+    }
+
+    private fun buildDefaultQuickSearchFilter(searchQuery: String): QueryFragment {
+        return getAllColumns()
+            .filter { (_, column) -> column.filterable }
+            .map { (columnKey, _) ->
+                "$columnKey::text ILIKE @searchQuery" withParam ("searchQuery" to "%$searchQuery%")
+            }.join(" OR ")
+    }
 }
 
 /**
@@ -116,7 +139,8 @@ abstract class ReportStructureBuilder: KoinComponent {
             reportName = getReportName(),
             rowActions = buildRowActions(),
             defaultRowAction = buildDefaultRowAction(),
-            mainActions = buildMainActions()
+            mainActions = buildMainActions(),
+            quickSearchMapper = { buildQuickSearch(it) }
         )
     }
 
@@ -152,4 +176,10 @@ abstract class ReportStructureBuilder: KoinComponent {
      * Domyślnie zwraca pustą listę.
      */
     open fun buildMainActions(): List<ReportMainAction> = emptyList()
+
+    /**
+     * Buduje fragment zapytania dla szybkiego wyszukiwania.
+     * Nadpisz tę metodę, aby dostarczyć niestandardową logikę wyszukiwania.
+     */
+    open fun buildQuickSearch(searchQuery: String): QueryFragment? = null
 }
