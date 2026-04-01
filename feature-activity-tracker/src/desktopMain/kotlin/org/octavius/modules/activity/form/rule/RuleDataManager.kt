@@ -52,7 +52,7 @@ class RuleDataManager : FormDataManager() {
         val result = if (loadedId != null) {
             dataAccess.update("activity_tracker.categorization_rules")
                 .setValues(params)
-                .where("id = :id")
+                .where("id = @id")
                 .execute(params + ("id" to loadedId))
         } else {
             dataAccess.insertInto("activity_tracker.categorization_rules")

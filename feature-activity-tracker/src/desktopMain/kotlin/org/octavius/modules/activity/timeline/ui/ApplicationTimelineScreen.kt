@@ -17,6 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 import org.octavius.localization.Tr
 import org.octavius.modules.activity.timeline.TimelineHandler
 import org.octavius.navigation.Screen
@@ -195,7 +197,7 @@ private fun DateNavigationBar(
             Icon(Icons.Default.ChevronLeft, contentDescription = null)
         }
         Text(
-            text = "${selectedDate.dayOfMonth}.${selectedDate.monthNumber}.${selectedDate.year}",
+            text = "${selectedDate.day}.${selectedDate.month.number}.${selectedDate.year}",
             style = MaterialTheme.typography.titleMedium,
         )
         IconButton(onClick = onNext) {

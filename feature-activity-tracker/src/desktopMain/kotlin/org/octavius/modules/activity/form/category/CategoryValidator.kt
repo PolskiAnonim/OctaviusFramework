@@ -22,14 +22,14 @@ class CategoryValidator : FormValidator() {
         val params = mutableMapOf<String, Any?>("name" to name)
         val builder = dataAccess.select("COUNT(*)").from("activity_tracker.categories")
         if (id != null) {
-            builder.where("id != :id AND name = :name")
+            builder.where("id != @id AND name = @name")
             params["id"] = id
         } else {
-            builder.where("name = :name")
+            builder.where("name = @name")
         }
         return when (val queryResult = builder.toField<Long>(params)) {
             is DataResult.Success -> {
-                if ((queryResult.value ?: 0L) > 0) {
+                if (queryResult.value > 0) {
                     errorManager.setFieldErrors("name", listOf(Tr.ActivityTracker.Validation.categoryNameExists()))
                     false
                 } else {

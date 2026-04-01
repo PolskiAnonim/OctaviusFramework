@@ -20,7 +20,7 @@ class StatisticsHandler : KoinComponent {
             "SUM(al.duration_seconds) as total_seconds"
         )
             .from("activity_tracker.activity_log al LEFT JOIN activity_tracker.categories c ON al.category_id = c.id")
-            .where("al.started_at >= :start_time AND al.started_at <= :end_time AND al.ended_at IS NOT NULL")
+            .where("al.started_at >= @start_time AND al.started_at <= @end_time AND al.ended_at IS NOT NULL")
             .groupBy("c.name, c.color")
             .orderBy("total_seconds DESC")
             .toListOf<CategoryBreakdownDto>(
@@ -56,7 +56,7 @@ class StatisticsHandler : KoinComponent {
             "SUM(al.duration_seconds) as total_seconds"
         )
             .from("activity_tracker.activity_log al LEFT JOIN activity_tracker.categories c ON al.category_id = c.id")
-            .where("al.started_at >= :start_time AND al.started_at <= :end_time AND al.ended_at IS NOT NULL")
+            .where("al.started_at >= @start_time AND al.started_at <= @end_time AND al.ended_at IS NOT NULL")
             .groupBy("al.process_name, c.name")
             .orderBy("total_seconds DESC")
             .toListOf<TopApplicationDto>(
@@ -82,7 +82,7 @@ class StatisticsHandler : KoinComponent {
 
         val result = dataAccess.select("COALESCE(SUM(duration_seconds), 0) as total")
             .from("activity_tracker.activity_log")
-            .where("started_at >= :start_time AND started_at <= :end_time AND ended_at IS NOT NULL")
+            .where("started_at >= @start_time AND started_at <= @end_time AND ended_at IS NOT NULL")
             .toListOf<TotalTimeDto>(
                 "start_time" to startOfDay.toInstant(TimeZone.currentSystemDefault()),
                 "end_time" to endOfDay.toInstant(TimeZone.currentSystemDefault())

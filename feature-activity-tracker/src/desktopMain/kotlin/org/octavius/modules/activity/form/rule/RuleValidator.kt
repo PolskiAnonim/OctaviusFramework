@@ -29,15 +29,15 @@ class RuleValidator : FormValidator() {
             .from("activity_tracker.categorization_rules")
 
         if (id != null) {
-            builder.where("id != :id AND match_type = :match_type AND pattern = :pattern")
+            builder.where("id != @id AND match_type = @match_type AND pattern = @pattern")
             params["id"] = id
         } else {
-            builder.where("match_type = :match_type AND pattern = :pattern")
+            builder.where("match_type = @match_type AND pattern = @pattern")
         }
 
         return when (val queryResult = builder.toField<Long>(params)) {
             is DataResult.Success -> {
-                if ((queryResult.value ?: 0L) > 0) {
+                if (queryResult.value > 0) {
                     errorManager.setFieldErrors("pattern", listOf(Tr.ActivityTracker.Validation.patternExists()))
                     false
                 } else {

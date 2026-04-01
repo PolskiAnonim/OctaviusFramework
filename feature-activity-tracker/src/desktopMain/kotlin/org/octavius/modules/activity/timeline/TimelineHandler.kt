@@ -29,7 +29,7 @@ class TimelineHandler : KoinComponent {
             "c.color",
         )
             .from("activity_tracker.category_slots cs JOIN activity_tracker.categories c ON cs.category_id = c.id")
-            .where("cs.started_at >= :start AND cs.started_at <= :end")
+            .where("cs.started_at >= @start AND cs.started_at <= @end")
             .orderBy("cs.started_at")
             .toListOf<CategorySlotDto>(params)
 
@@ -44,13 +44,13 @@ class TimelineHandler : KoinComponent {
                 activity_tracker.activity_log al
                 LEFT JOIN activity_tracker.process_colors pc ON al.process_name = pc.process_name
             """.trimIndent())
-            .where("al.started_at >= :start AND al.started_at <= :end")
+            .where("al.started_at >= @start AND al.started_at <= @end")
             .orderBy("al.started_at")
             .toListOf<AppBlockDto>(params)
 
         val docResult = dataAccess.select("d.path", "d.type", "d.timestamp")
             .from("activity_tracker.documents d")
-            .where("d.timestamp >= :start AND d.timestamp <= :end")
+            .where("d.timestamp >= @start AND d.timestamp <= @end")
             .toListOf<DocBlockDto>(params)
 
         val categories = (catResult as? DataResult.Success)?.value?.map { it.toTimelineBlock(tz) } ?: emptyList()
@@ -75,7 +75,7 @@ class TimelineHandler : KoinComponent {
         val params = mapOf("start" to startInstant, "end" to endInstant)
 
         dataAccess.deleteFrom("activity_tracker.category_slots")
-            .where("source_process_name IS NOT NULL AND started_at >= :start AND started_at <= :end")
+            .where("source_process_name IS NOT NULL AND started_at >= @start AND started_at <= @end")
             .execute(params)
 
         // LATERAL JOIN: dla każdego wpisu activity_log bierze regułę PROCESS_NAME o najwyższym priorytecie
@@ -96,7 +96,7 @@ class TimelineHandler : KoinComponent {
                     LIMIT 1
                 ) cr ON true
             """.trimIndent())
-            .where("al.started_at >= :start AND al.started_at <= :end AND al.ended_at IS NOT NULL")
+            .where("al.started_at >= @start AND al.started_at <= @end AND al.ended_at IS NOT NULL")
             .toListOf<AutoFillSlotDto>(params)
 
         val slots = (slotsResult as? DataResult.Success)?.value ?: return
@@ -129,7 +129,7 @@ class TimelineHandler : KoinComponent {
             .from("activity_tracker.categorization_rules")
             .where("""
                 match_type = 'PROCESS_NAME'::activity_tracker.match_type
-                AND pattern = :pattern
+                AND pattern = @pattern
                 AND is_active = true
             """.trimIndent())
             .orderBy("priority DESC")
@@ -139,13 +139,13 @@ class TimelineHandler : KoinComponent {
 
         val logResult = dataAccess.select("started_at", "ended_at")
             .from("activity_tracker.activity_log")
-            .where("process_name = :process AND started_at >= :start AND started_at <= :end AND ended_at IS NOT NULL")
+            .where("process_name = @process AND started_at >= @start AND started_at <= @end AND ended_at IS NOT NULL")
             .toListOf<ActivityTimeDto>(mapOf("process" to processName, "start" to startInstant, "end" to endInstant))
 
         val logs = (logResult as? DataResult.Success)?.value ?: return false
 
         dataAccess.deleteFrom("activity_tracker.category_slots")
-            .where("source_process_name = :process AND started_at >= :start AND started_at <= :end")
+            .where("source_process_name = @process AND started_at >= @start AND started_at <= @end")
             .execute(mapOf("process" to processName, "start" to startInstant, "end" to endInstant))
 
         for (log in logs) {
@@ -166,7 +166,7 @@ class TimelineHandler : KoinComponent {
 
     suspend fun deleteCategorySlot(id: Long) {
         dataAccess.deleteFrom("activity_tracker.category_slots")
-            .where("id = :id")
+            .where("id = @id")
             .execute(mapOf("id" to id))
     }
 

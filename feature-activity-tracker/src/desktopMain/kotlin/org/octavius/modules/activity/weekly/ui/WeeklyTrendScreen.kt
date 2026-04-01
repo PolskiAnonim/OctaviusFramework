@@ -14,8 +14,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.octavius.localization.Tr
@@ -84,7 +86,7 @@ class WeeklyTrendScreen : Screen {
                     val weekEnd = state.weekStartDate.plus(DatePeriod(days = 6))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "${state.weekStartDate.dayOfMonth}.${state.weekStartDate.monthNumber} - ${weekEnd.dayOfMonth}.${weekEnd.monthNumber}.${weekEnd.year}",
+                            text = "${state.weekStartDate.day}.${state.weekStartDate.month.number} - ${weekEnd.day}.${weekEnd.month.number}.${weekEnd.year}",
                             style = MaterialTheme.typography.titleLarge
                         )
                         val totalHours = state.days.sumOf { it.totalSeconds } / 3600f

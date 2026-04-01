@@ -14,8 +14,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.octavius.localization.Tr
@@ -86,7 +88,7 @@ class StatisticsScreen : Screen {
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "${state.selectedDate.dayOfMonth}.${state.selectedDate.monthNumber}.${state.selectedDate.year}",
+                            text = "${state.selectedDate.day}.${state.selectedDate.month.number}.${state.selectedDate.year}",
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(

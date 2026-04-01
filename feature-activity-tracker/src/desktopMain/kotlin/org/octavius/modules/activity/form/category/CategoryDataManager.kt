@@ -45,7 +45,7 @@ class CategoryDataManager : FormDataManager() {
         val result = if (loadedId != null) {
             dataAccess.update("activity_tracker.categories")
                 .setValues(params)
-                .where("id = :id")
+                .where("id = @id")
                 .execute(params + ("id" to loadedId))
         } else {
             dataAccess.insertInto("activity_tracker.categories")

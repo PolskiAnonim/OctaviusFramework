@@ -25,7 +25,7 @@ class WeeklyHandler : KoinComponent {
                 "SUM(al.duration_seconds) as total_seconds"
             )
                 .from("activity_tracker.activity_log al LEFT JOIN activity_tracker.categories c ON al.category_id = c.id")
-                .where("al.started_at >= :start_time AND al.started_at <= :end_time AND al.ended_at IS NOT NULL")
+                .where("al.started_at >= @start_time AND al.started_at <= @end_time AND al.ended_at IS NOT NULL")
                 .groupBy("c.name, c.color")
                 .orderBy("total_seconds DESC")
                 .toListOf<DayCategoryDto>(

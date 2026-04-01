@@ -2,6 +2,7 @@ package org.octavius.modules.activity.navigation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Rule
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -71,7 +72,7 @@ class ActivityTrackerHomeScreen : Screen {
                 QuickActionCard(
                     title = Tr.ActivityTracker.Home.rules(),
                     description = Tr.ActivityTracker.Home.rulesDescription(),
-                    icon = Icons.Default.Rule,
+                    icon = Icons.AutoMirrored.Filled.Rule,
                     onClick = { AppRouter.navigateTo(RulesReportScreen.create()) },
                     modifier = Modifier.weight(1f)
                 )
