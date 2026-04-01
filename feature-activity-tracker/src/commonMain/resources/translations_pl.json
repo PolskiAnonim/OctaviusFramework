@@ -1,0 +1,108 @@
+{
+  "activityTracker": {
+    "home": {
+      "title": "Aktywność - Strona główna",
+      "mainText": "Śledzenie aktywności",
+      "description": "Wizualizuj swoją aktywność komputerową, przeglądaj timeline aplikacji i dokumentów.",
+      "categories": "Kategorie",
+      "categoriesDescription": "Zarządzaj kategoriami aktywności",
+      "rules": "Reguły kategoryzacji",
+      "rulesDescription": "Definiuj automatyczne reguły przypisywania kategorii",
+      "activityLog": "Dziennik aktywności",
+      "activityLogDescription": "Przeglądaj historię uruchomionych aplikacji",
+      "documents": "Dokumenty",
+      "documentsDescription": "Przeglądaj historię otwieranych dokumentów",
+      "appTimeline": "Timeline aplikacji",
+      "appTimelineDescription": "Wizualizacja aktywności aplikacji w czasie",
+      "docTimeline": "Timeline dokumentów",
+      "docTimelineDescription": "Wizualizacja otwieranych dokumentów w czasie",
+      "statistics": "Statystyki",
+      "statisticsDescription": "Podsumowanie dziennej aktywności",
+      "weeklyTrend": "Trend tygodniowy",
+      "weeklyTrendDescription": "Analiza aktywności w ciągu tygodnia"
+    },
+    "category": {
+      "title": "Kategorie aktywności",
+      "name": "Nazwa kategorii",
+      "color": "Kolor",
+      "icon": "Ikona",
+      "parentCategory": "Kategoria nadrzędna",
+      "ruleCount": "Liczba reguł",
+      "activityCount": "Liczba aktywności"
+    },
+    "rule": {
+      "title": "Reguły kategoryzacji",
+      "category": "Kategoria",
+      "matchType": "Typ dopasowania",
+      "pattern": "Wzorzec",
+      "priority": "Priorytet",
+      "isActive": "Aktywna"
+    },
+    "matchType": {
+      "processName": "Nazwa procesu",
+      "windowTitle": "Tytuł okna",
+      "regex": "Wyrażenie regularne",
+      "pathContains": "Ścieżka zawiera"
+    },
+    "documentType": {
+      "pdf": "PDF",
+      "word": "Word",
+      "excel": "Excel",
+      "powerpoint": "PowerPoint",
+      "text": "Tekst",
+      "code": "Kod",
+      "image": "Obraz",
+      "video": "Wideo",
+      "other": "Inne"
+    },
+    "report": {
+      "activityLogTitle": "Dziennik aktywności",
+      "documentsTitle": "Dokumenty",
+      "windowTitle": "Tytuł okna",
+      "processName": "Nazwa procesu",
+      "startedAt": "Rozpoczęto",
+      "endedAt": "Zakończono",
+      "durationSeconds": "Czas trwania (s)",
+      "categoryName": "Kategoria",
+      "documentPath": "Ścieżka",
+      "documentTitle": "Tytuł dokumentu",
+      "documentType": "Typ",
+      "timestamp": "Czas"
+    },
+    "form": {
+      "newCategory": "Nowa kategoria",
+      "editCategory": "Edytuj kategorię",
+      "newRule": "Nowa reguła",
+      "editRule": "Edytuj regułę"
+    },
+    "timeline": {
+      "title": "Timeline",
+      "appTimelineTitle": "Timeline aplikacji",
+      "docTimelineTitle": "Timeline dokumentów",
+      "zoom": "Powiększenie",
+      "noData": "Brak danych dla wybranego dnia",
+      "selectRange": "Przeciągnij, aby wybrać zakres",
+      "selectedRange": "Wybrany zakres"
+    },
+    "statistics": {
+      "title": "Statystyki dzienne",
+      "categoryBreakdown": "Podział na kategorie",
+      "topApplications": "Najczęściej używane aplikacje",
+      "totalTime": "Całkowity czas",
+      "noData": "Brak danych do wyświetlenia"
+    },
+    "weekly": {
+      "title": "Trend tygodniowy",
+      "legend": "Legenda",
+      "totalHours": "Łączny czas (h)",
+      "noData": "Brak danych dla wybranego tygodnia"
+    },
+    "validation": {
+      "categoryNameExists": "Kategoria o tej nazwie już istnieje",
+      "patternExists": "Reguła z tym wzorcem już istnieje"
+    }
+  },
+  "tabs": {
+    "activityTracker": "Aktywność"
+  }
+}

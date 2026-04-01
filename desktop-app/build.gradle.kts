@@ -31,6 +31,7 @@ kotlin {
             implementation(projects.featureSettings)
             implementation(projects.featureAsianMedia)
             implementation(projects.featureBooks)
+            implementation(projects.featureActivityTracker)
             implementation(projects.featureSandbox)
             implementation(projects.apiServer)
             implementation(projects.apiContract)
