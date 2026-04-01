@@ -9,6 +9,8 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import org.octavius.modules.asian.model.PublicationAddRequest
 import org.octavius.modules.asian.model.PublicationAddResponse
+import org.octavius.modules.asian.model.PublicationCheckRequest
+import org.octavius.modules.asian.model.PublicationCheckResponse
 
 object ApiClient {
 
@@ -35,6 +37,18 @@ object ApiClient {
                 success = false,
                 message = "Nie można połączyć się z serwerem Octavius. Upewnij się, że aplikacja jest uruchomiona."
             )
+        }
+    }
+
+    suspend fun checkPublicationExistence(request: PublicationCheckRequest): PublicationCheckResponse {
+        return try {
+            client.post("$BASE_URL/api/asian-media/check") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body()
+        } catch (e: Exception) {
+            println("Błąd API (/check): ${e.message}")
+            PublicationCheckResponse(found = false)
         }
     }
 }

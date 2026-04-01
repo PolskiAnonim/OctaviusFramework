@@ -42,7 +42,7 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
     /**
      * Definiuje endpoint: GET /api/asian-media/check
-     * Sprawdza, czy którykolwiek z podanych tytułów istnieje już w bazie.
+     * Sprawdza, czy którykolwiek z podanych tytułów istnieje już w bazie (lub jest bardzo podobny).
      */
     private fun Route.checkPublicationExistence() {
         post("/check") {
@@ -52,24 +52,24 @@ class AsianMediaApi : ApiModule, KoinComponent {
                 return@post
             }
 
-            val result = dataAccess.select("id", "titles")
-                .from("asian_media.titles")
-                .where("titles && @titles")
+            // Używamy unnest na tytułach z bazy i tytułach z wejścia (it), aby znaleźć najlepszą parę
+            val result = dataAccess.select("id", "t as matched_title")
+                .from("asian_media.titles, unnest(titles) t, unnest(@titles) it")
+                .where("t % it")
+                .orderBy("t <-> it ASC")
+                .limit(1)
                 .toSingle("titles" to request.titles.withPgType(PgStandardType.TEXT_ARRAY))
 
             when (result) {
                 is DataResult.Failure -> {
-                    call.respond(PublicationCheckResponse(found = false)) // TODO Error
+                    println("Błąd wyszukiwania trigramowego: ${result.error.message}")
+                    call.respond(PublicationCheckResponse(found = false))
                 }
                 is DataResult.Success -> {
                     val row = result.value
                     if (row != null) {
                         val titleId = row["id"] as Int
-
-                        @Suppress("UNCHECKED_CAST")
-                        val dbTitles = row["titles"] as List<String>
-
-                        val matchedTitle = request.titles.firstOrNull { it in dbTitles }
+                        val matchedTitle = row["matched_title"] as String
 
                         call.respond(
                             PublicationCheckResponse(

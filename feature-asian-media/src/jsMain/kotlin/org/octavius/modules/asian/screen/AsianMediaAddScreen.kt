@@ -1,95 +1,127 @@
 package org.octavius.modules.asian.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.octavius.modules.asian.api.ApiClient
 import org.octavius.modules.asian.model.AsianPublicationData
 import org.octavius.modules.asian.model.PublicationAddRequest
+import org.octavius.modules.asian.model.PublicationCheckRequest
+import org.octavius.modules.asian.model.PublicationCheckResponse
 import org.octavius.navigation.Screen
 
 /**
- * Ekran dedykowany do wyświetlania danych sparsowanych ze strony MangaUpdates
+ * Ekran dedykowany do wyświetlania danych sparsowanych ze strony
  * i umożliwiający dodanie ich do bazy danych Octavius.
- *
- * @param data Sprawdzone i zdeserializowane dane publikacji.
  */
 class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
     override val title = "asianMediaAddScreen"
 
     @OptIn(ExperimentalMaterial3Api::class)
-        @Composable
-        override fun Content() {
-            // Stany dla UI - specyficzne dla tego ekranu
-            var isLoading by remember { mutableStateOf(false) }
-            var statusMessage by remember { mutableStateOf<Pair<String, Boolean>?>(null) } // Pair<Wiadomość, czySukces>
-            val coroutineScope = rememberCoroutineScope()
+    @Composable
+    override fun Content() {
+        var isLoading by remember { mutableStateOf(false) }
+        var checkResponse by remember { mutableStateOf<PublicationCheckResponse?>(null) }
+        var statusMessage by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
+        val coroutineScope = rememberCoroutineScope()
 
-            // Nie potrzebujemy już `LaunchedEffect` do pobierania danych,
-            // ponieważ dane (`data`) są przekazywane w konstruktorze.
+        // Sprawdź czy tytuł już istnieje przy wejściu na ekran
+        LaunchedEffect(data.titles) {
+            if (data.titles.isNotEmpty()) {
+                checkResponse = ApiClient.checkPublicationExistence(PublicationCheckRequest(data.titles))
+            }
+        }
 
-            // Układ UI - praktycznie skopiowany z Twojego App()
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Sekcja nagłówka (stała)
-            Text("Octavius Helper", style = MaterialTheme.typography.headlineSmall)
+            // Header
             Text(
-                "Znalezione tytuły (${data.source}):", // Dodajemy informację o źródle
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 8.dp)
+                "Octavius Helper",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            )
+            
+            Text(
+                "Źródło: ${data.source}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Sekcja listy tytułów (przewijalna)
-            Column(
-                modifier = Modifier
-                    .weight(1f) // Zajmuje dostępną przestrzeń
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(vertical = 8.dp)
-            ) {
-                if (data.titles.isEmpty()) {
-                    Text("Nie znaleziono tytułów na stronie...")
-                } else {
-                    data.titles.forEach { title ->
-                        Text("- $title")
-                    }
+            // Warning Section if exists
+            checkResponse?.let { check ->
+                if (check.found) {
+                    WarningCard(check.matchedTitle ?: "Nieznany tytuł")
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
-            // Sekcja kontrolek (stała na dole)
+            // Main Content Card
+            Card(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        "Wykryte tytuły:",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    
+                    if (data.titles.isEmpty()) {
+                        Text("Nie znaleziono tytułów...", style = MaterialTheme.typography.bodyMedium)
+                    } else {
+                        data.titles.forEach { title ->
+                            Text(
+                                "• $title",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)
+                            )
+                        }
+                    }
 
-            // Typ publikacji jest już wykryty i przekazany w `data`
-            OutlinedTextField(
-                value = data.type.toDisplayString(),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Wykryty typ publikacji") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-            )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
 
-            // Język publikacji również jest już wykryty
-            OutlinedTextField(
-                value = data.language.toDisplayString(),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Wykryty język") },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-            )
+                    InfoRow("Typ", data.type.toDisplayString())
+                    InfoRow("Język", data.language.toDisplayString())
+                }
+            }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Action Button
             Button(
                 onClick = {
                     isLoading = true
                     statusMessage = null
                     coroutineScope.launch {
-                        // Tworzymy request na podstawie danych przekazanych do ekranu
                         val request = PublicationAddRequest(
                             titles = data.titles,
                             type = data.type,
@@ -101,20 +133,75 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
                     }
                 },
                 enabled = data.titles.isNotEmpty() && !isLoading,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(8.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
                 } else {
-                    Text("Dodaj do bazy")
+                    Text("Dodaj do Octaviusa", fontWeight = FontWeight.Bold)
                 }
             }
 
-            // Wyświetlanie statusu operacji
+            // Status Message
             statusMessage?.let { (message, isSuccess) ->
-                val color = if (isSuccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                Text(message, color = color, modifier = Modifier.padding(top = 8.dp))
+                val color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+                Text(
+                    message,
+                    color = color,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                    fontSize = 12.sp
+                )
             }
         }
+    }
+
+    @Composable
+    private fun WarningCard(matchedTitle: String) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFFFFF3E0))
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Ostrzeżenie",
+                tint = Color(0xFFEF6C00),
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    "Podobny tytuł w bazie!",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color(0xFFE65100),
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Znaleziono: \"$matchedTitle\"",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFEF6C00)
+                )
+            }
         }
+    }
+
+    @Composable
+    private fun InfoRow(label: String, value: String) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+            Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+        }
+    }
 }
