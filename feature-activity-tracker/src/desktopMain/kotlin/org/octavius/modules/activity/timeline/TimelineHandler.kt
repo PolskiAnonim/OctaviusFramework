@@ -10,18 +10,18 @@ import org.octavius.data.builder.toListOf
 import org.octavius.modules.activity.domain.DocumentType
 import org.octavius.ui.timeline.TimelineBlock
 import org.octavius.ui.timeline.TimelineLane
+import org.octavius.util.ColorUtils.hexToColor
 import kotlin.time.Instant
 
 class TimelineHandler : KoinComponent {
     private val dataAccess: DataAccess by inject()
 
-    suspend fun loadLanes(date: LocalDate): List<TimelineLane> {
+    fun loadLanes(date: LocalDate): List<TimelineLane> {
         val tz = TimeZone.currentSystemDefault()
         val startInstant = date.atTime(0, 0, 0).toInstant(tz)
         val endInstant = date.atTime(23, 59, 59).toInstant(tz)
         val params = mapOf("start" to startInstant, "end" to endInstant)
 
-        // Kategorie z niezależnej tabeli category_slots
         val catResult = dataAccess.select(
             "cs.id",
             "c.name as label",
@@ -33,7 +33,6 @@ class TimelineHandler : KoinComponent {
             .orderBy("cs.started_at")
             .toListOf<CategorySlotDto>(params)
 
-        // Aplikacje: główna etykieta = tytuł okna, opis = nazwa procesu
         val appResult = dataAccess.select(
             "al.window_title as label",
             "al.process_name as description",
@@ -64,11 +63,7 @@ class TimelineHandler : KoinComponent {
         )
     }
 
-    /**
-     * Stosuje wszystkie reguły PROCESS_NAME do wpisów activity_log z danego dnia,
-     * zastępując wszystkie wcześniej auto-wypełnione sloty.
-     */
-    suspend fun autoFillAllCategories(date: LocalDate) {
+    fun autoFillAllCategories(date: LocalDate) {
         val tz = TimeZone.currentSystemDefault()
         val startInstant = date.atTime(0, 0, 0).toInstant(tz)
         val endInstant = date.atTime(23, 59, 59).toInstant(tz)
@@ -78,7 +73,6 @@ class TimelineHandler : KoinComponent {
             .where("source_process_name IS NOT NULL AND started_at >= @start AND started_at <= @end")
             .execute(params)
 
-        // LATERAL JOIN: dla każdego wpisu activity_log bierze regułę PROCESS_NAME o najwyższym priorytecie
         val slotsResult = dataAccess.select(
             "al.started_at", "al.ended_at",
             "cr.category_id",
@@ -115,12 +109,7 @@ class TimelineHandler : KoinComponent {
         }
     }
 
-    /**
-     * Szuka reguły PROCESS_NAME dla podanej aplikacji i tworzy sloty kategorii
-     * dla wszystkich jej wpisów w activity_log z danego dnia.
-     * Zwraca true jeśli reguła została znaleziona i sloty utworzone.
-     */
-    suspend fun autoFillCategoryForProcess(processName: String, date: LocalDate): Boolean {
+    fun autoFillCategoryForProcess(processName: String, date: LocalDate): Boolean {
         val tz = TimeZone.currentSystemDefault()
         val startInstant = date.atTime(0, 0, 0).toInstant(tz)
         val endInstant = date.atTime(23, 59, 59).toInstant(tz)
@@ -164,35 +153,17 @@ class TimelineHandler : KoinComponent {
         return true
     }
 
-    suspend fun deleteCategorySlot(id: Long) {
+    fun deleteCategorySlot(id: Long) {
         dataAccess.deleteFrom("activity_tracker.category_slots")
             .where("id = @id")
             .execute(mapOf("id" to id))
     }
 
-    private fun CategorySlotDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
-        val s = startedAt.toLocalDateTime(tz)
-        val e = endedAt?.toLocalDateTime(tz) ?: s
-        val startSec = s.hour * 3600f + s.minute * 60f + s.second
-        val endSec = (e.hour * 3600f + e.minute * 60f + e.second).coerceAtLeast(startSec + 1f)
-        return TimelineBlock(startSec, endSec, parseColor(color), label, id = id)
-    }
+    private fun CategorySlotDto.toTimelineBlock(tz: TimeZone): TimelineBlock =
+        createTimelineBlock(startedAt, endedAt, color, label, id = id, tz = tz)
 
-    private fun ActivityLogBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
-        val s = startedAt.toLocalDateTime(tz)
-        val e = endedAt?.toLocalDateTime(tz) ?: s
-        val startSec = s.hour * 3600f + s.minute * 60f + s.second
-        val endSec = (e.hour * 3600f + e.minute * 60f + e.second).coerceAtLeast(startSec + 1f)
-        return TimelineBlock(startSec, endSec, parseColor(color), label)
-    }
-
-    private fun AppBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
-        val s = startedAt.toLocalDateTime(tz)
-        val e = endedAt?.toLocalDateTime(tz) ?: s
-        val startSec = s.hour * 3600f + s.minute * 60f + s.second
-        val endSec = (e.hour * 3600f + e.minute * 60f + e.second).coerceAtLeast(startSec + 1f)
-        return TimelineBlock(startSec, endSec, parseColor(color), label, description)
-    }
+    private fun AppBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock =
+        createTimelineBlock(startedAt, endedAt, color, label, description, tz = tz)
 
     private fun DocBlockDto.toTimelineBlock(tz: TimeZone): TimelineBlock {
         val t = timestamp.toLocalDateTime(tz)
@@ -201,8 +172,31 @@ class TimelineHandler : KoinComponent {
         return TimelineBlock(
             startSeconds = startSec,
             endSeconds = (startSec + 120f).coerceAtMost(86400f),
-            color = parseColor(colorForDocType(type)),
+            color = hexToColor(colorForDocType(type)) ?: Color.Gray,
             label = fileName,
+        )
+    }
+
+    private fun createTimelineBlock(
+        startedAt: Instant,
+        endedAt: Instant?,
+        colorHex: String,
+        label: String,
+        description: String = "",
+        id: Long? = null,
+        tz: TimeZone
+    ): TimelineBlock {
+        val s = startedAt.toLocalDateTime(tz)
+        val e = endedAt?.toLocalDateTime(tz) ?: s
+        val startSec = s.hour * 3600f + s.minute * 60f + s.second
+        val endSec = (e.hour * 3600f + e.minute * 60f + e.second).coerceAtLeast(startSec + 1f)
+        return TimelineBlock(
+            startSeconds = startSec,
+            endSeconds = endSec,
+            color = hexToColor(colorHex) ?: Color.Gray,
+            label = label,
+            description = description,
+            id = id
         )
     }
 
@@ -214,20 +208,8 @@ class TimelineHandler : KoinComponent {
     }
 }
 
-private fun parseColor(hex: String): Color {
-    return try {
-        val clean = hex.removePrefix("#")
-        Color(when (clean.length) {
-            6 -> clean.toLong(16).toInt() or 0xFF000000.toInt()
-            8 -> clean.toLong(16).toInt()
-            else -> 0xFF6366F1.toInt()
-        })
-    } catch (e: Exception) {
-        Color.Gray
-    }
-}
-
-data class CategorySlotDto(
+// DTOs
+internal data class CategorySlotDto(
     val id: Long,
     val label: String,
     val startedAt: Instant,
@@ -235,14 +217,7 @@ data class CategorySlotDto(
     val color: String,
 )
 
-data class ActivityLogBlockDto(
-    val label: String,
-    val startedAt: Instant,
-    val endedAt: Instant?,
-    val color: String,
-)
-
-data class AppBlockDto(
+internal data class AppBlockDto(
     val label: String,
     val description: String,
     val startedAt: Instant,
@@ -250,17 +225,17 @@ data class AppBlockDto(
     val color: String,
 )
 
-data class DocBlockDto(
+internal data class DocBlockDto(
     val path: String,
     val type: DocumentType,
     val timestamp: Instant,
 )
 
-data class CategoryRuleDto(val categoryId: Int)
+internal data class CategoryRuleDto(val categoryId: Int)
 
-data class ActivityTimeDto(val startedAt: Instant, val endedAt: Instant?)
+internal data class ActivityTimeDto(val startedAt: Instant, val endedAt: Instant?)
 
-data class AutoFillSlotDto(
+internal data class AutoFillSlotDto(
     val startedAt: Instant,
     val endedAt: Instant?,
     val categoryId: Int,

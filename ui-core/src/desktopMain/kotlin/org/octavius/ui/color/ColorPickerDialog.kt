@@ -26,6 +26,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.octavius.localization.Tr
+import org.octavius.util.ColorUtils.colorToHex
+import org.octavius.util.ColorUtils.colorToHsv
+import org.octavius.util.ColorUtils.hexToColor
+import org.octavius.util.ColorUtils.hsvToColor
 
 /**
  * Okno dialogowe do wyboru koloru.
@@ -33,11 +37,6 @@ import org.octavius.localization.Tr
  * Zawiera panel nasycenia/jasności (SV), suwak odcienia (Hue),
  * opcjonalny suwak przezroczystości (Alpha), pole tekstowe hex
  * oraz podgląd wybranego koloru.
- *
- * @param initialColor Początkowy kolor (domyślnie czerwony).
- * @param showAlphaSlider Czy pokazywać suwak przezroczystości.
- * @param onDismiss Lambda wywoływana przy zamknięciu dialogu.
- * @param onConfirm Lambda wywoływana przy potwierdzeniu z wybranym kolorem.
  */
 @Composable
 fun ColorPickerDialog(
@@ -55,7 +54,7 @@ fun ColorPickerDialog(
     var alpha by remember { mutableFloatStateOf(initialAlpha) }
 
     val currentColor by remember(hue, saturation, value, alpha) {
-        derivedStateOf { hsvToColor(hue, saturation, value, alpha) }
+        derivedStateOf {  hsvToColor(hue, saturation, value, alpha) }
     }
 
     var hexInput by remember(currentColor) {
@@ -70,7 +69,6 @@ fun ColorPickerDialog(
                 modifier = Modifier.width(300.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Panel nasycenia i jasności
                 SaturationValuePanel(
                     hue = hue,
                     saturation = saturation,
@@ -84,14 +82,12 @@ fun ColorPickerDialog(
                         .height(200.dp)
                 )
 
-                // Suwak odcienia
                 HueSlider(
                     hue = hue,
                     onHueChange = { hue = it },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Opcjonalny suwak przezroczystości
                 if (showAlphaSlider) {
                     AlphaSlider(
                         alpha = alpha,
@@ -101,7 +97,6 @@ fun ColorPickerDialog(
                     )
                 }
 
-                // Podgląd i pole hex
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -140,13 +135,6 @@ fun ColorPickerDialog(
     )
 }
 
-// -- Komponenty wewnętrzne --
-
-/**
- * Panel 2D do wyboru nasycenia (oś X) i jasności (oś Y).
- * Tło to gradient od białego do czystego koloru hue (poziomo),
- * nałożony z gradientem od przezroczystego do czarnego (pionowo).
- */
 @Composable
 private fun SaturationValuePanel(
     hue: Float,
@@ -181,28 +169,13 @@ private fun SaturationValuePanel(
                     }
                 }
         ) {
-            // Gradient poziomy: biały → kolor hue
-            drawRect(
-                brush = Brush.horizontalGradient(listOf(Color.White, hueColor)),
-                size = size
-            )
-            // Gradient pionowy: przezroczysty → czarny
-            drawRect(
-                brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black)),
-                size = size
-            )
-            // Wskaźnik pozycji
-            drawSelectionIndicator(
-                x = saturation * size.width,
-                y = (1f - value) * size.height
-            )
+            drawRect(brush = Brush.horizontalGradient(listOf(Color.White, hueColor)), size = size)
+            drawRect(brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black)), size = size)
+            drawSelectionIndicator(saturation * size.width, (1f - value) * size.height)
         }
     }
 }
 
-/**
- * Suwak odcienia (0–360°) z tęczowym gradientem.
- */
 @Composable
 private fun HueSlider(
     hue: Float,
@@ -222,10 +195,6 @@ private fun HueSlider(
     )
 }
 
-/**
- * Suwak przezroczystości z gradientem od przezroczystego do pełnego koloru.
- * Tło szachownicy sygnalizuje przezroczystość.
- */
 @Composable
 private fun AlphaSlider(
     alpha: Float,
@@ -243,9 +212,6 @@ private fun AlphaSlider(
     )
 }
 
-/**
- * Uniwersalny suwak z gradientowym tłem i okrągłym uchwytem.
- */
 @Composable
 private fun GradientSlider(
     value: Float,
@@ -282,27 +248,15 @@ private fun GradientSlider(
             drawBackground?.invoke(this)
             drawRect(brush = Brush.horizontalGradient(colors), size = size)
 
-            // Uchwyt
             val thumbX = (value / maxValue) * size.width
             val thumbRadiusPx = thumbRadius.toPx()
-            drawCircle(
-                color = Color.White,
-                radius = thumbRadiusPx,
-                center = Offset(thumbX.coerceIn(thumbRadiusPx, size.width - thumbRadiusPx), size.height / 2)
-            )
-            drawCircle(
-                color = Color.Black,
-                radius = thumbRadiusPx,
-                center = Offset(thumbX.coerceIn(thumbRadiusPx, size.width - thumbRadiusPx), size.height / 2),
-                style = Stroke(width = 2f)
-            )
+            val center = Offset(thumbX.coerceIn(thumbRadiusPx, size.width - thumbRadiusPx), size.height / 2)
+            drawCircle(color = Color.White, radius = thumbRadiusPx, center = center)
+            drawCircle(color = Color.Black, radius = thumbRadiusPx, center = center, style = Stroke(width = 2f))
         }
     }
 }
 
-/**
- * Kwadratowy podgląd wybranego koloru z obramowaniem.
- */
 @Composable
 private fun ColorPreview(
     color: Color,
@@ -318,9 +272,6 @@ private fun ColorPreview(
     )
 }
 
-/**
- * Pole tekstowe do ręcznego wpisania koloru w formacie hex (#RRGGBB lub #AARRGGBB).
- */
 @Composable
 private fun HexTextField(
     value: String,
@@ -333,7 +284,6 @@ private fun HexTextField(
     OutlinedTextField(
         value = value,
         onValueChange = { newValue ->
-            // Akceptuj tylko znaki hex z prefiksem #
             val filtered = newValue.uppercase().filter { it in "0123456789ABCDEF#" }
             if (filtered.length <= 9) onValueChange(filtered)
         },
@@ -346,98 +296,6 @@ private fun HexTextField(
     )
 }
 
-// -- Funkcje pomocnicze do konwersji kolorów --
-
-/** Konwertuje Color na tablicę HSV [hue, saturation, value]. */
-private fun colorToHsv(color: Color): FloatArray {
-    val r = color.red
-    val g = color.green
-    val b = color.blue
-
-    val max = maxOf(r, g, b)
-    val min = minOf(r, g, b)
-    val delta = max - min
-
-    val h = when {
-        delta == 0f -> 0f
-        max == r -> 60f * (((g - b) / delta) % 6f)
-        max == g -> 60f * (((b - r) / delta) + 2f)
-        else -> 60f * (((r - g) / delta) + 4f)
-    }.let { if (it < 0f) it + 360f else it }
-
-    val s = if (max == 0f) 0f else delta / max
-    val v = max
-
-    return floatArrayOf(h, s, v)
-}
-
-/** Konwertuje wartości HSV + alpha na Color. */
-private fun hsvToColor(hue: Float, saturation: Float, value: Float, alpha: Float): Color {
-    val c = value * saturation
-    val x = c * (1f - kotlin.math.abs((hue / 60f) % 2f - 1f))
-    val m = value - c
-
-    val (r, g, b) = when {
-        hue < 60f -> Triple(c, x, 0f)
-        hue < 120f -> Triple(x, c, 0f)
-        hue < 180f -> Triple(0f, c, x)
-        hue < 240f -> Triple(0f, x, c)
-        hue < 300f -> Triple(x, 0f, c)
-        else -> Triple(c, 0f, x)
-    }
-
-    return Color(
-        red = (r + m).coerceIn(0f, 1f),
-        green = (g + m).coerceIn(0f, 1f),
-        blue = (b + m).coerceIn(0f, 1f),
-        alpha = alpha
-    )
-}
-
-/** Konwertuje Color na string hex (#RRGGBB lub #AARRGGBB). */
-private fun colorToHex(color: Color, includeAlpha: Boolean = false): String {
-    val r = (color.red * 255).toInt().coerceIn(0, 255)
-    val g = (color.green * 255).toInt().coerceIn(0, 255)
-    val b = (color.blue * 255).toInt().coerceIn(0, 255)
-
-    return if (includeAlpha) {
-        val a = (color.alpha * 255).toInt().coerceIn(0, 255)
-        "#%02X%02X%02X%02X".format(a, r, g, b)
-    } else {
-        "#%02X%02X%02X".format(r, g, b)
-    }
-}
-
-/** Parsuje string hex na Color. Zwraca null przy błędnym formacie. */
-private fun hexToColor(hex: String): Color? {
-    val clean = hex.removePrefix("#")
-    return try {
-        when (clean.length) {
-            6 -> {
-                val value = clean.toLong(16)
-                Color(
-                    red = ((value shr 16) and 0xFF) / 255f,
-                    green = ((value shr 8) and 0xFF) / 255f,
-                    blue = (value and 0xFF) / 255f
-                )
-            }
-            8 -> {
-                val value = clean.toLong(16)
-                Color(
-                    alpha = ((value shr 24) and 0xFF) / 255f,
-                    red = ((value shr 16) and 0xFF) / 255f,
-                    green = ((value shr 8) and 0xFF) / 255f,
-                    blue = (value and 0xFF) / 255f
-                )
-            }
-            else -> null
-        }
-    } catch (_: NumberFormatException) {
-        null
-    }
-}
-
-/** Rysuje okrągły wskaźnik pozycji na panelu SV. */
 private fun DrawScope.drawSelectionIndicator(x: Float, y: Float) {
     val radius = 8.dp.toPx()
     val center = Offset(x.coerceIn(0f, size.width), y.coerceIn(0f, size.height))
@@ -445,7 +303,6 @@ private fun DrawScope.drawSelectionIndicator(x: Float, y: Float) {
     drawCircle(color = Color.Black, radius = radius, center = center, style = Stroke(width = 1.5f))
 }
 
-/** Rysuje szachownicę sygnalizującą przezroczystość. */
 private fun DrawScope.drawCheckerboard(canvasSize: Size) {
     val tileSize = 6.dp.toPx()
     val cols = (canvasSize.width / tileSize).toInt() + 1
@@ -453,11 +310,7 @@ private fun DrawScope.drawCheckerboard(canvasSize: Size) {
     for (row in 0 until rows) {
         for (col in 0 until cols) {
             val color = if ((row + col) % 2 == 0) Color.LightGray else Color.White
-            drawRect(
-                color = color,
-                topLeft = Offset(col * tileSize, row * tileSize),
-                size = Size(tileSize, tileSize)
-            )
+            drawRect(color, Offset(col * tileSize, row * tileSize), Size(tileSize, tileSize))
         }
     }
 }

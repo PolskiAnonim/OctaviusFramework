@@ -16,7 +16,7 @@ import org.octavius.modules.activity.report.ui.CategoriesReportScreen
 import org.octavius.modules.activity.report.ui.DocumentsReportScreen
 import org.octavius.modules.activity.report.ui.RulesReportScreen
 import org.octavius.modules.activity.statistics.ui.StatisticsScreen
-import org.octavius.modules.activity.timeline.ui.UnifiedTimelineScreen
+import org.octavius.modules.activity.timeline.ui.ActivityTimelineScreen
 import org.octavius.modules.activity.weekly.ui.WeeklyTrendScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
@@ -109,7 +109,7 @@ class ActivityTrackerHomeScreen : Screen {
                     title = Tr.ActivityTracker.Home.appTimeline(),
                     description = Tr.ActivityTracker.Home.appTimelineDescription(),
                     icon = Icons.Default.Timeline,
-                    onClick = { AppRouter.navigateTo(UnifiedTimelineScreen()) },
+                    onClick = { AppRouter.navigateTo(ActivityTimelineScreen()) },
                     modifier = Modifier.weight(1f)
                 )
             }
