@@ -36,21 +36,21 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
 
     override fun buildColumns(): Map<String, ReportColumn> = mapOf(
         "titles" to StringColumn(
-            header = Tr.Games.General.titles(),
+            header = Tr.AsianMedia.Report.titles(),
             width = 2f
         ).asList(5),
         "language" to EnumColumn(
-            header = Tr.Games.General.language(),
+            header = Tr.AsianMedia.Report.language(),
             enumClass = PublicationLanguage::class,
             width = 1f
         ),
         "publication_type" to EnumColumn(
-            header = Tr.Games.General.publicationType(),
+            header = Tr.AsianMedia.Report.publicationType(),
             enumClass = PublicationType::class,
             width = 1.5f
         ).asList(9),
         "status" to EnumColumn(
-            header = Tr.Games.General.status(),
+            header = Tr.AsianMedia.Report.status(),
             enumClass = PublicationStatus::class,
             width = 1.5f
         ).asList(9)

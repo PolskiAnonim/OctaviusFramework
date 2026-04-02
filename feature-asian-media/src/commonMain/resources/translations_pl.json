@@ -27,7 +27,11 @@
     "report": {
       "newTitle": "Nowy tytuł",
       "newKoreanWebNovel": "Nowy Koreański Web Novel",
-      "title": "Azjatyckie media"
+      "title": "Azjatyckie media",
+      "titles": "Tytuły",
+      "language": "Język",
+      "publicationType": "Typ publikacji",
+      "status": "Status"
     },
     "home": {
       "title": "Strona główna",

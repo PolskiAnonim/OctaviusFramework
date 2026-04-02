@@ -70,7 +70,7 @@ fun main() {
 private fun ApplicationScope.AppLoadingScreen(onLoaded: () -> Unit, koin: Koin) {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "Loading...",
+        title = Tr.App.loading(),
         state = rememberWindowState(position = WindowPosition(Alignment.Center), size = DpSize(300.dp, 200.dp)),
         undecorated = true,
         resizable = false
@@ -79,14 +79,13 @@ private fun ApplicationScope.AppLoadingScreen(onLoaded: () -> Unit, koin: Koin) 
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
-                    Text("Loading...")
+                    Text(Tr.App.loading())
                 }
             }
         }
     }
 
     LaunchedEffect(Unit) {
-        @Suppress("HardcodedDispatcher")
         withContext(Dispatchers.IO) {
             koin.get<DataAccess>() // Używamy przekazanego Koin
         }

@@ -16,6 +16,7 @@ import kotlinx.serialization.json.Json
 import org.octavius.api.contract.ExtensionModule
 import org.octavius.api.contract.ParseResult
 import org.octavius.extension.util.chrome
+import org.octavius.localization.Tr
 import org.octavius.modules.asian.AsianMediaExtensionModule
 import org.octavius.navigation.Screen
 import org.octavius.theme.AppTheme
@@ -33,13 +34,13 @@ fun main() {
     ComposeViewport {
         // Stan przechowujący aktualnie wyświetlany ekran
         var currentScreen by remember { mutableStateOf<Screen?>(null) }
-        var statusMessage by remember { mutableStateOf("Analizowanie strony...") }
+        var statusMessage by remember { mutableStateOf(Tr.Popup.Status.analyzing()) }
 
         LaunchedEffect(Unit) {
             val responseString = sendParseRequestToContentScript()
 
             if (responseString == null) {
-                statusMessage = "Nie udało się sparsować strony lub nie znaleziono parsera."
+                statusMessage = Tr.Popup.Status.parseError()
                 return@LaunchedEffect
             }
 
@@ -51,14 +52,14 @@ fun main() {
             }
 
             if (parseResult == null) {
-                statusMessage = "Otrzymano nieprawidłowe dane ze skryptu."
+                statusMessage = Tr.Popup.Status.invalidData()
                 return@LaunchedEffect
             }
 
             val targetModule = modulesById[parseResult.moduleId]
 
             if (targetModule == null) {
-                statusMessage = "Nie znaleziono modułu obsługującego: ${parseResult.moduleId}"
+                statusMessage =Tr.Popup.Status.moduleNotFound(parseResult.moduleId)
                 return@LaunchedEffect
             }
 
@@ -68,7 +69,7 @@ fun main() {
             if (screenToShow != null) {
                 currentScreen = screenToShow
             } else {
-                statusMessage = "Wystąpił błąd podczas przetwarzania danych przez moduł."
+                statusMessage = Tr.Popup.Status.processingError()
             }
         }
 

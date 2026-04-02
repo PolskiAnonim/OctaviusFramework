@@ -27,9 +27,6 @@
       "webtoon": "Webtoon"
     }
   },
-  "app": {
-    "name": "Octavius"
-  },
   "expandable": {
     "collapse": "Zwiń",
     "expand": "Rozwiń"

@@ -49,11 +49,8 @@
     },
     "general": {
       "gameName": "Nazwa",
-      "language": "Język",
-      "publicationType": "Typ publikacji",
       "series": "Seria",
-      "status": "Status",
-      "titles": "Tytuły"
+      "status": "Status"
     },
     "report": {
       "newGame": "Nowa gra",
