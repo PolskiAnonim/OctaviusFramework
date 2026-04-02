@@ -1,15 +1,15 @@
 [versions]
-octavius-database = "6.2.1"
-dokka = "2.1.0"
+octavius-database = "6.2.2"
+dokka = "2.2.0"
 compose-multiplatform = "1.11.0-alpha04"
 kotlin = "2.3.20"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 kotlinx-datetime = "0.7.1"
 # api-server
-ktor = "3.4.1"
+ktor = "3.4.2"
 # koin
-koin = "4.1.1"
+koin = "4.2.0"
 #test/log
 junit = "6.0.2"
 assertj-core = "4.0.0-M1"
