@@ -10,6 +10,7 @@ import org.octavius.navigation.AppRouter
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn
+import org.octavius.report.column.type.ColorColumn
 import org.octavius.report.column.type.LongColumn
 import org.octavius.report.column.type.StringColumn
 import org.octavius.report.component.ReportStructureBuilder
@@ -47,7 +48,7 @@ class CategoriesReportStructureBuilder : ReportStructureBuilder() {
         "name" to StringColumn(
             header = Tr.ActivityTracker.Category.name()
         ),
-        "color" to StringColumn(
+        "color" to ColorColumn(
             header = Tr.ActivityTracker.Category.color()
         ),
         "icon" to StringColumn(
