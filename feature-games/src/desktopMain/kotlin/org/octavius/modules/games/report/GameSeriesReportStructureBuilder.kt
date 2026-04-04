@@ -3,10 +3,12 @@ package org.octavius.modules.games.report
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.List
 import org.octavius.data.QueryFragment
 import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.modules.games.form.series.ui.GameSeriesFormScreen
+import org.octavius.modules.games.report.ui.GameReportScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
@@ -66,6 +68,15 @@ class GameSeriesReportStructureBuilder : ReportStructureBuilder() {
     )
 
     override fun buildRowActions(): List<ReportRowAction> = listOf(
+        ReportRowAction(
+            label = Tr.Games.Report.viewGames(),
+            icon = Icons.Default.List
+        ) {
+            val seriesId = rowData["id"] as? Int
+            if (seriesId != null) {
+                AppRouter.navigateTo(GameReportScreen.create(seriesId = seriesId))
+            }
+        },
         ReportRowAction(Tr.Games.Report.addGameInSeries(), Icons.Default.Add) {
             val seriesId = rowData["id"] as? Int
             if (seriesId != null) {

@@ -7,9 +7,9 @@ import org.octavius.report.component.ReportScreen
 
 class GameReportScreen {
     companion object {
-        fun create(): ReportScreen {
+        fun create(categoryId: Int? = null, seriesId: Int? = null): ReportScreen {
             val title = Tr.Games.Report.title()
-            val reportStructureBuilder = GameReportStructureBuilder()
+            val reportStructureBuilder = GameReportStructureBuilder(categoryId, seriesId)
             return ReportScreen(title, ReportHandler(reportStructureBuilder))
         }
     }

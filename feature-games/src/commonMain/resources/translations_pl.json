@@ -56,7 +56,8 @@
       "newGame": "Nowa gra",
       "newSeries": "Nowa seria",
       "title": "Gry",
-      "addGameInSeries": "Dodaj nową grę w serii"
+      "addGameInSeries": "Dodaj nową grę w serii",
+      "viewGames": "Zobacz gry"
     },
     "series": {
       "basicInfo": "Informacje o serii",
