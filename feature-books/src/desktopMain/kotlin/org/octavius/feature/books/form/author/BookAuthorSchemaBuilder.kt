@@ -41,7 +41,7 @@ class BookAuthorSchemaBuilder : FormSchemaBuilder() {
             buttonType = ButtonType.Filled,
             dependencies = mapOf(
                 "visible" to ControlDependency(
-                    controlName = "id",
+                    controlPath = "id",
                     value = null,
                     dependencyType = DependencyType.Visible,
                     comparisonType = ComparisonType.NotEquals

@@ -3,18 +3,16 @@ package org.octavius.form.control.base
 /**
  * Definuje zależność między kontrolkami.
  *
- * @param controlName nazwa kontrolki od której zależy ta kontrolka
+ * @param controlPath ścieżka do kontrolki (względna lub bezwzględna)
  * @param value wartość kontrolki która powoduje aktywację zależności
  * @param dependencyType typ zależności (widoczność lub wymagalność)
  * @param comparisonType sposób porównania wartości
- * @param scope zasięg zależności (lokalny w obrębie wiersza lub globalny)
  */
 data class ControlDependency<T>(
-    val controlName: String,
+    val controlPath: String,
     val value: T,
     val dependencyType: DependencyType,
-    val comparisonType: ComparisonType,
-    val scope: DependencyScope = DependencyScope.Global
+    val comparisonType: ComparisonType
 )
 
 /**
@@ -40,17 +38,4 @@ enum class ComparisonType {
 
     /** Wartość musi być różna od podanej wartości */
     NotEquals
-}
-
-// TODO: zobaczyć ścieżki relatywne (../) lub od korzenia
-/**
- *
- * Zasięg zależności między kontrolkami.
- */
-enum class DependencyScope {
-    /** Zależność lokalna - w obrębie tego samego wiersza RepeatableControl */
-    Local,
-
-    /** Zależność globalna - w całym formularzu */
-    Global
 }
