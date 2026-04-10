@@ -51,11 +51,11 @@ data class ControlContext(
     val parent: ControlContext? = null
 ) {
     val fullControlPath: String by lazy {
-        if (controlPath.isEmpty()) localName else "$controlPath.$localName"
+        if (controlPath.isEmpty()) localName else "$controlPath/$localName"
     }
 
     val fullStatePath: String by lazy {
-        if (statePath.isEmpty()) localName else "$statePath.$localName"
+        if (statePath.isEmpty()) localName else "$statePath/$localName"
     }
 
     fun forSectionChild(childLocalName: String): ControlContext {

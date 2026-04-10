@@ -57,7 +57,7 @@ data class ActionContext<T>(
      */
     fun <V: Any> updateLocalControl(controlName: String, newValue: V?) {
         val path = sourceControlContext.statePath
-        val resolvedName ="$path.$controlName"
+        val resolvedName ="$path/$controlName"
         updateControl(resolvedName, newValue)
     }
 

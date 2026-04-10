@@ -134,8 +134,8 @@ abstract class ControlValidator<T : Any> {
             // Jeśli to lokalna zależność, składamy pełną ścieżkę
             // do "sąsiada" w tym samym basePath.
             // basePath to np. "publications[123]"
-            // dependency.controlName to np. "trackProgress"
-            "${controlContext.statePath}.${dependency.controlName}"
+            // dependency/controlName to np. "trackProgress"
+            "${controlContext.statePath}/${dependency.controlName}"
         } else {
             // Globalna zależność - użyj oryginalnej nazwy z definicji zależności
             dependency.controlName
