@@ -29,8 +29,8 @@ object PathResolver {
         }
 
         // Kompatybilność wsteczna: prosta nazwa bez separatorów i modyfikatorów to path bezwzględny
-        if (!path.contains(SEPARATOR) && 
-            !path.startsWith(CURRENT) && 
+        if (!path.contains(SEPARATOR) &&
+            !path.startsWith(CURRENT) &&
             !path.startsWith(PARENT)
         ) {
             return path
@@ -47,10 +47,12 @@ object PathResolver {
                     // Ponieważ currentContext.statePath odnosi się już do kontenera,
                     // nie musimy wchodzić wyżej w drzewo ControlContext.
                 }
+
                 PARENT -> {
                     // .. oznacza wyjście do kontenera nadrzędnego
                     contextNode = contextNode?.parent
                 }
+
                 else -> {
                     // Dotarliśmy do właściwych nazw ścieżki
                     break
@@ -71,5 +73,54 @@ object PathResolver {
         } else {
             "$basePath/$remainingPath"
         }
+    }
+
+    /**
+     * Rozwiązuje ścieżkę [path], która może zawierać symbole wieloznaczne (*),
+     * zwracając listę wszystkich pasujących kluczy z [formState].
+     *
+     * Przykład: "publications/[*]/details/status" -> ["publications[uuid1]/details/status", ...]
+     */
+    fun resolvePaths(path: String, currentContext: ControlContext, formState: FormState): List<String> {
+        if (!path.contains("*")) {
+            return listOf(resolvePath(path, currentContext))
+        }
+
+        // 1. Rozwiąż bazę (do pierwszego *)
+        val basePathPart = path.substringBefore("*")
+
+        val cleanBasePath = if (basePathPart.endsWith(SEPARATOR) && basePathPart.length > 1) {
+            basePathPart.dropLast(1)
+        } else {
+            basePathPart
+        }
+
+        val resolvedBase = if (cleanBasePath.isEmpty() || cleanBasePath == SEPARATOR) {
+            ""
+        } else {
+            resolvePath(cleanBasePath, currentContext)
+        }
+
+        // 2. Przygotuj regex dla reszty wzorca
+        val pattern = path.substring(basePathPart.length)
+
+        val regexPattern = pattern
+            .replace("/", "\\/")
+            .replace("[", "\\[")
+            .replace("]", "\\]")
+            .replace("*", "[^\\/]+")
+
+        val regexString = if (resolvedBase.isEmpty()) {
+            "^$regexPattern$"
+        } else {
+            val escapedBase = Regex.escape(resolvedBase)
+            val separator = if (pattern.startsWith(SEPARATOR)) "" else "\\/"
+            "^$escapedBase$separator$regexPattern$"
+        }
+
+        val regex = regexString.toRegex()
+
+        // 3. Filtrujemy klucze z FormState
+        return formState.getAllStates().keys.filter { it.matches(regex) }
     }
 }

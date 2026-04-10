@@ -51,4 +51,19 @@ data class ActionContext<T>(
             typedState.revision.value++ // ZAWSZE inkrementuj rewizję
         }
     }
+
+    /**
+     * Aktualizuje wartości wielu kontrolek pasujących do wzorca (np. z wildcardem *).
+     */
+    fun <V: Any> updateControls(controlPath: String, newValue: V?) {
+        val resolvedNames = PathResolver.resolvePaths(controlPath, sourceControlContext, formState)
+        resolvedNames.forEach { resolvedName ->
+            formState.getControlState(resolvedName)?.let { state ->
+                @Suppress("UNCHECKED_CAST")
+                val typedState = state as ControlState<V>
+                typedState.value.value = newValue
+                typedState.revision.value++
+            }
+        }
+    }
 }
