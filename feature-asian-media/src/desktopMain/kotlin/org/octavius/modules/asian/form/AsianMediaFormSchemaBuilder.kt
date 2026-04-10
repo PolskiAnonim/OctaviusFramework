@@ -80,7 +80,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             buttonType = ButtonType.Filled,
             dependencies = mapOf(
                 "visible" to ControlDependency(
-                    controlName = "id",
+                    controlPath = "id",
                     value = null,
                     dependencyType = DependencyType.Visible,
                     comparisonType = ComparisonType.NotEquals
@@ -135,7 +135,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                             PublicationStatus.PlanToRead, PublicationStatus.Reading,
                             PublicationStatus.Completed
                         ))
-                        updateLocalControl("trackProgress", shouldBeChecked)
+                        updateControl("./trackProgress", shouldBeChecked)
                     }
                 )
             ),
@@ -169,11 +169,10 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
 
     private fun visibleWhenTrackProgress(): Map<String, ControlDependency<Boolean>> = mapOf(
         "visible" to ControlDependency(
-            controlName = "trackProgress",
+            controlPath = "./trackProgress",
             value = true,
             dependencyType = DependencyType.Visible,
             comparisonType = ComparisonType.Equals,
-            scope = DependencyScope.Local
         )
     )
 

@@ -5,6 +5,7 @@ import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormActionTrigger
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
+import org.octavius.form.component.PathResolver
 
 /**
  * Definiuje akcję do wykonania po zmianie wartości kontrolki.
@@ -38,11 +39,11 @@ data class ActionContext<T>(
     val payload: Any? = null // Dodatkowe dane, przykładowo dla kontrolek dropdown dodatkowa wartość
 ) {
     /**
-     * Aktualizuje wartość kontrolki o podanej nazwie.
-     * Działa na kontrolkach globalnych.
+     * Aktualizuje wartość kontrolki używając ścieżki względnej (./, ../) lub bezwzględnej.
      */
-    fun <V: Any> updateControl(controlName: String, newValue: V?) {
-        formState.getControlState(controlName)?.let { state ->
+    fun <V: Any> updateControl(controlPath: String, newValue: V?) {
+        val resolvedName = PathResolver.resolvePath(controlPath, sourceControlContext)
+        formState.getControlState(resolvedName)?.let { state ->
             // Używamy "unsafe" cast, ponieważ programista jest odpowiedzialny za poprawny typ
             @Suppress("UNCHECKED_CAST")
             val typedState = state as ControlState<V>
@@ -50,15 +51,4 @@ data class ActionContext<T>(
             typedState.revision.value++ // ZAWSZE inkrementuj rewizję
         }
     }
-
-    /**
-     * Aktualizuje wartość kontrolki w tym samym wierszu (w obrębie RepeatableControl).
-     * Jeśli kontrolka nie jest w RepeatableControl, działa jak updateControl.
-     */
-    fun <V: Any> updateLocalControl(controlName: String, newValue: V?) {
-        val path = sourceControlContext.statePath
-        val resolvedName ="$path/$controlName"
-        updateControl(resolvedName, newValue)
-    }
-
 }

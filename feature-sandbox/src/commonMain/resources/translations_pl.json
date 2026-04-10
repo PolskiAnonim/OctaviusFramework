@@ -42,6 +42,10 @@
       "elements": "Elementy",
       "elementName": "Nazwa elementu",
       "elementValue": "Wartość elementu",
+      "nestedRepeatable": "Zagnieżdżona lista",
+      "innerRepeatable": "Wewnętrzna lista",
+      "innerString": "Wewnętrzny tekst",
+      "innerBoolean": "Wewnętrzny przełącznik",
       "savedMessage": "Dane zapisane (sandbox)"
     },
     "report": {

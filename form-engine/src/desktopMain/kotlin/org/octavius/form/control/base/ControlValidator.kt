@@ -3,6 +3,7 @@ package org.octavius.form.control.base
 import org.octavius.form.component.ErrorManager
 import org.octavius.form.component.FormSchema
 import org.octavius.form.component.FormState
+import org.octavius.form.component.PathResolver
 import org.octavius.localization.Tr
 
 /**
@@ -44,7 +45,7 @@ abstract class ControlValidator<T : Any> {
         // Pobieramy stan z nadrzędnej klasy.
         val states = formState.getAllStates()
 
-        val resolvedControlName = resolveDependencyControlName(dependency, controlContext)
+        val resolvedControlName = PathResolver.resolvePath(dependency.controlPath, controlContext)
         val dependentState = states[resolvedControlName] ?: return true // Jeśli kontrolka nie istnieje, traktujemy zależność jako spełnioną
 
         val dependentValue = dependentState.value.value
@@ -120,25 +121,6 @@ abstract class ControlValidator<T : Any> {
             is String -> value.isBlank()
             is List<*> -> value.isEmpty()
             else -> false
-        }
-    }
-
-    /**
-     * Rozwiązuje nazwę kontrolki dla zależności, uwzględniając scope (Local/Global)
-     */
-    private fun resolveDependencyControlName(
-        dependency: ControlDependency<*>,
-        controlContext: ControlContext
-    ): String {
-        return if (dependency.scope == DependencyScope.Local) {
-            // Jeśli to lokalna zależność, składamy pełną ścieżkę
-            // do "sąsiada" w tym samym basePath.
-            // basePath to np. "publications[123]"
-            // dependency/controlName to np. "trackProgress"
-            "${controlContext.statePath}/${dependency.controlName}"
-        } else {
-            // Globalna zależność - użyj oryginalnej nazwy z definicji zależności
-            dependency.controlName
         }
     }
 

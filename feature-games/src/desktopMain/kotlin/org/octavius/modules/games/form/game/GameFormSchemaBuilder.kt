@@ -58,7 +58,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             required = true, // Automatycznie pomijana walidacja jak niewidoczna kontrolka
             dependencies = mapOf(
                 "visible" to ControlDependency(
-                    controlName = "status",
+                    controlPath = "status",
                     value = listOf(GameStatus.Playing, GameStatus.Played),
                     dependencyType = DependencyType.Visible,
                     comparisonType = ComparisonType.OneOf
@@ -74,7 +74,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             label = Tr.Games.Form.playTime(),
             dependencies = mapOf(
                 "visible" to ControlDependency(
-                    controlName = "status",
+                    controlPath = "status",
                     value = listOf(
                         GameStatus.Playing,
                         GameStatus.Played,
@@ -107,7 +107,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             label = Tr.Games.Form.ratings(),
             dependencies = mapOf(
                 "visible" to ControlDependency(
-                    controlName = "status",
+                    controlPath = "status",
                     value = listOf(GameStatus.Played, GameStatus.WithoutTheEnd),
                     dependencyType = DependencyType.Visible,
                     comparisonType = ComparisonType.OneOf
@@ -135,7 +135,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             label = Tr.Games.Form.characters(),
             dependencies = mapOf(
                 "visible" to ControlDependency(
-                    controlName = "visibleCharactersSection",
+                    controlPath = "visibleCharactersSection",
                     value = true,
                     dependencyType = DependencyType.Visible,
                     comparisonType = ComparisonType.Equals

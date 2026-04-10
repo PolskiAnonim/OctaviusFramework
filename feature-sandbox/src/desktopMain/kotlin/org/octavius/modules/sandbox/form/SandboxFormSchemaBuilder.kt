@@ -1,10 +1,7 @@
 package org.octavius.modules.sandbox.form
 
 import org.octavius.form.component.FormSchemaBuilder
-import org.octavius.form.control.base.Control
-import org.octavius.form.control.base.ControlAction
-import org.octavius.form.control.base.IntegerValidation
-import org.octavius.form.control.base.RepeatableValidation
+import org.octavius.form.control.base.*
 import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.collection.StringListControl
@@ -70,6 +67,32 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
                 uniqueFields = listOf("elementName")
             )
         ),
+        "nestedRepeatable" to RepeatableControl(
+            rowControls = mapOf(
+                "innerRepeatable" to RepeatableControl(
+                    rowControls = mapOf(
+                        "innerString" to StringControl(
+                            Tr.Sandbox.Form.innerString(),
+                            dependencies = mapOf(
+                                "visible" to ControlDependency(
+                                    controlPath = "../innerBoolean",
+                                    value = true,
+                                    dependencyType = DependencyType.Visible,
+                                    comparisonType = ComparisonType.Equals
+                                )
+                            )
+                        )
+                    ),
+                    rowOrder = listOf("innerString"),
+                    label = Tr.Sandbox.Form.innerRepeatable()
+                ),
+                "innerBoolean" to BooleanControl(
+                    Tr.Sandbox.Form.innerBoolean()
+                )
+            ),
+            rowOrder = listOf("innerRepeatable", "innerBoolean"),
+            label = Tr.Sandbox.Form.nestedRepeatable()
+        ),
         "saveButton" to ButtonControl(
             text = Tr.Action.save(),
             actions = listOf(
@@ -92,7 +115,8 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineContentOrder(): List<String> = listOf(
         "basicInfo",
-        "elements"
+        "elements",
+        "nestedRepeatable"
     )
 
     override fun defineActionBarOrder(): List<String> = listOf(
