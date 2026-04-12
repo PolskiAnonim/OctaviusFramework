@@ -91,6 +91,6 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
     )
 
     override fun buildQuickSearch(searchQuery: String): QueryFragment {
-        return "EXISTS (SELECT 1 FROM unnest(titles) AS t WHERE t % @searchQuery)" withParam ("searchQuery" to searchQuery)
+        return "title_id IN (SELECT title_id FROM asian_media.title_variants WHERE title % @searchQuery)" withParam ("searchQuery" to searchQuery)
     }
 }

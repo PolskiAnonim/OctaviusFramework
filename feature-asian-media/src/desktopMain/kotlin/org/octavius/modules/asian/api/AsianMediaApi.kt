@@ -52,11 +52,17 @@ class AsianMediaApi : ApiModule, KoinComponent {
                 return@post
             }
 
-            // Używamy unnest na tytułach z bazy i tytułach z wejścia (it), aby znaleźć najlepszą parę
-            val result = dataAccess.select("id", "t as matched_title")
-                .from("asian_media.titles, unnest(titles) t, unnest(@titles) it")
-                .where("t % it")
-                .orderBy("t <-> it ASC")
+            val result = dataAccess.select("v.id", "v.matched_title")
+                .from("""
+                    unnest(@titles) it,
+                    LATERAL (
+                        SELECT title_id as id, title as matched_title
+                        FROM asian_media.title_variants
+                        WHERE title % it
+                        ORDER BY title <-> it ASC
+                        LIMIT 1
+                    ) v
+                """.trimIndent())
                 .limit(1)
                 .toSingle("titles" to request.titles.withPgType(PgStandardType.TEXT_ARRAY))
 
