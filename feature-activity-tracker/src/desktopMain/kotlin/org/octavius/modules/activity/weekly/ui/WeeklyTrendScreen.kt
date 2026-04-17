@@ -172,7 +172,7 @@ class WeeklyTrendScreen : Screen {
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "${day.dayOfWeek} (${day.date.dayOfMonth}.${day.date.monthNumber})",
+                                    text = "${day.dayOfWeek} (${day.date.day}.${day.date.month.number})",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Text(

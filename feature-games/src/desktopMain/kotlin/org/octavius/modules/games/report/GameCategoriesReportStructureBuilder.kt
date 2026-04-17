@@ -1,6 +1,7 @@
 package org.octavius.modules.games.report
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
@@ -49,7 +50,7 @@ class GameCategoriesReportStructureBuilder : ReportStructureBuilder() {
     override fun buildRowActions(): List<ReportRowAction> = listOf(
         ReportRowAction(
             label = Tr.Games.Report.viewGames(),
-            icon = Icons.Default.List
+            icon = Icons.AutoMirrored.Filled.List
         ) {
             val categoryId = rowData["id"] as? Int
             if (categoryId != null) {
