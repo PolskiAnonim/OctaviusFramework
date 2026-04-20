@@ -10,7 +10,7 @@ data class ReportPaginationState(
     val currentPage: Long = 0,
     val totalPages: Long = 1,
     val totalItems: Long = 0,
-    val pageSize: Long = 10
+    val pageSize: Long = 50
 ) {
     fun resetPage(): ReportPaginationState = this.copy(currentPage = 0)
 }
