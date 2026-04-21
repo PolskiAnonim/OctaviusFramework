@@ -1,8 +1,8 @@
 package org.octavius.modules.games.statistics.model
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.octavius.data.annotation.DynamicallyMappable
-import org.octavius.data.helper.BigDecimalAsNumberSerializer
 import org.octavius.domain.game.GameStatus
 import org.octavius.domain.game.GameStatusDynamicDtoSerializer
 import java.math.BigDecimal
@@ -28,7 +28,7 @@ data class DashboardStatusCount(
 data class DashboardGameByTime(
     override val id: Int,
     override val name: String,
-    @Serializable(with = BigDecimalAsNumberSerializer::class)
+    @Contextual
     val playTimeHours: BigDecimal
 ) : DashboardGame {
     override val value: String = "${this.playTimeHours}h"
@@ -40,7 +40,7 @@ data class DashboardGameByTime(
 data class DashboardGameByRating(
     override val id: Int,
     override val name: String,
-    @Serializable(with = BigDecimalAsNumberSerializer::class)
+    @Contextual
     val averageRating: BigDecimal
 ) : DashboardGame {
     override val value: String = averageRating.toString()

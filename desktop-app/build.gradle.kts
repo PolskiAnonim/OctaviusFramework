@@ -24,6 +24,7 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(libs.octavius.database.core)
+            implementation(libs.octavius.database.flyway.integration)
             implementation(projects.featureContract)
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
