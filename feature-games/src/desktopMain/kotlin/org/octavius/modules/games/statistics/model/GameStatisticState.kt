@@ -2,7 +2,7 @@ package org.octavius.modules.games.statistics.model
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import org.octavius.data.annotation.DynamicallyMappable
+import io.github.octaviusframework.db.api.annotation.DynamicallyMappable
 import org.octavius.domain.game.GameStatus
 import org.octavius.domain.game.GameStatusDynamicDtoSerializer
 import java.math.BigDecimal

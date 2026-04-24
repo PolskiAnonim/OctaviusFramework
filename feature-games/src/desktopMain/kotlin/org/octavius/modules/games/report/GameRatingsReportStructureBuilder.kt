@@ -1,6 +1,6 @@
 package org.octavius.modules.games.report
 
-import org.octavius.data.QueryFragment
+import io.github.octaviusframework.db.api.QueryFragment
 import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
 import org.octavius.navigation.AppRouter

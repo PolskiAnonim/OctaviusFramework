@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.DataAccess
-import org.octavius.data.DataResult
-import org.octavius.data.builder.toSingleOf
-import org.octavius.data.exception.DatabaseException
+import io.github.octaviusframework.db.api.DataAccess
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.toSingleOf
+import io.github.octaviusframework.db.api.exception.DatabaseException
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 

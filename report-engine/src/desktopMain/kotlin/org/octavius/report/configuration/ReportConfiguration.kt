@@ -1,8 +1,8 @@
 package org.octavius.report.configuration
 
 import kotlinx.serialization.json.JsonObject
-import org.octavius.data.annotation.PgComposite
-import org.octavius.data.annotation.PgEnum
+import io.github.octaviusframework.db.api.annotation.PgComposite
+import io.github.octaviusframework.db.api.annotation.PgEnum
 
 data class ReportConfiguration(
     val id: Int? = null,

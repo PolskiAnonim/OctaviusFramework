@@ -1,7 +1,7 @@
 package org.octavius.domain.game
 
-import org.octavius.data.annotation.PgEnum
-import org.octavius.data.serializer.DynamicDtoEnumSerializer
+import io.github.octaviusframework.db.api.annotation.PgEnum
+import io.github.octaviusframework.db.api.serializer.DynamicDtoEnumSerializer
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Tr
 

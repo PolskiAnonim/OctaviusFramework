@@ -1,13 +1,13 @@
 package org.octavius.modules.games.form.game
 
-import org.octavius.data.DataResult
-import org.octavius.data.builder.execute
-import org.octavius.data.builder.toField
-import org.octavius.data.transaction.TransactionPlan
-import org.octavius.data.transaction.TransactionValue
-import org.octavius.data.transaction.toTransactionValue
-import org.octavius.data.type.PgStandardType
-import org.octavius.data.type.withPgType
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.execute
+import io.github.octaviusframework.db.api.builder.toField
+import io.github.octaviusframework.db.api.transaction.TransactionPlan
+import io.github.octaviusframework.db.api.transaction.TransactionValue
+import io.github.octaviusframework.db.api.transaction.toTransactionValue
+import io.github.octaviusframework.db.api.type.PgStandardType
+import io.github.octaviusframework.db.api.type.withPgType
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus

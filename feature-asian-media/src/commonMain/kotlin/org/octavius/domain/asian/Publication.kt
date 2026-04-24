@@ -1,6 +1,6 @@
 package org.octavius.domain.asian
 
-import org.octavius.data.annotation.PgEnum
+import io.github.octaviusframework.db.api.annotation.PgEnum
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Tr
 

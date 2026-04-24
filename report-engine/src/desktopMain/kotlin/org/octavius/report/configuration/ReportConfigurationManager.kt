@@ -2,12 +2,12 @@ package org.octavius.report.configuration
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.DataAccess
-import org.octavius.data.DataResult
-import org.octavius.data.builder.execute
-import org.octavius.data.builder.toListOf
-import org.octavius.data.builder.toSingleOf
-import org.octavius.data.toDataMap
+import io.github.octaviusframework.db.api.DataAccess
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.execute
+import io.github.octaviusframework.db.api.builder.toListOf
+import io.github.octaviusframework.db.api.builder.toSingleOf
+import io.github.octaviusframework.db.api.toDataMap
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 

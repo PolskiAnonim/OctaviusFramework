@@ -1,8 +1,8 @@
 package org.octavius.modules.games.form.series
 
-import org.octavius.data.DataResult
-import org.octavius.data.builder.execute
-import org.octavius.data.transaction.TransactionPlan
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.execute
+import io.github.octaviusframework.db.api.transaction.TransactionPlan
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormActionResult

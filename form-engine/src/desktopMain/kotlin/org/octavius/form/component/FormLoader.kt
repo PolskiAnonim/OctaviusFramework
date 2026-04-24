@@ -1,10 +1,10 @@
 package org.octavius.form.component
 
-import org.octavius.data.DataAccess
-import org.octavius.data.DataResult
-import org.octavius.data.builder.toList
-import org.octavius.data.builder.toSingle
-import org.octavius.data.util.toSnakeCase
+import io.github.octaviusframework.db.api.DataAccess
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.toList
+import io.github.octaviusframework.db.api.builder.toSingle
+import io.github.octaviusframework.db.api.util.toSnakeCase
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 

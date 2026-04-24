@@ -1,6 +1,6 @@
 package org.octavius.modules.activity.report
 
-import org.octavius.data.QueryFragment
+import io.github.octaviusframework.db.api.QueryFragment
 import org.octavius.localization.Tr
 import org.octavius.report.column.ReportColumn
 import org.octavius.report.column.type.InstantColumn

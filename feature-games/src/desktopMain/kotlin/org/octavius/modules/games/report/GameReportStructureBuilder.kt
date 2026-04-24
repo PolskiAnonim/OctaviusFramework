@@ -2,7 +2,7 @@ package org.octavius.modules.games.report
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import org.octavius.data.QueryFragment
+import io.github.octaviusframework.db.api.QueryFragment
 import org.octavius.domain.game.GameStatus
 import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
@@ -15,7 +15,7 @@ import org.octavius.report.column.type.EnumColumn
 import org.octavius.report.column.type.StringColumn
 import org.octavius.report.column.type.asList
 import org.octavius.report.component.ReportStructureBuilder
-import org.octavius.data.withParam
+import io.github.octaviusframework.db.api.withParam
 
 class GameReportStructureBuilder(
     private val categoryId: Int? = null,

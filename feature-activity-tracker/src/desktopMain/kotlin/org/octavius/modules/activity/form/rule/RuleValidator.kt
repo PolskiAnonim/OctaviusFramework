@@ -1,7 +1,7 @@
 package org.octavius.modules.activity.form.rule
 
-import org.octavius.data.DataResult
-import org.octavius.data.builder.toField
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.toField
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator

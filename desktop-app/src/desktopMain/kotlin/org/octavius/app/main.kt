@@ -20,7 +20,7 @@ import org.octavius.api.contract.ApiModule
 import org.octavius.api.server.EmbeddedServer
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
-import org.octavius.data.DataAccess
+import io.github.octaviusframework.db.api.DataAccess
 import org.octavius.feature.books.BooksFeature
 import org.octavius.localization.Tr
 import org.octavius.modules.activity.ActivityTrackerFeature

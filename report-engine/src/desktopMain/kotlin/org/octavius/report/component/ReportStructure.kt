@@ -2,10 +2,10 @@ package org.octavius.report.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.DataAccess
-import org.octavius.data.QueryFragment
-import org.octavius.data.join
-import org.octavius.data.withParam
+import io.github.octaviusframework.db.api.DataAccess
+import io.github.octaviusframework.db.api.QueryFragment
+import io.github.octaviusframework.db.api.join
+import io.github.octaviusframework.db.api.withParam
 import org.octavius.report.ReportMainAction
 import org.octavius.report.ReportRowAction
 import org.octavius.report.column.ReportColumn

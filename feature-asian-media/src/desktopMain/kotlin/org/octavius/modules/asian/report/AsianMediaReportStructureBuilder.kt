@@ -2,8 +2,8 @@ package org.octavius.modules.asian.report
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import org.octavius.data.QueryFragment
-import org.octavius.data.withParam
+import io.github.octaviusframework.db.api.QueryFragment
+import io.github.octaviusframework.db.api.withParam
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationStatus
 import org.octavius.domain.asian.PublicationType

@@ -2,11 +2,11 @@ package org.octavius.report.component
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.DataAccess
-import org.octavius.data.DataResult
-import org.octavius.data.QueryFragment
-import org.octavius.data.builder.toField
-import org.octavius.data.join
+import io.github.octaviusframework.db.api.DataAccess
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.QueryFragment
+import io.github.octaviusframework.db.api.builder.toField
+import io.github.octaviusframework.db.api.join
 import org.octavius.report.ReportDataResult
 import org.octavius.report.ReportPaginationState
 import org.octavius.report.configuration.SortDirection

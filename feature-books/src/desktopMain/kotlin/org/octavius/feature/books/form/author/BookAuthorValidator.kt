@@ -1,9 +1,9 @@
 package org.octavius.feature.books.form.author
 
-import org.octavius.data.DataResult
-import org.octavius.data.builder.toField
-import org.octavius.data.join
-import org.octavius.data.withParam
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.toField
+import io.github.octaviusframework.db.api.join
+import io.github.octaviusframework.db.api.withParam
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 import org.octavius.form.component.FormValidator

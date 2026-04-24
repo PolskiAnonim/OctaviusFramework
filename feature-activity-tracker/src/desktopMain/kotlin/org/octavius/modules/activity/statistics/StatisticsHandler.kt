@@ -3,9 +3,9 @@ package org.octavius.modules.activity.statistics
 import kotlinx.datetime.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.data.DataAccess
-import org.octavius.data.DataResult
-import org.octavius.data.builder.toListOf
+import io.github.octaviusframework.db.api.DataAccess
+import io.github.octaviusframework.db.api.DataResult
+import io.github.octaviusframework.db.api.builder.toListOf
 
 class StatisticsHandler : KoinComponent {
     private val dataAccess: DataAccess by inject()

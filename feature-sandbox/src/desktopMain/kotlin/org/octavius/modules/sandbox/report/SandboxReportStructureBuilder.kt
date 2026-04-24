@@ -2,7 +2,7 @@ package org.octavius.modules.sandbox.report
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import org.octavius.data.QueryFragment
+import io.github.octaviusframework.db.api.QueryFragment
 import org.octavius.localization.Tr
 import org.octavius.modules.sandbox.domain.SandboxPriority
 import org.octavius.modules.sandbox.form.ui.SandboxFormScreen
