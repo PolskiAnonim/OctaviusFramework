@@ -26,7 +26,7 @@ data class ReportState(
     val pagination: ReportPaginationState = ReportPaginationState(),
     //------------------------------------------------Widoczne kolumny--------------------------------------------------
     // Klucze wszystkich kolumn w kolejności - tak żeby nie przejmować się czy są widoczne czy nie
-    var columnKeysOrder: List<String> = emptyList(),
+    val columnKeysOrder: List<String> = emptyList(),
     // Aktualna kolejność widocznych kolumn
     val visibleColumns: Set<String> = emptySet(),
     // Oryginalna kolejność widocznych kolumn
