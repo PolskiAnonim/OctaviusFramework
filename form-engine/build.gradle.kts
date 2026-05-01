@@ -10,6 +10,7 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+        val desktopTest by getting
 
         commonMain.dependencies {
             implementation(projects.uiCore)
@@ -27,5 +28,17 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }
+
+        desktopTest.dependencies {
+            implementation(libs.junit.jupiter.api)
+            runtimeOnly(libs.junit.jupiter.engine)
+            runtimeOnly(libs.junit.platform.launcher)
+            implementation(libs.mockk)
+            implementation(libs.assertj.core)
+        }
     }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

@@ -114,7 +114,8 @@ object PathResolver {
             "^$regexPattern$"
         } else {
             val escapedBase = Regex.escape(resolvedBase)
-            val separator = if (pattern.startsWith(SEPARATOR)) "" else "\\/"
+            // Jeśli pattern zaczyna się od separatora, lub baza kończy się na '[' (otwarcie indeksu), nie dodajemy separatora
+            val separator = if (pattern.startsWith(SEPARATOR) || basePathPart.endsWith("[")) "" else "\\/"
             "^$escapedBase$separator$regexPattern$"
         }
 

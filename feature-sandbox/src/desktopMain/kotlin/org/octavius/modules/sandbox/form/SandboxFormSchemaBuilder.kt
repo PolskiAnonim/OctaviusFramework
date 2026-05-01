@@ -110,6 +110,15 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
                 }
             ),
             buttonType = ButtonType.Outlined
+        ),
+        "clearElementsButton" to ButtonControl(
+            text = "Wyczyść wartości elementów",
+            actions = listOf(
+                ControlAction {
+                    updateControls<Int>("elements[*]/elementValue", null)
+                }
+            ),
+            buttonType = ButtonType.Text
         )
     )
 
@@ -120,6 +129,7 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
     )
 
     override fun defineActionBarOrder(): List<String> = listOf(
+        "clearElementsButton",
         "cancelButton",
         "saveButton"
     )
