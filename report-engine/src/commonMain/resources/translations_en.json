@@ -1,0 +1,122 @@
+{
+  "filter": {
+    "datetime": {
+      "after": "After",
+      "afterEqual": "After or equal",
+      "before": "Before",
+      "beforeEqual": "Before or equal",
+      "equals": "Equals",
+      "from": "From",
+      "notEquals": "Not equal to",
+      "range": "Range",
+      "to": "To",
+      "value": "Value"
+    },
+    "interval": {
+      "equals": "Equals",
+      "notEquals": "Does not equal",
+      "lessThan": "Less than",
+      "lessEqual": "Less than or equal",
+      "greaterThan": "Greater than",
+      "greaterEqual": "Greater than or equal",
+      "range": "Range"
+    },
+    "enum": {
+      "excludeSelected": "Exclude selected",
+      "includeSelected": "Include selected",
+      "selectValues": "Select values",
+      "selectionMode": "Selection mode:"
+    },
+    "general": {
+      "active": "Filter active",
+      "clear": "Clear filter",
+      "label": "Filter:"
+    },
+    "boolean": {
+      "filterByValue": "Filter by value"
+    },
+    "list": {
+      "all": "All items",
+      "any": "Any item"
+    },
+    "mode": "List filtering mode",
+    "null": {
+      "exclude": "Exclude",
+      "ignore": "Ignore",
+      "include": "Include",
+      "values": "Empty values:"
+    },
+    "number": {
+      "equals": "Equals",
+      "from": "From",
+      "greaterEqual": "Greater than or equal",
+      "greaterThan": "Greater than",
+      "lessEqual": "Less than or equal",
+      "lessThan": "Less than",
+      "notEquals": "Not equal to",
+      "range": "Range",
+      "to": "To",
+      "value": "Value"
+    },
+    "string": {
+      "caseSensitive": "Case sensitive",
+      "contains": "Contains",
+      "endsWith": "Ends with",
+      "exact": "Equals",
+      "notContains": "Does not contain",
+      "notExact": "Not equal to",
+      "startsWith": "Starts with",
+      "value": "Value"
+    }
+  },
+  "report": {
+    "actions": {
+      "edit": "Edit",
+      "menuDescription": "Options"
+    },
+    "column": {
+      "boolean": {
+        "false": "No",
+        "true": "Yes"
+      }
+    },
+    "columns": {
+      "activeSorting": "Active sorting:",
+      "ascending": "Ascending",
+      "columns": "Columns",
+      "descending": "Descending",
+      "dragToReorder": "Drag to reorder",
+      "hideColumn": "Hide column",
+      "showColumn": "Show column",
+      "sorting": "Sorting",
+      "dragColumnsHere": "Drag columns here",
+      "dragMoreColumns": "Drag more columns"
+    },
+    "configuration": {
+      "configuration": {
+        "many": "Report configurations",
+        "one": "Report configuration"
+      },
+      "defaultConfig": "Default",
+      "description": "Description (optional)",
+      "errorSaving": "Error saving configuration",
+      "management": "Configuration management",
+      "name": "Configuration name",
+      "nameRequired": "Name is required",
+      "noSavedConfigurations": "No saved configurations",
+      "overwriteWarning": "Warning! You are overwriting an existing configuration",
+      "saveConfiguration": "Save configuration",
+      "saveCurrent": "Save current configuration",
+      "savedConfigurations": "Saved configurations:",
+      "setAsDefault": "Set as default"
+    },
+    "management": {
+      "columnManagement": "Column management"
+    }
+  },
+  "search": {
+    "clear": "Clear",
+    "placeholder": "Search...",
+    "search": "Search"
+  }
+}

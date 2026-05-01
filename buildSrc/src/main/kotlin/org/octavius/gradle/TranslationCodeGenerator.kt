@@ -226,10 +226,11 @@ fun Project.registerGenerateTranslationAccessorsTask(
 
             // Generuj Tr.kt (używamy pierwszego języka jako domyślnego)
             val (defaultLang, defaultMap) = mergedByLang.entries.first()
+            val allLangs = mergedByLang.keys.toList()
             val entries = parseTranslationMap(defaultMap)
 
             val trGenerator = TrGenerator(targetPackage)
-            val trCode = trGenerator.generate(entries, defaultLang)
+            val trCode = trGenerator.generate(entries, defaultLang, allLangs)
             val trFile = File(outputDirFile, "$packagePath/Tr.kt")
             trFile.writeText(trCode, StandardCharsets.UTF_8)
             logger.lifecycle("Generated: ${trFile.path}")

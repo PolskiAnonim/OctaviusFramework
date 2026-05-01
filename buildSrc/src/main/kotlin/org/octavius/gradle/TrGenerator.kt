@@ -18,7 +18,7 @@ internal class TrGenerator(private val packageName: String) {
         }
     }
 
-    fun generate(entries: Map<String, TranslationEntry>, defaultLang: String): String {
+    fun generate(entries: Map<String, TranslationEntry>, defaultLang: String, allLangs: List<String>): String {
         builder.clear()
 
         appendLine("@file:Suppress(\"unused\", \"RedundantVisibilityModifier\")")
@@ -58,10 +58,12 @@ internal class TrGenerator(private val packageName: String) {
         appendLine()
 
         // Init block
-        val langPascal = toPascalCase(defaultLang)
         appendLine("init {")
         indentLevel++
-        appendLine("register(\"$defaultLang\", Translations$langPascal)")
+        allLangs.forEach { lang ->
+            val langPascal = toPascalCase(lang)
+            appendLine("register(\"$lang\", Translations$langPascal)")
+        }
         indentLevel--
         appendLine("}")
         appendLine()

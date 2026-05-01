@@ -1,0 +1,34 @@
+{
+  "form": {
+    "actions": {
+      "containsErrors": "Form contains errors",
+      "errorsLabel": "Errors:",
+      "itemLabel": "Item {0}"
+    },
+    "dropdown": {
+      "noResults": "No results",
+      "noSelection": "No selection",
+      "selectOption": "Select option"
+    },
+    "stringList": {
+      "itemPlaceholder": "Enter text..."
+    }
+  },
+  "validation": {
+    "duplicateInRow": "Duplicate value in row {0}",
+    "invalidFormat": "Invalid format",
+    "itemMaxLength": "Item {0}: Maximum length is {1} characters",
+    "itemMinLength": "Item {0}: Minimum length is {1} characters",
+    "itemPatternError": "Item {0}: {1}",
+    "maxDecimalPlaces": "Maximum {0} decimal places",
+    "maxInterval": "Interval must be shorter than {0}",
+    "maxItems": "Maximum {0} items",
+    "maxLength": "Maximum length is {0} characters",
+    "maxValue": "Value must be less than or equal to {0}",
+    "minInterval": "Interval must be longer than {0}",
+    "minItems": "Minimum {0} items required",
+    "minLength": "Minimum length is {0} characters",
+    "minValue": "Value must be greater than or equal to {0}",
+    "multipleOf": "Value must be a multiple of {0}"
+  }
+}

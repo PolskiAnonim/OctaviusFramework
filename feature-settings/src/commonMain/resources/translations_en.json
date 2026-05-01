@@ -1,0 +1,25 @@
+{
+  "settings": {
+    "api": {
+      "columns": {
+        "apiKey": "API Key",
+        "enabled": "Enabled",
+        "endpointUrl": "Endpoint URL",
+        "lastSync": "Last sync",
+        "name": "Name",
+        "port": "Port"
+      },
+      "description": "Manage integrations with external APIs",
+      "title": "API Integrations"
+    },
+    "database": {
+      "description": "Database connection configuration",
+      "title": "Database Settings"
+    },
+    "language": {
+      "description": "Change application UI language",
+      "title": "App Language"
+    },
+    "title": "Settings"
+  }
+}
