@@ -16,14 +16,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.octavius.localization.Tr
+import org.octavius.modules.settings.form.database.DatabaseSettingsFormScreen
+import org.octavius.modules.settings.form.language.LanguageSettingsFormScreen
 import org.octavius.modules.settings.report.ui.ApiIntegrationsReportScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
+import org.octavius.settings.AppSettingsManager
 import org.octavius.theme.FormSpacing
 
-class SettingsScreen() : Screen {
+class SettingsScreen() : Screen, KoinComponent {
     override val title = Tr.Settings.title()
+
+    private val settingsManager: AppSettingsManager by inject()
 
     data class SettingOption(
         val title: String,
@@ -40,13 +47,17 @@ class SettingsScreen() : Screen {
                 title = Tr.Settings.Language.title(),
                 description = Tr.Settings.Language.description(),
                 icon = Icons.Default.Language,
-                onClick = { /* TODO: Navigate to language settings */ }
+                onClick = {
+                    AppRouter.navigateTo(LanguageSettingsFormScreen.create(settingsManager))
+                }
             ),
             SettingOption(
                 title = Tr.Settings.Database.title(),
                 description = Tr.Settings.Database.description(),
                 icon = Icons.Default.Storage,
-                onClick = { /* TODO: Navigate to database settings */ }
+                onClick = {
+                    AppRouter.navigateTo(DatabaseSettingsFormScreen.create(settingsManager))
+                }
             ),
             SettingOption(
                 title = Tr.Settings.Api.title(),

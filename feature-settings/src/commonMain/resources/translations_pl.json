@@ -14,11 +14,21 @@
     },
     "database": {
       "description": "Konfiguracja połączenia z bazą danych",
-      "title": "Ustawienia bazy danych"
+      "title": "Ustawienia bazy danych",
+      "url": "URL bazy danych (JDBC)",
+      "username": "Użytkownik",
+      "password": "Hasło",
+      "save": "Zapisz ustawienia",
+      "retry": "Ponów próbę połączenia",
+      "restartWarning": "Błąd połączenia z bazą danych. Sprawdź ustawienia poniżej."
     },
     "language": {
       "description": "Zmień język interfejsu aplikacji",
-      "title": "Język aplikacji"
+      "title": "Język aplikacji",
+      "select": "Wybierz język",
+      "pl": "Polski",
+      "en": "Angielski",
+      "save": "Zapisz język"
     },
     "title": "Ustawienia"
   }

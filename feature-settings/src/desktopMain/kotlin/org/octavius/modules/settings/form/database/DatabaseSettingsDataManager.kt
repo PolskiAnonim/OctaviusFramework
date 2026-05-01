@@ -1,0 +1,37 @@
+package org.octavius.modules.settings.form.database
+
+import org.octavius.form.component.FormDataManager
+import org.octavius.form.component.FormActionResult
+import org.octavius.form.control.base.FormResultData
+import org.octavius.form.control.base.getCurrentAs
+import org.octavius.settings.AppSettingsManager
+import org.octavius.settings.domain.DatabaseSettings
+
+class DatabaseSettingsDataManager(
+    private val settingsManager: AppSettingsManager
+) : FormDataManager() {
+
+    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
+        val dbSettings = settingsManager.currentSettings.database
+        return mapOf(
+            "url" to dbSettings.url,
+            "username" to dbSettings.username,
+            "password" to dbSettings.password
+        )
+    }
+
+    override fun definedFormActions(): Map<String, (formResultData: FormResultData, loadedId: Int?) -> FormActionResult> = mapOf(
+        "save" to { data, _ ->
+            val currentSettings = settingsManager.currentSettings
+            val newSettings = currentSettings.copy(
+                database = DatabaseSettings(
+                    url = data.getCurrentAs<String>("url"),
+                    username = data.getCurrentAs<String>("username"),
+                    password = data.getCurrentAs<String>("password")
+                )
+            )
+            settingsManager.updateSettings(newSettings)
+            FormActionResult.Success
+        }
+    )
+}

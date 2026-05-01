@@ -1,10 +1,7 @@
 package org.octavius.app
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +13,7 @@ import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.Koin
 import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.core.context.startKoin
+import org.koin.dsl.module
 import org.octavius.api.contract.ApiModule
 import org.octavius.api.server.EmbeddedServer
 import org.octavius.contract.FeatureModule
@@ -28,23 +26,33 @@ import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.modules.games.GamesFeature
 import org.octavius.modules.sandbox.SandboxFeature
 import org.octavius.modules.settings.SettingsFeature
+import org.octavius.modules.settings.form.database.DatabaseSettingsFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
 import org.octavius.navigation.Tab
+import org.octavius.settings.AppSettingsManager
 import org.octavius.theme.AppTheme
 import java.awt.Frame
 
 // Prosty enum do zarządzania stanem aplikacji
 private enum class AppState {
-    Loading, // Aplikacja ładuje zasoby
-    Ready    // Aplikacja jest gotowa do pracy
+    Loading,       // Aplikacja ładuje zasoby
+    DatabaseError, // Błąd połączenia z bazą danych
+    Ready          // Aplikacja jest gotowa do pracy
 }
 
 fun main() {
+    val settingsManager = AppSettingsManager()
+    settingsManager.applySettings()
+
     val koin = startKoin {
         printLogger()
-        modules(databaseModule)
+        allowOverride(true)
+        modules(
+            module { single { settingsManager } },
+            databaseModule
+        )
     }.koin
 
     application(exitProcessOnExit = false) {
@@ -54,7 +62,19 @@ fun main() {
             AppState.Loading -> {
                 AppLoadingScreen(
                     onLoaded = { appState = AppState.Ready },
+                    onError = { appState = AppState.DatabaseError },
                     koin = koin
+                )
+            }
+            AppState.DatabaseError -> {
+                DatabaseErrorWindow(
+                    onCloseRequest = ::exitApplication,
+                    onRetry = {
+                        // Re-load the database module to pick up new settings
+                        koin.loadModules(listOf(databaseModule))
+                        appState = AppState.Loading
+                    },
+                    settingsManager = settingsManager
                 )
             }
             AppState.Ready -> {
@@ -67,7 +87,7 @@ fun main() {
 }
 
 @Composable
-private fun ApplicationScope.AppLoadingScreen(onLoaded: () -> Unit, koin: Koin) {
+private fun ApplicationScope.AppLoadingScreen(onLoaded: () -> Unit, onError: () -> Unit, koin: Koin) {
     Window(
         onCloseRequest = ::exitApplication,
         title = Tr.App.loading(),
@@ -86,10 +106,57 @@ private fun ApplicationScope.AppLoadingScreen(onLoaded: () -> Unit, koin: Koin) 
     }
 
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            koin.get<DataAccess>() // Używamy przekazanego Koin
+        val success = withContext(Dispatchers.IO) {
+            try {
+                koin.get<DataAccess>()
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
         }
-        onLoaded()
+        if (success) onLoaded() else onError()
+    }
+}
+
+@Composable
+private fun ApplicationScope.DatabaseErrorWindow(
+    onCloseRequest: () -> Unit,
+    onRetry: () -> Unit,
+    settingsManager: AppSettingsManager
+) {
+    val formScreen = DatabaseSettingsFormScreen.create(settingsManager)
+    Window(
+        onCloseRequest = onCloseRequest,
+        title = Tr.Settings.Database.title(),
+        state = rememberWindowState(position = WindowPosition(Alignment.Center), size = DpSize(600.dp, 500.dp))
+    ) {
+        AppTheme(isDarkTheme = true) {
+            Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+                    Text(
+                        text = Tr.Settings.Database.restartWarning(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        println("Rendering DatabaseErrorWindow Content, isLoading: ${formScreen.formHandler.isLoading.value}")
+                        formScreen.Content()
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = onRetry,
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(Tr.Settings.Database.retry())
+                    }
+                }
+            }
+        }
     }
 }
 

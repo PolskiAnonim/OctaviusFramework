@@ -14,11 +14,21 @@
     },
     "database": {
       "description": "Database connection configuration",
-      "title": "Database Settings"
+      "title": "Database Settings",
+      "url": "Database URL (JDBC)",
+      "username": "Username",
+      "password": "Password",
+      "save": "Save settings",
+      "retry": "Retry connection",
+      "restartWarning": "Database connection error. Please check settings below."
     },
     "language": {
       "description": "Change application UI language",
-      "title": "App Language"
+      "title": "App Language",
+      "select": "Select language",
+      "pl": "Polish",
+      "en": "English",
+      "save": "Save language"
     },
     "title": "Settings"
   }

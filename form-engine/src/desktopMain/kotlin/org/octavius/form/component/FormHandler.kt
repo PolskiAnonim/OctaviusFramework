@@ -86,7 +86,6 @@ class FormHandler(
      */
     private fun loadData() {
         handlerScope.launch {
-            formState.isLoading.value = true
             val initValues = formDataManager.initData(entityId, payload)
             formState.initializeStates(formSchema, initValues)
             formState.isLoading.value = false
