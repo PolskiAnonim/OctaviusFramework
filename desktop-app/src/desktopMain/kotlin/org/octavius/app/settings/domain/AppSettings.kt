@@ -1,4 +1,4 @@
-package org.octavius.settings.domain
+package org.octavius.app.settings.domain
 
 import kotlinx.serialization.Serializable
 

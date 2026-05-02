@@ -1,9 +1,9 @@
-package org.octavius.settings
+package org.octavius.app.settings
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.octavius.app.settings.domain.AppSettings
 import org.octavius.localization.Tr
-import org.octavius.settings.domain.AppSettings
 import java.io.File
 
 /**

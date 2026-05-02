@@ -1,4 +1,4 @@
-package org.octavius.modules.settings.navigation
+package org.octavius.app.settings.navigation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,12 +19,12 @@ import androidx.compose.ui.unit.dp
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.localization.Tr
-import org.octavius.modules.settings.form.database.DatabaseSettingsFormScreen
-import org.octavius.modules.settings.form.language.LanguageSettingsFormScreen
-import org.octavius.modules.settings.report.ui.ApiIntegrationsReportScreen
+import org.octavius.app.settings.form.database.DatabaseSettingsFormScreen
+import org.octavius.app.settings.form.language.LanguageSettingsFormScreen
+import org.octavius.app.settings.report.ui.ApiIntegrationsReportScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
-import org.octavius.settings.AppSettingsManager
+import org.octavius.app.settings.AppSettingsManager
 import org.octavius.theme.FormSpacing
 
 class SettingsScreen() : Screen, KoinComponent {

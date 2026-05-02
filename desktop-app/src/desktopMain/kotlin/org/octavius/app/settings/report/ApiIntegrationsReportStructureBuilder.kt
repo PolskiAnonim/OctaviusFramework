@@ -1,4 +1,4 @@
-package org.octavius.modules.settings.report
+package org.octavius.app.settings.report
 
 import io.github.octaviusframework.db.api.QueryFragment
 import org.octavius.localization.Tr

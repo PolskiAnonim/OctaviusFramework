@@ -29,7 +29,6 @@ dependencies {
     dokka(projects.formEngine)
     dokka(projects.reportEngine)
     dokka(projects.featureAsianMedia)
-    dokka(projects.featureSettings)
     dokka(projects.featureGames)
     dokka(projects.featureContract)
     dokka(projects.browserExtension.popup)

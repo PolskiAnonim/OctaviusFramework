@@ -29,7 +29,6 @@ kotlin {
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
             implementation(projects.featureGames)
-            implementation(projects.featureSettings)
             implementation(projects.featureAsianMedia)
             implementation(projects.featureBooks)
             implementation(projects.featureActivityTracker)

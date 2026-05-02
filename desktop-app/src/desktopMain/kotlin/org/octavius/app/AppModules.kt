@@ -5,7 +5,7 @@ import org.koin.dsl.onClose
 import io.github.octaviusframework.db.core.OctaviusDatabase
 import io.github.octaviusframework.db.core.config.DatabaseConfig
 import io.github.octaviusframework.db.flyway.FlywayMigrationRunner
-import org.octavius.settings.AppSettingsManager
+import org.octavius.app.settings.AppSettingsManager
 
 /**
  * Moduł Koin konfigurujący zależności związane z bazą danych.

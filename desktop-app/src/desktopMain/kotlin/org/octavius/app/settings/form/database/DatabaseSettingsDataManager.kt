@@ -1,11 +1,11 @@
-package org.octavius.modules.settings.form.database
+package org.octavius.app.settings.form.database
 
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.component.FormActionResult
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrentAs
-import org.octavius.settings.AppSettingsManager
-import org.octavius.settings.domain.DatabaseSettings
+import org.octavius.app.settings.AppSettingsManager
+import org.octavius.app.settings.domain.DatabaseSettings
 
 class DatabaseSettingsDataManager(
     private val settingsManager: AppSettingsManager

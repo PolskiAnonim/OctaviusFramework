@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import io.github.octaviusframework.db.api.DataAccess
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.Koin
@@ -16,22 +17,21 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.octavius.api.contract.ApiModule
 import org.octavius.api.server.EmbeddedServer
+import org.octavius.app.settings.SettingsFeature
+import org.octavius.app.settings.form.database.DatabaseSettingsFormScreen
+import org.octavius.app.settings.AppSettingsManager
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
-import io.github.octaviusframework.db.api.DataAccess
 import org.octavius.feature.books.BooksFeature
 import org.octavius.localization.Tr
 import org.octavius.modules.activity.ActivityTrackerFeature
 import org.octavius.modules.asian.AsianMediaFeature
 import org.octavius.modules.games.GamesFeature
 import org.octavius.modules.sandbox.SandboxFeature
-import org.octavius.modules.settings.SettingsFeature
-import org.octavius.modules.settings.form.database.DatabaseSettingsFormScreen
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.NavigationEvent
 import org.octavius.navigation.NavigationEventBus
 import org.octavius.navigation.Tab
-import org.octavius.settings.AppSettingsManager
 import org.octavius.theme.AppTheme
 import java.awt.Frame
 
@@ -66,6 +66,7 @@ fun main() {
                     koin = koin
                 )
             }
+
             AppState.DatabaseError -> {
                 DatabaseErrorWindow(
                     onCloseRequest = ::exitApplication,
@@ -77,6 +78,7 @@ fun main() {
                     settingsManager = settingsManager
                 )
             }
+
             AppState.Ready -> {
                 MainAppScreen(onCloseRequest = ::exitApplication)
             }

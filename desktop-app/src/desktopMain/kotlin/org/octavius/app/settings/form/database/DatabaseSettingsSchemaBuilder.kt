@@ -1,4 +1,4 @@
-package org.octavius.modules.settings.form.database
+package org.octavius.app.settings.form.database
 
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.Control

@@ -1,4 +1,4 @@
-package org.octavius.modules.settings.form.language
+package org.octavius.app.settings.form.language
 
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.Control
@@ -7,7 +7,7 @@ import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.selection.EnumControl
 import org.octavius.localization.Tr
-import org.octavius.settings.domain.AppLanguage
+import org.octavius.app.settings.domain.AppLanguage
 
 class LanguageSettingsSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> = mapOf(

@@ -1,4 +1,4 @@
-package org.octavius.modules.settings.navigation
+package org.octavius.app.settings.navigation
 
 import androidx.compose.runtime.Composable
 import org.octavius.navigation.Screen

@@ -1,4 +1,4 @@
-package org.octavius.settings.domain
+package org.octavius.app.settings.domain
 
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Tr
@@ -16,6 +16,6 @@ enum class AppLanguage(val code: String) : EnumWithFormatter<AppLanguage> {
     }
 
     companion object {
-        fun fromCode(code: String): AppLanguage = values().find { it.code == code } ?: EN
+        fun fromCode(code: String): AppLanguage = entries.find { it.code == code } ?: EN
     }
 }

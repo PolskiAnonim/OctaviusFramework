@@ -46,7 +46,6 @@ include(
     ":api-contract",
     ":feature-contract",
     // Features
-    ":feature-settings",
     ":feature-asian-media",
     ":feature-games",
     ":feature-books",
