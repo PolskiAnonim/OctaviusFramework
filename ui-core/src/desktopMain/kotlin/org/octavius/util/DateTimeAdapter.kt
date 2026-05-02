@@ -2,7 +2,6 @@ package org.octavius.util
 
 import kotlinx.datetime.*
 import kotlinx.datetime.format.char
-import java.time.OffsetTime
 import kotlin.time.Instant
 
 private val DATE_FORMAT = LocalDate.Format {
@@ -27,7 +26,7 @@ private val DATE_TIME_FORMAT = LocalDateTime.Format {
     time(TIME_FORMAT)
 }
 
-enum class DateTimeComponent { DATE, TIME, OFFSET }
+enum class DateTimeComponent { DATE, TIME }
 
 data class DateTimePickerState(
     val date: LocalDate? = null,
@@ -114,24 +113,4 @@ class InstantAdapter(private val timeZone: TimeZone = TimeZone.currentSystemDefa
     override fun deserialize(value: String): Instant = Instant.parse(value)
 
     override fun serialize(value: Instant) = value.toString()
-}
-
-
-object OffsetTimeAdapter : DateTimeAdapter<OffsetTime> {
-    override val requiredComponents = setOf(DateTimeComponent.TIME, DateTimeComponent.OFFSET)
-    override fun format(value: OffsetTime?) = value?.toString() ?: ""
-    override fun getComponents(value: OffsetTime?) = DateTimePickerState(
-        time = value?.toLocalTime()?.toKotlinLocalTime(),
-        offset = value?.offset?.toKotlinUtcOffset()
-    )
-    override fun buildFromComponents(date: LocalDate?, time: LocalTime?, offset: UtcOffset?): OffsetTime? {
-        return if (time != null && offset != null) {
-            val javaTime = time.toJavaLocalTime()
-            val javaOffset = offset.toJavaZoneOffset()
-            OffsetTime.of(javaTime, javaOffset)
-        } else null
-    }
-
-    override fun deserialize(value: String): OffsetTime = OffsetTime.parse(value)
-    override fun serialize(value: OffsetTime) = value.toString()
 }

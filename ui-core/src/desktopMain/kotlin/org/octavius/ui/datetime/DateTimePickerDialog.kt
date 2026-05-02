@@ -1,9 +1,6 @@
 package org.octavius.ui.datetime
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,7 +16,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 // Prywatny enum do zarządzania krokami w procesie wyboru
-private enum class PickerStep { DATE, TIME, OFFSET }
+private enum class PickerStep { DATE, TIME }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,18 +38,14 @@ fun <T : Any> DateTimePickerDialog(
     fun findNextStep(after: PickerStep): PickerStep? {
         return when (after) {
             PickerStep.DATE -> if (adapter.requiredComponents.contains(DateTimeComponent.TIME)) PickerStep.TIME
-            else if (adapter.requiredComponents.contains(DateTimeComponent.OFFSET)) PickerStep.OFFSET
             else null
-            PickerStep.TIME -> if (adapter.requiredComponents.contains(DateTimeComponent.OFFSET)) PickerStep.OFFSET
-            else null
-            PickerStep.OFFSET -> null
+            PickerStep.TIME -> null
         }
     }
 
     fun getFirstStep(): PickerStep? {
         if (adapter.requiredComponents.contains(DateTimeComponent.DATE)) return PickerStep.DATE
         if (adapter.requiredComponents.contains(DateTimeComponent.TIME)) return PickerStep.TIME
-        if (adapter.requiredComponents.contains(DateTimeComponent.OFFSET)) return PickerStep.OFFSET
         return null
     }
 
@@ -95,17 +88,6 @@ fun <T : Any> DateTimePickerDialog(
                     tempTime = time
                     val nextStep = findNextStep(PickerStep.TIME)
                     if (nextStep == null) finish() else currentStep = nextStep
-                }
-            )
-        }
-
-        PickerStep.OFFSET -> {
-            OffsetPickerDialog(
-                initialOffset = tempOffset,
-                onDismiss = onDismiss,
-                onConfirm = { offset ->
-                    tempOffset = offset
-                    finish() // To zawsze ostatni krok
                 }
             )
         }
@@ -155,66 +137,6 @@ private fun TimePickerDialog(
                 val seconds = tempSeconds.toIntOrNull()?.coerceIn(0, 59) ?: 0
                 onConfirm(LocalTime(timePickerState.hour, timePickerState.minute, seconds))
             }) { Text(Tr.Action.ok()) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(Tr.Action.cancel()) }
-        }
-    )
-}
-
-@Composable
-private fun OffsetPickerDialog(
-    initialOffset: UtcOffset,
-    onDismiss: () -> Unit,
-    onConfirm: (UtcOffset) -> Unit
-) {
-    var textOffset by remember { mutableStateOf(initialOffset.toString()) }
-    val isError = remember(textOffset) { runCatching { UtcOffset.parse(textOffset) }.isFailure }
-
-    val onConfirmClick = {
-        if (!isError) {
-            onConfirm(UtcOffset.parse(textOffset))
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(Tr.Datetime.offset()) },
-        text = {
-            val commonOffsets by remember { mutableStateOf((-12..14).map { UtcOffset(hours = it) }) }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                OutlinedTextField(
-                    value = textOffset,
-                    onValueChange = { textOffset = it },
-                    label = { Text(Tr.Datetime.offset()) },
-                    placeholder = { Text("+02:00") },
-                    singleLine = true,
-                    isError = isError,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    Tr.Datetime.commonOffset(),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-                LazyColumn(modifier = Modifier.height(100.dp)) {
-                    items(commonOffsets) { commonOffset ->
-                        Text(
-                            text = commonOffset.toString(),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { textOffset = commonOffset.toString() }
-                                .padding(vertical = 4.dp)
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirmClick, enabled = !isError) {
-                Text(Tr.Action.ok())
-            }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(Tr.Action.cancel()) }

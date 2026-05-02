@@ -16,7 +16,6 @@ import org.octavius.report.column.ReportColumn
 import org.octavius.report.filter.Filter
 import org.octavius.report.filter.type.DateTimeFilter
 import org.octavius.util.*
-import java.time.OffsetTime
 import kotlin.reflect.KClass
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -25,7 +24,7 @@ import kotlin.time.Instant
  * Generyczna kolumna do wyświetlania danych daty i/lub czasu w raporcie.
  * Wykorzystuje adapter `DateTimeAdapter` do formatowania i obsługi różnych typów daty/czasu.
  *
- * @param T Typ daty/czasu (np. LocalDate, LocalDateTime, Instant, LocalTime, OffsetTime).
+ * @param T Typ daty/czasu (np. LocalDate, LocalDateTime, Instant, LocalTime).
  * @param header Nagłówek kolumny
  * @param kClass Klasa typu T, używana do deserializacji filtra.
  * @param adapter Adapter specyficzny dla typu T, służący do formatowania i konwersji.
@@ -135,24 +134,6 @@ fun LocalTimeColumn(
     header = header,
     kClass = LocalTime::class,
     adapter = LocalTimeAdapter,
-    width = width,
-    sortable = sortable,
-    filterable = filterable,
-)
-
-/**
- * Funkcja fabryczna tworząca kolumnę do wyświetlania czasu z offsetem (OffsetTime).
- */
-@Suppress("FunctionName")
-fun OffsetTimeColumn(
-    header: String,
-    width: Float = 1f,
-    sortable: Boolean = true,
-    filterable: Boolean = true,
-) = DateTimeColumn(
-    header = header,
-    kClass = OffsetTime::class,
-    adapter = OffsetTimeAdapter,
     width = width,
     sortable = sortable,
     filterable = filterable,

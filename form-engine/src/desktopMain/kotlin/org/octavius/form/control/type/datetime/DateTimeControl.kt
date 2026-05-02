@@ -10,7 +10,6 @@ import org.octavius.form.control.validator.datetime.DateTimeValidator
 import org.octavius.ui.datetime.DateTimePickerDialog
 import org.octavius.ui.datetime.PickerTextField
 import org.octavius.util.*
-import java.time.OffsetTime
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -128,25 +127,6 @@ fun LocalTimeControl(
     actions: List<ControlAction<LocalTime>>? = null
 ) = DateTimeControl(
     adapter = LocalTimeAdapter,
-    label = label,
-    required = required,
-    dependencies = dependencies,
-    validationOptions = validationOptions,
-    actions = actions
-)
-
-/**
- * Funkcja fabryczna tworząca kontrolkę do wyboru czasu z offsetem (OffsetTime).
- */
-@Suppress("FunctionName")
-fun OffsetTimeControl(
-    label: String?,
-    required: Boolean? = false,
-    dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: DateTimeValidation<OffsetTime>? = null,
-    actions: List<ControlAction<OffsetTime>>? = null
-) = DateTimeControl(
-    adapter = OffsetTimeAdapter,
     label = label,
     required = required,
     dependencies = dependencies,
