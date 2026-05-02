@@ -1,7 +1,7 @@
 package org.octavius.domain.game
 
 import io.github.octaviusframework.db.api.annotation.PgEnum
-import io.github.octaviusframework.db.api.serializer.DynamicDtoEnumSerializer
+import io.github.octaviusframework.db.api.serializer.EnumWithCaseConventionSerializer
 import org.octavius.domain.EnumWithFormatter
 import org.octavius.localization.Tr
 
@@ -24,7 +24,7 @@ enum class GameStatus : EnumWithFormatter<GameStatus> {
     }
 }
 
-object GameStatusDynamicDtoSerializer : DynamicDtoEnumSerializer<GameStatus>(
+object GameStatusDynamicDtoSerializer : EnumWithCaseConventionSerializer<GameStatus>(
     "GameStatus",
     GameStatus.entries
 )
