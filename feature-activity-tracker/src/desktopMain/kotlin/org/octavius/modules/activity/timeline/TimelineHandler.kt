@@ -57,10 +57,49 @@ class TimelineHandler : KoinComponent {
         val docs = (docResult as? DataResult.Success)?.value?.map { it.toTimelineBlock(tz) } ?: emptyList()
 
         return listOf(
-            TimelineLane("Kategorie", categories),
+            TimelineLane("Kategorie", categories.mergeAdjacent()),
             TimelineLane("Aplikacje", apps),
             TimelineLane("Dokumenty", docs),
         )
+    }
+
+    private fun List<TimelineBlock>.mergeAdjacent(): List<TimelineBlock> {
+        if (isEmpty()) return this
+        val result = mutableListOf<TimelineBlock>()
+        var current = first()
+        for (i in 1 until size) {
+            val next = this[i]
+            if (next.label == current.label && next.color == current.color && (next.startSeconds - current.endSeconds) <= 2f) {
+                current = current.copy(endSeconds = next.endSeconds)
+            } else {
+                result.add(current)
+                current = next
+            }
+        }
+        result.add(current)
+        return result
+    }
+
+    private fun mergeAutoFillSlots(slots: List<AutoFillSlotDto>): List<AutoFillSlotDto> {
+        if (slots.isEmpty()) return emptyList()
+        val result = mutableListOf<AutoFillSlotDto>()
+        var current = slots.first()
+        for (i in 1 until slots.size) {
+            val next = slots[i]
+            if (next.categoryId == current.categoryId && next.startedAt <= (current.endedAt ?: current.startedAt)) {
+                val newEnd = if (next.endedAt != null && (current.endedAt == null || next.endedAt > current.endedAt)) {
+                    next.endedAt
+                } else {
+                    current.endedAt
+                }
+                current = current.copy(endedAt = newEnd)
+            } else {
+                result.add(current)
+                current = next
+            }
+        }
+        result.add(current)
+        return result
     }
 
     fun autoFillAllCategories(date: LocalDate) {
@@ -91,11 +130,13 @@ class TimelineHandler : KoinComponent {
                 ) cr ON true
             """.trimIndent())
             .where("al.started_at >= @start AND al.started_at <= @end AND al.ended_at IS NOT NULL")
+            .orderBy("al.started_at")
             .toListOf<AutoFillSlotDto>(params)
 
         val slots = (slotsResult as? DataResult.Success)?.value ?: return
+        val mergedSlots = mergeAutoFillSlots(slots)
 
-        for (slot in slots) {
+        for (slot in mergedSlots) {
             val ended = slot.endedAt ?: continue
             val slotValues = mapOf(
                 "category_id" to slot.categoryId,
@@ -129,6 +170,7 @@ class TimelineHandler : KoinComponent {
         val logResult = dataAccess.select("started_at", "ended_at")
             .from("activity_tracker.activity_log")
             .where("process_name = @process AND started_at >= @start AND started_at <= @end AND ended_at IS NOT NULL")
+            .orderBy("started_at")
             .toListOf<ActivityTimeDto>(mapOf("process" to processName, "start" to startInstant, "end" to endInstant))
 
         val logs = (logResult as? DataResult.Success)?.value ?: return false
@@ -137,11 +179,16 @@ class TimelineHandler : KoinComponent {
             .where("source_process_name = @process AND started_at >= @start AND started_at <= @end")
             .execute(mapOf("process" to processName, "start" to startInstant, "end" to endInstant))
 
-        for (log in logs) {
-            val ended = log.endedAt ?: continue
+        val autoFillSlots = logs.map { 
+            AutoFillSlotDto(it.startedAt, it.endedAt, categoryId, processName)
+        }
+        val mergedSlots = mergeAutoFillSlots(autoFillSlots)
+
+        for (slot in mergedSlots) {
+            val ended = slot.endedAt ?: continue
             val slotValues = mapOf(
                 "category_id" to categoryId,
-                "started_at" to log.startedAt,
+                "started_at" to slot.startedAt,
                 "ended_at" to ended,
                 "source_process_name" to processName,
             )
