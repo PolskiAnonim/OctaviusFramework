@@ -1,1 +1,0 @@
-ALTER TYPE activity_tracker.document_type ADD VALUE 'URL';

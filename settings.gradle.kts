@@ -49,7 +49,6 @@ include(
     ":feature-asian-media",
     ":feature-games",
     ":feature-books",
-    ":feature-activity-tracker",
     ":feature-sandbox",
     // Browser extension
     ":browser-extension",

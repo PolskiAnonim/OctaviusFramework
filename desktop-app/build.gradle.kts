@@ -31,7 +31,6 @@ kotlin {
             implementation(projects.featureGames)
             implementation(projects.featureAsianMedia)
             implementation(projects.featureBooks)
-            implementation(projects.featureActivityTracker)
             implementation(projects.featureSandbox)
             implementation(projects.apiServer)
             implementation(projects.apiContract)
