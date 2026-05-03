@@ -102,7 +102,7 @@ class TimelineState {
 
         if (viewportWidth > 0) {
             val minPx = viewportWidth / totalSeconds
-            val maxPx = 2f // max ~120px na minutę
+            val maxPx = 50f // max ~3000px na minutę
             newPx = newPx.coerceIn(minPx, maxPx)
         }
         pixelsPerSecond = newPx
