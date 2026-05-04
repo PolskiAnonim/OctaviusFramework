@@ -18,10 +18,10 @@ class BookFormScreen {
             return FormScreen(
                 title,
                 FormHandler(
-                    entityId,
-                    BookFormSchemaBuilder(),
-                    BookFormDataManager(),
-                    BookFormValidator(entityId)
+                    formSchemaBuilder = BookFormSchemaBuilder(),
+                    formDataManager = BookFormDataManager(),
+                    formValidator = BookFormValidator(),
+                    payload = mapOf("id" to entityId)
                 )
             )
         }

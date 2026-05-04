@@ -11,7 +11,7 @@ import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrentAs
 import org.octavius.localization.Tr
 
-class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
+class GameSeriesFormValidator : FormValidator() {
 
     override fun defineActionValidations(): Map<String, (FormResultData) -> Boolean> {
         return mapOf("save" to { formData -> validateTitleAgainstDatabase(formData) })
@@ -26,10 +26,10 @@ class GameSeriesFormValidator(private val entityId: Int?) : FormValidator() {
      */
     private fun validateTitleAgainstDatabase(formResultData: FormResultData): Boolean {
         val title = formResultData.getCurrentAs<String>("name")
-
+        val id = formResultData.getCurrentAs<Int?>("id")
         val whereClause = listOfNotNull(
             "name = @title" withParam ("title" to title),
-            entityId?.let { "id != @id" withParam ("id" to entityId) }
+            id?.let { "id != @id" withParam ("id" to id) }
         ).join(" AND ")
 
         val result = dataAccess.select("COUNT(*)").from("series").where(whereClause.sql).toField<Long>(whereClause.params)

@@ -11,7 +11,7 @@ import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrentAs
 import org.octavius.localization.Tr
 
-class GameFormValidator(private val entityId: Int?) : FormValidator() {
+class GameFormValidator : FormValidator() {
 
     override fun defineActionValidations(): Map<String, (formResultData: FormResultData) -> Boolean> {
         return mapOf(
@@ -28,10 +28,10 @@ class GameFormValidator(private val entityId: Int?) : FormValidator() {
      */
     private fun checkTitleUniqueness(formResultData: FormResultData): Boolean {
         val title = formResultData.getCurrentAs<String>("name")
-
+        val id = formResultData.getCurrentAs<Int?>("id")
         val whereClause = listOfNotNull(
             "name = @title" withParam ("title" to title),
-            entityId?.let { "id != @id" withParam ("id" to entityId) }
+            id?.let { "id != @id" withParam ("id" to id) }
         ).join(" AND ")
 
         val result = dataAccess.select("COUNT(*)").from("games").where(whereClause.sql).toField<Long>(whereClause.params)

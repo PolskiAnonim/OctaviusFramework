@@ -12,7 +12,6 @@ class SandboxFormScreen {
             val title = Tr.Sandbox.Form.newItem()
 
             val formHandler = FormHandler(
-                entityId = null,
                 formSchemaBuilder = SandboxFormSchemaBuilder(),
                 formDataManager = SandboxFormDataManager()
             )

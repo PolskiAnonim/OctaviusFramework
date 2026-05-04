@@ -6,6 +6,7 @@ import org.octavius.form.control.base.ControlAction
 import org.octavius.form.control.type.button.ButtonControl
 import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.container.SectionControl
+import org.octavius.form.control.type.number.IntegerControl
 import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.localization.Tr
 
@@ -15,6 +16,7 @@ class GameSeriesFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineControls(): Map<String, Control<*>> =
         mapOf(
+            "id" to IntegerControl(null),
             "name" to StringControl(
                 Tr.Games.Series.name(),
                 required = true

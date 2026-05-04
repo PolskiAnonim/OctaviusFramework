@@ -11,15 +11,15 @@ class LanguageSettingsDataManager(
     private val settingsManager: AppSettingsManager
 ) : FormDataManager() {
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
+    override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
         val currentLangCode = settingsManager.currentSettings.language
         return mapOf(
             "language" to AppLanguage.fromCode(currentLangCode)
         )
     }
 
-    override fun definedFormActions(): Map<String, (formResultData: FormResultData, loadedId: Int?) -> FormActionResult> = mapOf(
-        "save" to { data, _ ->
+    override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> = mapOf(
+        "save" to { data ->
             val selectedLang = data.getCurrentAs<AppLanguage>("language")
             val newSettings = settingsManager.currentSettings.copy(
                 language = selectedLang.code

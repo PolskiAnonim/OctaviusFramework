@@ -16,7 +16,7 @@ import org.octavius.form.control.base.FormResultData
  *
  * Klasa może być rozszerzona dla implementacji niestandardowych reguł walidacji.
  */
-open class FormValidator() : KoinComponent {
+open class FormValidator : KoinComponent {
 
     protected lateinit var formState: FormState
     protected lateinit var formSchema: FormSchema

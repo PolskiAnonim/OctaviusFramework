@@ -10,7 +10,6 @@ class LanguageSettingsFormScreen {
         fun create(settingsManager: AppSettingsManager): FormScreen {
             val title = Tr.Settings.Language.title()
             val formHandler = FormHandler(
-                entityId = null,
                 formSchemaBuilder = LanguageSettingsSchemaBuilder(),
                 formDataManager = LanguageSettingsDataManager(settingsManager)
             )

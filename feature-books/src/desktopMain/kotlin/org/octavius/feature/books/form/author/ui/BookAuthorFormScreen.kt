@@ -18,10 +18,10 @@ class BookAuthorFormScreen {
             return FormScreen(
                 title,
                 FormHandler(
-                    entityId,
-                    BookAuthorSchemaBuilder(),
-                    BookAuthorDataManager(),
-                    BookAuthorValidator(entityId)
+                    formSchemaBuilder = BookAuthorSchemaBuilder(),
+                    formDataManager = BookAuthorDataManager(),
+                    formValidator = BookAuthorValidator(),
+                    payload = mapOf("id" to entityId)
                 )
             )
         }

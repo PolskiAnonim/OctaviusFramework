@@ -17,10 +17,10 @@ class GameCategoryFormScreen {
                 if (entityId == null) Tr.Games.Form.newCategory() else Tr.Games.Form.editCategory()
 
             val formHandler = FormHandler(
-                entityId = entityId,
                 formSchemaBuilder = GameCategorySchemaBuilder(),
                 formDataManager = GameCategoryDataManager(),
                 formValidator = GameCategoryValidator(),
+                payload = mapOf("id" to entityId)
             )
             return FormScreen(title, formHandler)
         }

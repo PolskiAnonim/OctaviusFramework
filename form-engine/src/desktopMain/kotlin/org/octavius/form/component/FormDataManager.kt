@@ -26,7 +26,7 @@ abstract class FormDataManager: KoinComponent {
 
     protected val dataAccess: DataAccess by inject()
 
-    fun loadData(id: Int?, block: DataLoaderBuilder.() -> Unit): Map<String, Any?> {
+    fun loadData(id: Any?, block: DataLoaderBuilder.() -> Unit): Map<String, Any?> {
         val builder = DataLoaderBuilder(dataAccess).apply(block)
         return builder.execute(id)
     }
@@ -34,11 +34,10 @@ abstract class FormDataManager: KoinComponent {
     /**
      * Dostarcza wartości początkowe dla kontrolek formularza.
      *
-     * @param loadedId ID edytowanej encji (null dla nowych rekordów)
      * @param payload dodatkowe dane dla formularza (pusta mapa dla braku dodatkowych danych)
      * @return mapa kontrolka->wartość z wartościami domyślnymi lub obliczonymi
      */
-    abstract fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?>
+    abstract fun initData(payload: Map<String, Any?>): Map<String, Any?>
 
     /**
     * Definiuje logikę dla wszystkich akcji formularza (Zapisz, Anuluj, Usuń, etc.).
@@ -50,7 +49,7 @@ abstract class FormDataManager: KoinComponent {
     *
     * @return Mapa akcji formularza.
     */
-    open fun definedFormActions(): Map<String, (formResultData: FormResultData, loadedId: Int?) -> FormActionResult> {
+    open fun definedFormActions(): Map<String, (formResultData: FormResultData) -> FormActionResult> {
         return emptyMap()
     }
 }

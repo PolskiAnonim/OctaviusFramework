@@ -11,7 +11,7 @@ class DatabaseSettingsDataManager(
     private val settingsManager: AppSettingsManager
 ) : FormDataManager() {
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
+    override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
         val dbSettings = settingsManager.currentSettings.database
         return mapOf(
             "url" to dbSettings.url,
@@ -20,8 +20,8 @@ class DatabaseSettingsDataManager(
         )
     }
 
-    override fun definedFormActions(): Map<String, (formResultData: FormResultData, loadedId: Int?) -> FormActionResult> = mapOf(
-        "save" to { data, _ ->
+    override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> = mapOf(
+        "save" to { data ->
             val currentSettings = settingsManager.currentSettings
             val newSettings = currentSettings.copy(
                 database = DatabaseSettings(

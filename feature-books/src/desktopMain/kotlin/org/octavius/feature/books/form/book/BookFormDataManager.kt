@@ -15,12 +15,13 @@ import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
 import org.octavius.form.control.base.getCurrentAs
+import org.octavius.form.control.base.getInitial
 import org.octavius.form.control.base.getInitialAs
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class BookFormDataManager : FormDataManager() {
 
-    private fun loadBookData(loadedId: Int?) = loadData(loadedId) {
+    private fun loadBookData(loadedId: Any?) = loadData(loadedId) {
         from("books.books", "b")
 
         map("id")
@@ -36,7 +37,8 @@ class BookFormDataManager : FormDataManager() {
         }
     }
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
+    override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
+        val loadedId = payload["id"]
         val loadedData = loadBookData(loadedId)
 
         val defaultData = if (loadedId == null) {
@@ -50,16 +52,17 @@ class BookFormDataManager : FormDataManager() {
         return defaultData + loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "delete" to { _, loadedId -> processDelete(loadedId) },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen }
+            "save" to { formData -> processSave(formData) },
+            "delete" to { formData -> processDelete(formData) },
+            "cancel" to { _ -> FormActionResult.CloseScreen }
         )
     }
 
-    private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
+    private fun processSave(formResultData: FormResultData): FormActionResult {
         val plan = TransactionPlan()
+        val loadedId = formResultData.getInitial("id")
 
         // =================================================================================
         // KROK 1: Główna encja 'books'
@@ -73,7 +76,7 @@ class BookFormDataManager : FormDataManager() {
         )
 
         if (loadedId != null) {
-            bookIdRef = loadedId.toTransactionValue()
+            bookIdRef = (loadedId as Int).toTransactionValue()
             plan.add(
                 dataAccess.update("books.books")
                     .setValues(bookData)
@@ -149,8 +152,8 @@ class BookFormDataManager : FormDataManager() {
         }
     }
 
-    private fun processDelete(loadedId: Int?): FormActionResult {
-        if (loadedId == null) return FormActionResult.CloseScreen
+    private fun processDelete(formResultData: FormResultData): FormActionResult {
+        val loadedId = formResultData.getInitial("id") ?: return FormActionResult.CloseScreen
 
         // CASCADE usunie powiązania w book_to_authors
         val result = dataAccess.deleteFrom("books.books")

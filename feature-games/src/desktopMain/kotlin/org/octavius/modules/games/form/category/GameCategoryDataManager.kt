@@ -7,32 +7,34 @@ import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
+import org.octavius.form.control.base.getInitial
 
 class GameCategoryDataManager : FormDataManager() {
 
-    private fun loadData(loadedId: Int?) = loadData(loadedId) {
+    private fun loadData(loadedId: Any?) = loadData(loadedId) {
         from("games.categories", "ctg")
+        map("id")
         map("name")
     }
 
     override fun initData(
-        loadedId: Int?,
         payload: Map<String, Any?>
     ): Map<String, Any?> {
-        val loadedData = loadData(loadedId)
+        val loadedData = loadData(payload["id"])
         return loadedData + payload
     }
 
 
 
-    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen }
+            "save" to { formData -> processSave(formData) },
+            "cancel" to { _ -> FormActionResult.CloseScreen }
         )
     }
 
-    private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
+    private fun processSave(formResultData: FormResultData): FormActionResult {
+        val loadedId = formResultData.getInitial("id")
         val result = if (loadedId != null) {
             dataAccess.update("games.categories").setValue("name").where("id = @id")
                 .execute(mapOf("name" to formResultData.getCurrent("name"), "id" to loadedId))

@@ -10,7 +10,6 @@ class DatabaseSettingsFormScreen {
         fun create(settingsManager: AppSettingsManager): FormScreen {
             val title = Tr.Settings.Database.title()
             val formHandler = FormHandler(
-                entityId = null,
                 formSchemaBuilder = DatabaseSettingsSchemaBuilder(),
                 formDataManager = DatabaseSettingsDataManager(settingsManager)
             )

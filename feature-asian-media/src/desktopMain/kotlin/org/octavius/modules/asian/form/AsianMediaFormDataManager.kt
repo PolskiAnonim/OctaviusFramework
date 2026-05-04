@@ -13,12 +13,13 @@ import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
 import org.octavius.form.control.base.getCurrentAs
+import org.octavius.form.control.base.getInitial
 import org.octavius.form.control.base.getInitialAs
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class AsianMediaFormDataManager : FormDataManager() {
 
-    private fun loadAsianMediaData(loadedId: Int?) = loadData(loadedId) {
+    private fun loadAsianMediaData(loadedId: Any?) = loadData(loadedId) {
         from("asian_media.titles", "t")
 
         // Proste mapowania z tabeli 'titles'
@@ -43,29 +44,29 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
     }
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
-        val loadedData = loadAsianMediaData(loadedId)
+    override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
+        val loadedData = loadAsianMediaData(payload["id"])
 
         // Kolejność łączenia: Załadowane z DB -> Payload (nadpisuje wszystko)
         return loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (formResultData: FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "delete" to { _, loadedId -> processDelete(loadedId!!) /* Istnienie ID zapewnia logika ukrywania przycisku */ },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen }
+            "save" to { formData -> processSave(formData) },
+            "delete" to { formData -> processDelete(formData) /* Istnienie ID zapewnia logika ukrywania przycisku */ },
+            "cancel" to { _ -> FormActionResult.CloseScreen }
         )
     }
 
-    fun processDelete(loadedId: Int): FormActionResult {
+    fun processDelete(formResultData: FormResultData): FormActionResult {
         // Wykorzystanie CASCADE
         val plan = TransactionPlan()
         plan.add(
             dataAccess.deleteFrom("asian_media.titles")
                 .where("id = @id")
                 .asStep()
-                .execute("id" to loadedId)
+                .execute("id" to formResultData.getInitial("id"))
         )
 
         return when (val result = dataAccess.executeTransactionPlan(plan)) {
@@ -77,7 +78,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
     }
 
-    fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
+    fun processSave(formResultData: FormResultData): FormActionResult {
         val plan = TransactionPlan()
 
         // =================================================================================
@@ -90,9 +91,9 @@ class AsianMediaFormDataManager : FormDataManager() {
             "language" to formResultData.getCurrent("language")
         )
 
-        if (loadedId != null) {
+        if (formResultData.getInitial("id") != null) {
             // TRYB EDYCJI: ID jest znane.
-            titleIdRef = loadedId.toTransactionValue()
+            titleIdRef = formResultData.getInitialAs<Int>("id").toTransactionValue()
             plan.add(
                 dataAccess.update("asian_media.titles")
                     .setValues(titleData)
@@ -116,7 +117,7 @@ class AsianMediaFormDataManager : FormDataManager() {
         val publicationsResult = formResultData.getCurrentAs<RepeatableResultValue>("publications")
 
         // --- TRYB EDYCJI: Rozpatrujemy zmiany ---
-        if (loadedId != null) {
+        if (formResultData.getInitial("id") != null) {
             // Usunięte publikacje
             publicationsResult.deletedRows.forEach { rowData ->
                 val pubId = rowData.getInitialAs<Int>("id")
@@ -153,7 +154,7 @@ class AsianMediaFormDataManager : FormDataManager() {
 
         // --- TRYB TWORZENIA lub DODAWANIA NOWYCH (wspólna logika) ---
         // W trybie tworzenia `allCurrentRows` = `addedRows`
-        val rowsToAdd = if (loadedId == null) publicationsResult.allCurrentRows else publicationsResult.addedRows
+        val rowsToAdd = if (formResultData.getInitial("id") == null) publicationsResult.allCurrentRows else publicationsResult.addedRows
 
         rowsToAdd.forEach { rowData ->
             val publicationData = mapOf(

@@ -25,7 +25,6 @@ import org.octavius.ui.snackbar.SnackbarManager
  * 3. Obsługa akcji użytkownika (walidacja + wykonanie akcji)
  * 4. Nawigacja lub zamknięcie formularza na podstawie wyniku akcji
  *
- * @param entityId ID edytowanej encji (null dla nowych rekordów).
  * @param formSchemaBuilder Builder dostarczający definicję struktury formularza.
  * @param formDataManager Manager odpowiedzialny za operacje na danych.
  * @param formValidator Validator do sprawdzania poprawności danych.
@@ -33,7 +32,6 @@ import org.octavius.ui.snackbar.SnackbarManager
  * @param handlerScope CoroutineScope do operacji asynchronicznych.
  */
 class FormHandler(
-    private val entityId: Int? = null,
     formSchemaBuilder: FormSchemaBuilder,
     val formDataManager: FormDataManager,
     val formValidator: FormValidator = FormValidator(),
@@ -86,7 +84,7 @@ class FormHandler(
      */
     private fun loadData() {
         handlerScope.launch {
-            val initValues = formDataManager.initData(entityId, payload)
+            val initValues = formDataManager.initData(payload)
             formState.initializeStates(formSchema, initValues)
             formState.isLoading.value = false
         }
@@ -130,7 +128,7 @@ class FormHandler(
                 return@withContext result
             }
 
-            val actionResult = action.invoke(rawFormData, entityId)
+            val actionResult = action.invoke(rawFormData)
             formState.actionTriggered.value = false
             return@withContext handleActionResult(actionResult)
         }

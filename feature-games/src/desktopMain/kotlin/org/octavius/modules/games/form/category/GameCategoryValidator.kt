@@ -10,7 +10,7 @@ import org.octavius.form.control.base.getCurrent
 import org.octavius.form.control.base.getCurrentAs
 import org.octavius.localization.Tr
 
-class GameCategoryValidator(): FormValidator() {
+class GameCategoryValidator: FormValidator() {
 
     override fun defineActionValidations(): Map<String, (FormResultData) -> Boolean> = mapOf(
         "save" to { result -> checkIfUnique(result) }

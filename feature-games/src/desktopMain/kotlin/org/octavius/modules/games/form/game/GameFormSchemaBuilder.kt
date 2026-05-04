@@ -18,6 +18,7 @@ import org.octavius.localization.Tr
 class GameFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
+        "id" to IntegerControl(null),
         // Podstawowe dane
         "visibleCharactersSection" to BooleanControl(
             Tr.Games.Form.visibleCharacterSection(),

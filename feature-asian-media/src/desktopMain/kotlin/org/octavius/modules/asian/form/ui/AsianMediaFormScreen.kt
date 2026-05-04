@@ -17,11 +17,10 @@ class AsianMediaFormScreen {
                 if (entityId == null) Tr.AsianMedia.Form.newTitle() else Tr.AsianMedia.Form.editTitle()
 
             val formHandler = FormHandler(
-                entityId = entityId,
                 formSchemaBuilder = AsianMediaFormSchemaBuilder(),
                 formDataManager = AsianMediaFormDataManager(),
-                formValidator = AsianMediaValidator(entityId),
-                payload = payload
+                formValidator = AsianMediaValidator(),
+                payload = payload + ("id" to entityId)
             )
 
             return FormScreen(title, formHandler)

@@ -16,15 +16,17 @@ import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
 import org.octavius.form.control.base.getCurrentAs
+import org.octavius.form.control.base.getInitial
 import org.octavius.form.control.base.getInitialAs
 import org.octavius.form.control.type.repeatable.RepeatableResultValue
 
 class GameFormDataManager : FormDataManager() {
 
-    private fun loadGameData(loadedId: Int?) = loadData(loadedId) {
+    private fun loadGameData(loadedId: Any?) = loadData(loadedId) {
         from("games", "g")
 
         // Proste mapowania z tabeli 'games'
+        map("id")
         map("name")
         map("series")
         map("status")
@@ -66,7 +68,8 @@ class GameFormDataManager : FormDataManager() {
         }
     }
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
+    override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
+        val loadedId = payload["id"]
         val loadedData = loadGameData(loadedId)
 
         val defaultData = if (loadedId == null) {
@@ -85,16 +88,17 @@ class GameFormDataManager : FormDataManager() {
         return defaultData + loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen }
+            "save" to { formData -> processSave(formData) },
+            "cancel" to { _ -> FormActionResult.CloseScreen }
         )
     }
 
-    fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
+    fun processSave(formResultData: FormResultData): FormActionResult {
         val plan = TransactionPlan()
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
+        val loadedId = formResultData.getInitialAs<Int?>("id")
 
         // =================================================================================
         // KROK 1: Główna encja 'games'

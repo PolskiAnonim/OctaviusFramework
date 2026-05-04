@@ -11,7 +11,7 @@ import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrentAs
 import org.octavius.localization.Tr
 
-class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
+class AsianMediaValidator: FormValidator() {
     override fun validateBusinessRules(formResultData: FormResultData): Boolean {
         return validateTitleDuplication(formResultData)
     }
@@ -29,12 +29,13 @@ class AsianMediaValidator(private val entityId: Int? = null) : FormValidator() {
 
     fun validateTitlesAgainstDatabase(formResultData: FormResultData): Boolean {
         val titles = formResultData.getCurrentAs<List<String>>("titles")
+        val id = formResultData.getCurrentAs<Int?>("id")
 
         if (titles.isEmpty()) return true
 
         val whereClause = listOfNotNull(
             "title = ANY(@titles)" withParam ("titles" to titles),
-            entityId?.let { "id != @id" withParam ("id" to entityId) }
+            id?.let { "id != @id" withParam ("id" to id) }
         ).join(separator = " AND ")
 
         val result = dataAccess.select("COUNT(*)").fromSubquery("SELECT id, UNNEST(titles) AS title FROM titles")

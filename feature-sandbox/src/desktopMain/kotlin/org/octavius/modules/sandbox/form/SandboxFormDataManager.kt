@@ -9,7 +9,7 @@ import org.octavius.ui.snackbar.SnackbarManager
 
 class SandboxFormDataManager : FormDataManager() {
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>): Map<String, Any?> {
+    override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
         return mapOf(
             "basicInfo" to mapOf(
                 "name" to "",
@@ -24,13 +24,13 @@ class SandboxFormDataManager : FormDataManager() {
         ) + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (formResultData: FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { _, _ ->
+            "save" to { _ ->
                 SnackbarManager.showMessage(Tr.Sandbox.Form.savedMessage())
                 FormActionResult.CloseScreen
             },
-            "cancel" to { _, _ ->
+            "cancel" to { _ ->
                 FormActionResult.CloseScreen
             }
         )

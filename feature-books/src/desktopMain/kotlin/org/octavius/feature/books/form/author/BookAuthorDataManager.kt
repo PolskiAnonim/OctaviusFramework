@@ -7,32 +7,34 @@ import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
+import org.octavius.form.control.base.getInitial
 
 class BookAuthorDataManager : FormDataManager() {
 
-    private fun loadData(loadedId: Int?) = loadData(loadedId) {
+    private fun loadData(loadedId: Any?) = loadData(loadedId) {
         from("books.authors", "a")
+        map("id")
         map("name")
         map("sortName")
     }
 
     override fun initData(
-        loadedId: Int?,
         payload: Map<String, Any?>
     ): Map<String, Any?> {
-        val loadedData = loadData(loadedId)
+        val loadedData = loadData(payload["id"])
         return loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "delete" to { _, loadedId -> processDelete(loadedId) },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen }
+            "save" to { formData -> processSave(formData) },
+            "delete" to { formData -> processDelete(formData) },
+            "cancel" to { _ -> FormActionResult.CloseScreen }
         )
     }
 
-    private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
+    private fun processSave(formResultData: FormResultData): FormActionResult {
+        val loadedId = formResultData.getInitial("id")
         val params = mapOf(
             "name" to formResultData.getCurrent("name"),
             "sort_name" to formResultData.getCurrent("sortName")
@@ -58,8 +60,8 @@ class BookAuthorDataManager : FormDataManager() {
         }
     }
 
-    private fun processDelete(loadedId: Int?): FormActionResult {
-        if (loadedId == null) return FormActionResult.CloseScreen
+    private fun processDelete(formResultData: FormResultData): FormActionResult {
+        val loadedId = formResultData.getInitial("id") ?: return FormActionResult.CloseScreen
 
         val result = dataAccess.deleteFrom("books.authors")
             .where("id = @id")

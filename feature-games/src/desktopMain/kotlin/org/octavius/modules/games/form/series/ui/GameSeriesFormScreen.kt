@@ -17,10 +17,10 @@ class GameSeriesFormScreen {
                 if (entityId == null) Tr.Games.Form.newSeries() else Tr.Games.Form.editSeries()
 
             val formHandler = FormHandler(
-                entityId = entityId,
                 formSchemaBuilder = GameSeriesFormSchemaBuilder(),
                 formDataManager = GameSeriesFormDataManager(),
-                formValidator = GameSeriesFormValidator(entityId),
+                formValidator = GameSeriesFormValidator(),
+                payload = mapOf("id" to entityId)
             )
             return FormScreen(title, formHandler)
         }

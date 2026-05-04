@@ -9,31 +9,31 @@ import org.octavius.form.component.FormActionResult
 import org.octavius.form.component.FormDataManager
 import org.octavius.form.control.base.FormResultData
 import org.octavius.form.control.base.getCurrent
+import org.octavius.form.control.base.getInitial
 
 class GameSeriesFormDataManager : FormDataManager() {
-    private fun loadData(loadedId: Int?) = loadData(loadedId) {
+    private fun loadData(loadedId: Any?) = loadData(loadedId) {
         from("games.series", "s")
+        map("id")
         map("name")
     }
 
     override fun initData(
-        loadedId: Int?,
         payload: Map<String, Any?>
     ): Map<String, Any?> {
-        val loadedData = loadData(loadedId)
+        val loadedData = loadData(payload["id"])
         return loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData, Int?) -> FormActionResult> {
+    override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { formData, loadedId -> processSave(formData, loadedId) },
-            "cancel" to { _, _ -> FormActionResult.CloseScreen }
+            "save" to { formData -> processSave(formData) },
+            "cancel" to { _ -> FormActionResult.CloseScreen }
         )
     }
 
-    private fun processSave(formResultData: FormResultData, loadedId: Int?): FormActionResult {
-        val seriesData = mutableMapOf<String, Any?>()
-        seriesData["name"] = formResultData.getCurrent("name")
+    private fun processSave(formResultData: FormResultData): FormActionResult {
+        val loadedId = formResultData.getInitial("id")
         val plan = TransactionPlan()
         if (loadedId != null) {
             plan.add(

@@ -91,6 +91,7 @@ data class RelatedDataMapping(val controlName: String, val builder: RelatedDataM
 class DataLoaderBuilder(private val dataAccess: DataAccess) {
     private lateinit var mainTableName: String
     private lateinit var mainTableAlias: String
+    private var idColumn: String = "id"
     private val relations = mutableListOf<RelationMapping>()
 
     private val mainTable: String
@@ -100,6 +101,10 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
     fun from(tableName: String, alias: String) {
         this.mainTableName = tableName
         this.mainTableAlias = alias
+    }
+
+    fun idColumn(name: String) {
+        this.idColumn = name
     }
 
     fun map(controlName: String, dbColumn: String? = null) {
@@ -119,7 +124,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
         relations.add(RelatedDataMapping(controlName, builder))
     }
 
-    fun execute(id: Int?): Map<String, Any?> {
+    fun execute(id: Any?): Map<String, Any?> {
         check(::mainTableName.isInitialized) { "Main table must be defined using from()" }
         if (id == null) return emptyMap()
 
@@ -133,7 +138,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
         return mainData + relatedData
     }
 
-    private fun loadMainData(id: Int): Map<String, Any?> {
+    private fun loadMainData(id: Any): Map<String, Any?> {
         val simpleFields = mutableListOf<String>()
         val joins = mutableListOf<String>()
 
@@ -158,19 +163,19 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
 
         val query = dataAccess.select(*simpleFields.toTypedArray())
             .from("$mainTable ${joins.joinToString(" ")}")
-            .where("$mainTableAlias.id = @id")
+            .where("$mainTableAlias.$idColumn = @id")
             .toSingle("id" to id)
 
         return when (query) {
             is DataResult.Success -> query.value ?: emptyMap()
             is DataResult.Failure -> {
                 GlobalDialogManager.show(ErrorDialogConfig(query.error))
-                return emptyMap()
+                emptyMap()
             }
         }
     }
 
-    private fun loadRelatedData(id: Int): Map<String, Any?> {
+    private fun loadRelatedData(id: Any): Map<String, Any?> {
         val result = mutableMapOf<String, Any?>()
         relations.filterIsInstance<RelatedDataMapping>().forEach { rel ->
             val builder = rel.builder
