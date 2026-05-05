@@ -64,17 +64,19 @@ class GameReportStructureBuilder(
         "categories" to StringColumn(Tr.Games.Form.category(2)).asList(),
     )
 
-    override fun buildRowActions(): List<ReportRowAction> = listOf(
-        ReportRowAction(Tr.Report.Actions.edit()) {
-            val id = rowData["id"] as? Int
-            if (id != null) {
-                AppRouter.navigateTo(
-                    GameFormScreen.create(
-                        entityId = id
-                    )
+    override fun buildDefaultRowAction(): ReportRowAction = ReportRowAction(
+        Tr.Report.Actions.edit()
+    ) {
+        val id = rowData["id"] as? Int
+        if (id != null) {
+            AppRouter.navigateTo(
+                GameFormScreen.create(
+                    entityId = id
                 )
-            }
-        })
+            )
+        }
+    }
+
 
     override fun buildMainActions(): List<ReportMainAction> = listOf(
         ReportMainAction(Tr.Games.Report.newGame(), Icons.Default.Add) {
