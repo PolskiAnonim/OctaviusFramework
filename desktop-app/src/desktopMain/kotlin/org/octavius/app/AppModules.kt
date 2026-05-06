@@ -18,7 +18,7 @@ val databaseModule = module {
                 dbUrl = settings.url,
                 dbUsername = settings.username,
                 dbPassword = settings.password,
-                dbSchemas = listOf("public", "asian_media", "games", "books"),
+                dbSchemas = listOf("public", "asian_media", "games", "books", "finances"),
                 setSearchPath = true,
                 packagesToScan = listOf("org.octavius"),
             ),
@@ -27,7 +27,8 @@ val databaseModule = module {
                     "public",
                     "asian_media",
                     "games",
-                    "books"
+                    "books",
+                    "finances"
                 ), baselineVersion = "2025.12.21.15.13"
             )
         )

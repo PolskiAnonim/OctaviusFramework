@@ -1,0 +1,46 @@
+{
+  "Finances": {
+    "Title": "Finances",
+    "Home": {
+      "Title": "Finances Dashboard",
+      "TotalBalance": "Total Balance",
+      "ExpensesThisMonth": "Expenses (month)",
+      "IncomeThisMonth": "Income (month)",
+      "RecentTransactions": "Recent Transactions",
+      "Accounts": "Accounts",
+      "ViewAllTransactions": "View All Transactions",
+      "ViewAllAccounts": "View All Accounts",
+      "NoTransactions": "No transactions found",
+      "NoAccounts": "No accounts found"
+    },
+    "AccountType": {
+      "Asset": "Asset",
+      "Liability": "Liability",
+      "Income": "Income",
+      "Expense": "Expense",
+      "Equity": "Equity"
+    },
+    "Tabs": {
+      "Accounts": "Accounts",
+      "Transactions": "Transactions"
+    },
+    "Account": {
+      "Name": "Name",
+      "Type": "Type",
+      "Currency": "Currency",
+      "Parent": "Parent Account",
+      "New": "New Account",
+      "Edit": "Edit Account"
+    },
+    "Transaction": {
+      "Date": "Date",
+      "Description": "Description",
+      "Splits": "Splits",
+      "Amount": "Amount",
+      "Account": "Account",
+      "New": "New Transaction",
+      "Edit": "Edit Transaction",
+      "NotBalanced": "Transaction must be balanced (sum of amounts must be zero)"
+    }
+  }
+}

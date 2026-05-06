@@ -1,0 +1,46 @@
+{
+  "Finances": {
+    "Title": "Finanse",
+    "Home": {
+      "Title": "Pulpit Finansowy",
+      "TotalBalance": "Całkowite saldo",
+      "ExpensesThisMonth": "Wydatki (miesiąc)",
+      "IncomeThisMonth": "Przychody (miesiąc)",
+      "RecentTransactions": "Ostatnie transakcje",
+      "Accounts": "Konta",
+      "ViewAllTransactions": "Zobacz wszystkie transakcje",
+      "ViewAllAccounts": "Zobacz wszystkie konta",
+      "NoTransactions": "Nie znaleziono transakcji",
+      "NoAccounts": "Nie znaleziono kont"
+    },
+    "AccountType": {
+      "Asset": "Aktywa",
+      "Liability": "Pasywa",
+      "Income": "Przychody",
+      "Expense": "Wydatki",
+      "Equity": "Kapitał własny"
+    },
+    "Tabs": {
+      "Accounts": "Konta",
+      "Transactions": "Transakcje"
+    },
+    "Account": {
+      "Name": "Nazwa",
+      "Type": "Typ",
+      "Currency": "Waluta",
+      "Parent": "Konto nadrzędne",
+      "New": "Nowe konto",
+      "Edit": "Edytuj konto"
+    },
+    "Transaction": {
+      "Date": "Data",
+      "Description": "Opis",
+      "Splits": "Rozbicia",
+      "Amount": "Kwota",
+      "Account": "Konto",
+      "New": "Nowa transakcja",
+      "Edit": "Edytuj transakcję",
+      "NotBalanced": "Transakcja musi być zbilansowana (suma kwot musi wynosić zero)"
+    }
+  }
+}

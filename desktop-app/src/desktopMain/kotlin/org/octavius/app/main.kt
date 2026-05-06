@@ -25,6 +25,7 @@ import org.octavius.contract.ScreenFactory
 import org.octavius.feature.books.BooksFeature
 import org.octavius.localization.Tr
 import org.octavius.modules.asian.AsianMediaFeature
+import org.octavius.modules.finances.FinancesFeature
 import org.octavius.modules.games.GamesFeature
 import org.octavius.modules.sandbox.SandboxFeature
 import org.octavius.navigation.AppRouter
@@ -167,7 +168,7 @@ private fun ApplicationScope.MainAppScreen(onCloseRequest: () -> Unit) {
     //  GŁÓWNA APLIKACJA (komponowana tylko raz, gdy stan jest Ready)
     // ==============================================================================
     val features: List<FeatureModule> = remember {
-        listOf(AsianMediaFeature, GamesFeature, BooksFeature, SandboxFeature, SettingsFeature)
+        listOf(AsianMediaFeature, GamesFeature, BooksFeature, FinancesFeature, SandboxFeature, SettingsFeature)
     }
     val (tabs, apiModules, screenFactories) = remember {
         val tabs = features.mapNotNull { it.getTab() }
