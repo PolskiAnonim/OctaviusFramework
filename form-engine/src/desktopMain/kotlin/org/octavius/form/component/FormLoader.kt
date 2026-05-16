@@ -152,7 +152,7 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
                         simpleFields.add(selectAs(field.dbColumn, field.controlName))
                     }
                     rel.existenceFlag?.let { flag ->
-                        simpleFields.add("CASE WHEN ${flag.checkColumn} IS NOT NULL THEN TRUE ELSE FALSE END AS \"${flag.controlName}\"")
+                        simpleFields.add("CASE WHEN ${flag.checkColumn} IS NOT NULL THEN TRUE ELSE FALSE END AS ${flag.controlName}")
                     }
                 }
                 is RelatedDataMapping -> { /* Ignorowane w tej fazie */ }
@@ -195,5 +195,5 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
     }
 
     // Helper do generowania "column AS control"
-    private fun selectAs(dbColumn: String, controlName: String) = "$dbColumn AS \"$controlName\""
+    private fun selectAs(dbColumn: String, controlName: String) = "$dbColumn AS $controlName"
 }

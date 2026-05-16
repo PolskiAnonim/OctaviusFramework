@@ -35,14 +35,14 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
             SandboxPriority::class,
             required = true
         ),
-        "startDate" to DateControl(
+        "start_date" to DateControl(
             Tr.Sandbox.Form.startDate()
         ),
         "tags" to StringListControl(
             Tr.Sandbox.Form.tags()
         ),
-        "basicInfo" to SectionControl(
-            controls = listOf("name", "quantity", "active", "priority", "startDate", "tags"),
+        "basic_info" to SectionControl(
+            controls = listOf("name", "quantity", "active", "priority", "start_date", "tags"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 2,
@@ -50,32 +50,32 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
         ),
         "elements" to RepeatableControl(
             rowControls = mapOf(
-                "elementName" to StringControl(
+                "element_name" to StringControl(
                     Tr.Sandbox.Form.elementName(),
                     required = true
                 ),
-                "elementValue" to IntegerControl(
+                "element_value" to IntegerControl(
                     Tr.Sandbox.Form.elementValue(),
                     validationOptions = IntegerValidation(min = 0)
                 )
             ),
-            rowOrder = listOf("elementName", "elementValue"),
+            rowOrder = listOf("element_name", "element_value"),
             label = Tr.Sandbox.Form.elements(),
             validationOptions = RepeatableValidation(
                 minItems = 0,
                 maxItems = 10,
-                uniqueFields = listOf("elementName")
+                uniqueFields = listOf("element_name")
             )
         ),
-        "nestedRepeatable" to RepeatableControl(
+        "nested_repeatable" to RepeatableControl(
             rowControls = mapOf(
-                "innerRepeatable" to RepeatableControl(
+                "inner_repeatable" to RepeatableControl(
                     rowControls = mapOf(
-                        "innerString" to StringControl(
+                        "inner_string" to StringControl(
                             Tr.Sandbox.Form.innerString(),
                             dependencies = mapOf(
                                 "visible" to ControlDependency(
-                                    controlPath = "../innerBoolean",
+                                    controlPath = "../inner_boolean",
                                     value = true,
                                     dependencyType = DependencyType.Visible,
                                     comparisonType = ComparisonType.Equals
@@ -83,17 +83,17 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
                             )
                         )
                     ),
-                    rowOrder = listOf("innerString"),
+                    rowOrder = listOf("inner_string"),
                     label = Tr.Sandbox.Form.innerRepeatable()
                 ),
-                "innerBoolean" to BooleanControl(
+                "inner_boolean" to BooleanControl(
                     Tr.Sandbox.Form.innerBoolean()
                 )
             ),
-            rowOrder = listOf("innerRepeatable", "innerBoolean"),
+            rowOrder = listOf("inner_repeatable", "inner_boolean"),
             label = Tr.Sandbox.Form.nestedRepeatable()
         ),
-        "saveButton" to ButtonControl(
+        "save_button" to ButtonControl(
             text = Tr.Action.save(),
             actions = listOf(
                 ControlAction {
@@ -102,7 +102,7 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
             ),
             buttonType = ButtonType.Filled
         ),
-        "cancelButton" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             actions = listOf(
                 ControlAction {
@@ -111,11 +111,11 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
             ),
             buttonType = ButtonType.Outlined
         ),
-        "clearElementsButton" to ButtonControl(
+        "clear_elements_button" to ButtonControl(
             text = "Wyczyść wartości elementów",
             actions = listOf(
                 ControlAction {
-                    updateControls<Int>("elements[*]/elementValue", null)
+                    updateControls<Int>("elements[*]/element_value", null)
                 }
             ),
             buttonType = ButtonType.Text
@@ -123,14 +123,14 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
     )
 
     override fun defineContentOrder(): List<String> = listOf(
-        "basicInfo",
+        "basic_info",
         "elements",
-        "nestedRepeatable"
+        "nested_repeatable"
     )
 
     override fun defineActionBarOrder(): List<String> = listOf(
-        "clearElementsButton",
-        "cancelButton",
-        "saveButton"
+        "clear_elements_button",
+        "cancel_button",
+        "save_button"
     )
 }

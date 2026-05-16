@@ -17,7 +17,7 @@ class AccountFormDataManager : FormDataManager() {
         map("name")
         map("type")
         map("currency")
-        map("parentId", "parent_id")
+        map("parent_id", "parent_id")
     }
 
     override fun initData(
@@ -44,7 +44,7 @@ class AccountFormDataManager : FormDataManager() {
             "name" to formResultData.getCurrent("name"),
             "type" to formResultData.getCurrent("type"),
             "currency" to formResultData.getCurrent("currency"),
-            "parent_id" to formResultData.getCurrent("parentId")
+            "parent_id" to formResultData.getCurrent("parent_id")
         )
 
         val result = if (loadedId != null) {

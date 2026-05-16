@@ -25,15 +25,15 @@ class BookFormDataManager : FormDataManager() {
         from("books.books", "b")
 
         map("id")
-        map("titlePl")
-        map("titleEng")
+        map("title_pl", "titlePl")
+        map("title_eng", "titleEng")
         map("status")
 
         // Relacja N-do-M z autorami
         mapRelatedList("authors") {
             from("books.book_to_authors", "bta")
             linkedBy("bta.book_id")
-            map("authorId", "author_id")
+            map("author_id", "author_id")
         }
     }
 
@@ -70,8 +70,8 @@ class BookFormDataManager : FormDataManager() {
         val bookIdRef: TransactionValue<Int>
 
         val bookData = mapOf(
-            "title_pl" to formResultData.getCurrent("titlePl"),
-            "title_eng" to formResultData.getCurrent("titleEng"),
+            "title_pl" to formResultData.getCurrent("title_pl"),
+            "title_eng" to formResultData.getCurrent("title_eng"),
             "status" to formResultData.getCurrent("status")
         )
 
@@ -102,9 +102,9 @@ class BookFormDataManager : FormDataManager() {
 
         // Usunięci i zmodyfikowani autorzy (stare wartości do usunięcia)
         val deletedAuthors = authorsResult.deletedRows.map { rowData ->
-            rowData.getInitialAs<Int>("authorId")
+            rowData.getInitialAs<Int>("author_id")
         } + authorsResult.modifiedRows.map { rowData ->
-            rowData.getInitialAs<Int>("authorId")
+            rowData.getInitialAs<Int>("author_id")
         }
 
         if (deletedAuthors.isNotEmpty()) {
@@ -122,9 +122,9 @@ class BookFormDataManager : FormDataManager() {
 
         // Dodani i zmodyfikowani autorzy (nowe wartości do wstawienia)
         val insertedAuthors = authorsResult.addedRows.map { rowData ->
-            rowData.getCurrentAs<Int>("authorId")
+            rowData.getCurrentAs<Int>("author_id")
         } + authorsResult.modifiedRows.map { rowData ->
-            rowData.getCurrentAs<Int>("authorId")
+            rowData.getCurrentAs<Int>("author_id")
         }
 
         if (insertedAuthors.isNotEmpty()) {

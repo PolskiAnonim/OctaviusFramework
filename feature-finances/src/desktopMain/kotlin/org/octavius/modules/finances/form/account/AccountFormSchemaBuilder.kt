@@ -13,8 +13,8 @@ import org.octavius.modules.finances.domain.AccountType
 
 class AccountFormSchemaBuilder : FormSchemaBuilder() {
 
-    override fun defineContentOrder(): List<String> = listOf("name", "type", "currency", "parentId")
-    override fun defineActionBarOrder(): List<String> = listOf("cancelButton", "saveButton")
+    override fun defineContentOrder(): List<String> = listOf("name", "type", "currency", "parent_id")
+    override fun defineActionBarOrder(): List<String> = listOf("cancel_button", "save_button")
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(null),
@@ -33,13 +33,13 @@ class AccountFormSchemaBuilder : FormSchemaBuilder() {
         ).apply { 
             // Default value should be handled in DataManager or here
         },
-        "parentId" to DatabaseControl(
+        "parent_id" to DatabaseControl(
             Tr.Finances.Account.parent(),
             "finances.accounts",
             "name",
             required = false
         ),
-        "saveButton" to ButtonControl(
+        "save_button" to ButtonControl(
             text = Tr.Action.save(),
             buttonType = ButtonType.Filled,
             actions = listOf(
@@ -48,7 +48,7 @@ class AccountFormSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "cancelButton" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             buttonType = ButtonType.Outlined,
             actions = listOf(

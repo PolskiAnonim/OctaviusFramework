@@ -18,18 +18,18 @@ import org.octavius.localization.Tr
 
 class BookFormSchemaBuilder : FormSchemaBuilder() {
 
-    override fun defineContentOrder(): List<String> = listOf("basicInfo", "authors")
-    override fun defineActionBarOrder(): List<String> = listOf("cancelButton", "saveButton", "deleteButton")
+    override fun defineContentOrder(): List<String> = listOf("basic_info", "authors")
+    override fun defineActionBarOrder(): List<String> = listOf("cancel_button", "save_button", "delete_button")
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(null),
 
         // Podstawowe informacje
-        "titlePl" to StringControl(
+        "title_pl" to StringControl(
             Tr.Books.Form.titlePl(),
             required = true
         ),
-        "titleEng" to StringControl(
+        "title_eng" to StringControl(
             Tr.Books.Form.titleEng(),
             required = false
         ),
@@ -38,8 +38,8 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
             ReadingStatus::class,
             required = true
         ),
-        "basicInfo" to SectionControl(
-            controls = listOf("titlePl", "titleEng", "status"),
+        "basic_info" to SectionControl(
+            controls = listOf("title_pl", "title_eng", "status"),
             collapsible = false,
             initiallyExpanded = true,
             columns = 1,
@@ -49,24 +49,24 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
         // Autorzy
         "authors" to RepeatableControl(
             rowControls = mapOf(
-                "authorId" to DatabaseControl(
+                "author_id" to DatabaseControl(
                     label = Tr.Books.Form.author(),
                     relatedTable = "books.authors",
                     displayColumn = "name",
                     required = true
                 )
             ),
-            rowOrder = listOf("authorId"),
+            rowOrder = listOf("author_id"),
             label = Tr.Books.Form.authors(),
             validationOptions = RepeatableValidation(
                 minItems = 0,
                 maxItems = 10,
-                uniqueFields = listOf("authorId")
+                uniqueFields = listOf("author_id")
             )
         ),
 
         // Przyciski
-        "saveButton" to ButtonControl(
+        "save_button" to ButtonControl(
             text = Tr.Action.save(),
             buttonType = ButtonType.Filled,
             actions = listOf(
@@ -75,7 +75,7 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "deleteButton" to ButtonControl(
+        "delete_button" to ButtonControl(
             text = Tr.Action.remove(),
             buttonType = ButtonType.Filled,
             dependencies = mapOf(
@@ -105,7 +105,7 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "cancelButton" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             buttonType = ButtonType.Outlined,
             actions = listOf(

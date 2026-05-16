@@ -16,7 +16,7 @@ import java.math.BigDecimal
 class TransactionFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineContentOrder(): List<String> = listOf("date", "description", "splits")
-    override fun defineActionBarOrder(): List<String> = listOf("cancelButton", "saveButton")
+    override fun defineActionBarOrder(): List<String> = listOf("cancel_button", "save_button")
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(null),
@@ -30,7 +30,7 @@ class TransactionFormSchemaBuilder : FormSchemaBuilder() {
         ),
         "splits" to RepeatableControl(
             rowControls = mapOf(
-                "accountId" to DatabaseControl(
+                "account_id" to DatabaseControl(
                     label = Tr.Finances.Transaction.account(),
                     relatedTable = "finances.accounts",
                     displayColumn = "name",
@@ -44,14 +44,14 @@ class TransactionFormSchemaBuilder : FormSchemaBuilder() {
                     )
                 )
             ),
-            rowOrder = listOf("accountId", "amount"),
+            rowOrder = listOf("account_id", "amount"),
             label = Tr.Finances.Transaction.splits(),
             validationOptions = RepeatableValidation(
                 minItems = 2,
-                uniqueFields = listOf("accountId")
+                uniqueFields = listOf("account_id")
             )
         ),
-        "saveButton" to ButtonControl(
+        "save_button" to ButtonControl(
             text = Tr.Action.save(),
             buttonType = ButtonType.Filled,
             actions = listOf(
@@ -60,7 +60,7 @@ class TransactionFormSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "cancelButton" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             buttonType = ButtonType.Outlined,
             actions = listOf(

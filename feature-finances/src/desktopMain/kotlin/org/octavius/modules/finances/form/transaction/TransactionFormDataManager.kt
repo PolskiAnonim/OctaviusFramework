@@ -28,7 +28,7 @@ class TransactionFormDataManager : FormDataManager() {
             from("finances.splits", "s")
             linkedBy("s.transaction_id")
             map("id")
-            map("accountId", "account_id")
+            map("account_id", "account_id")
             map("amount")
         }
     }
@@ -100,7 +100,7 @@ class TransactionFormDataManager : FormDataManager() {
         splitsResult.allCurrentRows.forEach { rowData ->
             val splitData = mapOf(
                 "transaction_id" to transactionIdRef,
-                "account_id" to rowData.getCurrent("accountId"),
+                "account_id" to rowData.getCurrent("account_id"),
                 "amount" to rowData.getCurrent("amount")
             )
             plan.add(

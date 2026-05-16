@@ -11,7 +11,7 @@ import org.octavius.localization.Tr
 
 class GameCategorySchemaBuilder : FormSchemaBuilder() {
 
-    override fun defineActionBarOrder(): List<String> = listOf("cancelButton", "saveButton")
+    override fun defineActionBarOrder(): List<String> = listOf("cancel_button", "save_button")
     override fun defineContentOrder(): List<String> = listOf("name")
 
     override fun defineControls(): Map<String, Control<*>> =
@@ -24,14 +24,14 @@ class GameCategorySchemaBuilder : FormSchemaBuilder() {
                 required = true
             ),
             // Przyciski
-            "saveButton" to ButtonControl(
+            "save_button" to ButtonControl(
                 text = Tr.Action.save(), actions = listOf(
                     ControlAction {
                         trigger.triggerAction("save", true)
                     }
                 ), buttonType = ButtonType.Filled
             ),
-            "cancelButton" to ButtonControl(
+            "cancel_button" to ButtonControl(
                 text = Tr.Action.cancel(), buttonType = ButtonType.Outlined, actions = listOf(
                     ControlAction {
                         trigger.triggerAction("cancel", false)

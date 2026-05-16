@@ -20,13 +20,13 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(null),
         // Podstawowe dane
-        "visibleCharactersSection" to BooleanControl(
+        "visible_characters_section" to BooleanControl(
             Tr.Games.Form.visibleCharacterSection(),
             required = true
         ),
-        "playTimeExists" to BooleanControl(null),
-        "ratingsExists" to BooleanControl(null),
-        "charactersExists" to BooleanControl(null),
+        "play_time_exists" to BooleanControl(null),
+        "ratings_exists" to BooleanControl(null),
+        "characters_exists" to BooleanControl(null),
         // Sekcja podstawowych informacji
         "name" to StringControl(
             Tr.Games.General.gameName(),
@@ -42,19 +42,19 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             GameStatus::class,
             required = true
         ),
-        "basicInfo" to SectionControl(
-            controls = listOf("name", "series", "status", "visibleCharactersSection"),
+        "basic_info" to SectionControl(
+            controls = listOf("name", "series", "status", "visible_characters_section"),
             collapsible = false,
             initiallyExpanded = true,
             columns = 1,
             label = Tr.Games.Form.basicInfo()
         ),
         // Sekcja czasu gry
-        "playTimeHours" to DoubleControl(
+        "play_time_hours" to DoubleControl(
             Tr.Games.Form.playTimeHours(),
             validationOptions = DoubleValidation(min = 0.0, decimalPlaces = 2)
         ),
-        "completionCount" to IntegerControl(
+        "completion_count" to IntegerControl(
             Tr.Games.Form.playCount(),
             required = true, // Automatycznie pomijana walidacja jak niewidoczna kontrolka
             dependencies = mapOf(
@@ -67,8 +67,8 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             ),
             validationOptions = IntegerValidation(min = 0)
         ),
-        "playTimeSection" to SectionControl(
-            controls = listOf("playTimeHours", "completionCount"),
+        "play_time_section" to SectionControl(
+            controls = listOf("play_time_hours", "completion_count"),
             collapsible = false,
             initiallyExpanded = true,
             columns = 2,
@@ -87,21 +87,21 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             )
         ),
         // Sekcja ocen
-        "storyRating" to IntegerControl(
+        "story_rating" to IntegerControl(
             Tr.Games.Form.storyRating(),
             validationOptions = IntegerValidation(min = 0, max = 10)
         ),
-        "gameplayRating" to IntegerControl(
+        "gameplay_rating" to IntegerControl(
             Tr.Games.Form.gameplayRating(),
             required = true,
             validationOptions = IntegerValidation(min = 0, max = 10)
         ),
-        "atmosphereRating" to IntegerControl(
+        "atmosphere_rating" to IntegerControl(
             Tr.Games.Form.atmosphereRating(),
             validationOptions = IntegerValidation(min = 0, max = 10)
         ),
-        "ratingsSection" to SectionControl(
-            controls = listOf("storyRating", "gameplayRating", "atmosphereRating"),
+        "ratings_section" to SectionControl(
+            controls = listOf("story_rating", "gameplay_rating", "atmosphere_rating"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 3,
@@ -116,27 +116,27 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             )
         ),
         // Sekcja postaci
-        "hasDistinctiveCharacter" to BooleanControl(
+        "has_distinctive_character" to BooleanControl(
             Tr.Games.Form.distinctiveCharacters(),
             required = true
         ),
-        "hasDistinctiveProtagonist" to BooleanControl(
+        "has_distinctive_protagonist" to BooleanControl(
             Tr.Games.Form.distinctiveProtagonist(),
             required = true
         ),
-        "hasDistinctiveAntagonist" to BooleanControl(
+        "has_distinctive_antagonist" to BooleanControl(
             Tr.Games.Form.distinctiveAntagonist(),
             required = true
         ),
-        "charactersSection" to SectionControl(
-            controls = listOf("hasDistinctiveCharacter", "hasDistinctiveProtagonist", "hasDistinctiveAntagonist"),
+        "characters_section" to SectionControl(
+            controls = listOf("has_distinctive_character", "has_distinctive_protagonist", "has_distinctive_antagonist"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 1,
             label = Tr.Games.Form.characters(),
             dependencies = mapOf(
                 "visible" to ControlDependency(
-                    controlPath = "visibleCharactersSection",
+                    controlPath = "visible_characters_section",
                     value = true,
                     dependencyType = DependencyType.Visible,
                     comparisonType = ComparisonType.Equals
@@ -162,7 +162,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             )
         ),
         // Przyciski
-        "saveButton" to ButtonControl(
+        "save_button" to ButtonControl(
             text = Tr.Action.save(),
             actions = listOf(
                 ControlAction {
@@ -171,7 +171,7 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             ),
             buttonType = ButtonType.Filled
         ),
-        "cancelButton" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             actions = listOf(
                 ControlAction {
@@ -183,16 +183,16 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
     )
 
     override fun defineContentOrder(): List<String> = listOf(
-        "basicInfo",
-        "playTimeSection",
-        "ratingsSection",
-        "charactersSection",
+        "basic_info",
+        "play_time_section",
+        "ratings_section",
+        "characters_section",
         "categories"
     )
 
     override fun defineActionBarOrder(): List<String> = listOf(
-        "cancelButton",
-        "saveButton"
+        "cancel_button",
+        "save_button"
     )
 
 }

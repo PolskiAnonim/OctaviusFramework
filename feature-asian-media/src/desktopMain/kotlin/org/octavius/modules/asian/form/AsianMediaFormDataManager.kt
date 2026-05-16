@@ -33,14 +33,14 @@ class AsianMediaFormDataManager : FormDataManager() {
             join("LEFT JOIN asian_media.publication_volumes pv ON pv.publication_id = p.id")
             linkedBy("p.title_id")
             map("id")
-            map("publicationType")
+            map("publication_type")
             map("status")
-            map("trackProgress")
+            map("track_progress")
             map("volumes")
-            map("translatedVolumes")
+            map("translated_volumes")
             map("chapters")
-            map("translatedChapters")
-            map("originalCompleted")
+            map("translated_chapters")
+            map("original_completed")
         }
     }
 
@@ -134,9 +134,9 @@ class AsianMediaFormDataManager : FormDataManager() {
                 val pubId = rowData.getInitialAs<Int>("id")
                 val publicationIdRef = pubId.toTransactionValue()
                 val publicationData = mapOf(
-                    "publication_type" to rowData.getCurrent("publicationType"),
+                    "publication_type" to rowData.getCurrent("publication_type"),
                     "status" to rowData.getCurrent("status"),
-                    "track_progress" to rowData.getCurrent("trackProgress")
+                    "track_progress" to rowData.getCurrent("track_progress")
                 )
 
                 plan.add(
@@ -158,9 +158,9 @@ class AsianMediaFormDataManager : FormDataManager() {
 
         rowsToAdd.forEach { rowData ->
             val publicationData = mapOf(
-                "publication_type" to rowData.getCurrent("publicationType"),
+                "publication_type" to rowData.getCurrent("publication_type"),
                 "status" to rowData.getCurrent("status"),
-                "track_progress" to rowData.getCurrent("trackProgress"),
+                "track_progress" to rowData.getCurrent("track_progress"),
                 "title_id" to titleIdRef
             )
 
@@ -190,13 +190,13 @@ class AsianMediaFormDataManager : FormDataManager() {
         rowData: FormResultData,
         publicationIdRef: TransactionValue<Int>
     ) {
-        if (rowData.getCurrentAs<Boolean>("trackProgress")) {
+        if (rowData.getCurrentAs<Boolean>("track_progress")) {
             val volumesData = mapOf(
                 "volumes" to rowData.getCurrent("volumes"),
-                "translated_volumes" to rowData.getCurrent("translatedVolumes"),
+                "translated_volumes" to rowData.getCurrent("translated_volumes"),
                 "chapters" to rowData.getCurrent("chapters"),
-                "translated_chapters" to rowData.getCurrent("translatedChapters"),
-                "original_completed" to rowData.getCurrent("originalCompleted")
+                "translated_chapters" to rowData.getCurrent("translated_chapters"),
+                "original_completed" to rowData.getCurrent("original_completed")
             )
 
             plan.add(

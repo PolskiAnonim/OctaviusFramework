@@ -50,12 +50,12 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
         "year" to IntegerControl(label = "Year"),
         "status" to EnumControl<ReadingStatus>(label = "Status"),
 
-        "save" to ButtonControl(
+        "save_button" to ButtonControl(
             text = "Save",
             buttonType = ButtonType.Filled,
             actions = listOf(ControlAction { trigger.triggerAction("save", validates = true) })
         ),
-        "cancel" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = "Cancel",
             buttonType = ButtonType.Outlined,
             actions = listOf(ControlAction { trigger.triggerAction("cancel", validates = false) })
@@ -64,7 +64,7 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineContentOrder() = listOf("title", "author", "year", "status")
 
-    override fun defineActionBarOrder() = listOf("cancel", "save")
+    override fun defineActionBarOrder() = listOf("cancel_button", "save_button")
 }
 ```
 
@@ -73,8 +73,8 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
 ```kotlin
 class BookFormDataManager : FormDataManager() {
 
-    override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
-        return loadData(loadedId) {
+    override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
+        return loadData(payload["id"]) {
             from("books", "b")
             map("title")
             map("author")
@@ -84,21 +84,21 @@ class BookFormDataManager : FormDataManager() {
     }
 
     override fun definedFormActions() = mapOf(
-        "save" to { formData, loadedId ->
-            val result = if (loadedId == null) {
+        "save" to { formResultData ->
+            val result = if (formResultData.getInitial("id") == null) {
                 dataAccess.insertInto("books")
-                    .values(formData.all)
+                    .values(formResultData.allCurrentValues)
                     .execute()
             } else {
                 dataAccess.update("books")
-                    .setValues(formData.changes)
-                    .where("id = :id")
-                    .execute("id" to loadedId)
+                    .setValues(formResultData.allCurrentValues)
+                    .where("id = @id")
+                    .execute(formResultData.allCurrentValues + ("id" to formResultData.getInitial("id")))
             }
             if (result is DataResult.Success) FormActionResult.CloseScreen
             else FormActionResult.Failure
         },
-        "cancel" to { _, _ -> FormActionResult.CloseScreen }
+        "cancel" to { _ -> FormActionResult.CloseScreen }
     )
 }
 ```
@@ -111,10 +111,10 @@ fun BookFormScreen(bookId: Int?) {
     FormScreen(
         title = "Books",
         FormHandler(
-            entityId = bookId,
             formSchemaBuilder = BookFormSchemaBuilder(),
             formDataManager = BookFormDataManager(),
             formValidator = BookFormValidator(),
+            payload = mapOf("id" to bookId)
         )
     )
 }
@@ -125,21 +125,21 @@ fun BookFormScreen(bookId: Int?) {
 The `loadData` function provides a DSL for loading form data:
 
 ```kotlin
-override fun initData(loadedId: Int?, payload: Map<String, Any?>?): Map<String, Any?> {
-    return loadData(loadedId) {
+override fun initData(payload: Map<String, Any?>): Map<String, Any?> {
+    return loadData(payload["id"]) {
         // Main table
         from("books", "b")
-        map("title", "title") // control name -> db column (dafault is control name in snake case)
+        map("title", "title") // control name -> db column (default is control name in snake case)
         map("author")
-        map("publicationYear", "pub_year")
+        map("publication_year", "pub_year")
 
         // One-to-one relation
         mapOneToOne {
             from("book_details", "bd")
             on("bd.book_id = b.id")
             map("isbn")
-            map("pageCount", "page_count")
-            existenceFlag("hasDetails", "bd.id")  // boolean flag if relation exists
+            map("page_count") // matches db column 'page_count' automatically
+            existenceFlag("has_details", "bd.id")  // boolean flag if relation exists
         }
 
         // One-to-many relation (for RepeatableControl)
@@ -163,7 +163,7 @@ Control visibility and requirements based on other control values:
     label = "Publisher",
     dependencies = mapOf(
         "visibility" to ControlDependency(
-            controlName = "status",
+            controlPath = "status",
             value = BookStatus.Published,
             dependencyType = DependencyType.Visible,
             comparisonType = ComparisonType.Equals
@@ -171,12 +171,12 @@ Control visibility and requirements based on other control values:
     )
 )
 
-// Make "isbn" required only when "hasIsbn" is checked
+// Make "isbn" required only when "has_isbn" is checked
 "isbn" to StringControl(
     label = "ISBN",
     dependencies = mapOf(
         "required" to ControlDependency(
-            controlName = "hasIsbn",
+            controlPath = "has_isbn",
             value = true,
             dependencyType = DependencyType.Required,
             comparisonType = ComparisonType.Equals
@@ -192,12 +192,12 @@ Dynamic rows for collections like order items or authors:
 ```kotlin
 "authors" to RepeatableControl(
     label = "Authors",
-    minRows = 1,
-    maxRows = 10,
     rowControls = mapOf(
         "name" to StringControl(label = "Name", required = true),
-        "role" to EnumControl<AuthorRole>(label = "Role")
-    )
+        "role" to EnumControl(label = "Role", enumClass = AuthorRole::class)
+    ),
+    rowOrder = listOf("name", "role"),
+    validationOptions = RepeatableValidation(minItems = 1, maxItems = 10)
 )
 ```
 
@@ -206,28 +206,13 @@ Dynamic rows for collections like order items or authors:
 ```kotlin
 class BookFormValidator : FormValidator() {
 
-    override fun validateBusinessRules(formResultData: FormResultData): Boolean {
-        val year = formResultData.all["year"] as? Int
-
-        if (year != null && year > LocalDate.now().year) {
-            errorManager.addFieldError("year", "Year cannot be in the future")
-            return false
-        }
-
+    override fun validateBusinessRules(controlContext: ControlContext): Boolean {
+        // Validation using FormState/ErrorManager
         return true
     }
-
-    override fun defineActionValidations() = mapOf(
-        "publish" to { formData ->
-            val isbn = formData.all["isbn"] as? String
-            if (isbn.isNullOrBlank()) {
-                errorManager.addFieldError("isbn", "ISBN is required for publishing")
-                false
-            } else true
-        }
-    )
 }
 ```
+
 
 ## Architecture
 

@@ -20,14 +20,14 @@ import org.octavius.localization.Tr
 
 class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
 
-    override fun defineActionBarOrder(): List<String> = listOf("cancelButton", "saveButton", "deleteButton")
-    override fun defineContentOrder(): List<String> = listOf("titleInfo", "publications")
+    override fun defineActionBarOrder(): List<String> = listOf("cancel_button", "save_button", "delete_button")
+    override fun defineContentOrder(): List<String> = listOf("title_info", "publications")
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(
             null
         ),
-        "titleInfo" to SectionControl(
+        "title_info" to SectionControl(
             controls = listOf("titles", "language"),
             collapsible = false,
             initiallyExpanded = true,
@@ -49,24 +49,24 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
         "publications" to RepeatableControl(
             rowControls = createPublicationControls(),
             rowOrder = listOf(
-                "publicationType",
+                "publication_type",
                 "status",
-                "trackProgress",
+                "track_progress",
                 "volumes",
-                "translatedVolumes",
+                "translated_volumes",
                 "chapters",
-                "translatedChapters",
-                "originalCompleted"
+                "translated_chapters",
+                "original_completed"
             ),
             validationOptions = RepeatableValidation(
-                uniqueFields = listOf("publicationType"),
+                uniqueFields = listOf("publication_type"),
                 minItems = 1,
                 maxItems = 7
             ),
             label = Tr.AsianMedia.Form.publications()
         ),
         // Przyciski
-        "saveButton" to ButtonControl(
+        "save_button" to ButtonControl(
             text = Tr.Action.save(),
             buttonType = ButtonType.Filled,
             actions = listOf(
@@ -75,7 +75,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "deleteButton" to ButtonControl(
+        "delete_button" to ButtonControl(
             text = Tr.Action.remove(),
             buttonType = ButtonType.Filled,
             dependencies = mapOf(
@@ -105,7 +105,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "cancelButton" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             buttonType = ButtonType.Outlined,
             actions = listOf(
@@ -120,7 +120,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
     private fun createPublicationControls(): Map<String, Control<*>> {
         return mapOf(
             "id" to IntegerControl(null),
-            "publicationType" to EnumControl(
+            "publication_type" to EnumControl(
                 Tr.AsianMedia.Form.publicationType(),
                 PublicationType::class,
                 required = true
@@ -135,11 +135,11 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                             PublicationStatus.PlanToRead, PublicationStatus.Reading,
                             PublicationStatus.Completed
                         ))
-                        updateControl("./trackProgress", shouldBeChecked)
+                        updateControl("./track_progress", shouldBeChecked)
                     }
                 )
             ),
-            "trackProgress" to BooleanControl(
+            "track_progress" to BooleanControl(
                 Tr.AsianMedia.Form.trackProgress(),
                 required = true
             ),
@@ -147,7 +147,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 Tr.AsianMedia.Form.volumeCount(),
                 dependencies = visibleWhenTrackProgress()
             ),
-            "translatedVolumes" to IntegerControl(
+            "translated_volumes" to IntegerControl(
                 Tr.AsianMedia.Form.translatedVolumes(),
                 dependencies = visibleWhenTrackProgress()
             ),
@@ -155,11 +155,11 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 Tr.AsianMedia.Form.chapterCount(),
                 dependencies = visibleWhenTrackProgress()
             ),
-            "translatedChapters" to IntegerControl(
+            "translated_chapters" to IntegerControl(
                 Tr.AsianMedia.Form.translatedChapters(),
                 dependencies = visibleWhenTrackProgress()
             ),
-            "originalCompleted" to BooleanControl(
+            "original_completed" to BooleanControl(
                 Tr.AsianMedia.Form.originalCompleted(),
                 required = true,
                 dependencies = visibleWhenTrackProgress()
@@ -169,7 +169,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
 
     private fun visibleWhenTrackProgress(): Map<String, ControlDependency<Boolean>> = mapOf(
         "visible" to ControlDependency(
-            controlPath = "./trackProgress",
+            controlPath = "./track_progress",
             value = true,
             dependencyType = DependencyType.Visible,
             comparisonType = ComparisonType.Equals,

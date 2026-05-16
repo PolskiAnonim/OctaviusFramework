@@ -13,8 +13,8 @@ import org.octavius.localization.Tr
 
 class BookAuthorSchemaBuilder : FormSchemaBuilder() {
 
-    override fun defineContentOrder(): List<String> = listOf("name", "sortName")
-    override fun defineActionBarOrder(): List<String> = listOf("cancelButton", "saveButton", "deleteButton")
+    override fun defineContentOrder(): List<String> = listOf("name", "sort_name")
+    override fun defineActionBarOrder(): List<String> = listOf("cancel_button", "save_button", "delete_button")
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(null),
@@ -22,12 +22,12 @@ class BookAuthorSchemaBuilder : FormSchemaBuilder() {
             Tr.Books.Authors.Form.name(),
             required = true
         ),
-        "sortName" to StringControl(
+        "sort_name" to StringControl(
             Tr.Books.Authors.Form.sortName(),
             required = false
         ),
         // Przyciski
-        "saveButton" to ButtonControl(
+        "save_button" to ButtonControl(
             text = Tr.Action.save(),
             buttonType = ButtonType.Filled,
             actions = listOf(
@@ -36,7 +36,7 @@ class BookAuthorSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "deleteButton" to ButtonControl(
+        "delete_button" to ButtonControl(
             text = Tr.Action.remove(),
             buttonType = ButtonType.Filled,
             dependencies = mapOf(
@@ -66,7 +66,7 @@ class BookAuthorSchemaBuilder : FormSchemaBuilder() {
                 }
             )
         ),
-        "cancelButton" to ButtonControl(
+        "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             buttonType = ButtonType.Outlined,
             actions = listOf(

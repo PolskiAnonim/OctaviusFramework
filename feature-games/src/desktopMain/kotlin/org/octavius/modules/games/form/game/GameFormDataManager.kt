@@ -35,29 +35,29 @@ class GameFormDataManager : FormDataManager() {
         mapOneToOne {
             from("play_time", "pt")
             on("g.id = pt.game_id")
-            existenceFlag("playTimeExists", "pt.game_id")
-            map("playTimeHours")
-            map("completionCount")
+            existenceFlag("play_time_exists", "pt.game_id")
+            map("play_time_hours", "play_time_hours")
+            map("completion_count", "completion_count")
         }
 
         // Relacja 1-do-1 z 'ratings'
         mapOneToOne {
             from("ratings", "r")
             on("g.id = r.game_id")
-            existenceFlag("ratingsExists", "r.game_id")
-            map("storyRating")
-            map("gameplayRating")
-            map("atmosphereRating")
+            existenceFlag("ratings_exists", "r.game_id")
+            map("story_rating", "story_rating")
+            map("gameplay_rating", "gameplay_rating")
+            map("atmosphere_rating", "atmosphere_rating")
         }
 
         // Relacja 1-do-1 z 'characters'
         mapOneToOne {
             from("characters", "c")
             on("g.id = c.game_id")
-            existenceFlag("charactersExists", "c.game_id")
-            map("hasDistinctiveCharacter")
-            map("hasDistinctiveProtagonist")
-            map("hasDistinctiveAntagonist")
+            existenceFlag("characters_exists", "c.game_id")
+            map("has_distinctive_character", "has_distinctive_character")
+            map("has_distinctive_protagonist", "has_distinctive_protagonist")
+            map("has_distinctive_antagonist", "has_distinctive_antagonist")
         }
 
         // Relacja 1-do-N z 'categories'
@@ -74,14 +74,14 @@ class GameFormDataManager : FormDataManager() {
 
         val defaultData = if (loadedId == null) {
             mapOf(
-                "visibleCharactersSection" to false,
-                "playTimeExists" to false,
-                "ratingsExists" to false,
-                "charactersExists" to false,
+                "visible_characters_section" to false,
+                "play_time_exists" to false,
+                "ratings_exists" to false,
+                "characters_exists" to false,
                 "categories" to emptyList<Map<String, Any?>>()
             )
         } else {
-            mapOf("visibleCharactersSection" to (loadedData["charactersExists"] as Boolean))
+            mapOf("visible_characters_section" to (loadedData["characters_exists"] as Boolean))
         }
 
         // Kolejność łączenia: Domyślne -> Załadowane z DB -> Payload (nadpisuje wszystko)
@@ -145,12 +145,12 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Play Time ---
         handleDependentTable(
             plan = plan,
-            exists = formResultData.getCurrentAs("playTimeExists"),
+            exists = formResultData.getCurrentAs("play_time_exists"),
             conditionMet = status in statusesWithDetails,
             tableName = "games.play_time",
             data = mapOf(
-                "play_time_hours" to formResultData.getCurrent("playTimeHours"),
-                "completion_count" to formResultData.getCurrent("completionCount")
+                "play_time_hours" to formResultData.getCurrent("play_time_hours"),
+                "completion_count" to formResultData.getCurrent("completion_count")
             ),
             gameIdRef = gameIdRef
         )
@@ -158,13 +158,13 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Ratings ---
         handleDependentTable(
             plan = plan,
-            exists = formResultData.getCurrentAs("ratingsExists"),
+            exists = formResultData.getCurrentAs("ratings_exists"),
             conditionMet = status in statusesWithDetails,
             tableName = "games.ratings",
             data = mapOf(
-                "story_rating" to formResultData.getCurrent("storyRating"),
-                "gameplay_rating" to formResultData.getCurrent("gameplayRating"),
-                "atmosphere_rating" to formResultData.getCurrent("atmosphereRating")
+                "story_rating" to formResultData.getCurrent("story_rating"),
+                "gameplay_rating" to formResultData.getCurrent("gameplay_rating"),
+                "atmosphere_rating" to formResultData.getCurrent("atmosphere_rating")
             ),
             gameIdRef = gameIdRef
         )
@@ -172,13 +172,13 @@ class GameFormDataManager : FormDataManager() {
         // --- Obsługa Characters ---
         handleDependentTable(
             plan = plan,
-            exists = formResultData.getCurrentAs("charactersExists"),
-            conditionMet = formResultData.getCurrentAs("visibleCharactersSection"),
+            exists = formResultData.getCurrentAs("characters_exists"),
+            conditionMet = formResultData.getCurrentAs("visible_characters_section"),
             tableName = "games.characters",
             data = mapOf(
-                "has_distinctive_character" to formResultData.getCurrent("hasDistinctiveCharacter"),
-                "has_distinctive_protagonist" to formResultData.getCurrent("hasDistinctiveProtagonist"),
-                "has_distinctive_antagonist" to formResultData.getCurrent("hasDistinctiveAntagonist")
+                "has_distinctive_character" to formResultData.getCurrent("has_distinctive_character"),
+                "has_distinctive_protagonist" to formResultData.getCurrent("has_distinctive_protagonist"),
+                "has_distinctive_antagonist" to formResultData.getCurrent("has_distinctive_antagonist")
             ),
             gameIdRef = gameIdRef
         )

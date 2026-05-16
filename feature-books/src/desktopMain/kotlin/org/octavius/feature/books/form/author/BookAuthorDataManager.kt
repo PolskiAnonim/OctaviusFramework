@@ -15,7 +15,7 @@ class BookAuthorDataManager : FormDataManager() {
         from("books.authors", "a")
         map("id")
         map("name")
-        map("sortName")
+        map("sort_name")
     }
 
     override fun initData(
@@ -37,7 +37,7 @@ class BookAuthorDataManager : FormDataManager() {
         val loadedId = formResultData.getInitial("id")
         val params = mapOf(
             "name" to formResultData.getCurrent("name"),
-            "sort_name" to formResultData.getCurrent("sortName")
+            "sort_name" to formResultData.getCurrent("sort_name")
         )
 
         val result = if (loadedId != null) {

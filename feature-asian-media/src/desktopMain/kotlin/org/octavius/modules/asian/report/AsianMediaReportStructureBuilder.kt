@@ -78,9 +78,9 @@ class AsianMediaReportStructureBuilder() : ReportStructureBuilder() {
             val payload = mapOf(
                 "publications" to listOf(
                     mapOf(
-                        "publicationType" to PublicationType.WebNovel,
+                        "publication_type" to PublicationType.WebNovel,
                         "status" to PublicationStatus.NotReading,
-                        "trackProgress" to false
+                        "track_progress" to false
                     )
                 ), "language" to PublicationLanguage.Korean
             )
