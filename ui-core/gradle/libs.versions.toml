@@ -1,11 +1,12 @@
 [versions]
-compose = "1.11.0-alpha04"
+compose = "1.11.0"
+mateerial3 = "1.11.0-alpha07"
 icons-extended = "1.7.3"
 
 [libraries]
 runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "compose" }
 foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "compose" }
-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "compose" }
+material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "mateerial3" }
 ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
 html-core = { group = "org.jetbrains.compose.html", name = "html-core", version.ref = "compose" }
 # Utils & Resources
