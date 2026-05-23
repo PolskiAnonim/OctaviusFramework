@@ -10,6 +10,9 @@ import io.github.octaviusframework.db.api.DataAccess
 import io.github.octaviusframework.db.api.DataResult
 import io.github.octaviusframework.db.api.builder.toSingleOf
 import io.github.octaviusframework.db.api.exception.DatabaseException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
@@ -25,9 +28,9 @@ class AsianMediaHomeHandler(
         val totalTitlesSubquery = dataAccess.select("COUNT(*)").from("asian_media.titles").toSql()
 
         val readingCountSubquery = dataAccess.select("COUNT(DISTINCT title_id)")
-                .from("asian_media.publications")
-                .where("status = 'READING'")
-                .toSql()
+            .from("asian_media.publications")
+            .where("status = 'READING'")
+            .toSql()
 
         val notExistsForCompleted = dataAccess.select("1")
             .from("asian_media.publications p2")
@@ -45,7 +48,8 @@ class AsianMediaHomeHandler(
             .orderBy("t.updated_at DESC")
             .limit(5)
             .toSql()
-        val currentlyReadingSubquery = dataAccess.select("""
+        val currentlyReadingSubquery = dataAccess.select(
+            """
             array_agg(
                 dynamic_dto('asian_media_dashboard_item', jsonb_build_object(
                     'id', id,
@@ -53,21 +57,23 @@ class AsianMediaHomeHandler(
                 )
             )"""
         ).fromSubquery(innerCurrentlyReading)
-                .toSql()
+            .toSql()
 
         val innerRecentlyAdded = dataAccess.select("id, titles")
             .from("asian_media.titles")
             .orderBy("created_at DESC")
             .limit(5)
             .toSql()
-        val recentlyAddedSubquery = dataAccess.select("""
+        val recentlyAddedSubquery = dataAccess.select(
+            """
             array_agg(
                 dynamic_dto('asian_media_dashboard_item', jsonb_build_object(
                     'id', id,
                     'mainTitle', titles[1])
                 )
-            )""").fromSubquery(innerRecentlyAdded)
-                .toSql()
+            )"""
+        ).fromSubquery(innerRecentlyAdded)
+            .toSql()
 
         // === Składamy finalną klauzulę SELECT z gotowych klocków ===
 
@@ -81,31 +87,34 @@ class AsianMediaHomeHandler(
     }
 
     fun loadData() {
-        val finalSelectClause = getSql()
+        scope.launch {
+            val finalSelectClause = getSql()
+            val result = withContext(Dispatchers.IO) {
+                dataAccess.select(finalSelectClause)
+                    .toSingleOf<DashboardData>()
+            }
 
-        dataAccess.select(finalSelectClause)
-            .async(scope)
-            .toSingleOf<DashboardData> { result ->
-                when (result) {
-                    is DataResult.Success -> {
-                        val data = result.value
-                        _state.update {
-                            it.copy(
-                                totalTitles = data.totalTitles,
-                                readingCount = data.readingCount,
-                                completedCount = data.completedCount,
-                                currentlyReading = data.currentlyReading.orEmpty(),
-                                recentlyAdded = data.recentlyAdded.orEmpty(),
-                                isLoading = false
-                            )
-                        }
-                    }
-                    is DataResult.Failure -> {
-                        showError(result.error)
-                        _state.update { it.copy(isLoading = false) }
+            when (result) {
+                is DataResult.Success -> {
+                    val data = result.value
+                    _state.update {
+                        it.copy(
+                            totalTitles = data.totalTitles,
+                            readingCount = data.readingCount,
+                            completedCount = data.completedCount,
+                            currentlyReading = data.currentlyReading.orEmpty(),
+                            recentlyAdded = data.recentlyAdded.orEmpty(),
+                            isLoading = false
+                        )
                     }
                 }
+
+                is DataResult.Failure -> {
+                    showError(result.error)
+                    _state.update { it.copy(isLoading = false) }
+                }
             }
+        }
     }
 
     private fun showError(error: DatabaseException) {

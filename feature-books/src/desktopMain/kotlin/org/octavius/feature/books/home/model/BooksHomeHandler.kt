@@ -10,8 +10,12 @@ import io.github.octaviusframework.db.api.DataAccess
 import io.github.octaviusframework.db.api.DataResult
 import io.github.octaviusframework.db.api.builder.toSingleOf
 import io.github.octaviusframework.db.api.exception.DatabaseException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
+import kotlin.collections.orEmpty
 
 class BooksHomeHandler(
     private val scope: CoroutineScope
@@ -48,7 +52,8 @@ class BooksHomeHandler(
             .limit(5)
             .toSql()
 
-        val currentlyReadingSubquery = dataAccess.select("""
+        val currentlyReadingSubquery = dataAccess.select(
+            """
             COALESCE(
                 array_agg(
                     dynamic_dto('books_dashboard_item', jsonb_build_object(
@@ -58,7 +63,8 @@ class BooksHomeHandler(
                 ), 
                 '{}'::dynamic_dto[]
             )
-        """).fromSubquery(innerCurrentlyReading).toSql()
+        """
+        ).fromSubquery(innerCurrentlyReading).toSql()
 
         // Lista: Ostatnio dodane
         val innerRecentlyAdded = dataAccess.select("id, title_pl")
@@ -67,7 +73,8 @@ class BooksHomeHandler(
             .limit(5)
             .toSql()
 
-        val recentlyAddedSubquery = dataAccess.select("""
+        val recentlyAddedSubquery = dataAccess.select(
+            """
             COALESCE(
                 array_agg(
                     dynamic_dto('books_dashboard_item', jsonb_build_object(
@@ -77,7 +84,8 @@ class BooksHomeHandler(
                 ), 
                 '{}'::dynamic_dto[]
             )
-        """).fromSubquery(innerRecentlyAdded).toSql()
+        """
+        ).fromSubquery(innerRecentlyAdded).toSql()
 
         // Złożenie wszystkiego w jeden SELECT
         return """
@@ -91,24 +99,27 @@ class BooksHomeHandler(
     }
 
     fun loadData() {
-        val finalSelectClause = getSql()
+        scope.launch {
+            val finalSelectClause = getSql()
+            val result = withContext(Dispatchers.IO) {
+                dataAccess.select(finalSelectClause)
+                    .toSingleOf<BooksDashboardData>()
+            }
 
-        dataAccess.select(finalSelectClause)
-            .async(scope)
-            .toSingleOf<BooksDashboardData> { result ->
-                when (result) {
-                    is DataResult.Success -> {
-                        val data = result.value
-                        _state.update {
-                            BooksHomeState.Success(data)
-                        }
-                    }
-                    is DataResult.Failure -> {
-                        showError(result.error)
-                        _state.update { BooksHomeState.Error }
+            when (result) {
+                is DataResult.Success -> {
+                    val data = result.value
+                    _state.update {
+                        BooksHomeState.Success(data)
                     }
                 }
+
+                is DataResult.Failure -> {
+                    showError(result.error)
+                    _state.update { BooksHomeState.Error }
+                }
             }
+        }
     }
 
     private fun showError(error: DatabaseException) {

@@ -10,6 +10,9 @@ import io.github.octaviusframework.db.api.DataAccess
 import io.github.octaviusframework.db.api.DataResult
 import io.github.octaviusframework.db.api.builder.toSingleOf
 import io.github.octaviusframework.db.api.exception.DatabaseException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
@@ -35,7 +38,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
             .toSql()
 
         // --- CTE 2: status_distribution ---
-        val statusDistributionQuery = dataAccess.select("""
+        val statusDistributionQuery = dataAccess.select(
+            """
             array_agg(
                 dynamic_dto('game_dashboard_status', jsonb_build_object(
                     'status', status,
@@ -43,7 +47,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
                     )
                 ) ORDER BY count DESC
             ) AS distribution
-        """)
+        """
+        )
             .fromSubquery(
                 dataAccess.select("status, COUNT(*) as count")
                     .from("games.games")
@@ -63,8 +68,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
             .toSql()
 
         // --- CTE 4: most_played_games ---
-        // Prostsze i bardziej "postgresowe" - LIMIT bezpośrednio w CTE.
-        val mostPlayedGamesQuery = dataAccess.select("""
+        val mostPlayedGamesQuery = dataAccess.select(
+            """
             array_agg(
                 dynamic_dto('game_dashboard_time', jsonb_build_object(
                     'id', g.id,
@@ -72,7 +77,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
                     'playTimeHours', pt.play_time_hours)
                 ) ORDER BY pt.play_time_hours DESC
             ) AS games
-        """)
+        """
+        )
             .from("games.play_time pt JOIN games.games g ON pt.game_id = g.id")
             .where(
                 "pt.game_id IN (${
@@ -83,7 +89,6 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
             .toSql()
 
         // --- CTE 5: highest_rated_games ---
-        // Złożenie w jednym CTE, co jest bardziej naturalne.
         val avgRatingCalculation = """
         (
             (COALESCE(story_rating, 0) + COALESCE(gameplay_rating, 0) + COALESCE(atmosphere_rating, 0))
@@ -96,7 +101,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
         )::numeric(10, 2)
     """.trimIndent()
 
-        val highestRatedGamesQuery = dataAccess.select("""
+        val highestRatedGamesQuery = dataAccess.select(
+            """
             array_agg(
                 dynamic_dto('game_dashboard_rating', jsonb_build_object(
                     'id', g.id,
@@ -104,7 +110,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
                     'averageRating', r.avg_rating)
                 ) ORDER BY r.avg_rating DESC
             ) AS games
-        """)
+        """
+        )
             .from(
                 "(${
                     dataAccess.select("game_id, $avgRatingCalculation AS avg_rating")
@@ -118,22 +125,24 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
             .toSql()
 
         // --- CTE 6: favorite_category ---
-        // Bez zmian.
-        val favoriteCategoryQuery = dataAccess.select("c.name")
-            .from("games.categories_to_games ctg JOIN games.play_time pt ON ctg.game_id = pt.game_id JOIN games.categories c ON ctg.category_id = c.id")
-            .groupBy("c.id, c.name")
-            .orderBy("SUM(pt.play_time_hours) DESC")
-            .limit(1)
-            .toSql()
+        val favoriteCategoryQuery = "SELECT (${
+            dataAccess.select("c.name")
+                .from("games.categories_to_games ctg JOIN games.play_time pt ON ctg.game_id = pt.game_id JOIN games.categories c ON ctg.category_id = c.id")
+                .groupBy("c.id, c.name")
+                .orderBy("SUM(pt.play_time_hours) DESC")
+                .limit(1)
+                .toSql()
+        }) AS name"
 
         // --- CTE 7: favorite_series ---
-        // Bez zmian.
-        val favoriteSeriesQuery = dataAccess.select("s.name")
-            .from("games.games g JOIN games.series s ON g.series = s.id JOIN games.play_time pt ON g.id = pt.game_id")
-            .groupBy("s.id, s.name")
-            .orderBy("SUM(pt.play_time_hours) DESC")
-            .limit(1)
-            .toSql()
+        val favoriteSeriesQuery = "SELECT (${
+            dataAccess.select("s.name")
+                .from("games.games g JOIN games.series s ON g.series = s.id JOIN games.play_time pt ON g.id = pt.game_id")
+                .groupBy("s.id, s.name")
+                .orderBy("SUM(pt.play_time_hours) DESC")
+                .limit(1)
+                .toSql()
+        }) AS name"
 
         return dataAccess.select(
             """
@@ -163,10 +172,11 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
     }
 
     fun loadData() {
-        _state.update { it.copy(isLoading = true) }
-
-        val query = buildGameStatisticsQuery()
-        dataAccess.rawQuery(query).async(scope).toSingleOf<GameStatisticsData> { result ->
+        scope.launch {
+            val query = buildGameStatisticsQuery()
+            val result = withContext(Dispatchers.IO) {
+                dataAccess.rawQuery(query).toSingleOf<GameStatisticsData>()
+            }
             when (result) {
                 is DataResult.Success -> {
                     _state.update {
