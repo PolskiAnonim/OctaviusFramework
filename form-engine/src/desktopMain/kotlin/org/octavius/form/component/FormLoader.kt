@@ -13,23 +13,39 @@ import org.octavius.dialog.GlobalDialogManager
 data class FieldMapping(val controlName: String, val dbColumn: String)
 data class ExistenceFlag(val controlName: String, val checkColumn: String)
 
-abstract class BaseTableMappingBuilder {
+interface MappingContainer {
+    val relations: MutableList<RelationMapping>
+
+    fun map(controlName: String, dbColumn: String? = null) {
+        val finalDbColumn = dbColumn ?: controlName.toSnakeCase()
+        relations.add(SimpleMapping(FieldMapping(controlName, finalDbColumn)))
+    }
+
+    fun mapOneToOne(block: OneToOneMappingBuilder.() -> Unit) {
+        val builder = OneToOneMappingBuilder().apply(block)
+        builder.validate()
+        relations.add(OneToOneMapping(builder.existenceFlag, builder.fromTable, builder.joinCondition, builder.relations))
+    }
+
+    fun mapRelatedList(controlName: String, block: RelatedDataMappingBuilder.() -> Unit) {
+        val builder = RelatedDataMappingBuilder().apply(block)
+        builder.validate()
+        relations.add(RelatedDataMapping(controlName, builder))
+    }
+}
+
+abstract class BaseTableMappingBuilder : MappingContainer {
     protected lateinit var tableName: String
     protected lateinit var tableAlias: String
 
     val fromTable: String
         get() = if (::tableName.isInitialized) "$tableName $tableAlias" else ""
 
-    val mappings = mutableListOf<FieldMapping>()
+    override val relations = mutableListOf<RelationMapping>()
 
     fun from(tableName: String, alias: String) {
         this.tableName = tableName
         this.tableAlias = alias
-    }
-
-    fun map(controlName: String, dbColumn: String? = null) {
-        val finalDbColumn = dbColumn ?: controlName.toSnakeCase()
-        mappings.add(FieldMapping(controlName, finalDbColumn))
     }
 
     protected fun validateBase() {
@@ -59,13 +75,15 @@ class OneToOneMappingBuilder : BaseTableMappingBuilder() {
 class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
     var joinClause: String = ""
     private lateinit var linkColumn: String
+    private var parentColumn: String = "@id"
 
     fun join(joinSql: String) {
         this.joinClause = joinSql
     }
 
-    fun linkedBy(foreignKeyColumn: String) {
+    fun linkedBy(foreignKeyColumn: String, parentColumn: String = "@id") {
         this.linkColumn = foreignKeyColumn
+        this.parentColumn = parentColumn
     }
 
     fun validate() {
@@ -74,7 +92,7 @@ class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
     }
 
     fun buildWhereClause(): String {
-        return "$linkColumn = @id"
+        return "$linkColumn = $parentColumn"
     }
 }
 
@@ -82,21 +100,80 @@ class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
 
 sealed class RelationMapping
 data class SimpleMapping(val mapping: FieldMapping) : RelationMapping()
-data class OneToOneMapping(val existenceFlag: ExistenceFlag?, val table: String, val on: String, val fields: List<FieldMapping>) : RelationMapping()
+data class OneToOneMapping(val existenceFlag: ExistenceFlag?, val table: String, val on: String, val relations: List<RelationMapping>) : RelationMapping()
 data class RelatedDataMapping(val controlName: String, val builder: RelatedDataMappingBuilder) : RelationMapping()
+
+
+// --- Helper do budowy SQL ---
+
+class QueryScope(
+    val isTopLevel: Boolean
+) {
+    val fieldExpressions = mutableListOf<String>()
+    val joins = mutableListOf<String>()
+
+    fun processRelations(relations: List<RelationMapping>) {
+        relations.forEach { rel ->
+            when (rel) {
+                is SimpleMapping -> {
+                    if (isTopLevel) {
+                        fieldExpressions.add("${rel.mapping.dbColumn} AS ${rel.mapping.controlName}")
+                    } else {
+                        fieldExpressions.add("'${rel.mapping.controlName}' ~> ${rel.mapping.dbColumn}")
+                    }
+                }
+                is OneToOneMapping -> {
+                    joins.add("LEFT JOIN ${rel.table} ON ${rel.on}")
+                    rel.existenceFlag?.let { flag ->
+                        val expr = "CASE WHEN ${flag.checkColumn} IS NOT NULL THEN TRUE ELSE FALSE END"
+                        if (isTopLevel) {
+                            fieldExpressions.add("$expr AS ${flag.controlName}")
+                        } else {
+                            fieldExpressions.add("'${flag.controlName}' ~> $expr")
+                        }
+                    }
+                    processRelations(rel.relations)
+                }
+                is RelatedDataMapping -> {
+                    val builder = rel.builder
+                    val subScope = QueryScope(isTopLevel = false)
+                    subScope.processRelations(builder.relations)
+
+                    val mapEntries = subScope.fieldExpressions.joinToString(",\n                            ")
+                    val subJoins = subScope.joins.joinToString(" ")
+                    
+                    val subquery = """
+                        ARRAY(
+                            SELECT dynamic_map(
+                                $mapEntries
+                            )
+                            FROM ${builder.fromTable} ${builder.joinClause} $subJoins
+                            WHERE ${builder.buildWhereClause()}
+                        )::public.dynamic_map[]
+                    """.trimIndent()
+
+                    if (isTopLevel) {
+                        fieldExpressions.add("($subquery) AS ${rel.controlName}")
+                    } else {
+                        fieldExpressions.add("'${rel.controlName}' ~> ($subquery)")
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 // --- Główny Builder ---
 
-class DataLoaderBuilder(private val dataAccess: DataAccess) {
+class DataLoaderBuilder(private val dataAccess: DataAccess) : MappingContainer {
     private lateinit var mainTableName: String
     private lateinit var mainTableAlias: String
     private var idColumn: String = "id"
-    private val relations = mutableListOf<RelationMapping>()
+    override val relations = mutableListOf<RelationMapping>()
 
     private val mainTable: String
-        get() = if (::mainTableName.isInitialized) "$mainTableName $mainTableAlias" else ""
-
+    get() = if (::mainTableName.isInitialized) "$mainTableName $mainTableAlias" else ""
 
     fun from(tableName: String, alias: String) {
         this.mainTableName = tableName
@@ -107,62 +184,20 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
         this.idColumn = name
     }
 
-    fun map(controlName: String, dbColumn: String? = null) {
-        val finalDbColumn = dbColumn ?: controlName.toSnakeCase()
-        relations.add(SimpleMapping(FieldMapping(controlName, finalDbColumn)))
-    }
-
-    fun mapOneToOne(block: OneToOneMappingBuilder.() -> Unit) {
-        val builder = OneToOneMappingBuilder().apply(block)
-        builder.validate()
-        relations.add(OneToOneMapping(builder.existenceFlag, builder.fromTable, builder.joinCondition, builder.mappings))
-    }
-
-    fun mapRelatedList(controlName: String, block: RelatedDataMappingBuilder.() -> Unit) {
-        val builder = RelatedDataMappingBuilder().apply(block)
-        builder.validate()
-        relations.add(RelatedDataMapping(controlName, builder))
-    }
-
     fun execute(id: Any?): Map<String, Any?> {
         check(::mainTableName.isInitialized) { "Main table must be defined using from()" }
         if (id == null) return emptyMap()
 
-        // Krok 1: Wczytaj dane z głównego zapytania (pola proste i 1-1)
-        val mainData = loadMainData(id)
+        val topScope = QueryScope(isTopLevel = true)
+        topScope.processRelations(relations)
 
-        // Krok 2: Wczytaj dane z relacji 1-N / N-N
-        val relatedData = loadRelatedData(id)
+        if (topScope.fieldExpressions.isEmpty()) return emptyMap()
 
-        // Krok 3: Połącz wyniki
-        return mainData + relatedData
-    }
+        val joinsStr = topScope.joins.joinToString(" ")
 
-    private fun loadMainData(id: Any): Map<String, Any?> {
-        val simpleFields = mutableListOf<String>()
-        val joins = mutableListOf<String>()
-
-        relations.forEach { rel ->
-            when (rel) {
-                is SimpleMapping ->
-                    simpleFields.add(selectAs(rel.mapping.dbColumn, rel.mapping.controlName))
-                is OneToOneMapping -> {
-                    joins.add("LEFT JOIN ${rel.table} ON ${rel.on}")
-                    rel.fields.forEach { field ->
-                        simpleFields.add(selectAs(field.dbColumn, field.controlName))
-                    }
-                    rel.existenceFlag?.let { flag ->
-                        simpleFields.add("CASE WHEN ${flag.checkColumn} IS NOT NULL THEN TRUE ELSE FALSE END AS ${flag.controlName}")
-                    }
-                }
-                is RelatedDataMapping -> { /* Ignorowane w tej fazie */ }
-            }
-        }
-
-        if (simpleFields.isEmpty()) return emptyMap()
-
-        val query = dataAccess.select(*simpleFields.toTypedArray())
-            .from("$mainTable ${joins.joinToString(" ")}")
+        // SKŁADAMY OSTATECZNE, JEDNO ZAPYTANIE
+        val query = dataAccess.select(*topScope.fieldExpressions.toTypedArray())
+            .from("$mainTable $joinsStr".trim())
             .where("$mainTableAlias.$idColumn = @id")
             .toSingle("id" to id)
 
@@ -174,26 +209,4 @@ class DataLoaderBuilder(private val dataAccess: DataAccess) {
             }
         }
     }
-
-    private fun loadRelatedData(id: Any): Map<String, Any?> {
-        val result = mutableMapOf<String, Any?>()
-        relations.filterIsInstance<RelatedDataMapping>().forEach { rel ->
-            val builder = rel.builder
-            val columns = builder.mappings.map { selectAs(it.dbColumn, it.controlName) }
-
-            val relatedQuery = dataAccess.select(*columns.toTypedArray())
-                .from("${builder.fromTable} ${builder.joinClause}")
-                .where(builder.buildWhereClause())
-                .toList("id" to id)
-
-            when(relatedQuery) {
-                is DataResult.Success -> result[rel.controlName] = relatedQuery.value
-                is DataResult.Failure -> GlobalDialogManager.show(ErrorDialogConfig(relatedQuery.error))
-            }
-        }
-        return result
-    }
-
-    // Helper do generowania "column AS control"
-    private fun selectAs(dbColumn: String, controlName: String) = "$dbColumn AS $controlName"
 }
