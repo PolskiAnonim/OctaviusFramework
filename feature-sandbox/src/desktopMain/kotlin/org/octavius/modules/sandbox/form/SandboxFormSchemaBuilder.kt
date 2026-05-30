@@ -67,31 +67,35 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
                 uniqueFields = listOf("element_name")
             )
         ),
-        "nested_repeatable" to RepeatableControl(
+        "level_1" to RepeatableControl(
             rowControls = mapOf(
-                "inner_repeatable" to RepeatableControl(
+                "level_1_name" to StringControl(
+                    "Level 1 Name"
+                ),
+                "level_2" to RepeatableControl(
                     rowControls = mapOf(
-                        "inner_string" to StringControl(
-                            Tr.Sandbox.Form.innerString(),
-                            dependencies = mapOf(
-                                "visible" to ControlDependency(
-                                    controlPath = "../inner_boolean",
-                                    value = true,
-                                    dependencyType = DependencyType.Visible,
-                                    comparisonType = ComparisonType.Equals
+                        "level_2_name" to StringControl(
+                            "Level 2 Name"
+                        ),
+                        "level_3" to RepeatableControl(
+                            rowControls = mapOf(
+                                "level_3_name" to StringControl(
+                                    "Level 3 Name"
+                                ),
+                                "level_3_value" to IntegerControl(
+                                    "Level 3 Value"
                                 )
-                            )
+                            ),
+                            rowOrder = listOf("level_3_name", "level_3_value"),
+                            label = "Level 3 Array"
                         )
                     ),
-                    rowOrder = listOf("inner_string"),
-                    label = Tr.Sandbox.Form.innerRepeatable()
-                ),
-                "inner_boolean" to BooleanControl(
-                    Tr.Sandbox.Form.innerBoolean()
+                    rowOrder = listOf("level_2_name", "level_3"),
+                    label = "Level 2 Array"
                 )
             ),
-            rowOrder = listOf("inner_repeatable", "inner_boolean"),
-            label = Tr.Sandbox.Form.nestedRepeatable()
+            rowOrder = listOf("level_1_name", "level_2"),
+            label = "Level 1 (Triple Nested)"
         ),
         "save_button" to ButtonControl(
             text = Tr.Action.save(),
@@ -125,7 +129,7 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
     override fun defineContentOrder(): List<String> = listOf(
         "basic_info",
         "elements",
-        "nested_repeatable"
+        "level_1"
     )
 
     override fun defineActionBarOrder(): List<String> = listOf(
