@@ -25,8 +25,8 @@ class BookFormDataManager : FormDataManager() {
         from("books.books", "b")
 
         map("id")
-        map("title_pl", "titlePl")
-        map("title_eng", "titleEng")
+        map("title_pl")
+        map("title_eng")
         map("status")
 
         // Relacja N-do-M z autorami
