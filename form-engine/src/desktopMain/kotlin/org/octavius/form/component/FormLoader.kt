@@ -73,13 +73,8 @@ class OneToOneMappingBuilder : BaseTableMappingBuilder() {
 }
 
 class RelatedDataMappingBuilder : BaseTableMappingBuilder() {
-    var joinClause: String = ""
     private lateinit var linkColumn: String
     private var parentColumn: String = "@id"
-
-    fun join(joinSql: String) {
-        this.joinClause = joinSql
-    }
 
     fun linkedBy(foreignKeyColumn: String, parentColumn: String = "@id") {
         this.linkColumn = foreignKeyColumn
@@ -147,7 +142,7 @@ class QueryScope(
                             SELECT dynamic_map(
                                 $mapEntries
                             )
-                            FROM ${builder.fromTable} ${builder.joinClause} $subJoins
+                            FROM ${builder.fromTable} $subJoins
                             WHERE ${builder.buildWhereClause()}
                         )::public.dynamic_map[]
                     """.trimIndent()

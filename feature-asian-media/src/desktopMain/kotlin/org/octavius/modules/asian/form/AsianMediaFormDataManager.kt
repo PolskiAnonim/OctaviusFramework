@@ -30,17 +30,22 @@ class AsianMediaFormDataManager : FormDataManager() {
         // Relacja 1-do-N z 'categories'
         mapRelatedList("publications") {
             from("asian_media.publications", "p")
-            join("LEFT JOIN asian_media.publication_volumes pv ON pv.publication_id = p.id")
             linkedBy("p.title_id")
+
             map("id")
             map("publication_type")
             map("status")
             map("track_progress")
-            map("volumes")
-            map("translated_volumes")
-            map("chapters")
-            map("translated_chapters")
-            map("original_completed")
+
+            mapOneToOne {
+                from("asian_media.publication_volumes", "pv")
+                on("pv.publication_id = p.id")
+                map("volumes")
+                map("translated_volumes")
+                map("chapters")
+                map("translated_chapters")
+                map("original_completed")
+            }
         }
     }
 
