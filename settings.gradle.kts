@@ -25,7 +25,6 @@ dependencyResolutionManagement {
         }
     }
     repositories {
-        mavenLocal()
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")
@@ -34,6 +33,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        mavenLocal()
     }
 }
 

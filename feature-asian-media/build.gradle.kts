@@ -8,7 +8,7 @@ plugins {
 kotlin {
     // Definiujemy, że ten moduł jest tylko dla desktopa
     jvm("desktop")
-    js(IR) {
+    js {
         browser()
     }
 

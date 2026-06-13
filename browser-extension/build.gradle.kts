@@ -5,10 +5,6 @@ plugins {
     base
 }
 
-// Pobieramy konfigurację `jsRuntimeClasspath` Z PROJEKTU `:extension-popup`
-val popupConfiguration = project(":browser-extension:popup").configurations.getByName("jsRuntimeClasspath")
-
-
 // 2. Główny task do składania wtyczki
 tasks.register("assembleBrowserExtension") {
     group = "Octavius Extension"

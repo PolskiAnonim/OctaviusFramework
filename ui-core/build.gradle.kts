@@ -7,10 +7,7 @@ plugins {
 
 kotlin {
     jvm("desktop")
-    js(IR) {
-        browser()
-        binaries.executable()
-    }
+    js { browser() }
 
     sourceSets {
         val commonMain by getting {

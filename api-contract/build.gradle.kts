@@ -6,7 +6,7 @@ plugins {
 kotlin {
     // Definiujemy targety dla obu platform
     jvm("desktop")
-    js(IR) {
+    js {
         browser()
     }
 

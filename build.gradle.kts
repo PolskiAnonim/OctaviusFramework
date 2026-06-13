@@ -1,5 +1,6 @@
 import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.octavius.gradle.registerGenerateTranslationAccessorsTask
 
 plugins {
