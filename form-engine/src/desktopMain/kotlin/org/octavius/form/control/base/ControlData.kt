@@ -33,7 +33,8 @@ data class ControlResultData(
 data class ControlState<T>(
     val value: MutableState<T?> = mutableStateOf(null),
     val initValue: MutableState<T?> = mutableStateOf(null),
-    val revision: MutableState<Int> = mutableStateOf(0)
+    val revision: MutableState<Int> = mutableStateOf(0),
+    val labelOverride: MutableState<String?> = mutableStateOf(null)
 )
 
 /**

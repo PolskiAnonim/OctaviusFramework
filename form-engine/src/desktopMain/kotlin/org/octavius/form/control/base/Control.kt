@@ -171,6 +171,27 @@ abstract class Control<T : Any> internal constructor(
         }
     }
 
+    internal fun executeInitActions(
+        controlContext: ControlContext,
+        currentValue: T?,
+        scope: CoroutineScope
+    ) {
+        actions?.filter { it.executeOnInit }?.forEach { action ->
+            scope.launch {
+                val context = ActionContext(
+                    sourceValue = currentValue,
+                    sourceControlContext = controlContext,
+                    formState = formState,
+                    formSchema = formSchema,
+                    errorManager = errorManager,
+                    trigger = formActionTrigger,
+                    coroutineScope = scope
+                )
+                action.action.invoke(context)
+            }
+        }
+    }
+
     // --- 7. Renderowanie UI ---
     /**
      * Renderuje kontrolkę w interfejsie użytkownika.
@@ -180,14 +201,20 @@ abstract class Control<T : Any> internal constructor(
     internal fun Render(controlContext: ControlContext, controlState: ControlState<*>) {
         val isVisible = validator.isControlVisible(this, controlContext)
         val isRequired = validator.isControlRequired(this, controlContext)
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+        @Suppress("UNCHECKED_CAST")
+        val typedState = controlState as ControlState<T>
+
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            executeInitActions(controlContext, typedState.value.value, scope)
+        }
 
         AnimatedVisibility(visible = isVisible) {
-            @Suppress("UNCHECKED_CAST")
-            val typedState = controlState as ControlState<T>
             if (hasStandardLayout) {
                 // Standardowy układ: Etykieta nad kontrolką, błędy pod.
                 Column {
-                    RenderNormalLabel(label, isRequired)
+                    RenderNormalLabel(controlState.labelOverride.value ?: label, isRequired)
                     Display(controlContext, typedState, isRequired)
                     DisplayFieldErrors(controlContext)
                 }

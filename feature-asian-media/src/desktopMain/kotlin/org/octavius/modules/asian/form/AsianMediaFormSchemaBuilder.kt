@@ -123,7 +123,19 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
             "publication_type" to EnumControl(
                 Tr.AsianMedia.Form.publicationType(),
                 PublicationType::class,
-                required = true
+                required = true,
+                actions = listOf(
+                    ControlAction(executeOnInit = true) {
+                        val isWebtoon = sourceValue == PublicationType.Webtoon
+                        if (isWebtoon) {
+                            updateLabel("./volumes", Tr.AsianMedia.Form.seasonsCount())
+                            updateLabel("./translated_volumes", Tr.AsianMedia.Form.translatedSeasons())
+                        } else {
+                            updateLabel("./volumes", Tr.AsianMedia.Form.volumeCount())
+                            updateLabel("./translated_volumes", Tr.AsianMedia.Form.translatedVolumes())
+                        }
+                    }
+                )
             ),
             "status" to EnumControl(
                 Tr.AsianMedia.Form.readingStatus(),

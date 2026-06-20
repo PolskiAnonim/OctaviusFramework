@@ -16,7 +16,9 @@
       "trackProgress": "Track progress?",
       "translatedChapters": "Translated Chapters",
       "translatedVolumes": "Translated Volumes",
-      "volumeCount": "Volume Count"
+      "volumeCount": "Volume Count",
+      "seasonsCount": "Seasons Count",
+      "translatedSeasons": "Translated Seasons"
     },
     "readingStatus": {
       "completed": "Completed",

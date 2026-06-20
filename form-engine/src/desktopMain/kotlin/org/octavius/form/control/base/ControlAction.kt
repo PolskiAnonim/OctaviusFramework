@@ -14,6 +14,7 @@ import org.octavius.form.component.PathResolver
  * @param action Lambda, która zostanie wykonana. Otrzymuje ActionContext jako receiver (`this`).
  */
 class ControlAction<T>(
+    val executeOnInit: Boolean = false,
     val action: suspend ActionContext<T>.() -> Unit
 )
 
@@ -64,6 +65,16 @@ data class ActionContext<T>(
                 typedState.value.value = newValue
                 typedState.revision.value++
             }
+        }
+    }
+
+    /**
+     * Aktualizuje etykietę kontrolki (nadpisuje domyślną).
+     */
+    fun updateLabel(controlPath: String, newLabel: String?) {
+        val resolvedName = PathResolver.resolvePath(controlPath, sourceControlContext)
+        formState.getControlState(resolvedName)?.let { state ->
+            state.labelOverride.value = newLabel
         }
     }
 }

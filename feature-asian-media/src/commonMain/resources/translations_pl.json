@@ -16,7 +16,9 @@
       "trackProgress": "Śledzić postęp?",
       "translatedChapters": "Przetłumaczone rozdziały",
       "translatedVolumes": "Przetłumaczone tomy",
-      "volumeCount": "Liczba tomów"
+      "volumeCount": "Liczba tomów",
+      "seasonsCount": "Liczba sezonów",
+      "translatedSeasons": "Przetłumaczone sezony"
     },
     "readingStatus": {
       "completed": "Ukończone",
