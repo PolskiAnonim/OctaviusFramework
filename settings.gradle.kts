@@ -50,7 +50,6 @@ include(
     ":feature-games",
     ":feature-books",
     ":feature-sandbox",
-    ":feature-finances",
     // Browser extension
     ":browser-extension",
     ":browser-extension:content-script",
