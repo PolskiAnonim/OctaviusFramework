@@ -11,7 +11,11 @@ import org.octavius.form.control.type.number.IntegerControl
 import org.octavius.form.control.type.primitive.BooleanControl
 import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
+import org.octavius.form.control.layout.ControlOrientation
+import org.octavius.form.control.type.selection.CheckboxGroupControl
 import org.octavius.form.control.type.selection.EnumControl
+import org.octavius.form.control.type.selection.RadioGroupControl
+import org.octavius.form.control.type.selection.SelectionOption
 import org.octavius.localization.Tr
 import org.octavius.modules.sandbox.domain.SandboxPriority
 
@@ -41,8 +45,26 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
         "tags" to StringListControl(
             Tr.Sandbox.Form.tags()
         ),
+        "radio_test" to RadioGroupControl(
+            label = "Test Radio (Poziom)",
+            options = listOf(
+                SelectionOption("opcja1", "Opcja 1"),
+                SelectionOption("opcja2", "Opcja 2"),
+                SelectionOption("opcja3", "Opcja 3")
+            ),
+            orientation = ControlOrientation.HORIZONTAL
+        ),
+        "checkbox_test" to CheckboxGroupControl(
+            label = "Test Checkbox (Pion)",
+            options = listOf(
+                SelectionOption("opcjaA", "Opcja A"),
+                SelectionOption("opcjaB", "Opcja B"),
+                SelectionOption("opcjaC", "Opcja C")
+            ),
+            orientation = ControlOrientation.VERTICAL
+        ),
         "basic_info" to SectionControl(
-            controls = listOf("name", "quantity", "active", "priority", "start_date", "tags"),
+            controls = listOf("name", "quantity", "active", "priority", "start_date", "tags", "radio_test", "checkbox_test"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 2,

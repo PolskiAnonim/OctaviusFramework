@@ -26,7 +26,7 @@ class SandboxFormDataManager : FormDataManager() {
 
     override fun definedFormActions(): Map<String, (formResultData: FormResultData) -> FormActionResult> {
         return mapOf(
-            "save" to { _ ->
+            "save" to { res ->
                 SnackbarManager.showMessage(Tr.Sandbox.Form.savedMessage())
                 FormActionResult.CloseScreen
             },
