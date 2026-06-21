@@ -8,7 +8,7 @@ import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.number.DoubleControl
 import org.octavius.form.control.type.number.IntegerControl
-import org.octavius.form.control.type.primitive.BooleanControl
+import org.octavius.form.control.type.primitive.CheckboxControl
 import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.DatabaseControl
@@ -20,13 +20,13 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> = mapOf(
         "id" to IntegerControl(null),
         // Podstawowe dane
-        "visible_characters_section" to BooleanControl(
+        "visible_characters_section" to CheckboxControl(
             Tr.Games.Form.visibleCharacterSection(),
             required = true
         ),
-        "play_time_exists" to BooleanControl(null),
-        "ratings_exists" to BooleanControl(null),
-        "characters_exists" to BooleanControl(null),
+        "play_time_exists" to CheckboxControl(null),
+        "ratings_exists" to CheckboxControl(null),
+        "characters_exists" to CheckboxControl(null),
         // Sekcja podstawowych informacji
         "name" to StringControl(
             Tr.Games.General.gameName(),
@@ -116,15 +116,15 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             )
         ),
         // Sekcja postaci
-        "has_distinctive_character" to BooleanControl(
+        "has_distinctive_character" to CheckboxControl(
             Tr.Games.Form.distinctiveCharacters(),
             required = true
         ),
-        "has_distinctive_protagonist" to BooleanControl(
+        "has_distinctive_protagonist" to CheckboxControl(
             Tr.Games.Form.distinctiveProtagonist(),
             required = true
         ),
-        "has_distinctive_antagonist" to BooleanControl(
+        "has_distinctive_antagonist" to CheckboxControl(
             Tr.Games.Form.distinctiveAntagonist(),
             required = true
         ),

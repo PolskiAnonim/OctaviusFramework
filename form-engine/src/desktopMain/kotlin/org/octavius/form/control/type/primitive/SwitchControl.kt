@@ -4,14 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TriStateCheckbox
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.state.ToggleableState
 import org.octavius.form.control.base.*
 import org.octavius.form.control.layout.RenderCheckboxLabel
 import org.octavius.theme.FormSpacing
@@ -19,18 +17,17 @@ import org.octavius.theme.FormSpacing
 /**
  * Kontrolka do wprowadzania wartości logicznych (prawda/fałsz).
  *
- * Renderuje checkbox z etykietą. Dla pól wymaganych używa standardowego
- * checkboxa (true/false), dla opcjonalnych używa checkboxa z trzema stanami
- * (true/false/null). Obsługuje automatyczne przełączanie między stanami.
+ * Renderuje standardowy przełącznik (Switch) z etykietą.
+ * Używana zamiast Checkboxa w przypadkach, gdy zmiana stanu
+ * przypomina włączanie/wyłączanie danej funkcji.
  */
-class BooleanControl(
+class SwitchControl(
     label: String?,
-    required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
     actions: List<ControlAction<Boolean>>? = null,
 ) : Control<Boolean>(
     label,
-    required,
+    required = true,
     dependencies,
     hasStandardLayout = false,
     actions = actions
@@ -53,28 +50,20 @@ class BooleanControl(
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isRequired) {
-                        val currentValue = controlState.value.value ?: false
-                        controlState.value.value = currentValue
-                        Checkbox(
-                            checked = currentValue,
-                            onCheckedChange = {
-                                controlState.value.value = it
-                                executeActions(controlContext, it, scope)
-                            }
-                        )
-                    } else {
-                        TriStateCheckbox(
-                            state = controlState.value.value?.let { ToggleableState(it) }
-                                ?: ToggleableState.Indeterminate,
-                            onClick = {
-                                val mapping = mapOf(null to false, false to true, true to null)
-                                val newValue = mapping[controlState.value.value]
-                                controlState.value.value = newValue
-                                executeActions(controlContext, newValue, scope)
-                            }
-                        )
+                    val currentValue = controlState.value.value ?: false
+                    // Wymuszamy stan non-null, jako że Switch nie posiada stanu nieokreślonego
+                    if (controlState.value.value == null) {
+                        controlState.value.value = false
                     }
+
+                    Switch(
+                        checked = currentValue,
+                        onCheckedChange = {
+                            controlState.value.value = it
+                            executeActions(controlContext, it, scope)
+                        }
+                    )
+                    
                     RenderCheckboxLabel(label, isRequired)
                 }
 

@@ -8,8 +8,10 @@ import org.octavius.form.control.type.collection.StringListControl
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.datetime.DateControl
 import org.octavius.form.control.type.number.IntegerControl
-import org.octavius.form.control.type.primitive.BooleanControl
+import org.octavius.form.control.type.primitive.CheckboxControl
+import org.octavius.form.control.type.primitive.MultilineStringControl
 import org.octavius.form.control.type.primitive.StringControl
+import org.octavius.form.control.type.primitive.SwitchControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.layout.ControlOrientation
 import org.octavius.form.control.type.selection.CheckboxGroupControl
@@ -30,7 +32,7 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
             Tr.Sandbox.Form.quantity(),
             validationOptions = IntegerValidation(min = 0)
         ),
-        "active" to BooleanControl(
+        "active" to CheckboxControl(
             Tr.Sandbox.Form.active(),
             required = true
         ),
@@ -63,8 +65,15 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
             ),
             orientation = ControlOrientation.VERTICAL
         ),
+        "multiline_test" to MultilineStringControl(
+            label = "Test Multiline (Rozszerzalne)",
+            required = false
+        ),
+        "switch_test" to SwitchControl(
+            label = "Test Switch (Przełącznik)"
+        ),
         "basic_info" to SectionControl(
-            controls = listOf("name", "quantity", "active", "priority", "start_date", "tags", "radio_test", "checkbox_test"),
+            controls = listOf("name", "quantity", "active", "priority", "start_date", "tags", "radio_test", "checkbox_test", "multiline_test", "switch_test"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 2,
@@ -108,7 +117,7 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
                     rowOrder = listOf("inner_string"),
                     label = Tr.Sandbox.Form.innerRepeatable()
                 ),
-                "inner_boolean" to BooleanControl(
+                "inner_boolean" to CheckboxControl(
                     Tr.Sandbox.Form.innerBoolean()
                 )
             ),

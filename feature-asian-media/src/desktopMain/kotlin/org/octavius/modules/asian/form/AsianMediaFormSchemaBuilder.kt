@@ -13,7 +13,7 @@ import org.octavius.form.control.type.button.ButtonType
 import org.octavius.form.control.type.collection.StringListControl
 import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.number.IntegerControl
-import org.octavius.form.control.type.primitive.BooleanControl
+import org.octavius.form.control.type.primitive.CheckboxControl
 import org.octavius.form.control.type.repeatable.RepeatableControl
 import org.octavius.form.control.type.selection.EnumControl
 import org.octavius.localization.Tr
@@ -151,7 +151,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                     }
                 )
             ),
-            "track_progress" to BooleanControl(
+            "track_progress" to CheckboxControl(
                 Tr.AsianMedia.Form.trackProgress(),
                 required = true
             ),
@@ -171,7 +171,7 @@ class AsianMediaFormSchemaBuilder : FormSchemaBuilder() {
                 Tr.AsianMedia.Form.translatedChapters(),
                 dependencies = visibleWhenTrackProgress()
             ),
-            "original_completed" to BooleanControl(
+            "original_completed" to CheckboxControl(
                 Tr.AsianMedia.Form.originalCompleted(),
                 required = true,
                 dependencies = visibleWhenTrackProgress()
