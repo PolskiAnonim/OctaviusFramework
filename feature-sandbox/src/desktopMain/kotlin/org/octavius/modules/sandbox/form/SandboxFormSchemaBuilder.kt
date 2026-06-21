@@ -9,6 +9,8 @@ import org.octavius.form.control.type.container.SectionControl
 import org.octavius.form.control.type.datetime.DateControl
 import org.octavius.form.control.type.number.IntegerControl
 import org.octavius.form.control.type.primitive.CheckboxControl
+import org.octavius.form.control.type.primitive.FilePickerControl
+import org.octavius.form.control.type.primitive.FilePickerMode
 import org.octavius.form.control.type.primitive.MultilineStringControl
 import org.octavius.form.control.type.primitive.StringControl
 import org.octavius.form.control.type.primitive.SwitchControl
@@ -72,8 +74,16 @@ class SandboxFormSchemaBuilder : FormSchemaBuilder() {
         "switch_test" to SwitchControl(
             label = "Test Switch (Przełącznik)"
         ),
+        "file_picker_path" to FilePickerControl<String>(
+            label = "Wybór pliku (Ścieżka)",
+            mode = FilePickerMode.PATH_STRING
+        ),
+        "file_picker_bytes" to FilePickerControl<ByteArray>(
+            label = "Wybór pliku (Zawartość)",
+            mode = FilePickerMode.CONTENT_BYTES
+        ),
         "basic_info" to SectionControl(
-            controls = listOf("name", "quantity", "active", "priority", "start_date", "tags", "radio_test", "checkbox_test", "multiline_test", "switch_test"),
+            controls = listOf("name", "quantity", "active", "priority", "start_date", "tags", "radio_test", "checkbox_test", "multiline_test", "switch_test", "file_picker_path", "file_picker_bytes"),
             collapsible = true,
             initiallyExpanded = true,
             columns = 2,
