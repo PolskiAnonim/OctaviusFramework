@@ -1,5 +1,8 @@
 package org.octavius.modules.games.form.game
 
+import kotlinx.coroutines.launch
+import org.octavius.dialog.DialogConfig
+import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus
 import org.octavius.form.component.FormSchemaBuilder
 import org.octavius.form.control.base.*
@@ -171,6 +174,36 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
             ),
             buttonType = ButtonType.Filled
         ),
+        "delete_button" to ButtonControl(
+            text = Tr.Action.remove(),
+            buttonType = ButtonType.Filled,
+            dependencies = mapOf(
+                "visible" to ControlDependency(
+                    controlPath = "id",
+                    value = null,
+                    dependencyType = DependencyType.Visible,
+                    comparisonType = ComparisonType.NotEquals
+                )
+            ),
+            actions = listOf(
+                ControlAction {
+                    GlobalDialogManager.show(
+                        DialogConfig(
+                            title = Tr.Action.confirm(),
+                            text = Tr.Dialog.confirmDelete(),
+                            onDismiss = { GlobalDialogManager.dismiss() },
+                            confirmButtonText = Tr.Dialog.yes(),
+                            onConfirm = {
+                                coroutineScope.launch {
+                                    trigger.triggerAction("delete", false)
+                                    GlobalDialogManager.dismiss()
+                                }
+                            }
+                        )
+                    )
+                }
+            )
+        ),
         "cancel_button" to ButtonControl(
             text = Tr.Action.cancel(),
             actions = listOf(
@@ -192,7 +225,8 @@ class GameFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineActionBarOrder(): List<String> = listOf(
         "cancel_button",
-        "save_button"
+        "save_button",
+        "delete_button"
     )
 
 }

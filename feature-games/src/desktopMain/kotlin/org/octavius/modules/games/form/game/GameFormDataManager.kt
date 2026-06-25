@@ -91,8 +91,28 @@ class GameFormDataManager : FormDataManager() {
     override fun definedFormActions(): Map<String, (FormResultData) -> FormActionResult> {
         return mapOf(
             "save" to { formData -> processSave(formData) },
+            "delete" to { formData -> processDelete(formData) /* Istnienie ID zapewnia logika ukrywania przycisku */ },
             "cancel" to { _ -> FormActionResult.CloseScreen }
         )
+    }
+
+    fun processDelete(formResultData: FormResultData): FormActionResult {
+        // Wykorzystanie CASCADE
+        val plan = TransactionPlan()
+        plan.add(
+            dataAccess.deleteFrom("games.games")
+                .where("id = @id")
+                .asStep()
+                .execute("id" to formResultData.getInitial("id"))
+        )
+
+        return when (val result = dataAccess.executeTransactionPlan(plan)) {
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(result.error))
+                FormActionResult.Failure
+            }
+            is DataResult.Success -> FormActionResult.CloseScreen
+        }
     }
 
     fun processSave(formResultData: FormResultData): FormActionResult {
