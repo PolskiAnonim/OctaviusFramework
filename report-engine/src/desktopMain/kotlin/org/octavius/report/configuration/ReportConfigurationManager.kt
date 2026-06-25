@@ -8,6 +8,7 @@ import io.github.octaviusframework.db.api.builder.execute
 import io.github.octaviusframework.db.api.builder.toListOf
 import io.github.octaviusframework.db.api.builder.toSingleOf
 import io.github.octaviusframework.db.api.toDataMap
+import io.github.octaviusframework.db.api.type.withPgType
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
 
@@ -15,7 +16,7 @@ class ReportConfigurationManager : KoinComponent {
 
     val dataAccess: DataAccess by inject()
     fun saveConfiguration(configuration: ReportConfiguration): Boolean {
-        val flatValueMap = configuration.toDataMap("id")
+        val flatValueMap = configuration.toDataMap("id") + ("sort_order" to configuration.sortOrder.withPgType("sort_configuration", "public", true))
         val result = dataAccess.insertInto("report_configurations")
             .values(flatValueMap).onConflict {
                 onColumns("name", "report_name")
